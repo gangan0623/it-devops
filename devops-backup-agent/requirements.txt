@@ -1,0 +1,6 @@
+fastapi==0.115.6
+uvicorn==0.32.1
+paramiko==3.5.0
+minio==7.2.10
+PyYAML==6.0.2
+pyinstaller==6.10.0

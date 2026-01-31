@@ -1,0 +1,161 @@
+<template>
+  <div class="mod-alert__trigger">
+    <el-form :inline="true" :model="state.dataForm" @keyup.enter="state.getDataList()" class="ops-toolbar">
+      <div class="ops-toolbar__row">
+        <div class="ops-toolbar__group ops-filters">
+          <el-form-item>
+            <el-input v-model="state.dataForm.name" placeholder="触发器名称" clearable></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-select v-model="state.dataForm.status" placeholder="状态" clearable>
+              <el-option label="启用" :value="1"></el-option>
+              <el-option label="禁用" :value="0"></el-option>
+            </el-select>
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="state.getDataList()">查询</el-button>
+          </el-form-item>
+        </div>
+        <div class="ops-toolbar__group ops-actions">
+          <el-button v-if="state.hasPermission('alert:trigger:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
+          <el-button v-if="state.hasPermission('alert:trigger:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
+        </div>
+      </div>
+    </el-form>
+
+    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" style="width: 100%">
+      <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
+      <el-table-column prop="name" label="触发器名称" header-align="center" align="center"></el-table-column>
+      <el-table-column prop="templateId" label="模板" header-align="center" align="center">
+        <template v-slot="scope">{{ templateMap[scope.row.templateId] || scope.row.templateId }}</template>
+      </el-table-column>
+      <el-table-column prop="mediaId" label="媒介" header-align="center" align="center">
+        <template v-slot="scope">{{ mediaMap[scope.row.mediaId] || scope.row.mediaId }}</template>
+      </el-table-column>
+      <el-table-column prop="severity" label="告警级别" header-align="center" align="center">
+        <template v-slot="scope">
+          <span>{{ formatSeverity(scope.row.severity) }}</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="status" label="状态" header-align="center" align="center">
+        <template v-slot="scope">
+          <el-tag v-if="scope.row.status === 0" size="small" type="danger">禁用</el-tag>
+          <el-tag v-else size="small" type="success">启用</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" fixed="right" header-align="center" align="center" width="180">
+        <template v-slot="scope">
+          <el-button v-if="state.hasPermission('alert:trigger:update')" type="primary" link @click="addOrUpdateHandle(scope.row.id)">修改</el-button>
+          <el-button v-if="state.hasPermission('alert:trigger:delete')" type="primary" link @click="state.deleteHandle(scope.row.id)">删除</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+
+    <el-pagination
+      :current-page="state.page"
+      :page-sizes="[10, 20, 50, 100]"
+      :page-size="state.limit"
+      :total="state.total"
+      layout="total, sizes, prev, pager, next, jumper"
+      @size-change="state.pageSizeChangeHandle"
+      @current-change="state.pageCurrentChangeHandle"
+    ></el-pagination>
+
+    <add-or-update ref="addOrUpdateRef" @refreshDataList="refresh"></add-or-update>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import useView from "@/hooks/useView";
+import {onMounted, reactive, ref, toRefs} from "vue";
+import baseService from "@/service/baseService";
+import AddOrUpdate from "./trigger-add-or-update.vue";
+
+const view = reactive({
+  deleteIsBatch: true,
+  getDataListURL: "/alert/trigger/page",
+  getDataListIsPage: true,
+  deleteURL: "/alert/trigger",
+  dataForm: {
+    name: "",
+    status: ""
+  }
+});
+
+const state = reactive({ ...useView(view), ...toRefs(view) });
+const addOrUpdateRef = ref();
+const severityLabelMap: Record<string, string> = {
+  critical: "灾难告警",
+  warning: "重要告警",
+  info: "信息提示",
+  recover: "告警恢复"
+};
+
+const formatSeverity = (value?: string) => {
+  if (!value) {
+    return "-";
+  }
+  return value
+    .split(",")
+    .map((item) => {
+      const key = item.trim().toLowerCase();
+      return severityLabelMap[key] || item.trim();
+    })
+    .filter(Boolean)
+    .join("、");
+};
+const templateMap = reactive({} as Record<string, string>);
+const mediaMap = reactive({} as Record<string, string>);
+
+const addOrUpdateHandle = (id?: number) => {
+  addOrUpdateRef.value.init(id);
+};
+
+const loadResources = () => {
+  baseService.get("/alert/trigger/resources").then((res) => {
+    (res.data.templates || []).forEach((item: any) => {
+      templateMap[item.id] = item.name;
+    });
+    (res.data.medias || []).forEach((item: any) => {
+      mediaMap[item.id] = item.name;
+    });
+  });
+};
+
+const refresh = () => {
+  state.getDataList();
+  loadResources();
+};
+
+onMounted(() => {
+  loadResources();
+});
+</script>
+
+<style lang="less" scoped>
+.ops-toolbar {
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
+}
+.ops-toolbar__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+.ops-toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+.ops-filters .el-form-item {
+  margin-bottom: 0;
+}
+</style>

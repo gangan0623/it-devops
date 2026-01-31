@@ -1,0 +1,6 @@
+devops-ui/node_modules
+devops-ui/.idea
+devops-admin/target
+.idea
+.git
+*.md

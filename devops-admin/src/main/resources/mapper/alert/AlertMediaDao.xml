@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.leoch.modules.alert.dao.AlertMediaDao">
+
+    <resultMap type="net.leoch.modules.alert.entity.AlertMediaEntity" id="alertMediaMap">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="host" column="host"/>
+        <result property="port" column="port"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="protocol" column="protocol"/>
+        <result property="smtpAuth" column="smtp_auth"/>
+        <result property="starttlsEnable" column="starttls_enable"/>
+        <result property="tlsEnable" column="tls_enable"/>
+        <result property="fromAddr" column="from_addr"/>
+        <result property="status" column="status"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updater" column="updater"/>
+        <result property="updateDate" column="update_date"/>
+    </resultMap>
+
+</mapper>

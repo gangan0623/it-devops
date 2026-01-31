@@ -1,0 +1,68 @@
+# IDE / OS
+.idea/
+.claude
+.vscode/
+*.iml
+*.ipr
+*.iws
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+*.out
+
+# Java / Maven
+*.class
+*.ctxt
+.mtj.tmp/
+target/
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+*.jar.original
+hs_err_pid*
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+*.tsbuildinfo
+.cache/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+*.egg-info/
+build/
+.venv/
+.venv*/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+
+# Env files (keep shared ones committed)
+.env
+.env.*
+!.env.example
+!.env.development
+!.env.production
+
+# App-specific
+devops-admin/target/
+devops-backup-agent/.venv/
+devops-backup-agent/build/
+devops-backup-agent/dist/
+devops-ui/node_modules/
+devops-ui/dist/
+devops-ui/.vite/
+
+

@@ -1,0 +1,129 @@
+package net.leoch.modules.ops.controller;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.Parameters;
+import io.swagger.v3.oas.annotations.enums.ParameterIn;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
+import net.leoch.common.annotation.LogOperation;
+import net.leoch.common.constant.Constant;
+import net.leoch.common.page.PageData;
+import net.leoch.common.utils.Result;
+import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.service.BusinessSystemService;
+import org.apache.shiro.authz.annotation.RequiresPermissions;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * 业务系统表
+ *
+ * @author Taohongqiang
+ * @since 1.0.0 2026-01-28
+ */
+@RestController
+@RequestMapping("ops/businesssystem")
+@Tag(name="业务系统表")
+public class BusinessSystemController {
+    @Autowired
+    private BusinessSystemService businessSystemService;
+
+    @GetMapping("page")
+    @Operation(summary = "分页")
+    @Parameters({
+        @Parameter(name = Constant.PAGE, description = "当前页码，从1开始", in = ParameterIn.QUERY, required = true, ref="int") ,
+        @Parameter(name = Constant.LIMIT, description = "每页显示记录数", in = ParameterIn.QUERY,required = true, ref="int") ,
+        @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref="String") ,
+        @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
+    })
+    @RequiresPermissions("ops:businesssystem:page")
+    public Result<PageData<BusinessSystemDTO>> page(@Parameter(hidden = true) BusinessSystemPageRequest request){
+        return new Result<PageData<BusinessSystemDTO>>().ok(businessSystemService.page(request));
+    }
+
+    @GetMapping("{id}")
+    @Operation(summary = "信息")
+    @RequiresPermissions("ops:businesssystem:info")
+    public Result<BusinessSystemDTO> get(@PathVariable("id") Long id){
+        return new Result<BusinessSystemDTO>().ok(businessSystemService.get(BusinessSystemIdRequest.of(id)));
+    }
+
+    @PostMapping
+    @Operation(summary = "保存")
+    @LogOperation("保存")
+    @RequiresPermissions("ops:businesssystem:save")
+    public Result<Object> save(@RequestBody BusinessSystemSaveRequest request){
+        businessSystemService.save(request);
+        return new Result<>();
+    }
+
+    @PutMapping
+    @Operation(summary = "修改")
+    @LogOperation("修改")
+    @RequiresPermissions("ops:businesssystem:update")
+    public Result<Object> update(@RequestBody BusinessSystemUpdateRequest request){
+        businessSystemService.update(request);
+        return new Result<>();
+    }
+
+    @PutMapping("status")
+    @Operation(summary = "批量状态更新")
+    @LogOperation("批量状态更新")
+    @RequiresPermissions("ops:businesssystem:update")
+    public Result<Object> updateStatus(@RequestBody BusinessSystemStatusUpdateRequest request){
+        businessSystemService.updateStatus(request);
+        return new Result<>();
+    }
+
+    @PostMapping("import")
+    @Operation(summary = "导入")
+    @LogOperation("导入")
+    @RequiresPermissions("ops:businesssystem:import")
+    public Result<Object> importExcel(@ModelAttribute BusinessSystemImportRequest request) throws Exception {
+        businessSystemService.importExcel(request);
+        return new Result<>();
+    }
+
+    @GetMapping("template")
+    @Operation(summary = "导入模板")
+    @LogOperation("导入模板")
+    @RequiresPermissions("ops:businesssystem:template")
+    public void template(HttpServletResponse response) throws Exception {
+        businessSystemService.template(response);
+    }
+
+    @GetMapping("online")
+    @Operation(summary = "在线状态")
+    @RequiresPermissions("ops:businesssystem:page")
+    public Result<Boolean> online(BusinessSystemOnlineRequest request){
+        return new Result<Boolean>().ok(businessSystemService.online(request));
+    }
+
+    @GetMapping("check")
+    @Operation(summary = "唯一校验")
+    @RequiresPermissions("ops:businesssystem:page")
+    public Result<Boolean> check(BusinessSystemCheckRequest request){
+        return new Result<Boolean>().ok(businessSystemService.check(request));
+    }
+
+    @DeleteMapping
+    @Operation(summary = "删除")
+    @LogOperation("删除")
+    @RequiresPermissions("ops:businesssystem:delete")
+    public Result<Object> delete(@RequestBody Long[] ids){
+        BusinessSystemDeleteRequest request = new BusinessSystemDeleteRequest();
+        request.setIds(ids);
+        businessSystemService.delete(request);
+        return new Result<>();
+    }
+
+    @GetMapping("export")
+    @Operation(summary = "导出")
+    @LogOperation("导出")
+    @RequiresPermissions("ops:businesssystem:export")
+    public void export(@Parameter(hidden = true) @ModelAttribute BusinessSystemPageRequest request, HttpServletResponse response) throws Exception {
+        businessSystemService.export(request, response);
+    }
+
+}

@@ -1,0 +1,30 @@
+spring:
+  datasource:
+    druid:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://192.168.159.121:3306/renren?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true
+      username: root
+      password: Leoch@@2024
+      initial-size: 10
+      max-active: 100
+      min-idle: 10
+      max-wait: 6000
+      pool-prepared-statements: true
+      max-pool-prepared-statement-per-connection-size: 20
+      time-between-eviction-runs-millis: 60000
+      min-evictable-idle-time-millis: 300000
+      test-while-idle: true
+      test-on-borrow: false
+      test-on-return: false
+      stat-view-servlet:
+        enabled: true
+        url-pattern: /druid/*
+
+zabbix:
+  url: http://192.168.17.123:8080/api_jsonrpc.php
+  username: Admin
+  password: Leoch.ah.2025zb
+  templates:
+    - 001.飞塔监控模板
+    - 002.华为监控模板
+    - 003.华三监控模板

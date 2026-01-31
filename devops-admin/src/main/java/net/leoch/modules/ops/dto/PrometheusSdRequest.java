@@ -1,0 +1,20 @@
+package net.leoch.modules.ops.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+import java.io.Serial;
+import java.io.Serializable;
+
+/**
+ * Prometheus SD 请求
+ */
+@Data
+@Schema(name = "PrometheusSdRequest")
+public class PrometheusSdRequest implements Serializable {
+    @Serial
+    private static final long serialVersionUID = 1L;
+
+    @Schema(description = "区域代码")
+    private String area;
+}

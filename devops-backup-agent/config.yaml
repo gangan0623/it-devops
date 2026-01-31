@@ -1,0 +1,7 @@
+minio:
+  endpoint: https://***
+  access-key: ad**
+  secret-key: Leo***
+  bucket-name: devops
+  backup-path: /switch
+  public-url: https://****
