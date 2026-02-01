@@ -1,10 +1,4 @@
-/**
- * Copyright (c) 2018 人人开源 All rights reserved.
- * <p>
- * https://www.renren.io
- * <p>
- * 版权所有，侵权必究！
- */
+
 
 package net.leoch.modules.security.service.impl;
 
@@ -31,7 +25,7 @@ import java.io.IOException;
 public class CaptchaServiceImpl implements CaptchaService {
     @Resource
     private RedisUtils redisUtils;
-    @Value("${renren.redis.open: false}")
+    @Value("${DevOps.redis.open: false}")
     private boolean open;
     /**
      * Local Cache  5分钟过期

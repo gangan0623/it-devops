@@ -335,8 +335,7 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
             return null;
         }
         try {
-            Map<String, Object> map = JsonUtils.parseObject(json, Map.class);
-            Object current = map;
+            Object current = JsonUtils.parseObject(json, Map.class);
             for (String key : keys) {
                 if (!(current instanceof Map)) {
                     return null;
@@ -442,7 +441,7 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
             connection.setConnectTimeout(5000);
             connection.setReadTimeout(8000);
             if (url.contains("api.github.com")) {
-                connection.setRequestProperty("User-Agent", "renren-monitor");
+                connection.setRequestProperty("User-Agent", "devops-monitor");
             }
             int code = connection.getResponseCode();
             if (code != 200) {

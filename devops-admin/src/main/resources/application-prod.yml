@@ -13,9 +13,9 @@ spring:
   data:
     redis:
       database: 0
-      host: 192.168.210.136
+      host: 192.168.159.121
       port: 6379
-      password: Leoch@@20260101
+      password: Leoch@@2024
       timeout: 6000ms
       lettuce:
         pool:
@@ -25,10 +25,4 @@ spring:
           min-idle: 5       # 连接池中的最小空闲连接
 
 knife4j:
-  enable: false
-  basic:
-    enable: false
-    username: admin
-    password: admin
-  setting:
-    enableFooter: false
+  production: true

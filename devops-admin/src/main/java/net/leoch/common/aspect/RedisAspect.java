@@ -1,10 +1,4 @@
-/**
- * Copyright (c) 2018 人人开源 All rights reserved.
- * <p>
- * https://www.renren.io
- * <p>
- * 版权所有，侵权必究！
- */
+
 
 package net.leoch.common.aspect;
 
@@ -30,7 +24,7 @@ public class RedisAspect {
     /**
      * 是否开启redis缓存  true开启   false关闭
      */
-    @Value("${renren.redis.open: false}")
+    @Value("${devops.redis.open: false}")
     private boolean open;
 
     @Around("execution(* net.leoch.common.redis.RedisUtils.*(..))")

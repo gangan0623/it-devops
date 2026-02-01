@@ -48,7 +48,7 @@
       </template>
       <template v-else-if="dataForm.type === 2">
         <el-form-item prop="aliyunDomain" label="域名">
-          <el-input v-model="dataForm.aliyunDomain" placeholder="阿里云绑定的域名，如：http://cdn.renren.io"></el-input>
+          <el-input v-model="dataForm.aliyunDomain" placeholder="阿里云绑定的域名，如：http://cdn.devops.io"></el-input>
         </el-form-item>
         <el-form-item prop="aliyunPrefix" label="路径前缀">
           <el-input v-model="dataForm.aliyunPrefix" placeholder="不设置默认为空"></el-input>

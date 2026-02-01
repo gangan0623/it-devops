@@ -1,10 +1,4 @@
-/**
- * Copyright (c) 2018 人人开源 All rights reserved.
- * <p>
- * https://www.renren.io
- * <p>
- * 版权所有，侵权必究！
- */
+
 
 package net.leoch.modules.security.config;
 
@@ -63,7 +57,7 @@ public class ShiroConfig {
 
         Map<String, String> filterMap = new LinkedHashMap<>();
         filterMap.put("/webjars/**", "anon");
-        filterMap.put("/druid/**", "anon");
+
         filterMap.put("/login", "anon");
         filterMap.put("/swagger/**", "anon");
         filterMap.put("/v3/api-docs/**", "anon");
@@ -83,8 +77,9 @@ public class ShiroConfig {
         return shiroFilter;
     }
 
+
     @Bean("lifecycleBeanPostProcessor")
-    public LifecycleBeanPostProcessor lifecycleBeanPostProcessor() {
+    public static LifecycleBeanPostProcessor lifecycleBeanPostProcessor() {
         return new LifecycleBeanPostProcessor();
     }
 
