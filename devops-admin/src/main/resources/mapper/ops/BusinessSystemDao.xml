@@ -7,8 +7,8 @@
         <result property="id" column="id"/>
         <result property="instance" column="instance"/>
         <result property="name" column="name"/>
-        <result property="areaName" column="area_name"/>
-        <result property="siteLocation" column="site_location"/>
+        <result property="areaName" column="area_name_type"/>
+        <result property="siteLocation" column="base_site_location"/>
         <result property="menuName" column="menu_name"/>
         <result property="subMenuName" column="sub_menu_name"/>
         <result property="status" column="status"/>

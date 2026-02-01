@@ -10,6 +10,8 @@ import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
 import net.leoch.modules.ops.service.PrometheusSdService;
+import net.leoch.modules.sys.dao.SysDictDataDao;
+import net.leoch.modules.sys.entity.DictData;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -21,22 +23,16 @@ import java.util.stream.Collectors;
 @Service
 public class PrometheusSdServiceImpl implements PrometheusSdService {
 
-    private static final Map<String, String> AREA_MAP = Map.of(
-            "ah", "安徽理士",
-            "js", "江苏理士",
-            "sz", "深圳理士",
-            "zq", "肇庆理士",
-            "hw", "海外理士"
-    );
-
     private final LinuxHostDao linuxHostDao;
     private final WindowHostDao windowHostDao;
     private final BusinessSystemDao businessSystemDao;
+    private final SysDictDataDao sysDictDataDao;
 
-    public PrometheusSdServiceImpl(LinuxHostDao linuxHostDao, WindowHostDao windowHostDao, BusinessSystemDao businessSystemDao) {
+    public PrometheusSdServiceImpl(LinuxHostDao linuxHostDao, WindowHostDao windowHostDao, BusinessSystemDao businessSystemDao, SysDictDataDao sysDictDataDao) {
         this.linuxHostDao = linuxHostDao;
         this.windowHostDao = windowHostDao;
         this.businessSystemDao = businessSystemDao;
+        this.sysDictDataDao = sysDictDataDao;
     }
 
     @Override
@@ -94,12 +90,28 @@ public class PrometheusSdServiceImpl implements PrometheusSdService {
         if (request == null || request.getArea() == null) {
             return null;
         }
-        return AREA_MAP.get(request.getArea().trim().toLowerCase());
+        String key = request.getArea().trim().toLowerCase();
+        Map<String, String> areaMap = getAreaMap();
+        return areaMap.get(key);
+    }
+
+    private Map<String, String> getAreaMap() {
+        List<DictData> dictDataList = sysDictDataDao.getDictDataListByType("area_code");
+        if (dictDataList == null || dictDataList.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<String, String> areaMap = new HashMap<>();
+        for (DictData data : dictDataList) {
+            if (data.getDictLabel() != null && data.getDictValue() != null) {
+                areaMap.put(data.getDictLabel().trim().toLowerCase(), data.getDictValue());
+            }
+        }
+        return areaMap;
     }
 
     private PrometheusSdResponse buildTarget(String instance, String name, String siteLocation, String type, String menuName, String subMenuName) {
         Map<String, Object> labels = new HashMap<>();
-        labels.put("site_location", siteLocation);
+        labels.put("base_site_location", siteLocation);
         if (name != null && !name.isEmpty()) {
             labels.put("name", name);
         }

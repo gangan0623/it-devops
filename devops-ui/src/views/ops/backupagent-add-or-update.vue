@@ -8,7 +8,13 @@
         <el-input v-model="dataForm.name" placeholder="名称" @blur="checkUnique('name')"></el-input>
       </el-form-item>
       <el-form-item label="区域名称" prop="areaName">
-        <ren-select v-model="dataForm.areaName" dict-type="area_name" placeholder="区域名称"></ren-select>
+        <ren-select
+          v-model="dataForm.areaName"
+          dict-type="area_name_type"
+          label-field="dictValue"
+          value-field="dictLabel"
+          placeholder="区域名称"
+        ></ren-select>
       </el-form-item>
       <el-form-item v-if="!dataForm.id" label="Token" prop="token">
         <el-input v-model="dataForm.token" placeholder="Token"></el-input>

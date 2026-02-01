@@ -8,13 +8,31 @@
         <el-input v-model="dataForm.name" placeholder="名称" @blur="checkUnique('name')"></el-input>
       </el-form-item>
       <el-form-item label="区域名称" prop="areaName">
-        <ren-select v-model="dataForm.areaName" dict-type="area_name" placeholder="区域名称"></ren-select>
+        <ren-select
+          v-model="dataForm.areaName"
+          dict-type="area_name_type"
+          label-field="dictValue"
+          value-field="dictLabel"
+          placeholder="区域名称"
+        ></ren-select>
       </el-form-item>
       <el-form-item label="站点位置" prop="siteLocation">
-        <ren-select v-model="dataForm.siteLocation" dict-type="site_location" placeholder="站点位置"></ren-select>
+        <ren-select
+          v-model="dataForm.siteLocation"
+          dict-type="base_site_location"
+          label-field="dictValue"
+          value-field="dictLabel"
+          placeholder="站点位置"
+        ></ren-select>
       </el-form-item>
           <el-form-item label="分组名称" prop="menuName">
-        <ren-select v-model="dataForm.menuName" dict-type="server_group" placeholder="分组名称"></ren-select>
+        <ren-select
+          v-model="dataForm.menuName"
+          dict-type="virtual_host_group"
+          label-field="dictValue"
+          value-field="dictLabel"
+          placeholder="分组名称"
+        ></ren-select>
       </el-form-item>
           <el-form-item label="子组名称" prop="subMenuName">
         <el-input v-model="dataForm.subMenuName" placeholder="子组名称"></el-input>

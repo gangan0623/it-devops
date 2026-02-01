@@ -29,7 +29,7 @@ import net.leoch.modules.sys.dto.SysUserDTO;
 import net.leoch.modules.sys.excel.SysUserExcel;
 import net.leoch.modules.sys.service.SysRoleUserService;
 import net.leoch.modules.sys.service.SysUserService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Arrays;
@@ -60,7 +60,7 @@ public class SysUserController {
             @Parameter(name = "gender", description = "性别", in = ParameterIn.QUERY, ref = "String"),
             @Parameter(name = "deptId", description = "部门ID", in = ParameterIn.QUERY, ref = "String")
     })
-    @RequiresPermissions("sys:user:page")
+    @SaCheckPermission("sys:user:page")
     public Result<PageData<SysUserDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
         PageData<SysUserDTO> page = sysUserService.page(params);
 
@@ -69,7 +69,7 @@ public class SysUserController {
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
-    @RequiresPermissions("sys:user:info")
+    @SaCheckPermission("sys:user:info")
     public Result<SysUserDTO> get(@PathVariable("id") Long id) {
         SysUserDTO data = sysUserService.get(id);
 
@@ -109,7 +109,7 @@ public class SysUserController {
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
-    @RequiresPermissions("sys:user:save")
+    @SaCheckPermission("sys:user:save")
     public Result<Object> save(@RequestBody SysUserDTO dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
@@ -122,7 +122,7 @@ public class SysUserController {
     @PutMapping
     @Operation(summary = "修改")
     @LogOperation("修改")
-    @RequiresPermissions("sys:user:update")
+    @SaCheckPermission("sys:user:update")
     public Result<Object> update(@RequestBody SysUserDTO dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
@@ -135,7 +135,7 @@ public class SysUserController {
     @DeleteMapping
     @Operation(summary = "删除")
     @LogOperation("删除")
-    @RequiresPermissions("sys:user:delete")
+    @SaCheckPermission("sys:user:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
         //效验数据
         AssertUtils.isArrayEmpty(ids, "id");
@@ -148,7 +148,7 @@ public class SysUserController {
     @GetMapping("export")
     @Operation(summary = "导出")
     @LogOperation("导出")
-    @RequiresPermissions("sys:user:export")
+    @SaCheckPermission("sys:user:export")
     @Parameter(name = "username", description = "用户名", in = ParameterIn.QUERY, ref = "String")
     public void export(@Parameter(hidden = true) @RequestParam Map<String, Object> params, HttpServletResponse response) throws Exception {
         List<SysUserDTO> list = sysUserService.list(params);

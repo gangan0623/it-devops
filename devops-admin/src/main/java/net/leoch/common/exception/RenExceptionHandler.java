@@ -2,6 +2,7 @@
 
 package net.leoch.common.exception;
 
+import cn.dev33.satoken.exception.SaTokenException;
 import cn.hutool.core.map.MapUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
@@ -48,6 +49,13 @@ public class RenExceptionHandler {
         Result result = new Result();
         result.error(ErrorCode.DB_RECORD_EXISTS);
 
+        return result;
+    }
+
+    @ExceptionHandler(SaTokenException.class)
+    public Result<Object> handleSaTokenException(SaTokenException ex) {
+        Result result = new Result();
+        result.error(ErrorCode.UNAUTHORIZED, ex.getMessage());
         return result;
     }
 

@@ -22,7 +22,7 @@ import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.dto.SysParamsDTO;
 import net.leoch.modules.sys.excel.SysParamsExcel;
 import net.leoch.modules.sys.service.SysParamsService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -51,7 +51,7 @@ public class SysParamsController {
             @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref = "String"),
             @Parameter(name = "paramCode", description = "参数编码", in = ParameterIn.QUERY, ref = "String")
     })
-    @RequiresPermissions("sys:params:page")
+    @SaCheckPermission("sys:params:page")
     public Result<PageData<SysParamsDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
         PageData<SysParamsDTO> page = sysParamsService.page(params);
 
@@ -60,7 +60,7 @@ public class SysParamsController {
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
-    @RequiresPermissions("sys:params:info")
+    @SaCheckPermission("sys:params:info")
     public Result<SysParamsDTO> get(@PathVariable("id") Long id) {
         SysParamsDTO data = sysParamsService.get(id);
 
@@ -70,7 +70,7 @@ public class SysParamsController {
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
-    @RequiresPermissions("sys:params:save")
+    @SaCheckPermission("sys:params:save")
     public Result<Object> save(@RequestBody SysParamsDTO dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
@@ -83,7 +83,7 @@ public class SysParamsController {
     @PutMapping
     @Operation(summary = "修改")
     @LogOperation("修改")
-    @RequiresPermissions("sys:params:update")
+    @SaCheckPermission("sys:params:update")
     public Result<Object> update(@RequestBody SysParamsDTO dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
@@ -96,7 +96,7 @@ public class SysParamsController {
     @DeleteMapping
     @Operation(summary = "删除")
     @LogOperation("删除")
-    @RequiresPermissions("sys:params:delete")
+    @SaCheckPermission("sys:params:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
         //效验数据
         AssertUtils.isArrayEmpty(ids, "id");
@@ -109,7 +109,7 @@ public class SysParamsController {
     @GetMapping("export")
     @Operation(summary = "导出")
     @LogOperation("导出")
-    @RequiresPermissions("sys:params:export")
+    @SaCheckPermission("sys:params:export")
     @Parameter(name = "paramCode", description = "参数编码", in = ParameterIn.QUERY, ref = "String")
     public void export(@Parameter(hidden = true) @RequestParam Map<String, Object> params, HttpServletResponse response) throws Exception {
         List<SysParamsDTO> list = sysParamsService.list(params);

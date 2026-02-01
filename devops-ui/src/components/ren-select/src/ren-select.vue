@@ -1,6 +1,13 @@
 <template>
   <el-select v-model="value" @change="$emit('update:modelValue', $event)" :placeholder="placeholder" clearable>
-    <el-option :label="data.dictLabel" v-for="data in dataList" :key="data.dictValue" :value="data.dictValue">{{ data.dictLabel }}</el-option>
+    <el-option
+      :label="data[labelField]"
+      v-for="data in dataList"
+      :key="data[valueField]"
+      :value="data[valueField]"
+    >
+      {{ data[labelField] }}
+    </el-option>
   </el-select>
 </template>
 <script lang="ts">
@@ -13,7 +20,15 @@ export default defineComponent({
   props: {
     modelValue: [Number, String],
     dictType: String,
-    placeholder: String
+    placeholder: String,
+    labelField: {
+      type: String,
+      default: "dictLabel"
+    },
+    valueField: {
+      type: String,
+      default: "dictValue"
+    }
   },
   setup(props) {
     const store = useAppStore();

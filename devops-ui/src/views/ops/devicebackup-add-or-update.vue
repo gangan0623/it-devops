@@ -14,13 +14,31 @@
         <el-input v-model="dataForm.password" placeholder="修改时留空不变" show-password></el-input>
       </el-form-item>
           <el-form-item label="区域名称" prop="areaName">
-        <ren-select v-model="dataForm.areaName" dict-type="area_name" placeholder="区域名称"></ren-select>
+        <ren-select
+          v-model="dataForm.areaName"
+          dict-type="area_name_type"
+          label-field="dictValue"
+          value-field="dictLabel"
+          placeholder="区域名称"
+        ></ren-select>
       </el-form-item>
       <el-form-item label="分组名称" prop="groupName">
-        <ren-select v-model="dataForm.groupName" dict-type="network_device_group" placeholder="分组名称"></ren-select>
+        <ren-select
+          v-model="dataForm.groupName"
+          dict-type="network_device_group"
+          label-field="dictValue"
+          value-field="dictLabel"
+          placeholder="分组名称"
+        ></ren-select>
       </el-form-item>
       <el-form-item label="设备型号" prop="deviceModel">
-        <ren-select v-model="dataForm.deviceModel" dict-type="device_model" placeholder="设备型号"></ren-select>
+        <ren-select
+          v-model="dataForm.deviceModel"
+          dict-type="network_device_model"
+          label-field="dictValue"
+          value-field="dictLabel"
+          placeholder="设备型号"
+        ></ren-select>
       </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-select v-model="dataForm.status" placeholder="请选择状态">

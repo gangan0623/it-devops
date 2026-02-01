@@ -7,4 +7,12 @@
         select dict_type_id, dict_label, dict_value from sys_dict_data order by dict_type_id, sort
     </select>
 
+    <select id="getDictDataListByType" resultType="net.leoch.modules.sys.entity.DictData">
+        select d.dict_type_id, d.dict_label, d.dict_value
+        from sys_dict_data d
+        join sys_dict_type t on t.id = d.dict_type_id
+        where t.dict_type = #{dictType}
+        order by d.sort
+    </select>
+
 </mapper>

@@ -41,9 +41,15 @@
                   <span>***</span>
                 </template>
               </el-table-column>
-              <el-table-column prop="areaName" label="区域名称" header-align="center" align="center"></el-table-column>
-              <el-table-column prop="groupName" label="分组名称" header-align="center" align="center"></el-table-column>
-              <el-table-column prop="deviceModel" label="设备型号" header-align="center" align="center"></el-table-column>
+              <el-table-column label="区域名称" header-align="center" align="center">
+                <template v-slot="scope">{{ state.getDictValueByLabel("area_name_type", scope.row.areaName) }}</template>
+              </el-table-column>
+              <el-table-column label="分组名称" header-align="center" align="center">
+                <template v-slot="scope">{{ state.getDictValueByLabel("network_device_group", scope.row.groupName) }}</template>
+              </el-table-column>
+              <el-table-column label="设备型号" header-align="center" align="center">
+                <template v-slot="scope">{{ state.getDictValueByLabel("network_device_model", scope.row.deviceModel) }}</template>
+              </el-table-column>
               <el-table-column prop="status" label="状态" header-align="center" align="center">
                 <template v-slot="scope">
                   <el-tag v-if="scope.row.status === 0" size="small" type="danger">禁用</el-tag>

@@ -10,11 +10,11 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * shiro相关接口
+ * 安全相关接口
  *
  * @author Taohongqiang
  */
-public interface ShiroService {
+public interface SecurityService {
     /**
      * 获取用户权限列表
      */

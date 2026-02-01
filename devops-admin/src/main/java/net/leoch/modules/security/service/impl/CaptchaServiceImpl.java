@@ -2,8 +2,6 @@
 
 package net.leoch.modules.security.service.impl;
 
-import cn.hutool.cache.Cache;
-import cn.hutool.cache.CacheUtil;
 import com.wf.captcha.SpecCaptcha;
 import com.wf.captcha.base.Captcha;
 import jakarta.annotation.Resource;
@@ -11,7 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.redis.RedisKeys;
 import net.leoch.common.redis.RedisUtils;
 import net.leoch.modules.security.service.CaptchaService;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -25,12 +22,6 @@ import java.io.IOException;
 public class CaptchaServiceImpl implements CaptchaService {
     @Resource
     private RedisUtils redisUtils;
-    @Value("${DevOps.redis.open: false}")
-    private boolean open;
-    /**
-     * Local Cache  5分钟过期
-     */
-    Cache<String, String> localCache = CacheUtil.newLRUCache(1000, 1000 * 60 * 5);
 
     @Override
     public void create(HttpServletResponse response, String uuid) throws IOException {
@@ -53,40 +44,21 @@ public class CaptchaServiceImpl implements CaptchaService {
     public boolean validate(String uuid, String code) {
         //获取验证码
         String captcha = getCache(uuid);
-
         //效验成功
-        if (code.equalsIgnoreCase(captcha)) {
-            return true;
-        }
-
-        return false;
+        return code.equalsIgnoreCase(captcha);
     }
 
     private void setCache(String key, String value) {
-        if (open) {
-            key = RedisKeys.getCaptchaKey(key);
-            redisUtils.set(key, value, 300);
-        } else {
-            localCache.put(key, value);
-        }
+        key = RedisKeys.getCaptchaKey(key);
+        redisUtils.set(key, value, 300);
     }
 
     private String getCache(String key) {
-        if (open) {
-            key = RedisKeys.getCaptchaKey(key);
-            String captcha = (String) redisUtils.get(key);
-            //删除验证码
-            if (captcha != null) {
-                redisUtils.delete(key);
-            }
-
-            return captcha;
-        }
-
-        String captcha = localCache.get(key);
+        key = RedisKeys.getCaptchaKey(key);
+        String captcha = (String) redisUtils.get(key);
         //删除验证码
         if (captcha != null) {
-            localCache.remove(key);
+            redisUtils.delete(key);
         }
         return captcha;
     }

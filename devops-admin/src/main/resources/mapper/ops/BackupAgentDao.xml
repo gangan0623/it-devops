@@ -7,7 +7,7 @@
         <result property="id" column="id"/>
         <result property="instance" column="instance"/>
         <result property="name" column="name"/>
-        <result property="areaName" column="area_name"/>
+        <result property="areaName" column="area_name_type"/>
         <result property="token" column="token"/>
         <result property="status" column="status"/>
         <result property="creator" column="creator"/>

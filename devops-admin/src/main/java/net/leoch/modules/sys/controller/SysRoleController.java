@@ -21,7 +21,7 @@ import net.leoch.modules.sys.dto.SysRoleDTO;
 import net.leoch.modules.sys.service.SysRoleDataScopeService;
 import net.leoch.modules.sys.service.SysRoleMenuService;
 import net.leoch.modules.sys.service.SysRoleService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -51,7 +51,7 @@ public class SysRoleController {
             @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref = "String"),
             @Parameter(name = "name", description = "角色名", in = ParameterIn.QUERY, ref = "String")
     })
-    @RequiresPermissions("sys:role:page")
+    @SaCheckPermission("sys:role:page")
     public Result<PageData<SysRoleDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
         PageData<SysRoleDTO> page = sysRoleService.page(params);
 
@@ -60,7 +60,7 @@ public class SysRoleController {
 
     @GetMapping("list")
     @Operation(summary = "列表")
-    @RequiresPermissions("sys:role:list")
+    @SaCheckPermission("sys:role:list")
     public Result<List<SysRoleDTO>> list() {
         List<SysRoleDTO> data = sysRoleService.list(new HashMap<>(1));
 
@@ -69,7 +69,7 @@ public class SysRoleController {
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
-    @RequiresPermissions("sys:role:info")
+    @SaCheckPermission("sys:role:info")
     public Result<SysRoleDTO> get(@PathVariable("id") Long id) {
         SysRoleDTO data = sysRoleService.get(id);
 
@@ -87,7 +87,7 @@ public class SysRoleController {
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
-    @RequiresPermissions("sys:role:save")
+    @SaCheckPermission("sys:role:save")
     public Result<Object> save(@RequestBody SysRoleDTO dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
@@ -100,7 +100,7 @@ public class SysRoleController {
     @PutMapping
     @Operation(summary = "修改")
     @LogOperation("修改")
-    @RequiresPermissions("sys:role:update")
+    @SaCheckPermission("sys:role:update")
     public Result<Object> update(@RequestBody SysRoleDTO dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
@@ -113,7 +113,7 @@ public class SysRoleController {
     @DeleteMapping
     @Operation(summary = "删除")
     @LogOperation("删除")
-    @RequiresPermissions("sys:role:delete")
+    @SaCheckPermission("sys:role:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
         //效验数据
         AssertUtils.isArrayEmpty(ids, "id");

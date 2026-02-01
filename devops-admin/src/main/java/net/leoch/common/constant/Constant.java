@@ -63,9 +63,9 @@ public interface Constant {
     String TOKEN_HEADER = "token";
 
     /**
-     * 云存储配置KEY
+     * Zabbix配置KEY
      */
-    String CLOUD_STORAGE_CONFIG_KEY = "CLOUD_STORAGE_CONFIG_KEY";
+    String ZABBIX_CONFIG_KEY = "ZABBIX_CONFIG";
 
     /**
      * 定时任务状态

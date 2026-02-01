@@ -130,6 +130,10 @@ export interface IViewHooks extends IViewHooksOptions, IObject {
    */
   getDictLabel: (dictType: string, dictValue: number) => string | number;
   /**
+   * 获取字典值（通过字典标签）
+   */
+  getDictValueByLabel: (dictType: string, dictLabel?: string | number) => string | number | undefined;
+  /**
    * 查询列表记录
    */
   query: () => void;

@@ -11,7 +11,6 @@ import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.page.PageData;
-import net.leoch.common.utils.JsonUtils;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.AliyunGroup;
@@ -22,8 +21,8 @@ import net.leoch.modules.oss.cloud.CloudStorageConfig;
 import net.leoch.modules.oss.cloud.OSSFactory;
 import net.leoch.modules.oss.entity.SysOssEntity;
 import net.leoch.modules.oss.service.SysOssService;
-import net.leoch.modules.sys.service.SysParamsService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import net.leoch.modules.oss.service.SysOssConfigService;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -43,13 +42,11 @@ import java.util.Map;
 @AllArgsConstructor
 public class SysOssController {
     private final SysOssService sysOssService;
-    private final SysParamsService sysParamsService;
-
-    private final static String KEY = Constant.CLOUD_STORAGE_CONFIG_KEY;
+    private final SysOssConfigService sysOssConfigService;
 
     @GetMapping("page")
     @Operation(summary = "分页")
-    @RequiresPermissions("sys:oss:all")
+    @SaCheckPermission("sys:oss:all")
     public Result<PageData<SysOssEntity>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
         PageData<SysOssEntity> page = sysOssService.page(params);
 
@@ -58,9 +55,9 @@ public class SysOssController {
 
     @GetMapping("info")
     @Operation(summary = "云存储配置信息")
-    @RequiresPermissions("sys:oss:all")
+    @SaCheckPermission("sys:oss:all")
     public Result<CloudStorageConfig> info() {
-        CloudStorageConfig config = sysParamsService.getValueObject(KEY, CloudStorageConfig.class);
+        CloudStorageConfig config = sysOssConfigService.getConfig();
 
         return new Result<CloudStorageConfig>().ok(config);
     }
@@ -68,7 +65,7 @@ public class SysOssController {
     @PostMapping
     @Operation(summary = "保存云存储配置信息")
     @LogOperation("保存云存储配置信息")
-    @RequiresPermissions("sys:oss:all")
+    @SaCheckPermission("sys:oss:all")
     public Result<Object> saveConfig(@RequestBody CloudStorageConfig config) {
         //校验类型
         ValidatorUtils.validateEntity(config);
@@ -86,14 +83,14 @@ public class SysOssController {
             ValidatorUtils.validateEntity(config, MinioGroup.class);
         }
 
-        sysParamsService.updateValueByCode(KEY, JsonUtils.toJsonString(config));
+        sysOssConfigService.saveConfig(config);
 
         return new Result<>();
     }
 
     @PostMapping("upload")
     @Operation(summary = "上传文件")
-    @RequiresPermissions("sys:oss:all")
+    @SaCheckPermission("sys:oss:all")
     public Result<Map<String, Object>> upload(@RequestParam("file") MultipartFile file) throws Exception {
         if (file.isEmpty()) {
             return new Result<Map<String, Object>>().error(ErrorCode.UPLOAD_FILE_EMPTY);
@@ -118,7 +115,7 @@ public class SysOssController {
     @DeleteMapping
     @Operation(summary = "删除")
     @LogOperation("删除")
-    @RequiresPermissions("sys:oss:all")
+    @SaCheckPermission("sys:oss:all")
     public Result<Object> delete(@RequestBody Long[] ids) {
         sysOssService.deleteBatchIds(Arrays.asList(ids));
 

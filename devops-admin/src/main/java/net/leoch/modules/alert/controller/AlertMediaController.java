@@ -16,7 +16,7 @@ import net.leoch.modules.alert.dto.AlertMediaTestDTO;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
 import net.leoch.modules.alert.service.AlertMailService;
 import net.leoch.modules.alert.service.AlertMediaService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -50,7 +50,7 @@ public class AlertMediaController {
         @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref="String") ,
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
-    @RequiresPermissions("alert:media:page")
+    @SaCheckPermission("alert:media:page")
     public Result<PageData<AlertMediaDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params){
         PageData<AlertMediaDTO> page = alertMediaService.page(params);
 
@@ -59,7 +59,7 @@ public class AlertMediaController {
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
-    @RequiresPermissions("alert:media:info")
+    @SaCheckPermission("alert:media:info")
     public Result<AlertMediaDTO> get(@PathVariable("id") Long id){
         AlertMediaDTO data = alertMediaService.get(id);
 
@@ -69,7 +69,7 @@ public class AlertMediaController {
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
-    @RequiresPermissions("alert:media:save")
+    @SaCheckPermission("alert:media:save")
     public Result<Object> save(@RequestBody AlertMediaDTO dto){
         alertMediaService.save(dto);
 
@@ -79,7 +79,7 @@ public class AlertMediaController {
     @PutMapping
     @Operation(summary = "修改")
     @LogOperation("修改")
-    @RequiresPermissions("alert:media:update")
+    @SaCheckPermission("alert:media:update")
     public Result<Object> update(@RequestBody AlertMediaDTO dto){
         alertMediaService.update(dto);
 
@@ -89,7 +89,7 @@ public class AlertMediaController {
     @DeleteMapping
     @Operation(summary = "删除")
     @LogOperation("删除")
-    @RequiresPermissions("alert:media:delete")
+    @SaCheckPermission("alert:media:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
         AssertUtils.isArrayEmpty(ids, "id");
         alertMediaService.delete(ids);
@@ -99,7 +99,7 @@ public class AlertMediaController {
 
     @PostMapping("test")
     @Operation(summary = "媒介测试")
-    @RequiresPermissions("alert:media:test")
+    @SaCheckPermission("alert:media:test")
     public Result<Object> test(@RequestBody AlertMediaTestDTO dto) {
         if (StrUtil.isBlank(dto.getTo())) {
             return new Result().error("收件人不能为空");

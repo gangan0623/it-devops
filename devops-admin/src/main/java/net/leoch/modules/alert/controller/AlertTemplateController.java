@@ -20,7 +20,7 @@ import net.leoch.modules.alert.service.AlertTriggerService;
 import net.leoch.modules.alert.utils.AlertJsonUtils;
 import net.leoch.modules.alert.utils.AlertPayloadUtils;
 import net.leoch.modules.alert.utils.AlertTemplateRenderer;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -55,7 +55,7 @@ public class AlertTemplateController {
         @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref="String") ,
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
-    @RequiresPermissions("alert:template:page")
+    @SaCheckPermission("alert:template:page")
     public Result<PageData<AlertTemplateDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params){
         PageData<AlertTemplateDTO> page = alertTemplateService.page(params);
 
@@ -64,7 +64,7 @@ public class AlertTemplateController {
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
-    @RequiresPermissions("alert:template:info")
+    @SaCheckPermission("alert:template:info")
     public Result<AlertTemplateDTO> get(@PathVariable("id") Long id){
         AlertTemplateDTO data = alertTemplateService.get(id);
 
@@ -74,7 +74,7 @@ public class AlertTemplateController {
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
-    @RequiresPermissions("alert:template:save")
+    @SaCheckPermission("alert:template:save")
     public Result<Object> save(@RequestBody AlertTemplateDTO dto){
         alertTemplateService.save(dto);
 
@@ -84,7 +84,7 @@ public class AlertTemplateController {
     @PostMapping(consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     @Operation(summary = "保存(表单)")
     @LogOperation("保存")
-    @RequiresPermissions("alert:template:save")
+    @SaCheckPermission("alert:template:save")
     public Result<Object> saveForm(AlertTemplateDTO dto){
         alertTemplateService.save(dto);
 
@@ -94,7 +94,7 @@ public class AlertTemplateController {
     @PutMapping
     @Operation(summary = "修改")
     @LogOperation("修改")
-    @RequiresPermissions("alert:template:update")
+    @SaCheckPermission("alert:template:update")
     public Result<Object> update(@RequestBody AlertTemplateDTO dto){
         alertTemplateService.update(dto);
 
@@ -104,7 +104,7 @@ public class AlertTemplateController {
     @PutMapping(consumes = {MediaType.APPLICATION_FORM_URLENCODED_VALUE, MediaType.MULTIPART_FORM_DATA_VALUE})
     @Operation(summary = "修改(表单)")
     @LogOperation("修改")
-    @RequiresPermissions("alert:template:update")
+    @SaCheckPermission("alert:template:update")
     public Result<Object> updateForm(AlertTemplateDTO dto){
         alertTemplateService.update(dto);
 
@@ -114,7 +114,7 @@ public class AlertTemplateController {
     @DeleteMapping
     @Operation(summary = "删除")
     @LogOperation("删除")
-    @RequiresPermissions("alert:template:delete")
+    @SaCheckPermission("alert:template:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
         AssertUtils.isArrayEmpty(ids, "id");
         alertTemplateService.delete(ids);
@@ -124,7 +124,7 @@ public class AlertTemplateController {
 
     @PostMapping("preview")
     @Operation(summary = "模板预览")
-    @RequiresPermissions("alert:template:test")
+    @SaCheckPermission("alert:template:test")
     public Result<Map<String, Object>> preview(@RequestBody AlertTemplatePreviewDTO dto) {
         if (dto == null || StrUtil.isBlank(dto.getRawJson())) {
             return new Result<Map<String, Object>>().error("原始JSON不能为空");
@@ -146,7 +146,7 @@ public class AlertTemplateController {
 
     @PostMapping("test-send")
     @Operation(summary = "模板发送测试")
-    @RequiresPermissions("alert:template:test")
+    @SaCheckPermission("alert:template:test")
     public Result<Object> testSend(@RequestBody AlertTemplateSendTestDTO dto) {
         alertTriggerService.sendTest(dto.getTemplateId(), dto.getTriggerId(), dto.getRawJson());
         return new Result<>();

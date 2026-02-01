@@ -26,7 +26,7 @@
 		<knife4j.version>4.5.0</knife4j.version>
 		<springdoc.version>2.8.4</springdoc.version>
 		<quartz.version>2.3.2</quartz.version>
-		<shiro.version>1.12.0</shiro.version>
+		<sa-token.version>1.37.0</sa-token.version>
 		<captcha.version>1.6.2</captcha.version>
 		<easyexcel.version>3.2.1</easyexcel.version>
 		<qiniu.version>7.2.27</qiniu.version>
@@ -123,38 +123,14 @@
 			</exclusions>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.shiro</groupId>
-			<artifactId>shiro-spring</artifactId>
-			<classifier>jakarta</classifier>
-			<version>${shiro.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.apache.shiro</groupId>
-					<artifactId>shiro-core</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>org.apache.shiro</groupId>
-					<artifactId>shiro-web</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>cn.dev33</groupId>
+			<artifactId>sa-token-spring-boot3-starter</artifactId>
+			<version>${sa-token.version}</version>
 		</dependency>
 		<dependency>
-			<groupId>org.apache.shiro</groupId>
-			<artifactId>shiro-core</artifactId>
-			<classifier>jakarta</classifier>
-			<version>${shiro.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.apache.shiro</groupId>
-			<artifactId>shiro-web</artifactId>
-			<classifier>jakarta</classifier>
-			<version>${shiro.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.apache.shiro</groupId>
-					<artifactId>shiro-core</artifactId>
-				</exclusion>
-			</exclusions>
+			<groupId>cn.dev33</groupId>
+			<artifactId>sa-token-redis-jackson</artifactId>
+			<version>${sa-token.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>com.github.whvcse</groupId>

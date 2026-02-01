@@ -19,7 +19,7 @@ import net.leoch.modules.alert.service.AlertTemplateService;
 import net.leoch.modules.alert.service.AlertTriggerService;
 import net.leoch.modules.sys.dao.SysUserDao;
 import net.leoch.modules.sys.entity.SysUserEntity;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -58,7 +58,7 @@ public class AlertTriggerController {
         @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref="String") ,
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
-    @RequiresPermissions("alert:trigger:page")
+    @SaCheckPermission("alert:trigger:page")
     public Result<PageData<AlertTriggerDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params){
         PageData<AlertTriggerDTO> page = alertTriggerService.page(params);
         alertTriggerService.fillReceiverUserIdList(page.getList());
@@ -68,7 +68,7 @@ public class AlertTriggerController {
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
-    @RequiresPermissions("alert:trigger:info")
+    @SaCheckPermission("alert:trigger:info")
     public Result<AlertTriggerDTO> get(@PathVariable("id") Long id){
         AlertTriggerDTO data = alertTriggerService.get(id);
         alertTriggerService.fillReceiverUserIdList(data);
@@ -79,7 +79,7 @@ public class AlertTriggerController {
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
-    @RequiresPermissions("alert:trigger:save")
+    @SaCheckPermission("alert:trigger:save")
     public Result<Object> save(@RequestBody AlertTriggerDTO dto){
         normalizeReceiverIds(dto);
         alertTriggerService.save(dto);
@@ -90,7 +90,7 @@ public class AlertTriggerController {
     @PutMapping
     @Operation(summary = "修改")
     @LogOperation("修改")
-    @RequiresPermissions("alert:trigger:update")
+    @SaCheckPermission("alert:trigger:update")
     public Result<Object> update(@RequestBody AlertTriggerDTO dto){
         normalizeReceiverIds(dto);
         alertTriggerService.update(dto);
@@ -101,7 +101,7 @@ public class AlertTriggerController {
     @DeleteMapping
     @Operation(summary = "删除")
     @LogOperation("删除")
-    @RequiresPermissions("alert:trigger:delete")
+    @SaCheckPermission("alert:trigger:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
         AssertUtils.isArrayEmpty(ids, "id");
         alertTriggerService.delete(ids);
@@ -111,7 +111,7 @@ public class AlertTriggerController {
 
     @GetMapping("resources")
     @Operation(summary = "资源")
-    @RequiresPermissions("alert:trigger:page")
+    @SaCheckPermission("alert:trigger:page")
     public Result<Map<String, Object>> resources() {
         Map<String, Object> result = new HashMap<>();
         List<AlertTemplateDTO> templates = alertTemplateService.list(new HashMap<>());
@@ -144,7 +144,7 @@ public class AlertTriggerController {
 
     @GetMapping("options")
     @Operation(summary = "触发器选项")
-    @RequiresPermissions("alert:trigger:page")
+    @SaCheckPermission("alert:trigger:page")
     public Result<List<Map<String, Object>>> options() {
         List<AlertTriggerDTO> list = alertTriggerService.list(new HashMap<>());
         List<Map<String, Object>> options = list.stream().map(item -> {

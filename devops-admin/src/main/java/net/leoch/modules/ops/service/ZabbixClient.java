@@ -4,7 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import net.leoch.common.utils.JsonUtils;
-import net.leoch.modules.ops.config.ZabbixProperties;
+import net.leoch.modules.ops.config.ZabbixConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -24,45 +24,46 @@ import java.util.Map;
 @Service
 public class ZabbixClient {
     private static final Logger logger = LoggerFactory.getLogger(ZabbixClient.class);
-    private final ZabbixProperties properties;
+    private final ZabbixConfigService configService;
 
-    public ZabbixClient(ZabbixProperties properties) {
-        this.properties = properties;
+    public ZabbixClient(ZabbixConfigService configService) {
+        this.configService = configService;
     }
 
     public List<Map<String, String>> getHostsByTemplates() {
-        if (properties == null || StrUtil.isBlank(properties.getUrl())) {
+        ZabbixConfig config = configService.getConfig();
+        if (config == null || StrUtil.isBlank(config.getUrl())) {
             return new ArrayList<>();
         }
-        String auth = login();
+        String auth = login(config);
         if (StrUtil.isBlank(auth)) {
             return new ArrayList<>();
         }
-        List<String> templateIds = getTemplateIds(auth);
+        List<String> templateIds = getTemplateIds(config, auth);
         if (CollUtil.isEmpty(templateIds)) {
             return new ArrayList<>();
         }
-        return getHosts(auth, templateIds);
+        return getHosts(config, auth, templateIds);
     }
 
-    private String login() {
+    private String login(ZabbixConfig config) {
         Map<String, Object> params = new HashMap<>();
-        params.put("username", properties.getUsername());
-        params.put("password", properties.getPassword());
-        Object result = call("user.login", params, null);
+        params.put("username", config.getUsername());
+        params.put("password", config.getPassword());
+        Object result = call(config, "user.login", params, null);
         return result == null ? null : String.valueOf(result);
     }
 
-    private List<String> getTemplateIds(String auth) {
-        if (CollUtil.isEmpty(properties.getTemplates())) {
+    private List<String> getTemplateIds(ZabbixConfig config, String auth) {
+        if (CollUtil.isEmpty(config.getTemplates())) {
             return new ArrayList<>();
         }
         Map<String, Object> params = new HashMap<>();
         params.put("output", List.of("templateid", "name"));
         Map<String, Object> filter = new HashMap<>();
-        filter.put("name", properties.getTemplates());
+        filter.put("name", config.getTemplates());
         params.put("filter", filter);
-        Object result = call("template.get", params, auth);
+        Object result = call(config, "template.get", params, auth);
         List<String> ids = new ArrayList<>();
         if (result instanceof List<?> list) {
             for (Object item : list) {
@@ -78,12 +79,12 @@ public class ZabbixClient {
         return ids;
     }
 
-    private List<Map<String, String>> getHosts(String auth, List<String> templateIds) {
+    private List<Map<String, String>> getHosts(ZabbixConfig config, String auth, List<String> templateIds) {
         Map<String, Object> params = new HashMap<>();
         params.put("output", List.of("host", "name"));
         params.put("templateids", templateIds);
         params.put("selectInterfaces", List.of("ip"));
-        Object result = call("host.get", params, auth);
+        Object result = call(config, "host.get", params, auth);
         List<Map<String, String>> hosts = new ArrayList<>();
         if (result instanceof List<?> list) {
             for (Object item : list) {
@@ -114,10 +115,10 @@ public class ZabbixClient {
         return hosts;
     }
 
-    private Object call(String method, Map<String, Object> params, String bearer) {
+    private Object call(ZabbixConfig config, String method, Map<String, Object> params, String bearer) {
         HttpURLConnection connection = null;
         try {
-            URL url = new URL(properties.getUrl());
+            URL url = new URL(config.getUrl());
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
             connection.setConnectTimeout(5000);

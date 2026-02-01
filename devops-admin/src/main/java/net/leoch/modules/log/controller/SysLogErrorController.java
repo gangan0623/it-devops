@@ -17,7 +17,7 @@ import net.leoch.common.utils.Result;
 import net.leoch.modules.log.dto.SysLogErrorDTO;
 import net.leoch.modules.log.excel.SysLogErrorExcel;
 import net.leoch.modules.log.service.SysLogErrorService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -48,7 +48,7 @@ public class SysLogErrorController {
             @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref = "String"),
             @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref = "String")
     })
-    @RequiresPermissions("sys:log:error")
+    @SaCheckPermission("sys:log:error")
     public Result<PageData<SysLogErrorDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
         PageData<SysLogErrorDTO> page = sysLogErrorService.page(params);
 
@@ -58,7 +58,7 @@ public class SysLogErrorController {
     @GetMapping("export")
     @Operation(summary = "导出")
     @LogOperation("导出")
-    @RequiresPermissions("sys:log:error")
+    @SaCheckPermission("sys:log:error")
     public void export(@Parameter(hidden = true) @RequestParam Map<String, Object> params, HttpServletResponse response) throws Exception {
         List<SysLogErrorDTO> list = sysLogErrorService.list(params);
 

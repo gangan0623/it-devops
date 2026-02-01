@@ -13,7 +13,7 @@ import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.alert.dto.AlertRecordDTO;
 import net.leoch.modules.alert.service.AlertRecordService;
 import net.leoch.modules.alert.service.AlertSseService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -46,7 +46,7 @@ public class AlertRecordController {
         @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref="String") ,
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
-    @RequiresPermissions("alert:record:page")
+    @SaCheckPermission("alert:record:page")
     public Result<PageData<AlertRecordDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params){
         PageData<AlertRecordDTO> page = alertRecordService.page(params);
 
@@ -55,7 +55,7 @@ public class AlertRecordController {
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
-    @RequiresPermissions("alert:record:info")
+    @SaCheckPermission("alert:record:info")
     public Result<AlertRecordDTO> get(@PathVariable("id") Long id){
         AlertRecordDTO data = alertRecordService.get(id);
 
@@ -65,7 +65,7 @@ public class AlertRecordController {
     @DeleteMapping
     @Operation(summary = "删除")
     @LogOperation("删除")
-    @RequiresPermissions("alert:record:delete")
+    @SaCheckPermission("alert:record:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
         AssertUtils.isArrayEmpty(ids, "id");
         alertRecordService.delete(ids);
@@ -75,7 +75,7 @@ public class AlertRecordController {
 
     @GetMapping("stream")
     @Operation(summary = "实时告警SSE")
-    @RequiresPermissions("alert:record:page")
+    @SaCheckPermission("alert:record:page")
     public SseEmitter stream(@RequestParam(value = "token", required = false) String token) {
         return alertSseService.createEmitter();
     }

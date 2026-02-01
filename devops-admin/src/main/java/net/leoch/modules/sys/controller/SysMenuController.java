@@ -13,13 +13,13 @@ import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
 import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.modules.security.service.ShiroService;
+import net.leoch.modules.security.service.SecurityService;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.dto.SysMenuDTO;
 import net.leoch.modules.sys.enums.MenuTypeEnum;
 import net.leoch.modules.sys.service.SysMenuService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -36,7 +36,7 @@ import java.util.Set;
 @AllArgsConstructor
 public class SysMenuController {
     private final SysMenuService sysMenuService;
-    private final ShiroService shiroService;
+    private final SecurityService securityService;
 
     @GetMapping("nav")
     @Operation(summary = "导航")
@@ -51,7 +51,7 @@ public class SysMenuController {
     @Operation(summary = "权限标识")
     public Result<Set<String>> permissions() {
         UserDetail user = SecurityUser.getUser();
-        Set<String> set = shiroService.getUserPermissions(user);
+        Set<String> set = securityService.getUserPermissions(user);
 
         return new Result<Set<String>>().ok(set);
     }
@@ -59,7 +59,7 @@ public class SysMenuController {
     @GetMapping("list")
     @Operation(summary = "列表")
     @Parameter(name = "type", description = "菜单类型 0：菜单 1：按钮  null：全部", in = ParameterIn.QUERY, ref = "int")
-    @RequiresPermissions("sys:menu:list")
+    @SaCheckPermission("sys:menu:list")
     public Result<List<SysMenuDTO>> list(Integer type) {
         List<SysMenuDTO> list = sysMenuService.getAllMenuList(type);
 
@@ -68,7 +68,7 @@ public class SysMenuController {
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
-    @RequiresPermissions("sys:menu:info")
+    @SaCheckPermission("sys:menu:info")
     public Result<SysMenuDTO> get(@PathVariable("id") Long id) {
         SysMenuDTO data = sysMenuService.get(id);
 
@@ -78,7 +78,7 @@ public class SysMenuController {
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
-    @RequiresPermissions("sys:menu:save")
+    @SaCheckPermission("sys:menu:save")
     public Result<Object> save(@RequestBody SysMenuDTO dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, DefaultGroup.class);
@@ -91,7 +91,7 @@ public class SysMenuController {
     @PutMapping
     @Operation(summary = "修改")
     @LogOperation("修改")
-    @RequiresPermissions("sys:menu:update")
+    @SaCheckPermission("sys:menu:update")
     public Result<Object> update(@RequestBody SysMenuDTO dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, DefaultGroup.class);
@@ -104,7 +104,7 @@ public class SysMenuController {
     @DeleteMapping("{id}")
     @Operation(summary = "删除")
     @LogOperation("删除")
-    @RequiresPermissions("sys:menu:delete")
+    @SaCheckPermission("sys:menu:delete")
     public Result<Object> delete(@PathVariable("id") Long id) {
         //效验数据
         AssertUtils.isNull(id, "id");
@@ -122,7 +122,7 @@ public class SysMenuController {
 
     @GetMapping("select")
     @Operation(summary = "角色菜单权限")
-    @RequiresPermissions("sys:menu:select")
+    @SaCheckPermission("sys:menu:select")
     public Result<List<SysMenuDTO>> select() {
         UserDetail user = SecurityUser.getUser();
         List<SysMenuDTO> list = sysMenuService.getUserMenuList(user, null);

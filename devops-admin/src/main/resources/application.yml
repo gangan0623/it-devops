@@ -1,5 +1,5 @@
 server:
-  port: 18088
+  port: 10001
   servlet:
     context-path: /api
     session:
@@ -19,10 +19,14 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
 
-# 是否开启redis缓存  true开启   false关闭
-DevOps:
-  redis:
-    open: false
+sa-token:
+  token-name: token
+  timeout: 43200
+  active-timeout: -1
+  is-concurrent: true
+  is-share: true
+  token-style: random-32
+  is-log: false
 
 #mybatis
 mybatis-plus:
@@ -41,12 +45,3 @@ mybatis-plus:
     cache-enabled: false
     call-setters-on-nulls: true
 
-#Zabbix-API配置
-zabbix:
-  url: http://192.168.17.123:8080/api_jsonrpc.php
-  username: Admin
-  password: Leoch.ah.2025zb
-  templates:
-    - 001.飞塔监控模板
-    - 002.华为监控模板
-    - 003.华三监控模板

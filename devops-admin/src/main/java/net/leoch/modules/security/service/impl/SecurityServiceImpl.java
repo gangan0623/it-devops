@@ -6,7 +6,7 @@ import cn.hutool.core.util.StrUtil;
 import lombok.AllArgsConstructor;
 import net.leoch.modules.security.dao.SysUserTokenDao;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
-import net.leoch.modules.security.service.ShiroService;
+import net.leoch.modules.security.service.SecurityService;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.dao.SysMenuDao;
 import net.leoch.modules.sys.dao.SysRoleDataScopeDao;
@@ -22,7 +22,7 @@ import java.util.Set;
 
 @Service
 @AllArgsConstructor
-public class ShiroServiceImpl implements ShiroService {
+public class SecurityServiceImpl implements SecurityService {
     private final SysMenuDao sysMenuDao;
     private final SysUserDao sysUserDao;
     private final SysUserTokenDao sysUserTokenDao;

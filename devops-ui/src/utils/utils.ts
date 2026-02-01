@@ -193,6 +193,29 @@ export const getDictLabel = (
 };
 
 /**
+ * 获取字典值（通过字典标签）
+ * @param dictType  字典类型
+ * @param dictLabel  字典标签
+ */
+export const getDictValueByLabel = (
+  list: IObject[],
+  dictType: string,
+  dictLabel?: string | number
+): string | number | undefined => {
+  if (dictLabel === null || dictLabel === undefined) {
+    return dictLabel as undefined;
+  }
+  const type = list.find((element: IObject) => element.dictType === dictType);
+  if (type) {
+    const val = type.dataList.find((element: IObject) => element.dictLabel === String(dictLabel));
+    if (val) {
+      return val.dictValue;
+    }
+  }
+  return dictLabel;
+};
+
+/**
  * 获取svg图标(id)列表
  */
 export const getIconList = (): string[] => {

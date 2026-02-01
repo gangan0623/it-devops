@@ -10,7 +10,13 @@
             <el-input v-model="state.dataForm.name" placeholder="名称" clearable></el-input>
           </el-form-item>
           <el-form-item>
-            <ren-select v-model="state.dataForm.areaName" dict-type="area_name" placeholder="区域名称"></ren-select>
+            <ren-select
+              v-model="state.dataForm.areaName"
+              dict-type="area_name_type"
+              label-field="dictValue"
+              value-field="dictLabel"
+              placeholder="区域名称"
+            ></ren-select>
           </el-form-item>
           <el-form-item>
             <el-button @click="state.getDataList()">查询</el-button>
@@ -33,7 +39,9 @@
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
               <el-table-column prop="instance" label="地址" header-align="center" align="center"></el-table-column>
               <el-table-column prop="name" label="名称" header-align="center" align="center"></el-table-column>
-              <el-table-column prop="areaName" label="区域名称" header-align="center" align="center"></el-table-column>
+              <el-table-column label="区域名称" header-align="center" align="center">
+                <template v-slot="scope">{{ state.getDictValueByLabel("area_name_type", scope.row.areaName) }}</template>
+              </el-table-column>
               <el-table-column prop="token" label="Token" header-align="center" align="center">
                 <template v-slot="scope">
                   <span>***</span>

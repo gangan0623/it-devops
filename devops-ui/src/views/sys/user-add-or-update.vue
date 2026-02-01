@@ -17,7 +17,11 @@
         <el-input v-model="dataForm.realName" placeholder="真实姓名"></el-input>
       </el-form-item>
       <el-form-item prop="gender" label="性别">
-        <ren-radio-group v-model="dataForm.gender" dict-type="gender"></ren-radio-group>
+        <el-radio-group v-model="dataForm.gender">
+          <el-radio :label="0">男</el-radio>
+          <el-radio :label="1">女</el-radio>
+          <el-radio :label="2">保密</el-radio>
+        </el-radio-group>
       </el-form-item>
       <el-form-item prop="email" label="邮箱">
         <el-input v-model="dataForm.email" placeholder="邮箱"></el-input>

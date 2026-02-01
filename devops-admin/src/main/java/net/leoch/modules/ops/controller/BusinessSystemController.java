@@ -12,7 +12,7 @@ import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.service.BusinessSystemService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,14 +37,14 @@ public class BusinessSystemController {
         @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref="String") ,
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
-    @RequiresPermissions("ops:businesssystem:page")
+    @SaCheckPermission("ops:businesssystem:page")
     public Result<PageData<BusinessSystemDTO>> page(@Parameter(hidden = true) BusinessSystemPageRequest request){
         return new Result<PageData<BusinessSystemDTO>>().ok(businessSystemService.page(request));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
-    @RequiresPermissions("ops:businesssystem:info")
+    @SaCheckPermission("ops:businesssystem:info")
     public Result<BusinessSystemDTO> get(@PathVariable("id") Long id){
         return new Result<BusinessSystemDTO>().ok(businessSystemService.get(BusinessSystemIdRequest.of(id)));
     }
@@ -52,7 +52,7 @@ public class BusinessSystemController {
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
-    @RequiresPermissions("ops:businesssystem:save")
+    @SaCheckPermission("ops:businesssystem:save")
     public Result<Object> save(@RequestBody BusinessSystemSaveRequest request){
         businessSystemService.save(request);
         return new Result<>();
@@ -61,7 +61,7 @@ public class BusinessSystemController {
     @PutMapping
     @Operation(summary = "修改")
     @LogOperation("修改")
-    @RequiresPermissions("ops:businesssystem:update")
+    @SaCheckPermission("ops:businesssystem:update")
     public Result<Object> update(@RequestBody BusinessSystemUpdateRequest request){
         businessSystemService.update(request);
         return new Result<>();
@@ -70,7 +70,7 @@ public class BusinessSystemController {
     @PutMapping("status")
     @Operation(summary = "批量状态更新")
     @LogOperation("批量状态更新")
-    @RequiresPermissions("ops:businesssystem:update")
+    @SaCheckPermission("ops:businesssystem:update")
     public Result<Object> updateStatus(@RequestBody BusinessSystemStatusUpdateRequest request){
         businessSystemService.updateStatus(request);
         return new Result<>();
@@ -79,7 +79,7 @@ public class BusinessSystemController {
     @PostMapping("import")
     @Operation(summary = "导入")
     @LogOperation("导入")
-    @RequiresPermissions("ops:businesssystem:import")
+    @SaCheckPermission("ops:businesssystem:import")
     public Result<Object> importExcel(@ModelAttribute BusinessSystemImportRequest request) throws Exception {
         businessSystemService.importExcel(request);
         return new Result<>();
@@ -88,21 +88,21 @@ public class BusinessSystemController {
     @GetMapping("template")
     @Operation(summary = "导入模板")
     @LogOperation("导入模板")
-    @RequiresPermissions("ops:businesssystem:template")
+    @SaCheckPermission("ops:businesssystem:template")
     public void template(HttpServletResponse response) throws Exception {
         businessSystemService.template(response);
     }
 
     @GetMapping("online")
     @Operation(summary = "在线状态")
-    @RequiresPermissions("ops:businesssystem:page")
+    @SaCheckPermission("ops:businesssystem:page")
     public Result<Boolean> online(BusinessSystemOnlineRequest request){
         return new Result<Boolean>().ok(businessSystemService.online(request));
     }
 
     @GetMapping("check")
     @Operation(summary = "唯一校验")
-    @RequiresPermissions("ops:businesssystem:page")
+    @SaCheckPermission("ops:businesssystem:page")
     public Result<Boolean> check(BusinessSystemCheckRequest request){
         return new Result<Boolean>().ok(businessSystemService.check(request));
     }
@@ -110,7 +110,7 @@ public class BusinessSystemController {
     @DeleteMapping
     @Operation(summary = "删除")
     @LogOperation("删除")
-    @RequiresPermissions("ops:businesssystem:delete")
+    @SaCheckPermission("ops:businesssystem:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
         BusinessSystemDeleteRequest request = new BusinessSystemDeleteRequest();
         request.setIds(ids);
@@ -121,7 +121,7 @@ public class BusinessSystemController {
     @GetMapping("export")
     @Operation(summary = "导出")
     @LogOperation("导出")
-    @RequiresPermissions("ops:businesssystem:export")
+    @SaCheckPermission("ops:businesssystem:export")
     public void export(@Parameter(hidden = true) @ModelAttribute BusinessSystemPageRequest request, HttpServletResponse response) throws Exception {
         businessSystemService.export(request, response);
     }

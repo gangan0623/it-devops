@@ -4,9 +4,13 @@
       <el-form-item>
         <el-input v-model="state.dataForm.username" placeholder="用户名" clearable></el-input>
       </el-form-item>
-      <el-form-item>
-        <ren-select v-model="state.dataForm.gender" dict-type="gender" placeholder="性别"></ren-select>
-      </el-form-item>
+          <el-form-item>
+            <el-select v-model="state.dataForm.gender" placeholder="性别" clearable>
+              <el-option label="男" :value="0"></el-option>
+              <el-option label="女" :value="1"></el-option>
+              <el-option label="保密" :value="2"></el-option>
+            </el-select>
+          </el-form-item>
       <el-form-item>
         <ren-dept-tree v-model="state.dataForm.deptId" placeholder="选择部门" :query="true"></ren-dept-tree>
       </el-form-item>
@@ -31,7 +35,9 @@
       <el-table-column prop="mobile" label="手机号" sortable="custom" header-align="center" align="center"></el-table-column>
       <el-table-column prop="gender" label="性别" sortable="custom" header-align="center" align="center">
         <template v-slot="scope">
-          {{ state.getDictLabel("gender", scope.row.gender) }}
+                <span v-if="scope.row.gender === 0">男</span>
+                <span v-else-if="scope.row.gender === 1">女</span>
+                <span v-else>保密</span>
         </template>
       </el-table-column>
       <el-table-column prop="status" label="状态" sortable="custom" header-align="center" align="center">

@@ -17,7 +17,7 @@ import net.leoch.common.utils.Result;
 import net.leoch.modules.log.dto.SysLogLoginDTO;
 import net.leoch.modules.log.excel.SysLogLoginExcel;
 import net.leoch.modules.log.service.SysLogLoginService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -50,7 +50,7 @@ public class SysLogLoginController {
             @Parameter(name = "status", description = "状态  0：失败    1：成功    2：账号已锁定", in = ParameterIn.QUERY, ref = "int"),
             @Parameter(name = "creatorName", description = "用户名", in = ParameterIn.QUERY, ref = "String")
     })
-    @RequiresPermissions("sys:log:login")
+    @SaCheckPermission("sys:log:login")
     public Result<PageData<SysLogLoginDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
         PageData<SysLogLoginDTO> page = sysLogLoginService.page(params);
 
@@ -64,7 +64,7 @@ public class SysLogLoginController {
             @Parameter(name = "status", description = "状态  0：失败    1：成功    2：账号已锁定", in = ParameterIn.QUERY, ref = "int"),
             @Parameter(name = "creatorName", description = "用户名", in = ParameterIn.QUERY, ref = "String")
     })
-    @RequiresPermissions("sys:log:login")
+    @SaCheckPermission("sys:log:login")
     public void export(@Parameter(hidden = true) @RequestParam Map<String, Object> params, HttpServletResponse response) throws Exception {
         List<SysLogLoginDTO> list = sysLogLoginService.list(params);
 

@@ -19,7 +19,7 @@ import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.dto.SysDictTypeDTO;
 import net.leoch.modules.sys.entity.DictType;
 import net.leoch.modules.sys.service.SysDictTypeService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -47,7 +47,7 @@ public class SysDictTypeController {
             @Parameter(name = "dictType", description = "字典类型", in = ParameterIn.QUERY, ref = "String"),
             @Parameter(name = "dictName", description = "字典名称", in = ParameterIn.QUERY, ref = "String")
     })
-    @RequiresPermissions("sys:dict:page")
+    @SaCheckPermission("sys:dict:page")
     public Result<PageData<SysDictTypeDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
         //字典类型
         PageData<SysDictTypeDTO> page = sysDictTypeService.page(params);
@@ -57,7 +57,7 @@ public class SysDictTypeController {
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
-    @RequiresPermissions("sys:dict:info")
+    @SaCheckPermission("sys:dict:info")
     public Result<SysDictTypeDTO> get(@PathVariable("id") Long id) {
         SysDictTypeDTO data = sysDictTypeService.get(id);
 
@@ -67,7 +67,7 @@ public class SysDictTypeController {
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
-    @RequiresPermissions("sys:dict:save")
+    @SaCheckPermission("sys:dict:save")
     public Result<Object> save(@RequestBody SysDictTypeDTO dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, DefaultGroup.class);
@@ -80,7 +80,7 @@ public class SysDictTypeController {
     @PutMapping
     @Operation(summary = "修改")
     @LogOperation("修改")
-    @RequiresPermissions("sys:dict:update")
+    @SaCheckPermission("sys:dict:update")
     public Result<Object> update(@RequestBody SysDictTypeDTO dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
@@ -93,7 +93,7 @@ public class SysDictTypeController {
     @DeleteMapping
     @Operation(summary = "删除")
     @LogOperation("删除")
-    @RequiresPermissions("sys:dict:delete")
+    @SaCheckPermission("sys:dict:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
         //效验数据
         AssertUtils.isArrayEmpty(ids, "id");

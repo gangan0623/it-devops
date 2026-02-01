@@ -13,7 +13,7 @@ import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.job.dto.ScheduleJobLogDTO;
 import net.leoch.modules.job.service.ScheduleJobLogService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -39,7 +39,7 @@ public class ScheduleJobLogController {
             @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref = "String"),
             @Parameter(name = "jobId", description = "jobId", in = ParameterIn.QUERY, ref = "String")
     })
-    @RequiresPermissions("sys:schedule:log")
+    @SaCheckPermission("sys:schedule:log")
     public Result<PageData<ScheduleJobLogDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
         PageData<ScheduleJobLogDTO> page = scheduleJobLogService.page(params);
 
@@ -48,7 +48,7 @@ public class ScheduleJobLogController {
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
-    @RequiresPermissions("sys:schedule:log")
+    @SaCheckPermission("sys:schedule:log")
     public Result<ScheduleJobLogDTO> info(@PathVariable("id") Long id) {
         ScheduleJobLogDTO log = scheduleJobLogService.get(id);
 

@@ -18,7 +18,7 @@ import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.job.dto.ScheduleJobDTO;
 import net.leoch.modules.job.service.ScheduleJobService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -44,7 +44,7 @@ public class ScheduleJobController {
             @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref = "String"),
             @Parameter(name = "beanName", description = "beanName", in = ParameterIn.QUERY, ref = "String")
     })
-    @RequiresPermissions("sys:schedule:page")
+    @SaCheckPermission("sys:schedule:page")
     public Result<PageData<ScheduleJobDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
         PageData<ScheduleJobDTO> page = scheduleJobService.page(params);
 
@@ -53,7 +53,7 @@ public class ScheduleJobController {
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
-    @RequiresPermissions("sys:schedule:info")
+    @SaCheckPermission("sys:schedule:info")
     public Result<ScheduleJobDTO> info(@PathVariable("id") Long id) {
         ScheduleJobDTO schedule = scheduleJobService.get(id);
 
@@ -63,7 +63,7 @@ public class ScheduleJobController {
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
-    @RequiresPermissions("sys:schedule:save")
+    @SaCheckPermission("sys:schedule:save")
     public Result<Object> save(@RequestBody ScheduleJobDTO dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
 
@@ -75,7 +75,7 @@ public class ScheduleJobController {
     @PutMapping
     @Operation(summary = "修改")
     @LogOperation("修改")
-    @RequiresPermissions("sys:schedule:update")
+    @SaCheckPermission("sys:schedule:update")
     public Result<Object> update(@RequestBody ScheduleJobDTO dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
 
@@ -87,7 +87,7 @@ public class ScheduleJobController {
     @DeleteMapping
     @Operation(summary = "删除")
     @LogOperation("删除")
-    @RequiresPermissions("sys:schedule:delete")
+    @SaCheckPermission("sys:schedule:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
         scheduleJobService.deleteBatch(ids);
 
@@ -97,7 +97,7 @@ public class ScheduleJobController {
     @PutMapping("/run")
     @Operation(summary = "立即执行")
     @LogOperation("立即执行")
-    @RequiresPermissions("sys:schedule:run")
+    @SaCheckPermission("sys:schedule:run")
     public Result<Object> run(@RequestBody Long[] ids) {
         scheduleJobService.run(ids);
 
@@ -107,7 +107,7 @@ public class ScheduleJobController {
     @PutMapping("/pause")
     @Operation(summary = "暂停")
     @LogOperation("暂停")
-    @RequiresPermissions("sys:schedule:pause")
+    @SaCheckPermission("sys:schedule:pause")
     public Result<Object> pause(@RequestBody Long[] ids) {
         scheduleJobService.pause(ids);
 
@@ -117,7 +117,7 @@ public class ScheduleJobController {
     @PutMapping("/resume")
     @Operation(summary = "恢复")
     @LogOperation("恢复")
-    @RequiresPermissions("sys:schedule:resume")
+    @SaCheckPermission("sys:schedule:resume")
     public Result<Object> resume(@RequestBody Long[] ids) {
         scheduleJobService.resume(ids);
 

@@ -6,7 +6,7 @@ import baseService from "@/service/baseService";
 import {getToken} from "@/utils/cache";
 import emits from "@/utils/emits";
 import {getThemeConfigCacheByKey} from "@/utils/theme";
-import {checkPermission, getDictLabel} from "@/utils/utils";
+import {checkPermission, getDictLabel, getDictValueByLabel} from "@/utils/utils";
 import qs from "qs";
 import {onActivated, onMounted} from "vue";
 import {useRoute, useRouter} from "vue-router";
@@ -81,6 +81,9 @@ const useView = (props: IViewHooksOptions | IObject): IViewHooks => {
     },
     getDictLabel(dictType: string, dictValue: number) {
       return getDictLabel(store.state.dicts, dictType, dictValue);
+    },
+    getDictValueByLabel(dictType: string, dictLabel?: string | number) {
+      return getDictValueByLabel(store.state.dicts, dictType, dictLabel);
     }
   };
 

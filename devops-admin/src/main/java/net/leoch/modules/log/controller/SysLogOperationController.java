@@ -17,7 +17,7 @@ import net.leoch.common.utils.Result;
 import net.leoch.modules.log.dto.SysLogOperationDTO;
 import net.leoch.modules.log.excel.SysLogOperationExcel;
 import net.leoch.modules.log.service.SysLogOperationService;
-import org.apache.shiro.authz.annotation.RequiresPermissions;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -49,7 +49,7 @@ public class SysLogOperationController {
             @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref = "String"),
             @Parameter(name = "status", description = "状态  0：失败    1：成功", in = ParameterIn.QUERY, ref = "int")
     })
-    @RequiresPermissions("sys:log:operation")
+    @SaCheckPermission("sys:log:operation")
     public Result<PageData<SysLogOperationDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
         PageData<SysLogOperationDTO> page = sysLogOperationService.page(params);
 
@@ -59,7 +59,7 @@ public class SysLogOperationController {
     @GetMapping("export")
     @Operation(summary = "导出")
     @LogOperation("导出")
-    @RequiresPermissions("sys:log:operation")
+    @SaCheckPermission("sys:log:operation")
     public void export(@Parameter(hidden = true) @RequestParam Map<String, Object> params, HttpServletResponse response) throws Exception {
         List<SysLogOperationDTO> list = sysLogOperationService.list(params);
 

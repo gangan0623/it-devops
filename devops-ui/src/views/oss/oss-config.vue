@@ -119,7 +119,7 @@ const visible = ref(false);
 const dataFormRef = ref();
 
 const dataForm = reactive({
-  type: 0,
+  type: 4,
   minioDomain: "",
   minioPath: "",
   minioEndPoint: "",
@@ -182,7 +182,12 @@ const init = () => {
 // 获取信息
 const getInfo = () => {
   baseService.get("/sys/oss/info").then((res) => {
-    Object.assign(dataForm, res.data);
+    if (res.data) {
+      Object.assign(dataForm, res.data);
+    }
+    if (!dataForm.type) {
+      dataForm.type = 4;
+    }
   });
 };
 

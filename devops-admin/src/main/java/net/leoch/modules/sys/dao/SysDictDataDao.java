@@ -6,6 +6,7 @@ import net.leoch.common.dao.BaseDao;
 import net.leoch.modules.sys.entity.DictData;
 import net.leoch.modules.sys.entity.SysDictDataEntity;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -21,4 +22,9 @@ public interface SysDictDataDao extends BaseDao<SysDictDataEntity> {
      * 字典数据列表
      */
     List<DictData> getDictDataList();
+
+    /**
+     * 按字典类型查询数据列表
+     */
+    List<DictData> getDictDataListByType(@Param("dictType") String dictType);
 }
