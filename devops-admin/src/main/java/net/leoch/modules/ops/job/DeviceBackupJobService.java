@@ -108,7 +108,7 @@ public class DeviceBackupJobService {
             item.put("name", device.getName());
             item.put("username", device.getUsername());
             item.put("password", device.getPassword());
-            item.put("model", mapModel(device.getDeviceModel()));
+            item.put("model", device.getDeviceModel());
             list.add(item);
         }
         return list;
@@ -148,26 +148,6 @@ public class DeviceBackupJobService {
                 connection.disconnect();
             }
         }
-    }
-
-    private String mapModel(String deviceModel) {
-        if (StrUtil.isBlank(deviceModel)) {
-            return "";
-        }
-        String value = deviceModel.trim().toLowerCase();
-        if ("华为".equals(deviceModel)) {
-            return "vrp";
-        }
-        if ("华三".equals(deviceModel)) {
-            return "comware";
-        }
-        if ("飞塔".equals(deviceModel)) {
-            return "fortios";
-        }
-        if ("vrp".equals(value) || "comware".equals(value) || "fortios".equals(value)) {
-            return value;
-        }
-        return value;
     }
 
     private String buildBackupUrl(String instance) {

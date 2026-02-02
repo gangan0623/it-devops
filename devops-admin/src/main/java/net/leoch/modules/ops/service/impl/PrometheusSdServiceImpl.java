@@ -15,6 +15,7 @@ import net.leoch.modules.sys.entity.DictData;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -37,81 +38,173 @@ public class PrometheusSdServiceImpl implements PrometheusSdService {
 
     @Override
     public List<PrometheusSdResponse> linux(PrometheusSdRequest request) {
-        String siteLocation = getSiteLocation(request);
-        if (siteLocation == null) {
+        String areaName = getAreaName(request);
+        if (areaName == null) {
             return new ArrayList<>();
         }
+        DictMaps dictMaps = loadDictMaps();
         List<LinuxHostEntity> list = linuxHostDao.selectList(new LambdaQueryWrapper<LinuxHostEntity>()
                 .select(LinuxHostEntity::getInstance, LinuxHostEntity::getName, LinuxHostEntity::getSiteLocation, LinuxHostEntity::getAreaName, LinuxHostEntity::getMenuName, LinuxHostEntity::getSubMenuName)
                 .eq(LinuxHostEntity::getStatus, 1)
-                .eq(LinuxHostEntity::getSiteLocation, siteLocation)
+                .eq(LinuxHostEntity::getAreaName, areaName)
         );
-        return toTargets(list.stream()
-                .filter(item -> item.getInstance() != null && !item.getInstance().isEmpty())
-                .map(item -> buildTarget(item.getInstance(), item.getName(), siteLocation(item), "linux", item.getMenuName(), item.getSubMenuName()))
-                .collect(Collectors.toList()));
+        return buildTargets(
+                list,
+                "linux",
+                dictMaps,
+                LinuxHostEntity::getInstance,
+                LinuxHostEntity::getName,
+                LinuxHostEntity::getSiteLocation,
+                LinuxHostEntity::getAreaName,
+                LinuxHostEntity::getMenuName,
+                LinuxHostEntity::getSubMenuName
+        );
     }
 
     @Override
     public List<PrometheusSdResponse> windows(PrometheusSdRequest request) {
-        String siteLocation = getSiteLocation(request);
-        if (siteLocation == null) {
+        String areaName = getAreaName(request);
+        if (areaName == null) {
             return new ArrayList<>();
         }
+        DictMaps dictMaps = loadDictMaps();
         List<WindowHostEntity> list = windowHostDao.selectList(new LambdaQueryWrapper<WindowHostEntity>()
                 .select(WindowHostEntity::getInstance, WindowHostEntity::getName, WindowHostEntity::getSiteLocation, WindowHostEntity::getAreaName, WindowHostEntity::getMenuName, WindowHostEntity::getSubMenuName)
                 .eq(WindowHostEntity::getStatus, 1)
-                .eq(WindowHostEntity::getSiteLocation, siteLocation)
+                .eq(WindowHostEntity::getAreaName, areaName)
         );
-        return toTargets(list.stream()
-                .filter(item -> item.getInstance() != null && !item.getInstance().isEmpty())
-                .map(item -> buildTarget(item.getInstance(), item.getName(), siteLocation(item), "windows", item.getMenuName(), item.getSubMenuName()))
-                .collect(Collectors.toList()));
+        return buildTargets(
+                list,
+                "windows",
+                dictMaps,
+                WindowHostEntity::getInstance,
+                WindowHostEntity::getName,
+                WindowHostEntity::getSiteLocation,
+                WindowHostEntity::getAreaName,
+                WindowHostEntity::getMenuName,
+                WindowHostEntity::getSubMenuName
+        );
     }
 
     @Override
     public List<PrometheusSdResponse> httpProbe(PrometheusSdRequest request) {
-        String siteLocation = getSiteLocation(request);
-        if (siteLocation == null) {
+        String areaName = getAreaName(request);
+        if (areaName == null) {
             return new ArrayList<>();
         }
+        DictMaps dictMaps = loadDictMaps();
         List<BusinessSystemEntity> list = businessSystemDao.selectList(new LambdaQueryWrapper<BusinessSystemEntity>()
                 .select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName, BusinessSystemEntity::getSiteLocation, BusinessSystemEntity::getAreaName, BusinessSystemEntity::getMenuName, BusinessSystemEntity::getSubMenuName)
                 .eq(BusinessSystemEntity::getStatus, 1)
-                .eq(BusinessSystemEntity::getSiteLocation, siteLocation)
+                .eq(BusinessSystemEntity::getAreaName, areaName)
         );
-        return toTargets(list.stream()
-                .filter(item -> item.getInstance() != null && !item.getInstance().isEmpty())
-                .map(item -> buildTarget(item.getInstance(), item.getName(), siteLocation(item), "http_probe", item.getMenuName(), item.getSubMenuName()))
-                .collect(Collectors.toList()));
+        return buildTargets(
+                list,
+                "http_probe",
+                dictMaps,
+                BusinessSystemEntity::getInstance,
+                BusinessSystemEntity::getName,
+                BusinessSystemEntity::getSiteLocation,
+                BusinessSystemEntity::getAreaName,
+                BusinessSystemEntity::getMenuName,
+                BusinessSystemEntity::getSubMenuName
+        );
     }
 
-    private String getSiteLocation(PrometheusSdRequest request) {
+    private String getAreaName(PrometheusSdRequest request) {
         if (request == null || request.getArea() == null) {
             return null;
         }
-        String key = request.getArea().trim().toLowerCase();
-        Map<String, String> areaMap = getAreaMap();
-        return areaMap.get(key);
+        String areaName = request.getArea().trim();
+        if (areaName.isEmpty()) {
+            return null;
+        }
+        return areaName;
     }
 
-    private Map<String, String> getAreaMap() {
-        List<DictData> dictDataList = sysDictDataDao.getDictDataListByType("area_code");
+    private DictMaps loadDictMaps() {
+        return new DictMaps(
+                getDictMapByType("area_name_type"),
+                getDictMapByType("base_site_location"),
+                getDictMapByType("virtual_host_group")
+        );
+    }
+
+    private Map<String, String> getDictMapByType(String dictType) {
+        List<DictData> dictDataList = sysDictDataDao.getDictDataListByType(dictType);
         if (dictDataList == null || dictDataList.isEmpty()) {
             return Collections.emptyMap();
         }
-        Map<String, String> areaMap = new HashMap<>();
+        Map<String, String> map = new HashMap<>();
         for (DictData data : dictDataList) {
             if (data.getDictLabel() != null && data.getDictValue() != null) {
-                areaMap.put(data.getDictLabel().trim().toLowerCase(), data.getDictValue());
+                String key = data.getDictLabel().trim();
+                if (!key.isEmpty()) {
+                    map.put(key, data.getDictValue());
+                    String lower = key.toLowerCase();
+                    if (!lower.equals(key)) {
+                        map.putIfAbsent(lower, data.getDictValue());
+                    }
+                }
             }
         }
-        return areaMap;
+        return map;
     }
 
-    private PrometheusSdResponse buildTarget(String instance, String name, String siteLocation, String type, String menuName, String subMenuName) {
+    private String convertDictValue(Map<String, String> dictMap, String value) {
+        if (value == null) {
+            return null;
+        }
+        String key = value.trim();
+        if (key.isEmpty()) {
+            return value;
+        }
+        String label = dictMap.get(key);
+        if (label == null) {
+            label = dictMap.get(key.toLowerCase());
+        }
+        return label == null ? value : label;
+    }
+
+    private String resolveBaseSiteLocation(String siteLocation, String areaName, DictMaps dictMaps) {
+        if (siteLocation != null && !siteLocation.isEmpty()) {
+            return convertDictValue(dictMaps.baseSiteLocationMap, siteLocation);
+        }
+        return convertDictValue(dictMaps.areaNameMap, areaName);
+    }
+
+    private <T> List<PrometheusSdResponse> buildTargets(
+            List<T> list,
+            String type,
+            DictMaps dictMaps,
+            Function<T, String> instanceFn,
+            Function<T, String> nameFn,
+            Function<T, String> siteLocationFn,
+            Function<T, String> areaNameFn,
+            Function<T, String> menuNameFn,
+            Function<T, String> subMenuNameFn) {
+        return toTargets(list.stream()
+                .filter(item -> {
+                    String instance = instanceFn.apply(item);
+                    return instance != null && !instance.isEmpty();
+                })
+                .map(item -> buildTarget(
+                        instanceFn.apply(item),
+                        nameFn.apply(item),
+                        resolveBaseSiteLocation(siteLocationFn.apply(item), areaNameFn.apply(item), dictMaps),
+                        convertDictValue(dictMaps.areaNameMap, areaNameFn.apply(item)),
+                        type,
+                        convertDictValue(dictMaps.menuNameMap, menuNameFn.apply(item)),
+                        subMenuNameFn.apply(item)))
+                .collect(Collectors.toList()));
+    }
+
+    private PrometheusSdResponse buildTarget(String instance, String name, String siteLocation, String areaName, String type, String menuName, String subMenuName) {
         Map<String, Object> labels = new HashMap<>();
         labels.put("base_site_location", siteLocation);
+        if (areaName != null && !areaName.isEmpty()) {
+            labels.put("area_name", areaName);
+        }
         if (name != null && !name.isEmpty()) {
             labels.put("name", name);
         }
@@ -154,37 +247,11 @@ public class PrometheusSdServiceImpl implements PrometheusSdService {
         return trimmed;
     }
 
-    private String siteLocation(LinuxHostEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-        if (entity.getSiteLocation() != null && !entity.getSiteLocation().isEmpty()) {
-            return entity.getSiteLocation();
-        }
-        return entity.getAreaName();
-    }
-
-    private String siteLocation(WindowHostEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-        if (entity.getSiteLocation() != null && !entity.getSiteLocation().isEmpty()) {
-            return entity.getSiteLocation();
-        }
-        return entity.getAreaName();
-    }
-
-    private String siteLocation(BusinessSystemEntity entity) {
-        if (entity == null) {
-            return null;
-        }
-        if (entity.getSiteLocation() != null && !entity.getSiteLocation().isEmpty()) {
-            return entity.getSiteLocation();
-        }
-        return entity.getAreaName();
-    }
-
     private List<PrometheusSdResponse> toTargets(List<PrometheusSdResponse> groups) {
         return groups == null ? new ArrayList<>() : groups;
+    }
+
+    private record DictMaps(Map<String, String> areaNameMap, Map<String, String> baseSiteLocationMap,
+                            Map<String, String> menuNameMap) {
     }
 }

@@ -2,7 +2,7 @@ version: "3.9"
 
 services:
   mysql:
-    image: crpi-3b3nup7gk3gkey6i.cn-hangzhou.personal.cr.aliyuncs.com/it-devops/it-devops-mysql:latest
+    image: taohongqiang/it-devops-mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: Leoch@@20260101
       MYSQL_DATABASE: devops
@@ -17,7 +17,7 @@ services:
       retries: 20
 
   redis:
-    image: crpi-3b3nup7gk3gkey6i.cn-hangzhou.personal.cr.aliyuncs.com/it-devops/it-devops-redis:7.4.7
+    image: taohongqiang/it-devops-redis:latest
     command: ["redis-server", "--requirepass", "Leoch@@20260101"]
     ports:
       - "6379:6379"
@@ -30,7 +30,7 @@ services:
       retries: 10
 
   devops-admin:
-    image: crpi-3b3nup7gk3gkey6i.cn-hangzhou.personal.cr.aliyuncs.com/it-devops/it-devops-devops-admin:latest
+    image: taohongqiang/it-devops-admin:latest
     container_name: it-devops-devops-admin
     environment:
       SPRING_PROFILES_ACTIVE: prod
@@ -51,7 +51,7 @@ services:
       - ./docker/admin/logs:/app/logs
 
   nginx:
-    image: crpi-3b3nup7gk3gkey6i.cn-hangzhou.personal.cr.aliyuncs.com/it-devops/it-devops-nginx:latest
+    image: taohongqiang/it-devops-ui:latest
     container_name: it-devops-nginx
     depends_on:
       devops-admin:
