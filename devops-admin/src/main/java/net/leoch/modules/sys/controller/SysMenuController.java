@@ -2,6 +2,7 @@
 
 package net.leoch.modules.sys.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
@@ -19,7 +20,6 @@ import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.dto.SysMenuDTO;
 import net.leoch.modules.sys.enums.MenuTypeEnum;
 import net.leoch.modules.sys.service.SysMenuService;
-import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

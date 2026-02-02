@@ -2,6 +2,7 @@
 
 package net.leoch.modules.sys.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -21,7 +22,6 @@ import net.leoch.modules.sys.dto.SysRoleDTO;
 import net.leoch.modules.sys.service.SysRoleDataScopeService;
 import net.leoch.modules.sys.service.SysRoleMenuService;
 import net.leoch.modules.sys.service.SysRoleService;
-import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;

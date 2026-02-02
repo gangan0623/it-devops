@@ -2,6 +2,7 @@
 
 package net.leoch.modules.job.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -13,7 +14,6 @@ import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.job.dto.ScheduleJobLogDTO;
 import net.leoch.modules.job.service.ScheduleJobLogService;
-import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;

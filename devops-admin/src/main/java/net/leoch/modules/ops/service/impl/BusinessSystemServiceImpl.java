@@ -7,12 +7,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
-import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.RenException;
 import net.leoch.common.page.PageData;
+import net.leoch.common.redis.RedisKeys;
+import net.leoch.common.redis.RedisUtils;
 import net.leoch.common.service.impl.CrudServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.ExcelUtils;
@@ -27,8 +28,10 @@ import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.excel.BusinessSystemExcel;
 import net.leoch.modules.ops.excel.template.BusinessSystemImportExcel;
 import net.leoch.modules.ops.service.BusinessSystemService;
+import net.leoch.modules.ops.util.OpsQueryUtils;
 import net.leoch.modules.security.user.SecurityUser;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -41,6 +44,9 @@ import java.util.*;
 @Service
 public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao, BusinessSystemEntity, BusinessSystemDTO> implements BusinessSystemService {
 
+    @Resource
+    private RedisUtils redisUtils;
+
     @Override
     public QueryWrapper<BusinessSystemEntity> getWrapper(Map<String, Object> params){
         QueryWrapper<BusinessSystemEntity> wrapper = new QueryWrapper<>();
@@ -50,21 +56,26 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
         String name = (String)params.get("name");
         String areaName = (String)params.get("areaName");
         lambda.eq(StrUtil.isNotBlank(id), BusinessSystemEntity::getId, id);
-        lambda.like(StrUtil.isNotBlank(instance), BusinessSystemEntity::getInstance, instance);
-        lambda.like(StrUtil.isNotBlank(name), BusinessSystemEntity::getName, name);
-        lambda.eq(StrUtil.isNotBlank(areaName), BusinessSystemEntity::getAreaName, areaName);
+        applyCommonFilters(lambda, instance, name, areaName);
         return wrapper;
     }
 
     @Override
     public PageData<BusinessSystemDTO> page(BusinessSystemPageRequest request) {
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StrUtil.isNotBlank(request.getInstance()), BusinessSystemEntity::getInstance, request.getInstance());
-        wrapper.like(StrUtil.isNotBlank(request.getName()), BusinessSystemEntity::getName, request.getName());
-        wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), BusinessSystemEntity::getAreaName, request.getAreaName());
+        applyCommonFilters(wrapper, request.getInstance(), request.getName(), request.getAreaName());
+        if ("online_status".equalsIgnoreCase(request.getOrderField())) {
+            List<BusinessSystemEntity> list = baseDao.selectList(wrapper);
+            List<BusinessSystemDTO> dtoList = ConvertUtils.sourceToTarget(list, BusinessSystemDTO.class);
+            fillOnlineStatus(dtoList);
+            OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), BusinessSystemDTO::getOnlineStatus);
+            return OnlineStatusSupport.buildPageData(dtoList, request.getPage(), request.getLimit());
+        }
         Page<BusinessSystemEntity> page = buildPage(request);
         IPage<BusinessSystemEntity> result = baseDao.selectPage(page, wrapper);
-        return new PageData<>(ConvertUtils.sourceToTarget(result.getRecords(), BusinessSystemDTO.class), result.getTotal());
+        List<BusinessSystemDTO> dtoList = ConvertUtils.sourceToTarget(result.getRecords(), BusinessSystemDTO.class);
+        fillOnlineStatus(dtoList);
+        return new PageData<>(dtoList, result.getTotal());
     }
 
     @Override
@@ -73,7 +84,11 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
             return null;
         }
         BusinessSystemEntity entity = baseDao.selectById(request.getId());
-        return ConvertUtils.sourceToTarget(entity, BusinessSystemDTO.class);
+        BusinessSystemDTO dto = ConvertUtils.sourceToTarget(entity, BusinessSystemDTO.class);
+        if (dto != null) {
+            fillOnlineStatus(Collections.singletonList(dto));
+        }
+        return dto;
     }
 
     @Override
@@ -115,6 +130,7 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
     }
 
     @Override
+    @Transactional
     public void importExcel(BusinessSystemImportRequest request) throws Exception {
         if (request == null || request.getFile() == null || request.getFile().isEmpty()) {
             throw new RenException("上传文件不能为空");
@@ -125,15 +141,7 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
         }
         List<BusinessSystemEntity> entityList = new ArrayList<>(dataList.size());
         for (BusinessSystemImportExcel item : dataList) {
-            BusinessSystemEntity entity = new BusinessSystemEntity();
-            entity.setInstance(item.getInstance());
-            entity.setName(item.getName());
-            entity.setAreaName(item.getAreaName());
-            entity.setSiteLocation(item.getSiteLocation());
-            entity.setMenuName(item.getMenuName());
-            entity.setSubMenuName(item.getSubMenuName());
-            entity.setStatus(item.getStatus());
-            entityList.add(entity);
+            entityList.add(toEntity(item));
         }
         insertBatch(entityList);
     }
@@ -146,9 +154,7 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
     @Override
     public void export(BusinessSystemPageRequest request, HttpServletResponse response) throws Exception {
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(StrUtil.isNotBlank(request.getInstance()), BusinessSystemEntity::getInstance, request.getInstance());
-        wrapper.like(StrUtil.isNotBlank(request.getName()), BusinessSystemEntity::getName, request.getName());
-        wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), BusinessSystemEntity::getAreaName, request.getAreaName());
+        applyCommonFilters(wrapper, request.getInstance(), request.getName(), request.getAreaName());
         List<BusinessSystemEntity> list = baseDao.selectList(wrapper);
         List<BusinessSystemDTO> dtoList = ConvertUtils.sourceToTarget(list, BusinessSystemDTO.class);
         ExcelUtils.exportExcelToTarget(response, null, "业务系统表", dtoList, BusinessSystemExcel.class);
@@ -178,47 +184,56 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
 
     @Override
     public boolean existsByInstanceOrName(String instance, String name, Long excludeId) {
-        if (StrUtil.isBlank(instance) && StrUtil.isBlank(name)) {
-            return false;
+        return OpsQueryUtils.existsByInstanceOrName(
+                baseDao,
+                BusinessSystemEntity::getId,
+                BusinessSystemEntity::getInstance,
+                BusinessSystemEntity::getName,
+                instance,
+                name,
+                excludeId
+        );
+    }
+
+    private void fillOnlineStatus(List<BusinessSystemDTO> list) {
+        if (list == null || list.isEmpty()) {
+            return;
         }
-        LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.and((query) -> {
-            if (StrUtil.isNotBlank(instance)) {
-                query.or().eq(BusinessSystemEntity::getInstance, instance);
-            }
-            if (StrUtil.isNotBlank(name)) {
-                query.or().eq(BusinessSystemEntity::getName, name);
-            }
-        });
-        if (excludeId != null) {
-            wrapper.ne(BusinessSystemEntity::getId, excludeId);
+        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBusinessSystemOnlineKey());
+        for (BusinessSystemDTO dto : list) {
+            String instance = dto.getInstance();
+            dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
         }
-        return baseDao.selectCount(wrapper) > 0;
+    }
+
+    private void applyCommonFilters(LambdaQueryWrapper<BusinessSystemEntity> wrapper, String instance, String name, String areaName) {
+        wrapper.eq(StrUtil.isNotBlank(instance), BusinessSystemEntity::getInstance, instance);
+        wrapper.like(StrUtil.isNotBlank(name), BusinessSystemEntity::getName, name);
+        wrapper.eq(StrUtil.isNotBlank(areaName), BusinessSystemEntity::getAreaName, areaName);
+    }
+
+    private BusinessSystemEntity toEntity(BusinessSystemImportExcel item) {
+        BusinessSystemEntity entity = new BusinessSystemEntity();
+        entity.setInstance(item.getInstance());
+        entity.setName(item.getName());
+        entity.setAreaName(item.getAreaName());
+        entity.setSiteLocation(item.getSiteLocation());
+        entity.setMenuName(item.getMenuName());
+        entity.setSubMenuName(item.getSubMenuName());
+        entity.setStatus(item.getStatus());
+        return entity;
     }
 
     private Page<BusinessSystemEntity> buildPage(BusinessSystemPageRequest request) {
-        long curPage = 1;
-        long limit = 10;
-        if (request != null) {
-            if (StrUtil.isNotBlank(request.getPage())) {
-                curPage = Long.parseLong(request.getPage());
-            }
-            if (StrUtil.isNotBlank(request.getLimit())) {
-                limit = Long.parseLong(request.getLimit());
-            }
-        }
-        Page<BusinessSystemEntity> page = new Page<>(curPage, limit);
         if (request == null) {
-            return page;
+            return new Page<>(1, 10);
         }
-        if (StrUtil.isNotBlank(request.getOrderField()) && StrUtil.isNotBlank(request.getOrder())) {
-            if (Constant.ASC.equalsIgnoreCase(request.getOrder())) {
-                page.addOrder(OrderItem.asc(request.getOrderField()));
-            } else {
-                page.addOrder(OrderItem.desc(request.getOrderField()));
-            }
-        }
-        return page;
+        return OpsQueryUtils.buildPage(
+                request.getPage(),
+                request.getLimit(),
+                request.getOrderField(),
+                request.getOrder()
+        );
     }
 
     private void validateUnique(BusinessSystemDTO dto) {

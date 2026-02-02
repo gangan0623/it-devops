@@ -55,4 +55,19 @@ public class RedisKeys {
     public static String getUserPermissionsKey(Long userId){
         return "sys:user:permissions:" + userId;
     }
+
+    /**
+     * 在线状态缓存Key
+     */
+    public static String getLinuxHostOnlineKey() {
+        return "ops:online:linuxhost";
+    }
+
+    public static String getWindowHostOnlineKey() {
+        return "ops:online:windowhost";
+    }
+
+    public static String getBusinessSystemOnlineKey() {
+        return "ops:online:businesssystem";
+    }
 }

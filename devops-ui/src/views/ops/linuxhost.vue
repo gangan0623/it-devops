@@ -35,7 +35,7 @@
         </div>
       </div>
     </el-form>
-    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="ops-table-nowrap" style="width: 100%">
+    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" @sort-change="state.dataListSortChangeHandle" class="ops-table-nowrap" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
               <el-table-column prop="instance" label="地址" header-align="center" align="center" min-width="180"></el-table-column>
               <el-table-column prop="name" label="名称" header-align="center" align="center" min-width="180"></el-table-column>
@@ -55,7 +55,7 @@
                   <el-tag v-else size="small" type="success">启用</el-tag>
                 </template>
               </el-table-column>
-              <el-table-column prop="onlineStatus" label="在线状态" header-align="center" align="center" width="90">
+              <el-table-column prop="onlineStatus" label="在线状态" header-align="center" align="center" width="90" sortable="custom">
                 <template v-slot="scope">
                   <el-tag v-if="scope.row.onlineStatus === true" size="small" type="success">在线</el-tag>
                   <el-tag v-else-if="scope.row.onlineStatus === false" size="small" type="danger">不在线</el-tag>
@@ -84,7 +84,7 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {reactive, ref, toRefs, watch} from "vue";
+import {reactive, ref, toRefs} from "vue";
 import AddOrUpdate from "./linuxhost-add-or-update.vue";
 import baseService from "@/service/baseService";
 import {ElMessage, ElMessageBox} from "element-plus";
@@ -147,33 +147,6 @@ const handleTemplateDownload = () => {
   window.location.href = templateUrl;
 };
 
-const refreshOnlineStatus = () => {
-  if (!state.dataList || state.dataList.length === 0) {
-    return;
-  }
-  state.dataList.forEach((row: { instance?: string; onlineStatus?: boolean | null }) => {
-    row.onlineStatus = null;
-    if (!row.instance) {
-      row.onlineStatus = false;
-      return;
-    }
-    baseService
-      .get("/ops/linuxhost/online", { instance: row.instance })
-      .then((res) => {
-        row.onlineStatus = !!res.data;
-      })
-      .catch(() => {
-        row.onlineStatus = false;
-      });
-  });
-};
-
-watch(
-  () => state.dataList,
-  () => {
-    refreshOnlineStatus();
-  }
-);
 
 const updateStatusHandle = (status: number) => {
   if (!state.dataListSelections || state.dataListSelections.length === 0) {

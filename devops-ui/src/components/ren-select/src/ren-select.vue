@@ -1,5 +1,5 @@
 <template>
-  <el-select v-model="value" @change="$emit('update:modelValue', $event)" :placeholder="placeholder" clearable>
+  <el-select v-model="value" :placeholder="placeholder" clearable>
     <el-option
       :label="data[labelField]"
       v-for="data in dataList"
@@ -30,10 +30,16 @@ export default defineComponent({
       default: "dictValue"
     }
   },
-  setup(props) {
+  setup(props, { emit }) {
     const store = useAppStore();
     return {
-      value: computed(() => `${props.modelValue}`),
+      value: computed({
+        get: () => (props.modelValue === undefined ? null : props.modelValue),
+        set: (val: number | string | null | undefined) => {
+          const next = val === undefined ? null : val;
+          emit("update:modelValue", next);
+        }
+      }),
       dataList: getDictDataList(store.state.dicts, props.dictType)
     };
   }

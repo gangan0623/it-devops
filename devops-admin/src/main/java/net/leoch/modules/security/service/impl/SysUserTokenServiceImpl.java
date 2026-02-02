@@ -2,6 +2,8 @@
 
 package net.leoch.modules.security.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
+import lombok.AllArgsConstructor;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.service.impl.BaseServiceImpl;
@@ -13,8 +15,6 @@ import net.leoch.modules.security.service.SysUserTokenService;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.dto.SysUserDTO;
 import net.leoch.modules.sys.service.SysUserService;
-import cn.dev33.satoken.stp.StpUtil;
-import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;

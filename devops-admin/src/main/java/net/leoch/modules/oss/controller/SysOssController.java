@@ -2,6 +2,7 @@
 
 package net.leoch.modules.oss.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.hutool.core.io.file.FileNameUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -20,9 +21,8 @@ import net.leoch.common.validator.group.QiniuGroup;
 import net.leoch.modules.oss.cloud.CloudStorageConfig;
 import net.leoch.modules.oss.cloud.OSSFactory;
 import net.leoch.modules.oss.entity.SysOssEntity;
-import net.leoch.modules.oss.service.SysOssService;
 import net.leoch.modules.oss.service.SysOssConfigService;
-import cn.dev33.satoken.annotation.SaCheckPermission;
+import net.leoch.modules.oss.service.SysOssService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 

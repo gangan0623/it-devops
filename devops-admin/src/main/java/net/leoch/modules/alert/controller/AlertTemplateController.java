@@ -1,5 +1,6 @@
 package net.leoch.modules.alert.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -20,7 +21,6 @@ import net.leoch.modules.alert.service.AlertTriggerService;
 import net.leoch.modules.alert.utils.AlertJsonUtils;
 import net.leoch.modules.alert.utils.AlertPayloadUtils;
 import net.leoch.modules.alert.utils.AlertTemplateRenderer;
-import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 

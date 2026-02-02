@@ -1,5 +1,6 @@
 package net.leoch.modules.alert.controller;
 
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -13,7 +14,6 @@ import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.alert.dto.AlertRecordDTO;
 import net.leoch.modules.alert.service.AlertRecordService;
 import net.leoch.modules.alert.service.AlertSseService;
-import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
