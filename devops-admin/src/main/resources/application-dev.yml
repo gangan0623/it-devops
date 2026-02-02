@@ -1,7 +1,7 @@
 spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://192.168.17.121:3306/devops?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true
+    url: jdbc:mysql://localhost:3306/devops?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true
     username: root
     password: Leoch@@20260101
     hikari:
@@ -13,7 +13,7 @@ spring:
   data:
     redis:
       database: 0
-      host: 192.168.17.121
+      host: 192.168.210.136
       port: 6379
       password: Leoch@@20260101
       timeout: 6000ms

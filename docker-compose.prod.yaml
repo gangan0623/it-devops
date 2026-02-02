@@ -34,9 +34,9 @@ services:
     container_name: it-devops-devops-admin
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      SPRING_DATASOURCE_DRUID_URL: jdbc:mysql://mysql:3306/devops?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true
-      SPRING_DATASOURCE_DRUID_USERNAME: root
-      SPRING_DATASOURCE_DRUID_PASSWORD: Leoch@@20260101
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/devops?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: Leoch@@20260101
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: "6379"
       SPRING_DATA_REDIS_PASSWORD: Leoch@@20260101

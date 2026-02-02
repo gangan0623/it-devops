@@ -38,7 +38,7 @@
     <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="ops-table-nowrap" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
               <el-table-column prop="instance" label="地址" header-align="center" align="center" min-width="180"></el-table-column>
-              <el-table-column prop="name" label="名称" header-align="center" align="center"></el-table-column>
+              <el-table-column prop="name" label="名称" header-align="center" align="center" min-width="180"></el-table-column>
               <el-table-column label="区域名称" header-align="center" align="center">
                 <template v-slot="scope">{{ state.getDictValueByLabel("area_name_type", scope.row.areaName) }}</template>
               </el-table-column>
