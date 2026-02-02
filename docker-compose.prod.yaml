@@ -2,8 +2,7 @@ version: "3.9"
 
 services:
   mysql:
-    image: mysql:8.0
-    container_name: mysql
+    image: crpi-3b3nup7gk3gkey6i.cn-hangzhou.personal.cr.aliyuncs.com/it-devops/it-devops-mysql:latest
     environment:
       MYSQL_ROOT_PASSWORD: Leoch@@20260101
       MYSQL_DATABASE: devops
@@ -11,7 +10,6 @@ services:
       - "3306:3306"
     volumes:
       - ./docker/mysql:/var/lib/mysql
-      - ./devops-admin/db/mysql.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p$$MYSQL_ROOT_PASSWORD"]
       interval: 5s
@@ -19,8 +17,7 @@ services:
       retries: 20
 
   redis:
-    image: redis:7.4.7
-    container_name: redis
+    image: crpi-3b3nup7gk3gkey6i.cn-hangzhou.personal.cr.aliyuncs.com/it-devops/it-devops-redis:7.4.7
     command: ["redis-server", "--requirepass", "Leoch@@20260101"]
     ports:
       - "6379:6379"
@@ -33,12 +30,10 @@ services:
       retries: 10
 
   devops-admin:
+    image: crpi-3b3nup7gk3gkey6i.cn-hangzhou.personal.cr.aliyuncs.com/it-devops/it-devops-devops-admin:latest
     container_name: it-devops-devops-admin
-    build:
-      context: ./devops-admin
-      dockerfile: Dockerfile
     environment:
-      SPRING_PROFILES_ACTIVE: dev
+      SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_DRUID_URL: jdbc:mysql://mysql:3306/devops?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true
       SPRING_DATASOURCE_DRUID_USERNAME: root
       SPRING_DATASOURCE_DRUID_PASSWORD: Leoch@@20260101
@@ -56,10 +51,8 @@ services:
       - ./docker/admin/logs:/app/logs
 
   nginx:
+    image: crpi-3b3nup7gk3gkey6i.cn-hangzhou.personal.cr.aliyuncs.com/it-devops/it-devops-nginx:latest
     container_name: it-devops-nginx
-    build:
-      context: .
-      dockerfile: devops-ui/Dockerfile
     depends_on:
       devops-admin:
         condition: service_started

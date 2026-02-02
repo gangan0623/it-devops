@@ -16,7 +16,6 @@ import net.leoch.common.page.PageData;
 import net.leoch.common.service.impl.CrudServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.ExcelUtils;
-import net.leoch.common.utils.PingUtils;
 import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
@@ -30,6 +29,8 @@ import net.leoch.modules.ops.service.WindowHostService;
 import net.leoch.modules.security.user.SecurityUser;
 import org.springframework.stereotype.Service;
 
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.*;
 
 /**
@@ -103,7 +104,7 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
         if (request == null || StrUtil.isBlank(request.getInstance())) {
             return false;
         }
-        return PingUtils.isReachable(request.getInstance(), 2000);
+        return metricsOk(request.getInstance());
     }
 
     @Override
@@ -136,6 +137,44 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
             entityList.add(entity);
         }
         insertBatch(entityList);
+    }
+
+    private boolean metricsOk(String instance) {
+        String url = buildMetricsUrl(instance);
+        if (StrUtil.isBlank(url)) {
+            return false;
+        }
+        HttpURLConnection connection = null;
+        try {
+            connection = (HttpURLConnection) new URL(url).openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(3000);
+            connection.setReadTimeout(3000);
+            return connection.getResponseCode() == 200;
+        } catch (Exception ignore) {
+            return false;
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+    private String buildMetricsUrl(String instance) {
+        String base = instance == null ? "" : instance.trim();
+        if (StrUtil.isBlank(base)) {
+            return null;
+        }
+        if (!base.startsWith("http://") && !base.startsWith("https://")) {
+            base = "http://" + base;
+        }
+        if (base.contains("/metrics")) {
+            return base;
+        }
+        if (base.endsWith("/")) {
+            return base + "metrics";
+        }
+        return base + "/metrics";
     }
 
     @Override
