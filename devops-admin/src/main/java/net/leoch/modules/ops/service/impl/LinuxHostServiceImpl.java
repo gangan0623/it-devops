@@ -54,16 +54,26 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
         String id = (String)params.get("id");
         String instance = (String)params.get("instance");
         String name = (String)params.get("name");
-        String areaName = (String)params.get("areaName");
+        String areaName = (String) params.get("areaName");
+        String siteLocation = (String) params.get("siteLocation");
+        String menuName = (String) params.get("menuName");
+        String status = (String) params.get("status");
         lambda.eq(StrUtil.isNotBlank(id), LinuxHostEntity::getId, id);
-        applyCommonFilters(lambda, instance, name, areaName);
+        LinuxHostPageRequest req = new LinuxHostPageRequest();
+        req.setInstance(instance);
+        req.setName(name);
+        req.setAreaName(areaName);
+        req.setSiteLocation(siteLocation);
+        req.setMenuName(menuName);
+        req.setStatus(status);
+        applyCommonFilters(lambda, req);
         return wrapper;
     }
 
     @Override
     public PageData<LinuxHostDTO> page(LinuxHostPageRequest request) {
         LambdaQueryWrapper<LinuxHostEntity> wrapper = new LambdaQueryWrapper<>();
-        applyCommonFilters(wrapper, request.getInstance(), request.getName(), request.getAreaName());
+        applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
             List<LinuxHostEntity> list = baseDao.selectList(wrapper);
             List<LinuxHostDTO> dtoList = ConvertUtils.sourceToTarget(list, LinuxHostDTO.class);
@@ -158,10 +168,13 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
         }
     }
 
-    private void applyCommonFilters(LambdaQueryWrapper<LinuxHostEntity> wrapper, String instance, String name, String areaName) {
-        wrapper.eq(StrUtil.isNotBlank(instance), LinuxHostEntity::getInstance, instance);
-        wrapper.like(StrUtil.isNotBlank(name), LinuxHostEntity::getName, name);
-        wrapper.eq(StrUtil.isNotBlank(areaName), LinuxHostEntity::getAreaName, areaName);
+    private void applyCommonFilters(LambdaQueryWrapper<LinuxHostEntity> wrapper, LinuxHostPageRequest request) {
+        wrapper.like(StrUtil.isNotBlank(request.getInstance()), LinuxHostEntity::getInstance, request.getInstance());
+        wrapper.like(StrUtil.isNotBlank(request.getName()), LinuxHostEntity::getName, request.getName());
+        wrapper.eq(StrUtil.isNotBlank(request.getSiteLocation()), LinuxHostEntity::getSiteLocation, request.getSiteLocation());
+        wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), LinuxHostEntity::getAreaName, request.getAreaName());
+        wrapper.eq(StrUtil.isNotBlank(request.getStatus()), LinuxHostEntity::getStatus, request.getStatus());
+        wrapper.eq(StrUtil.isNotBlank(request.getMenuName()), LinuxHostEntity::getMenuName, request.getMenuName());
     }
 
     private LinuxHostEntity toEntity(LinuxHostImportExcel item) {
@@ -184,7 +197,7 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
     @Override
     public void export(LinuxHostPageRequest request, HttpServletResponse response) throws Exception {
         LambdaQueryWrapper<LinuxHostEntity> wrapper = new LambdaQueryWrapper<>();
-        applyCommonFilters(wrapper, request.getInstance(), request.getName(), request.getAreaName());
+        applyCommonFilters(wrapper, request);
         List<LinuxHostEntity> list = baseDao.selectList(wrapper);
         List<LinuxHostDTO> dtoList = ConvertUtils.sourceToTarget(list, LinuxHostDTO.class);
         ExcelUtils.exportExcelToTarget(response, null, "Linux主机表", dtoList, LinuxHostExcel.class);

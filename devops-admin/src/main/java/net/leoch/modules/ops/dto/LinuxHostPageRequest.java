@@ -6,31 +6,40 @@ import lombok.Data;
 import java.io.Serializable;
 
 /**
- * Linux主机分页请求
+ * Linux host page request.
  */
 @Data
 @Schema(name = "LinuxHostPageRequest")
 public class LinuxHostPageRequest implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "当前页码，从1开始")
+    @Schema(description = "Page number, starting at 1")
     private String page;
 
-    @Schema(description = "每页显示记录数")
+    @Schema(description = "Page size")
     private String limit;
 
-    @Schema(description = "排序字段")
+    @Schema(description = "Order field")
     private String orderField;
 
-    @Schema(description = "排序方式，可选值(asc、desc)")
+    @Schema(description = "Order direction: asc, desc")
     private String order;
 
-    @Schema(description = "地址")
+    @Schema(description = "Instance")
     private String instance;
 
-    @Schema(description = "名称")
+    @Schema(description = "Name")
     private String name;
 
-    @Schema(description = "区域名称")
+    @Schema(description = "Area name")
     private String areaName;
+
+    @Schema(description = "Site location")
+    private String siteLocation;
+
+    @Schema(description = "Group name")
+    private String menuName;
+
+    @Schema(description = "Status")
+    private String status;
 }

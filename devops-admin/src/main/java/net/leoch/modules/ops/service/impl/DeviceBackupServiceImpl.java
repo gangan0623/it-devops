@@ -58,11 +58,17 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
         String instance = (String) params.get("instance");
         String name = (String) params.get("name");
         String areaName = (String) params.get("areaName");
+        String groupName = (String) params.get("groupName");
+        String deviceModel = (String) params.get("deviceModel");
+        String status = (String) params.get("status");
         String agentId = (String) params.get("agentId");
         lambda.eq(StrUtil.isNotBlank(id), DeviceBackupEntity::getId, id);
         lambda.like(StrUtil.isNotBlank(instance), DeviceBackupEntity::getInstance, instance);
         lambda.like(StrUtil.isNotBlank(name), DeviceBackupEntity::getName, name);
         lambda.eq(StrUtil.isNotBlank(areaName), DeviceBackupEntity::getAreaName, areaName);
+        lambda.eq(StrUtil.isNotBlank(groupName), DeviceBackupEntity::getGroupName, groupName);
+        lambda.eq(StrUtil.isNotBlank(deviceModel), DeviceBackupEntity::getDeviceModel, deviceModel);
+        lambda.eq(StrUtil.isNotBlank(status), DeviceBackupEntity::getStatus, status);
         lambda.eq(StrUtil.isNotBlank(agentId), DeviceBackupEntity::getAgentId, agentId);
         return wrapper;
     }
@@ -73,6 +79,9 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
         wrapper.like(StrUtil.isNotBlank(request.getInstance()), DeviceBackupEntity::getInstance, request.getInstance());
         wrapper.like(StrUtil.isNotBlank(request.getName()), DeviceBackupEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), DeviceBackupEntity::getAreaName, request.getAreaName());
+        wrapper.eq(StrUtil.isNotBlank(request.getGroupName()), DeviceBackupEntity::getGroupName, request.getGroupName());
+        wrapper.eq(StrUtil.isNotBlank(request.getDeviceModel()), DeviceBackupEntity::getDeviceModel, request.getDeviceModel());
+        wrapper.eq(StrUtil.isNotBlank(request.getStatus()), DeviceBackupEntity::getStatus, request.getStatus());
         wrapper.eq(StrUtil.isNotBlank(request.getAgentId()), DeviceBackupEntity::getAgentId, request.getAgentId());
         Page<DeviceBackupEntity> page = buildPage(request);
         IPage<DeviceBackupEntity> result = baseDao.selectPage(page, wrapper);
@@ -177,6 +186,9 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
         wrapper.like(StrUtil.isNotBlank(request.getInstance()), DeviceBackupEntity::getInstance, request.getInstance());
         wrapper.like(StrUtil.isNotBlank(request.getName()), DeviceBackupEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), DeviceBackupEntity::getAreaName, request.getAreaName());
+        wrapper.eq(StrUtil.isNotBlank(request.getGroupName()), DeviceBackupEntity::getGroupName, request.getGroupName());
+        wrapper.eq(StrUtil.isNotBlank(request.getDeviceModel()), DeviceBackupEntity::getDeviceModel, request.getDeviceModel());
+        wrapper.eq(StrUtil.isNotBlank(request.getStatus()), DeviceBackupEntity::getStatus, request.getStatus());
         wrapper.eq(StrUtil.isNotBlank(request.getAgentId()), DeviceBackupEntity::getAgentId, request.getAgentId());
         List<DeviceBackupEntity> list = baseDao.selectList(wrapper);
         List<DeviceBackupDTO> dtoList = ConvertUtils.sourceToTarget(list, DeviceBackupDTO.class);

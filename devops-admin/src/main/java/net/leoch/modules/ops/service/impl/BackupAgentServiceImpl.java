@@ -60,10 +60,12 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
         String instance = (String) params.get("instance");
         String name = (String) params.get("name");
         String areaName = (String) params.get("areaName");
+        String status = (String) params.get("status");
         lambda.eq(StrUtil.isNotBlank(id), BackupAgentEntity::getId, id);
         lambda.like(StrUtil.isNotBlank(instance), BackupAgentEntity::getInstance, instance);
         lambda.like(StrUtil.isNotBlank(name), BackupAgentEntity::getName, name);
         lambda.eq(StrUtil.isNotBlank(areaName), BackupAgentEntity::getAreaName, areaName);
+        lambda.eq(StrUtil.isNotBlank(status), BackupAgentEntity::getStatus, status);
         return wrapper;
     }
 
@@ -73,6 +75,7 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
         wrapper.like(StrUtil.isNotBlank(request.getInstance()), BackupAgentEntity::getInstance, request.getInstance());
         wrapper.like(StrUtil.isNotBlank(request.getName()), BackupAgentEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), BackupAgentEntity::getAreaName, request.getAreaName());
+        wrapper.eq(StrUtil.isNotBlank(request.getStatus()), BackupAgentEntity::getStatus, request.getStatus());
         Page<BackupAgentEntity> page = buildPage(request);
         IPage<BackupAgentEntity> result = baseDao.selectPage(page, wrapper);
         List<BackupAgentDTO> list = ConvertUtils.sourceToTarget(result.getRecords(), BackupAgentDTO.class);
@@ -168,6 +171,7 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
         wrapper.like(StrUtil.isNotBlank(request.getInstance()), BackupAgentEntity::getInstance, request.getInstance());
         wrapper.like(StrUtil.isNotBlank(request.getName()), BackupAgentEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), BackupAgentEntity::getAreaName, request.getAreaName());
+        wrapper.eq(StrUtil.isNotBlank(request.getStatus()), BackupAgentEntity::getStatus, request.getStatus());
         List<BackupAgentEntity> list = baseDao.selectList(wrapper);
         List<BackupAgentDTO> dtoList = ConvertUtils.sourceToTarget(list, BackupAgentDTO.class);
         maskTokens(dtoList);

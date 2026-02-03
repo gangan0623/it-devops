@@ -54,16 +54,26 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
         String id = (String)params.get("id");
         String instance = (String)params.get("instance");
         String name = (String)params.get("name");
-        String areaName = (String)params.get("areaName");
+        String areaName = (String) params.get("areaName");
+        String siteLocation = (String) params.get("siteLocation");
+        String menuName = (String) params.get("menuName");
+        String status = (String) params.get("status");
         lambda.eq(StrUtil.isNotBlank(id), BusinessSystemEntity::getId, id);
-        applyCommonFilters(lambda, instance, name, areaName);
+        BusinessSystemPageRequest req = new BusinessSystemPageRequest();
+        req.setInstance(instance);
+        req.setName(name);
+        req.setAreaName(areaName);
+        req.setSiteLocation(siteLocation);
+        req.setMenuName(menuName);
+        req.setStatus(status);
+        applyCommonFilters(lambda, req);
         return wrapper;
     }
 
     @Override
     public PageData<BusinessSystemDTO> page(BusinessSystemPageRequest request) {
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
-        applyCommonFilters(wrapper, request.getInstance(), request.getName(), request.getAreaName());
+        applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
             List<BusinessSystemEntity> list = baseDao.selectList(wrapper);
             List<BusinessSystemDTO> dtoList = ConvertUtils.sourceToTarget(list, BusinessSystemDTO.class);
@@ -154,7 +164,7 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
     @Override
     public void export(BusinessSystemPageRequest request, HttpServletResponse response) throws Exception {
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
-        applyCommonFilters(wrapper, request.getInstance(), request.getName(), request.getAreaName());
+        applyCommonFilters(wrapper, request);
         List<BusinessSystemEntity> list = baseDao.selectList(wrapper);
         List<BusinessSystemDTO> dtoList = ConvertUtils.sourceToTarget(list, BusinessSystemDTO.class);
         ExcelUtils.exportExcelToTarget(response, null, "业务系统表", dtoList, BusinessSystemExcel.class);
@@ -206,10 +216,13 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
         }
     }
 
-    private void applyCommonFilters(LambdaQueryWrapper<BusinessSystemEntity> wrapper, String instance, String name, String areaName) {
-        wrapper.eq(StrUtil.isNotBlank(instance), BusinessSystemEntity::getInstance, instance);
-        wrapper.like(StrUtil.isNotBlank(name), BusinessSystemEntity::getName, name);
-        wrapper.eq(StrUtil.isNotBlank(areaName), BusinessSystemEntity::getAreaName, areaName);
+    private void applyCommonFilters(LambdaQueryWrapper<BusinessSystemEntity> wrapper, BusinessSystemPageRequest request) {
+        wrapper.like(StrUtil.isNotBlank(request.getInstance()), BusinessSystemEntity::getInstance, request.getInstance());
+        wrapper.like(StrUtil.isNotBlank(request.getName()), BusinessSystemEntity::getName, request.getName());
+        wrapper.eq(StrUtil.isNotBlank(request.getSiteLocation()), BusinessSystemEntity::getSiteLocation, request.getSiteLocation());
+        wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), BusinessSystemEntity::getAreaName, request.getAreaName());
+        wrapper.eq(StrUtil.isNotBlank(request.getStatus()), BusinessSystemEntity::getStatus, request.getStatus());
+        wrapper.eq(StrUtil.isNotBlank(request.getMenuName()), BusinessSystemEntity::getMenuName, request.getMenuName());
     }
 
     private BusinessSystemEntity toEntity(BusinessSystemImportExcel item) {

@@ -33,4 +33,7 @@ public class BackupAgentPageRequest implements Serializable {
 
     @Schema(description = "区域名称")
     private String areaName;
+
+    @Schema(description = "状态")
+    private String status;
 }

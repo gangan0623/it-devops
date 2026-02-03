@@ -55,15 +55,25 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
         String instance = (String) params.get("instance");
         String name = (String) params.get("name");
         String areaName = (String) params.get("areaName");
+        String siteLocation = (String) params.get("siteLocation");
+        String menuName = (String) params.get("menuName");
+        String status = (String) params.get("status");
         lambda.eq(StrUtil.isNotBlank(id), WindowHostEntity::getId, id);
-        applyCommonFilters(lambda, instance, name, areaName);
+        WindowHostPageRequest req = new WindowHostPageRequest();
+        req.setInstance(instance);
+        req.setName(name);
+        req.setAreaName(areaName);
+        req.setSiteLocation(siteLocation);
+        req.setMenuName(menuName);
+        req.setStatus(status);
+        applyCommonFilters(lambda, req);
         return wrapper;
     }
 
     @Override
     public PageData<WindowHostDTO> page(WindowHostPageRequest request) {
         LambdaQueryWrapper<WindowHostEntity> wrapper = new LambdaQueryWrapper<>();
-        applyCommonFilters(wrapper, request.getInstance(), request.getName(), request.getAreaName());
+        applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
             List<WindowHostEntity> list = baseDao.selectList(wrapper);
             List<WindowHostDTO> dtoList = ConvertUtils.sourceToTarget(list, WindowHostDTO.class);
@@ -158,10 +168,13 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
         }
     }
 
-    private void applyCommonFilters(LambdaQueryWrapper<WindowHostEntity> wrapper, String instance, String name, String areaName) {
-        wrapper.eq(StrUtil.isNotBlank(instance), WindowHostEntity::getInstance, instance);
-        wrapper.like(StrUtil.isNotBlank(name), WindowHostEntity::getName, name);
-        wrapper.eq(StrUtil.isNotBlank(areaName), WindowHostEntity::getAreaName, areaName);
+    private void applyCommonFilters(LambdaQueryWrapper<WindowHostEntity> wrapper, WindowHostPageRequest request) {
+        wrapper.like(StrUtil.isNotBlank(request.getInstance()), WindowHostEntity::getInstance, request.getInstance());
+        wrapper.like(StrUtil.isNotBlank(request.getName()), WindowHostEntity::getName, request.getName());
+        wrapper.eq(StrUtil.isNotBlank(request.getSiteLocation()), WindowHostEntity::getSiteLocation, request.getSiteLocation());
+        wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), WindowHostEntity::getAreaName, request.getAreaName());
+        wrapper.eq(StrUtil.isNotBlank(request.getStatus()), WindowHostEntity::getStatus, request.getStatus());
+        wrapper.eq(StrUtil.isNotBlank(request.getMenuName()), WindowHostEntity::getMenuName, request.getMenuName());
     }
 
     private WindowHostEntity toEntity(WindowHostImportExcel item) {
@@ -184,7 +197,7 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
     @Override
     public void export(WindowHostPageRequest request, HttpServletResponse response) throws Exception {
         LambdaQueryWrapper<WindowHostEntity> wrapper = new LambdaQueryWrapper<>();
-        applyCommonFilters(wrapper, request.getInstance(), request.getName(), request.getAreaName());
+        applyCommonFilters(wrapper, request);
         List<WindowHostEntity> list = baseDao.selectList(wrapper);
         List<WindowHostDTO> dtoList = ConvertUtils.sourceToTarget(list, WindowHostDTO.class);
         ExcelUtils.exportExcelToTarget(response, null, "Windows主机表", dtoList, WindowHostExcel.class);

@@ -1,36 +1,50 @@
 <template>
   <div class="mod-ops__devicebackup">
-    <el-form :inline="true" :model="state.dataForm" @keyup.enter="state.getDataList()" class="ops-toolbar">
+    <div class="ops-toolbar">
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
-          <el-form-item>
-            <el-input v-model="state.dataForm.instance" placeholder="地址" clearable></el-input>
-          </el-form-item>
-          <el-form-item>
-            <el-input v-model="state.dataForm.name" placeholder="名称" clearable></el-input>
-          </el-form-item>
-          <el-form-item>
-            <el-select v-model="state.dataForm.agentId" placeholder="备份节点" clearable filterable>
-              <el-option v-for="item in backupAgentOptions" :key="item.id" :label="item.label" :value="item.id"></el-option>
-            </el-select>
-          </el-form-item>
-          <el-form-item>
-            <el-button @click="state.getDataList()">查询</el-button>
-          </el-form-item>
+          <el-input v-model="state.dataForm.instance" placeholder="地址(模糊)" clearable @keyup.enter="state.getDataList()"></el-input>
+          <el-input v-model="state.dataForm.name" placeholder="名称(模糊)" clearable @keyup.enter="state.getDataList()"></el-input>
+          <el-button @click="state.getDataList()">查询</el-button>
+          <el-button :icon="Filter" @click="filterDrawer = true">筛选<span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span></el-button>
         </div>
         <div class="ops-toolbar__group ops-actions">
           <el-button v-if="state.hasPermission('ops:devicebackup:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
-          <el-button v-if="state.hasPermission('ops:devicebackup:update')" type="success" @click="updateStatusHandle(1)">批量启用</el-button>
-          <el-button v-if="state.hasPermission('ops:devicebackup:update')" type="warning" @click="updateStatusHandle(0)">批量禁用</el-button>
+          <el-button v-if="state.hasPermission('ops:devicebackup:update')" type="success" @click="handleBatchToggle">启用/禁用</el-button>
           <el-button v-if="state.hasPermission('ops:devicebackup:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
           <el-button v-if="state.hasPermission('ops:devicebackup:export')" type="info" @click="state.exportHandle()">导出</el-button>
-          <el-upload v-if="state.hasPermission('ops:devicebackup:import')" :action="importUrl" :headers="uploadHeaders" :show-file-list="false" :before-upload="beforeImportUpload" :on-success="handleImportSuccess" accept=".xls,.xlsx">
-            <el-button type="primary">导入</el-button>
-          </el-upload>
-          <el-button v-if="state.hasPermission('ops:devicebackup:template')" type="info" @click="handleTemplateDownload">下载示例表格</el-button>
+          <el-button v-if="state.hasPermission('ops:devicebackup:import')" type="primary" @click="importDialogVisible = true">导入</el-button>
         </div>
       </div>
-    </el-form>
+    </div>
+    <el-drawer v-model="filterDrawer" title="筛选条件" size="360px" :append-to-body="true">
+      <el-form label-position="top" class="filter-form">
+        <el-form-item label="区域名称">
+          <ren-select v-model="state.dataForm.areaName" dict-type="area_name_type" label-field="dictValue" value-field="dictLabel" placeholder="全部"></ren-select>
+        </el-form-item>
+        <el-form-item label="分组名称">
+          <ren-select v-model="state.dataForm.groupName" dict-type="network_device_group" label-field="dictValue" value-field="dictLabel" placeholder="全部"></ren-select>
+        </el-form-item>
+        <el-form-item label="设备型号">
+          <ren-select v-model="state.dataForm.deviceModel" dict-type="network_device_model" label-field="dictValue" value-field="dictLabel" placeholder="全部"></ren-select>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="state.dataForm.status" placeholder="全部" clearable>
+            <el-option label="启用" :value="1"></el-option>
+            <el-option label="禁用" :value="0"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="备份节点">
+          <el-select v-model="state.dataForm.agentId" placeholder="全部" clearable filterable>
+            <el-option v-for="item in backupAgentOptions" :key="item.id" :label="item.label" :value="item.id"></el-option>
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="handleFilterReset">重置</el-button>
+        <el-button type="primary" @click="handleFilterConfirm">确定</el-button>
+      </template>
+    </el-drawer>
     <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
               <el-table-column prop="instance" label="地址" header-align="center" align="center"></el-table-column>
@@ -73,6 +87,14 @@
       </el-table-column>
     </el-table>
     <el-pagination :current-page="state.page" :page-sizes="[10, 20, 50, 100]" :page-size="state.limit" :total="state.total" layout="total, sizes, prev, pager, next, jumper" @size-change="state.pageSizeChangeHandle" @current-change="state.pageCurrentChangeHandle"> </el-pagination>
+    <el-dialog v-model="importDialogVisible" title="导入" width="420px">
+      <div class="import-actions">
+        <el-button v-if="state.hasPermission('ops:devicebackup:template')" type="info" @click="handleTemplateDownload">下载示例表格</el-button>
+        <el-upload v-if="state.hasPermission('ops:devicebackup:import')" :action="importUrl" :headers="uploadHeaders" :show-file-list="false" :before-upload="beforeImportUpload" :on-success="handleImportSuccess" accept=".xls,.xlsx">
+          <el-button type="primary">选择文件</el-button>
+        </el-upload>
+      </div>
+    </el-dialog>
     <!-- 弹窗, 新增 / 修改 -->
     <add-or-update ref="addOrUpdateRef" @refreshDataList="state.getDataList">确定</add-or-update>
   </div>
@@ -80,10 +102,11 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {reactive, ref, toRefs, watch} from "vue";
+import {computed, reactive, ref, toRefs, watch} from "vue";
 import AddOrUpdate from "./devicebackup-add-or-update.vue";
 import baseService from "@/service/baseService";
 import {ElMessage, ElMessageBox} from "element-plus";
+import {Filter} from "@element-plus/icons-vue";
 import app from "@/constants/app";
 import {getToken} from "@/utils/cache";
 import {IObject} from "@/types/interface";
@@ -97,6 +120,10 @@ const view = reactive({
   dataForm: {
     instance: "",
     name: "",
+    areaName: "",
+    groupName: "",
+    deviceModel: "",
+    status: "" as string | number,
     agentId: ""
   }
 });
@@ -105,7 +132,33 @@ const state = reactive({ ...useView(view), ...toRefs(view) });
 
 const backupAgentOptions = ref<{ id: number; label: string }[]>([]);
 
+const filterDrawer = ref(false);
+
+const activeFilterCount = computed(() => {
+  let count = 0;
+  if (state.dataForm.areaName) count++;
+  if (state.dataForm.groupName) count++;
+  if (state.dataForm.deviceModel) count++;
+  if (state.dataForm.status !== "" && state.dataForm.status !== null && state.dataForm.status !== undefined) count++;
+  if (state.dataForm.agentId) count++;
+  return count;
+});
+
+const handleFilterConfirm = () => {
+  filterDrawer.value = false;
+  state.getDataList();
+};
+
+const handleFilterReset = () => {
+  state.dataForm.areaName = "";
+  state.dataForm.groupName = "";
+  state.dataForm.deviceModel = "";
+  state.dataForm.status = "";
+  state.dataForm.agentId = "";
+};
+
 const addOrUpdateRef = ref();
+const importDialogVisible = ref(false);
 const addOrUpdateHandle = (id?: number) => {
   addOrUpdateRef.value.init(id);
 };
@@ -186,6 +239,27 @@ watch(
 
 loadBackupAgents();
 
+const handleBatchToggle = () => {
+  if (!state.dataListSelections || state.dataListSelections.length === 0) {
+    ElMessage.warning({
+      message: "请选择操作项",
+      duration: 500
+    });
+    return;
+  }
+  const statusSet = new Set(state.dataListSelections.map((item: { status?: number }) => item.status));
+  if (statusSet.size !== 1) {
+    ElMessage.warning({
+      message: "请选择相同状态的设备",
+      duration: 500
+    });
+    return;
+  }
+  const currentStatus = Number(state.dataListSelections[0].status);
+  const nextStatus = currentStatus === 1 ? 0 : 1;
+  updateStatusHandle(nextStatus);
+};
+
 const updateStatusHandle = (status: number) => {
   if (!state.dataListSelections || state.dataListSelections.length === 0) {
     ElMessage.warning({
@@ -242,5 +316,31 @@ const updateStatusHandle = (status: number) => {
 }
 .mod-ops__devicebackup :deep(.el-table .cell) {
   white-space: nowrap;
+}
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  padding: 0 4px;
+  font-size: 11px;
+  line-height: 1;
+  color: #fff;
+  background: #409eff;
+  border-radius: 8px;
+}
+.filter-form .el-select,
+.filter-form .ren-select {
+  width: 100%;
+}
+.filter-form .el-form-item {
+  margin-bottom: 18px;
+}
+.import-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 </style>

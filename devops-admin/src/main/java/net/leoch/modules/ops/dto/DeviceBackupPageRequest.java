@@ -34,6 +34,15 @@ public class DeviceBackupPageRequest implements Serializable {
     @Schema(description = "区域名称")
     private String areaName;
 
+    @Schema(description = "分组名称")
+    private String groupName;
+
+    @Schema(description = "设备型号")
+    private String deviceModel;
+
+    @Schema(description = "状态")
+    private String status;
+
     @Schema(description = "备份节点ID")
     private String agentId;
 }
