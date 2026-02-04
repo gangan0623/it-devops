@@ -27,6 +27,8 @@ public class LinuxHostExcel {
     private String menuName;
     @ExcelProperty(value = "子组名称")
     private String subMenuName;
+    @ExcelProperty(value = "主机类型")
+    private String type;
     @ExcelProperty(value = "状态 0禁用 1启用")
     private Integer status;
     @ExcelProperty(value = "创建者")

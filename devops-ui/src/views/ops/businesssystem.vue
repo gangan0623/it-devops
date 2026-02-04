@@ -32,7 +32,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="分组名称">
-          <ren-select v-model="state.dataForm.menuName" dict-type="virtual_host_group" label-field="dictValue" value-field="dictLabel" placeholder="全部"></ren-select>
+          <ren-select v-model="state.dataForm.menuName" dict-type="server_host_group" label-field="dictValue" value-field="dictLabel" placeholder="全部"></ren-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -51,7 +51,7 @@
                 <template v-slot="scope">{{ state.getDictValueByLabel("base_site_location", scope.row.siteLocation) }}</template>
               </el-table-column>
               <el-table-column label="分组名称" header-align="center" align="center">
-                <template v-slot="scope">{{ state.getDictValueByLabel("virtual_host_group", scope.row.menuName) }}</template>
+                <template v-slot="scope">{{ state.getDictValueByLabel("server_host_group", scope.row.menuName) }}</template>
               </el-table-column>
               <el-table-column prop="subMenuName" label="子组名称" header-align="center" align="center"></el-table-column>
               <el-table-column prop="status" label="状态" header-align="center" align="center" width="80">

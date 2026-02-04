@@ -57,6 +57,7 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
         String areaName = (String) params.get("areaName");
         String siteLocation = (String) params.get("siteLocation");
         String menuName = (String) params.get("menuName");
+        String type = (String) params.get("type");
         String status = (String) params.get("status");
         lambda.eq(StrUtil.isNotBlank(id), WindowHostEntity::getId, id);
         WindowHostPageRequest req = new WindowHostPageRequest();
@@ -65,6 +66,7 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
         req.setAreaName(areaName);
         req.setSiteLocation(siteLocation);
         req.setMenuName(menuName);
+        req.setType(type);
         req.setStatus(status);
         applyCommonFilters(lambda, req);
         return wrapper;
@@ -175,6 +177,7 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
         wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), WindowHostEntity::getAreaName, request.getAreaName());
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), WindowHostEntity::getStatus, request.getStatus());
         wrapper.eq(StrUtil.isNotBlank(request.getMenuName()), WindowHostEntity::getMenuName, request.getMenuName());
+        wrapper.eq(StrUtil.isNotBlank(request.getType()), WindowHostEntity::getType, request.getType());
     }
 
     private WindowHostEntity toEntity(WindowHostImportExcel item) {
@@ -185,6 +188,7 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
         entity.setSiteLocation(item.getSiteLocation());
         entity.setMenuName(item.getMenuName());
         entity.setSubMenuName(item.getSubMenuName());
+        entity.setType(item.getType());
         entity.setStatus(item.getStatus());
         return entity;
     }

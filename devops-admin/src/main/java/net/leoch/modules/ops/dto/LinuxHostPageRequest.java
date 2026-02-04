@@ -40,6 +40,9 @@ public class LinuxHostPageRequest implements Serializable {
     @Schema(description = "Group name")
     private String menuName;
 
+    @Schema(description = "Host type")
+    private String type;
+
     @Schema(description = "Status")
     private String status;
 }

@@ -32,10 +32,19 @@
           <el-form-item label="分组名称" prop="menuName">
         <ren-select
           v-model="dataForm.menuName"
-          dict-type="virtual_host_group"
+          dict-type="server_host_group"
           label-field="dictValue"
           value-field="dictLabel"
           placeholder="分组名称"
+        ></ren-select>
+      </el-form-item>
+      <el-form-item label="主机类型" prop="type">
+        <ren-select
+          v-model="dataForm.type"
+          dict-type="server_machine_type"
+          label-field="dictValue"
+          value-field="dictLabel"
+          placeholder="主机类型"
         ></ren-select>
       </el-form-item>
           <el-form-item label="子组名称" prop="subMenuName">
@@ -75,6 +84,7 @@ const dataForm = reactive({
   siteLocation: "",
   menuName: "",
   subMenuName: "",
+  type: "",
   status: ""
 });
 
@@ -114,6 +124,9 @@ const rules = ref({
       { required: true, message: '必填项不能为空', trigger: 'change' }
     ],
           menuName: [
+      { required: true, message: '必填项不能为空', trigger: 'change' }
+    ],
+          type: [
       { required: true, message: '必填项不能为空', trigger: 'change' }
     ],
           subMenuName: [

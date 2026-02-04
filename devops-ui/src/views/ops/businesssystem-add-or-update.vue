@@ -28,7 +28,7 @@
           <el-form-item label="分组名称" prop="menuName">
         <ren-select
           v-model="dataForm.menuName"
-          dict-type="virtual_host_group"
+          dict-type="server_host_group"
           label-field="dictValue"
           value-field="dictLabel"
           placeholder="分组名称"

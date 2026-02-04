@@ -57,6 +57,7 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
         String areaName = (String) params.get("areaName");
         String siteLocation = (String) params.get("siteLocation");
         String menuName = (String) params.get("menuName");
+        String type = (String) params.get("type");
         String status = (String) params.get("status");
         lambda.eq(StrUtil.isNotBlank(id), LinuxHostEntity::getId, id);
         LinuxHostPageRequest req = new LinuxHostPageRequest();
@@ -65,6 +66,7 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
         req.setAreaName(areaName);
         req.setSiteLocation(siteLocation);
         req.setMenuName(menuName);
+        req.setType(type);
         req.setStatus(status);
         applyCommonFilters(lambda, req);
         return wrapper;
@@ -175,6 +177,7 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
         wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), LinuxHostEntity::getAreaName, request.getAreaName());
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), LinuxHostEntity::getStatus, request.getStatus());
         wrapper.eq(StrUtil.isNotBlank(request.getMenuName()), LinuxHostEntity::getMenuName, request.getMenuName());
+        wrapper.eq(StrUtil.isNotBlank(request.getType()), LinuxHostEntity::getType, request.getType());
     }
 
     private LinuxHostEntity toEntity(LinuxHostImportExcel item) {
@@ -185,6 +188,7 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
         entity.setSiteLocation(item.getSiteLocation());
         entity.setMenuName(item.getMenuName());
         entity.setSubMenuName(item.getSubMenuName());
+        entity.setType(item.getType());
         entity.setStatus(item.getStatus());
         return entity;
     }

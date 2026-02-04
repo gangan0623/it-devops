@@ -40,6 +40,9 @@ public class WindowHostDTO implements Serializable {
 	@SchemaProperty(name = "子组名称")
 	private String subMenuName;
 
+	@SchemaProperty(name = "主机类型")
+	private String type;
+
 	@SchemaProperty(name = "状态 0禁用 1启用")
 	private Integer status;
 

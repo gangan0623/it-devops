@@ -46,6 +46,10 @@ public class WindowHostEntity {
      */
 	private String subMenuName;
     /**
+     * 主机类型
+     */
+    private String type;
+    /**
      * 状态 0禁用 1启用
      */
 	private Integer status;

@@ -32,7 +32,10 @@
           </el-select>
         </el-form-item>
         <el-form-item label="分组名称">
-          <ren-select v-model="state.dataForm.menuName" dict-type="virtual_host_group" label-field="dictValue" value-field="dictLabel" placeholder="全部"></ren-select>
+          <ren-select v-model="state.dataForm.menuName" dict-type="server_host_group" label-field="dictValue" value-field="dictLabel" placeholder="全部"></ren-select>
+        </el-form-item>
+        <el-form-item label="主机类型">
+          <ren-select v-model="state.dataForm.type" dict-type="server_machine_type" label-field="dictValue" value-field="dictLabel" placeholder="全部"></ren-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -51,7 +54,10 @@
                 <template v-slot="scope">{{ state.getDictValueByLabel("base_site_location", scope.row.siteLocation) }}</template>
               </el-table-column>
               <el-table-column label="分组名称" header-align="center" align="center">
-                <template v-slot="scope">{{ state.getDictValueByLabel("virtual_host_group", scope.row.menuName) }}</template>
+                <template v-slot="scope">{{ state.getDictValueByLabel("server_host_group", scope.row.menuName) }}</template>
+              </el-table-column>
+              <el-table-column label="主机类型" header-align="center" align="center">
+                <template v-slot="scope">{{ state.getDictValueByLabel("server_machine_type", scope.row.type) }}</template>
               </el-table-column>
               <el-table-column prop="subMenuName" label="子组名称" header-align="center" align="center"></el-table-column>
               <el-table-column prop="status" label="状态" header-align="center" align="center" width="80">
@@ -118,7 +124,8 @@ const view = reactive({
     siteLocation: "",
     areaName: "",
     status: "" as string | number,
-    menuName: ""
+    menuName: "",
+    type: ""
   }
 });
 
@@ -132,6 +139,7 @@ const activeFilterCount = computed(() => {
   if (state.dataForm.areaName) count++;
   if (state.dataForm.status !== "" && state.dataForm.status !== null && state.dataForm.status !== undefined) count++;
   if (state.dataForm.menuName) count++;
+  if (state.dataForm.type) count++;
   return count;
 });
 
@@ -145,6 +153,7 @@ const handleFilterReset = () => {
   state.dataForm.areaName = "";
   state.dataForm.status = "";
   state.dataForm.menuName = "";
+  state.dataForm.type = "";
 };
 
 const addOrUpdateRef = ref();
