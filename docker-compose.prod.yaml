@@ -6,10 +6,13 @@ services:
     environment:
       MYSQL_ROOT_PASSWORD: Leoch@@20260101
       MYSQL_DATABASE: devops
+      TZ: Asia/Shanghai
     ports:
       - "3306:3306"
     volumes:
       - ./docker/mysql:/var/lib/mysql
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p$$MYSQL_ROOT_PASSWORD"]
       interval: 5s
@@ -19,10 +22,14 @@ services:
   redis:
     image: taohongqiang/it-devops-redis:latest
     command: ["redis-server", "--requirepass", "Leoch@@20260101"]
+    environment:
+      TZ: Asia/Shanghai
     ports:
       - "6379:6379"
     volumes:
       - ./docker/redis:/data
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
     healthcheck:
       test: ["CMD", "redis-cli", "-a", "Leoch@@20260101", "ping"]
       interval: 5s
@@ -40,6 +47,8 @@ services:
       SPRING_DATA_REDIS_HOST: redis
       SPRING_DATA_REDIS_PORT: "6379"
       SPRING_DATA_REDIS_PASSWORD: Leoch@@20260101
+      TZ: Asia/Shanghai
+      JAVA_TOOL_OPTIONS: -Duser.timezone=Asia/Shanghai
     depends_on:
       mysql:
         condition: service_healthy
@@ -49,10 +58,14 @@ services:
       - "10001:10001"
     volumes:
       - ./docker/admin/logs:/app/logs
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
 
   nginx:
     image: taohongqiang/it-devops-ui:latest
     container_name: it-devops-nginx
+    environment:
+      TZ: Asia/Shanghai
     depends_on:
       devops-admin:
         condition: service_started
@@ -60,3 +73,5 @@ services:
       - "80:80"
     volumes:
       - ./docker/nginx/logs:/var/log/nginx
+      - /etc/localtime:/etc/localtime:ro
+      - /etc/timezone:/etc/timezone:ro
