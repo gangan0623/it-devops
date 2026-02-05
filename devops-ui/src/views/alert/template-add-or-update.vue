@@ -1,6 +1,6 @@
 <template>
-  <el-dialog v-model="visible" :title="!dataForm.id ? '新增' : '修改'" width="720px" :close-on-click-modal="false" :close-on-press-escape="false">
-    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px">
+  <el-dialog v-model="visible" :title="!dataForm.id ? '新增模板' : '修改模板'" width="820px" :close-on-click-modal="false" :close-on-press-escape="false">
+    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="template-form">
       <el-form-item prop="name">
         <template #label>
           <span>模板名称</span>
@@ -26,7 +26,7 @@
             <el-icon class="help-icon"><question-filled /></el-icon>
           </el-tooltip>
         </template>
-        <el-input v-model="dataForm.emailHtml" type="textarea" :rows="4" placeholder="HTML内容，可引用${annotations.summary}"></el-input>
+        <el-input v-model="dataForm.emailHtml" type="textarea" :rows="10" placeholder="HTML内容，可引用${annotations.summary}"></el-input>
       </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-select v-model="dataForm.status" placeholder="请选择状态">
@@ -37,7 +37,8 @@
     </el-form>
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="dataFormSubmitHandle()">确定</el-button>
+      <el-button @click="fillSample">填充示例</el-button>
+      <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
     </template>
   </el-dialog>
 </template>
@@ -52,6 +53,7 @@ const emit = defineEmits(["refreshDataList"]);
 
 const visible = ref(false);
 const dataFormRef = ref();
+const submitLoading = ref(false);
 
 const templateTip = "支持变量：${alertname}、${severity}、${instance}、${summary}、${description}、${labels.xxx}、${annotations.xxx}、${startsAt}";
 
@@ -83,6 +85,19 @@ const init = (id?: number) => {
   }
 };
 
+const fillSample = () => {
+  if (!dataForm.emailHtml) {
+    dataForm.emailHtml = [
+      "<h3>${alertname}</h3>",
+      "<p>级别：${severity}</p>",
+      "<p>实例：${instance}</p>",
+      "<p>摘要：${summary}</p>",
+      "<p>描述：${description}</p>",
+      "<p>时间：${startsAt}</p>"
+    ].join("");
+  }
+};
+
 const dataFormSubmitHandle = () => {
   dataFormRef.value.validate((valid: boolean) => {
     if (!valid) {
@@ -90,16 +105,21 @@ const dataFormSubmitHandle = () => {
     }
     const submitData = { ...dataForm } as Record<string, any>;
     const headers = { "Content-Type": "application/x-www-form-urlencoded" };
-    (!dataForm.id ? baseService.post : baseService.put)("/alert/template", submitData, headers).then(() => {
-      ElMessage.success({
-        message: "成功",
-        duration: 500,
-        onClose: () => {
-          visible.value = false;
-          emit("refreshDataList");
-        }
+    submitLoading.value = true;
+    (!dataForm.id ? baseService.post : baseService.put)("/alert/template", submitData, headers)
+      .then(() => {
+        ElMessage.success({
+          message: "成功",
+          duration: 500,
+          onClose: () => {
+            visible.value = false;
+            emit("refreshDataList");
+          }
+        });
+      })
+      .finally(() => {
+        submitLoading.value = false;
       });
-    });
   });
 };
 
@@ -111,5 +131,10 @@ defineExpose({ init });
   margin-left: 6px;
   color: #909399;
   cursor: pointer;
+}
+.template-form {
+  max-height: 64vh;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 </style>
