@@ -124,6 +124,9 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
         if (trigger == null) {
             return;
         }
+        if (trigger.getStatus() != null && trigger.getStatus() == 0) {
+            return;
+        }
         AlertTemplateEntity template = templateId == null ? null : alertTemplateDao.selectById(templateId);
         if (template == null) {
             return;
