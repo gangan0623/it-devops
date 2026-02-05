@@ -3,9 +3,9 @@
     <div class="ops-toolbar">
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
-          <el-input v-model="state.dataForm.instance" placeholder="地址(模糊)" clearable @keyup.enter="state.getDataList()"></el-input>
-          <el-input v-model="state.dataForm.name" placeholder="名称(模糊)" clearable @keyup.enter="state.getDataList()"></el-input>
-          <el-button @click="state.getDataList()">查询</el-button>
+          <el-input v-model="state.dataForm.instance" placeholder="地址(模糊)" clearable @keyup.enter="queryList()"></el-input>
+          <el-input v-model="state.dataForm.name" placeholder="名称(模糊)" clearable @keyup.enter="queryList()"></el-input>
+          <el-button @click="queryList()">查询</el-button>
           <el-button :icon="Filter" @click="filterDrawer = true">筛选<span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span></el-button>
         </div>
         <div class="ops-toolbar__group ops-actions">
@@ -97,7 +97,7 @@
       </div>
     </el-dialog>
     <!-- 弹窗, 新增 / 修改 -->
-    <add-or-update ref="addOrUpdateRef" @refreshDataList="state.getDataList">确定</add-or-update>
+    <add-or-update ref="addOrUpdateRef" @refreshDataList="queryList">确定</add-or-update>
   </div>
 </template>
 
@@ -109,7 +109,7 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {computed, reactive, ref, toRefs, watch} from "vue";
+import {computed, onMounted, reactive, ref, toRefs} from "vue";
 import AddOrUpdate from "./linuxhost-add-or-update.vue";
 import baseService from "@/service/baseService";
 import {ElMessage, ElMessageBox} from "element-plus";
@@ -161,7 +161,7 @@ const activeFilterCount = computed(() => {
 
 const handleFilterConfirm = () => {
   filterDrawer.value = false;
-  state.getDataList();
+  queryList();
 };
 
 const handleFilterReset = () => {
@@ -202,9 +202,9 @@ const handleImportSuccess = (res: IObject) => {
   }
   ElMessage.success({
     message: "成功",
-    duration: 500,
-    onClose: () => {
-      state.getDataList();
+      duration: 500,
+      onClose: () => {
+      queryList();
     }
   });
 };
@@ -234,13 +234,14 @@ const loadStatusSummary = () => {
     });
 };
 
-watch(
-  () => state.dataList,
-  () => {
-    loadStatusSummary();
-  },
-  { immediate: true }
-);
+const queryList = () => {
+  state.getDataList();
+  loadStatusSummary();
+};
+
+onMounted(() => {
+  loadStatusSummary();
+});
 
 const handleBatchToggle = () => {
   if (!state.dataListSelections || state.dataListSelections.length === 0) {
@@ -283,7 +284,7 @@ const updateStatusHandle = (status: number) => {
         message: "成功",
         duration: 500,
         onClose: () => {
-          state.getDataList();
+          queryList();
         }
       });
     });
