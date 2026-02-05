@@ -38,7 +38,7 @@ services:
 
   devops-admin:
     image: taohongqiang/it-devops-admin:latest
-    container_name: it-devops-devops-admin
+    container_name: it-devops-admin
     environment:
       SPRING_PROFILES_ACTIVE: prod
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/devops?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&nullCatalogMeansCurrent=true

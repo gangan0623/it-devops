@@ -990,6 +990,8 @@ CREATE TABLE `tb_alert_record` (
   `ends_at` datetime DEFAULT NULL COMMENT '结束时间',
   `receiver` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '接收器',
   `raw_json` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '原始JSON',
+  `closed` tinyint DEFAULT '0' COMMENT '是否关闭 0否 1是',
+  `suppressed_until` datetime DEFAULT NULL COMMENT '抑制截止时间',
   `creator` bigint DEFAULT NULL COMMENT '创建者',
   `create_date` datetime DEFAULT NULL COMMENT '创建时间',
   `updater` bigint DEFAULT NULL COMMENT '更新者',
@@ -1005,6 +1007,69 @@ CREATE TABLE `tb_alert_record` (
 LOCK TABLES `tb_alert_record` WRITE;
 /*!40000 ALTER TABLE `tb_alert_record` DISABLE KEYS */;
 /*!40000 ALTER TABLE `tb_alert_record` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `tb_alert_record_action`
+--
+
+DROP TABLE IF EXISTS `tb_alert_record_action`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tb_alert_record_action` (
+  `id` bigint NOT NULL,
+  `record_id` bigint NOT NULL COMMENT '告警记录ID',
+  `action` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '操作动作',
+  `message` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci DEFAULT NULL COMMENT '消息',
+  `details` text CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci COMMENT '附加详情',
+  `creator` bigint DEFAULT NULL COMMENT '创建者',
+  `create_date` datetime DEFAULT NULL COMMENT '创建时间',
+  `updater` bigint DEFAULT NULL COMMENT '更新者',
+  `update_date` datetime DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_record_id` (`record_id`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='告警记录操作历史';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tb_alert_record_action`
+--
+
+LOCK TABLES `tb_alert_record_action` WRITE;
+/*!40000 ALTER TABLE `tb_alert_record_action` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_alert_record_action` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `tb_alert_notify_log`
+--
+
+DROP TABLE IF EXISTS `tb_alert_notify_log`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tb_alert_notify_log` (
+  `id` bigint NOT NULL,
+  `record_id` bigint DEFAULT NULL COMMENT '告警记录ID',
+  `alert_name` varchar(200) DEFAULT NULL COMMENT '告警名',
+  `instance` varchar(200) DEFAULT NULL COMMENT '实例',
+  `severity` varchar(50) DEFAULT NULL COMMENT '严重性',
+  `media_name` varchar(100) DEFAULT NULL COMMENT '媒介名称',
+  `receivers` varchar(1000) DEFAULT NULL COMMENT '接收人',
+  `send_status` tinyint DEFAULT NULL COMMENT '发送状态 1成功 0失败',
+  `error_message` varchar(500) DEFAULT NULL COMMENT '失败原因',
+  `send_time` datetime DEFAULT NULL COMMENT '发送时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_record_send_time` (`record_id`,`send_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='告警发送日志';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tb_alert_notify_log`
+--
+
+LOCK TABLES `tb_alert_notify_log` WRITE;
+/*!40000 ALTER TABLE `tb_alert_notify_log` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_alert_notify_log` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --

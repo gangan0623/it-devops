@@ -20,6 +20,9 @@ public class AlertRealtimeDTO implements Serializable {
     @Schema(description = "实例")
     private String instance;
 
+    @Schema(description = "主机名")
+    private String hostName;
+
     @Schema(description = "级别")
     private String severity;
 

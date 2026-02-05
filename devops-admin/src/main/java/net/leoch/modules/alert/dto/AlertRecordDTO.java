@@ -33,6 +33,9 @@ public class AlertRecordDTO implements Serializable {
     @SchemaProperty(name = "实例")
     private String instance;
 
+    @SchemaProperty(name = "主机名")
+    private String hostName;
+
     @SchemaProperty(name = "摘要")
     private String summary;
 
@@ -50,6 +53,12 @@ public class AlertRecordDTO implements Serializable {
 
     @SchemaProperty(name = "原始JSON")
     private String rawJson;
+
+    @SchemaProperty(name = "是否关闭 0否 1是")
+    private Integer closed;
+
+    @SchemaProperty(name = "抑制截止时间")
+    private Date suppressedUntil;
 
     @SchemaProperty(name = "创建者")
     private Long creator;

@@ -112,8 +112,9 @@
           <span class="card-link" @click="goAlertRecord">查看详情</span>
         </div>
         <el-table :data="summary.recentAlerts" height="280" border>
-          <el-table-column prop="instance" label="实例" min-width="140" />
-          <el-table-column prop="alertName" label="告警名称" min-width="160" />
+          <el-table-column prop="instance" label="实例" min-width="140" show-overflow-tooltip />
+          <el-table-column prop="hostName" label="主机名" min-width="140" show-overflow-tooltip />
+          <el-table-column prop="alertName" label="告警名称" min-width="160" show-overflow-tooltip />
           <el-table-column prop="severity" label="级别" min-width="80">
             <template v-slot="scope">
               <el-tag v-if="scope.row.severity === 'critical'" size="small" type="danger">灾难</el-tag>

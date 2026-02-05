@@ -39,6 +39,24 @@ export const useAppStore = defineStore("useAppStore", {
     } as IObject
   }),
   actions: {
+    moveProblemMenuUnderWorkbench(routes: IObject[]): IObject[] {
+      if (!Array.isArray(routes) || !routes.length) {
+        return routes;
+      }
+      const workbench = routes.find((item) => item.path === "/");
+      if (!workbench || !Array.isArray(workbench.children)) {
+        return routes;
+      }
+      const idx = routes.findIndex((item) => item.path === "/alert/problem");
+      if (idx < 0) {
+        return routes;
+      }
+      const [problemRoute] = routes.splice(idx, 1);
+      if (!workbench.children.some((item: IObject) => item.path === "/alert/problem")) {
+        workbench.children.push(problemRoute);
+      }
+      return routes;
+    },
     updateState(data: IObject) {
       Object.keys(data).forEach((x: string) => {
         this.state[x] = data[x];
@@ -55,6 +73,7 @@ export const useAppStore = defineStore("useAppStore", {
           console.error("初始化用户数据错误", user.msg);
         }
         const [routes, routeToMeta] = mergeServerRoute(menus.data || [], getSysRouteMap());
+        const normalizedRoutes = this.moveProblemMenuUnderWorkbench(routes as IObject[]);
         this.updateState({
           permissions: permissions.data || [],
           user: user.data || {},
@@ -62,7 +81,7 @@ export const useAppStore = defineStore("useAppStore", {
           routeToMeta: routeToMeta || {},
           menus: []
         });
-        return routes;
+        return normalizedRoutes as any;
       });
     },
     //退出

@@ -18,6 +18,11 @@ const routes: Array<RouteRecordRaw> = [
         path: "/home",
         component: () => import("@/views/home.vue"),
         meta: { title: "主页", icon: "icon-home" }
+      },
+      {
+        path: "/problem",
+        component: () => import("@/views/problem.vue"),
+        meta: { title: "问题", icon: "icon-notification" }
       }
     ]
   },

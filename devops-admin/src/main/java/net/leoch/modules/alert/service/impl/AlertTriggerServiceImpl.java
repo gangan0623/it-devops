@@ -7,10 +7,14 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import net.leoch.common.service.impl.CrudServiceImpl;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.alert.dao.AlertMediaDao;
+import net.leoch.modules.alert.dao.AlertNotifyLogDao;
+import net.leoch.modules.alert.dao.AlertRecordDao;
 import net.leoch.modules.alert.dao.AlertTemplateDao;
 import net.leoch.modules.alert.dao.AlertTriggerDao;
 import net.leoch.modules.alert.dto.AlertTriggerDTO;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
+import net.leoch.modules.alert.entity.AlertNotifyLogEntity;
+import net.leoch.modules.alert.entity.AlertRecordEntity;
 import net.leoch.modules.alert.entity.AlertTemplateEntity;
 import net.leoch.modules.alert.entity.AlertTriggerEntity;
 import net.leoch.modules.alert.service.AlertMailService;
@@ -23,6 +27,7 @@ import net.leoch.modules.sys.entity.SysUserEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,12 +46,21 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
     private final AlertMediaDao alertMediaDao;
     private final SysUserDao sysUserDao;
     private final AlertMailService alertMailService;
+    private final AlertNotifyLogDao alertNotifyLogDao;
+    private final AlertRecordDao alertRecordDao;
 
-    public AlertTriggerServiceImpl(AlertTemplateDao alertTemplateDao, AlertMediaDao alertMediaDao, SysUserDao sysUserDao, AlertMailService alertMailService) {
+    public AlertTriggerServiceImpl(AlertTemplateDao alertTemplateDao,
+                                   AlertMediaDao alertMediaDao,
+                                   SysUserDao sysUserDao,
+                                   AlertMailService alertMailService,
+                                   AlertNotifyLogDao alertNotifyLogDao,
+                                   AlertRecordDao alertRecordDao) {
         this.alertTemplateDao = alertTemplateDao;
         this.alertMediaDao = alertMediaDao;
         this.sysUserDao = sysUserDao;
         this.alertMailService = alertMailService;
+        this.alertNotifyLogDao = alertNotifyLogDao;
+        this.alertRecordDao = alertRecordDao;
     }
 
     @Override
@@ -94,11 +108,12 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
         }
         for (Map<String, Object> alert : alerts) {
             String severityForAlert = resolveSeverity(payload, alert, severity);
+            Long recordId = findRecordId(payload, alert);
             for (AlertTriggerEntity trigger : triggers) {
                 if (!matches(trigger, payload, alert, severityForAlert)) {
                     continue;
                 }
-                sendAlert(trigger, payload, alert, rawJson, severityForAlert);
+                sendAlert(trigger, payload, alert, severityForAlert, recordId);
             }
         }
     }
@@ -119,11 +134,11 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
         }
         Map<String, Object> payload = AlertJsonUtils.parsePayload(rawJson);
         Map<String, Object> alert = CollUtil.isNotEmpty(getAlerts(payload)) ? getAlerts(payload).get(0) : new HashMap<>();
-        Map<String, Object> context = buildContext(payload, alert, null);
+        Map<String, Object> context = buildContext(payload, alert, null, null);
         sendWithTemplate(template, media, trigger.getReceiverUserIds(), context);
     }
 
-    private void sendAlert(AlertTriggerEntity trigger, Map<String, Object> payload, Map<String, Object> alert, String rawJson, String severity) {
+    private void sendAlert(AlertTriggerEntity trigger, Map<String, Object> payload, Map<String, Object> alert, String severity, Long recordId) {
         AlertTemplateEntity template = trigger.getTemplateId() == null ? null : alertTemplateDao.selectById(trigger.getTemplateId());
         AlertMediaEntity media = trigger.getMediaId() == null ? null : alertMediaDao.selectById(trigger.getMediaId());
         if (template == null || media == null) {
@@ -135,7 +150,7 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
         if (media.getStatus() != null && media.getStatus() == 0) {
             return;
         }
-        Map<String, Object> context = buildContext(payload, alert, severity);
+        Map<String, Object> context = buildContext(payload, alert, severity, recordId);
         sendWithTemplate(template, media, trigger.getReceiverUserIds(), context);
     }
 
@@ -146,7 +161,23 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
         }
         String subject = AlertTemplateRenderer.render(template.getEmailSubject(), context);
         String html = AlertTemplateRenderer.render(template.getEmailHtml(), context);
-        alertMailService.send(media, receivers, subject, null, html);
+        AlertNotifyLogEntity log = new AlertNotifyLogEntity();
+        log.setRecordId(context == null ? null : toLong(context.get("recordId")));
+        log.setAlertName(context == null ? null : toStr(context.get("alertname")));
+        log.setInstance(context == null ? null : toStr(context.get("instance")));
+        log.setSeverity(context == null ? null : toStr(context.get("severity")));
+        log.setMediaName(media.getName());
+        log.setReceivers(String.join(",", receivers));
+        log.setSendTime(new Date());
+        try {
+            alertMailService.send(media, receivers, subject, null, html);
+            log.setSendStatus(1);
+        } catch (Exception e) {
+            log.setSendStatus(0);
+            log.setErrorMessage(StrUtil.sub(e.getMessage(), 0, 500));
+        } finally {
+            alertNotifyLogDao.insert(log);
+        }
     }
 
     private boolean matches(AlertTriggerEntity trigger, Map<String, Object> payload, Map<String, Object> alert, String severityFromPath) {
@@ -169,7 +200,7 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
         return true;
     }
 
-    private Map<String, Object> buildContext(Map<String, Object> payload, Map<String, Object> alert, String severityFromPath) {
+    private Map<String, Object> buildContext(Map<String, Object> payload, Map<String, Object> alert, String severityFromPath, Long recordId) {
         Map<String, Object> context = new HashMap<>();
         context.put("receiver", payload.get("receiver"));
         context.put("status", payload.get("status"));
@@ -190,6 +221,7 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
         context.put("description", getLabelValue(annotations, toMap(payload.get("commonAnnotations")), "description"));
         context.put("startsAt", alert.get("startsAt"));
         context.put("endsAt", alert.get("endsAt"));
+        context.put("recordId", recordId);
         return context;
     }
 
@@ -258,6 +290,33 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
         return value instanceof Map ? (Map<String, Object>) value : new HashMap<>();
     }
 
+    private Long findRecordId(Map<String, Object> payload, Map<String, Object> alert) {
+        Map<String, Object> labels = toMap(alert == null ? null : alert.get("labels"));
+        String alertName = getLabelValue(labels, toMap(payload.get("commonLabels")), "alertname");
+        String instance = getLabelValue(labels, toMap(payload.get("commonLabels")), "instance", getLabelValue(labels, toMap(payload.get("commonLabels")), "service"));
+        String startsAt = alert == null ? null : String.valueOf(alert.get("startsAt"));
+        Date startsAtDate = parseDate(startsAt);
+        AlertRecordEntity record = alertRecordDao.selectOne(
+            new QueryWrapper<AlertRecordEntity>()
+                .eq(StrUtil.isNotBlank(alertName), "alert_name", alertName)
+                .eq(StrUtil.isNotBlank(instance), "instance", instance)
+                .eq(startsAtDate != null, "starts_at", startsAtDate)
+                .orderByDesc("create_date")
+                .last("limit 1")
+        );
+        if (record != null) {
+            return record.getId();
+        }
+        AlertRecordEntity fallback = alertRecordDao.selectOne(
+            new QueryWrapper<AlertRecordEntity>()
+                .eq(StrUtil.isNotBlank(alertName), "alert_name", alertName)
+                .eq(StrUtil.isNotBlank(instance), "instance", instance)
+                .orderByDesc("create_date")
+                .last("limit 1")
+        );
+        return fallback == null ? null : fallback.getId();
+    }
+
     private List<Map<String, Object>> getAlerts(Map<String, Object> payload) {
         Object alerts = payload.get("alerts");
         if (!(alerts instanceof List)) {
@@ -310,5 +369,31 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
             .filter(StrUtil::isNotBlank)
             .distinct()
             .collect(Collectors.toList());
+    }
+
+    private Date parseDate(String value) {
+        if (StrUtil.isBlank(value)) {
+            return null;
+        }
+        try {
+            return Date.from(java.time.Instant.parse(value));
+        } catch (Exception ignore) {
+            return null;
+        }
+    }
+
+    private Long toLong(Object value) {
+        if (value == null) {
+            return null;
+        }
+        try {
+            return Long.parseLong(String.valueOf(value));
+        } catch (Exception ignore) {
+            return null;
+        }
+    }
+
+    private String toStr(Object value) {
+        return value == null ? null : String.valueOf(value);
     }
 }
