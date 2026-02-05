@@ -64,9 +64,14 @@
 
     <el-dialog v-model="historyVisible" title="备份历史" width="900px">
       <div class="history-toolbar">
+        <div class="history-stats">
+          <span class="history-stats__item history-stats__item--ok">已完成 {{ historySuccessCount }}</span>
+          <span class="history-stats__item history-stats__item--bad">异常 {{ historyFailCount }}</span>
+          <el-switch v-model="showOnlyFailed" inline-prompt active-text="仅异常" inactive-text="全部"></el-switch>
+        </div>
         <el-button v-if="state.hasPermission('ops:devicebackuprecord:diff')" type="primary" @click="handleDiff" :disabled="historySelections.length !== 1">对比</el-button>
       </div>
-      <el-table v-loading="historyLoading" :data="historyList" border @selection-change="handleHistorySelectionChange" style="width: 100%">
+      <el-table v-loading="historyLoading" :data="filteredHistoryList" border @selection-change="handleHistorySelectionChange" style="width: 100%">
         <el-table-column type="selection" width="50" header-align="center" align="center"></el-table-column>
         <el-table-column prop="name" label="主机名" header-align="center" align="center"></el-table-column>
         <el-table-column prop="ip" label="IP" header-align="center" align="center"></el-table-column>
@@ -152,11 +157,20 @@ const historyVisible = ref(false);
 const historyLoading = ref(false);
 const historyList = ref<any[]>([]);
 const historySelections = ref<any[]>([]);
+const showOnlyFailed = ref(false);
 const diffVisible = ref(false);
 const diffLines = ref<any[]>([]);
 const currentIp = ref("");
 const previewVisible = ref(false);
 const previewContent = ref("");
+const historySuccessCount = computed(() => (historyList.value || []).filter((item: any) => Number(item?.backupStatus) === 1).length);
+const historyFailCount = computed(() => (historyList.value || []).filter((item: any) => Number(item?.backupStatus) === 0).length);
+const filteredHistoryList = computed(() => {
+  if (!showOnlyFailed.value) {
+    return historyList.value || [];
+  }
+  return (historyList.value || []).filter((item: any) => Number(item?.backupStatus) === 0);
+});
 
 const openHistory = (row: any) => {
   if (!row?.ip) {
@@ -166,6 +180,7 @@ const openHistory = (row: any) => {
   historyVisible.value = true;
   historyLoading.value = true;
   historySelections.value = [];
+  showOnlyFailed.value = false;
   baseService
     .get("/ops/devicebackuprecord/history", { ip: row.ip, limit: 200 })
     .then((res) => {
@@ -341,8 +356,28 @@ const setupPreviewSync = () => {
 }
 .history-toolbar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 10px;
+}
+.history-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.history-stats__item {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.history-stats__item--ok {
+  color: #166534;
+  background: #dcfce7;
+}
+.history-stats__item--bad {
+  color: #991b1b;
+  background: #fee2e2;
 }
 .diff-wrap {
   max-height: 80vh;
