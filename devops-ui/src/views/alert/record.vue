@@ -1,13 +1,16 @@
 <template>
   <div class="mod-alert__record">
-    <el-form :inline="true" :model="state.dataForm" @keyup.enter="state.getDataList()" class="ops-toolbar">
+    <el-form :inline="true" :model="state.dataForm" @keyup.enter="queryList()" class="ops-toolbar">
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
           <el-form-item>
             <el-input v-model="state.dataForm.hostName" class="query-input" placeholder="主机名(模糊)" clearable></el-input>
           </el-form-item>
           <el-form-item>
-            <el-button class="query-btn" @click="state.getDataList()">查询</el-button>
+            <el-button class="query-btn" :loading="state.dataListLoading" @click="queryList()">查询</el-button>
+          </el-form-item>
+          <el-form-item>
+            <el-button class="query-btn" @click="handleToolbarReset">重置</el-button>
           </el-form-item>
           <el-form-item>
             <el-button class="query-btn" :icon="Filter" @click="filterDrawer = true">
@@ -267,9 +270,17 @@ const firingCount = computed(
 const resolvedCount = computed(
   () => (state.dataList || []).filter((item: any) => String(item?.status || "").toLowerCase() !== "firing").length
 );
+const queryList = () => {
+  state.getDataList();
+};
+const handleToolbarReset = () => {
+  state.dataForm.hostName = "";
+  handleFilterReset();
+  queryList();
+};
 const handleFilterConfirm = () => {
   filterDrawer.value = false;
-  state.getDataList();
+  queryList();
 };
 const handleFilterReset = () => {
   state.dataForm.deviceType = "";
