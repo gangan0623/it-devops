@@ -134,7 +134,6 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
     @Override
     public OpsHostStatusSummaryDTO summary(BusinessSystemPageRequest request) {
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
-        applyCommonFilters(wrapper, request);
         wrapper.select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getStatus);
         List<BusinessSystemEntity> list = baseDao.selectList(wrapper);
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBusinessSystemOnlineKey());

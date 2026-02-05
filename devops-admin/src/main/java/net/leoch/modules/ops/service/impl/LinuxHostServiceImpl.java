@@ -136,7 +136,6 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
     @Override
     public OpsHostStatusSummaryDTO summary(LinuxHostPageRequest request) {
         LambdaQueryWrapper<LinuxHostEntity> wrapper = new LambdaQueryWrapper<>();
-        applyCommonFilters(wrapper, request);
         wrapper.select(LinuxHostEntity::getInstance, LinuxHostEntity::getStatus);
         List<LinuxHostEntity> list = baseDao.selectList(wrapper);
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getLinuxHostOnlineKey());

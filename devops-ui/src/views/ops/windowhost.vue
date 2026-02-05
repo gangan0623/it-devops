@@ -215,7 +215,7 @@ const handleTemplateDownload = () => {
 
 const loadStatusSummary = () => {
   baseService
-    .get("/ops/windowhost/summary", { ...state.dataForm })
+    .get("/ops/windowhost/summary")
     .then((res) => {
       statusSummary.value = {
         enabledCount: Number(res.data?.enabledCount || 0),

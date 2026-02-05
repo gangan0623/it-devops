@@ -136,7 +136,6 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
     @Override
     public OpsHostStatusSummaryDTO summary(WindowHostPageRequest request) {
         LambdaQueryWrapper<WindowHostEntity> wrapper = new LambdaQueryWrapper<>();
-        applyCommonFilters(wrapper, request);
         wrapper.select(WindowHostEntity::getInstance, WindowHostEntity::getStatus);
         List<WindowHostEntity> list = baseDao.selectList(wrapper);
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getWindowHostOnlineKey());
