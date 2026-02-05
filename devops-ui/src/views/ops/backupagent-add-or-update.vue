@@ -1,6 +1,7 @@
 <template>
-  <el-dialog v-model="visible" :title="!dataForm.id ? '新增' : '修改'" :close-on-click-modal="false" :close-on-press-escape="false">
-    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px">
+  <el-dialog v-model="visible" :title="!dataForm.id ? '新增备份节点' : '修改备份节点'" width="720px" :close-on-click-modal="false" :close-on-press-escape="false">
+    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="agent-form">
+      <div class="form-section-title">节点信息</div>
       <el-form-item label="地址" prop="instance">
         <el-input v-model="dataForm.instance" placeholder="地址" @blur="checkUnique('instance')"></el-input>
       </el-form-item>
@@ -17,7 +18,10 @@
         ></ren-select>
       </el-form-item>
       <el-form-item v-if="!dataForm.id" label="Token" prop="token">
-        <el-input v-model="dataForm.token" placeholder="Token"></el-input>
+        <div class="token-wrap">
+          <el-input v-model="dataForm.token" placeholder="Token"></el-input>
+          <el-button @click="genToken">随机生成</el-button>
+        </div>
       </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-select v-model="dataForm.status" placeholder="请选择状态">
@@ -28,7 +32,7 @@
               </el-form>
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="dataFormSubmitHandle()">确定</el-button>
+      <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
     </template>
   </el-dialog>
 </template>
@@ -42,6 +46,7 @@ const emit = defineEmits(["refreshDataList"]);
 
 const visible = ref(false);
 const dataFormRef = ref();
+const submitLoading = ref(false);
 
 const dataForm = reactive({
   id: "",
@@ -110,6 +115,8 @@ const init = (id?: number) => {
 
   if (id) {
     getInfo(id);
+  } else {
+    genToken();
   }
 };
 
@@ -140,6 +147,9 @@ const checkUnique = (field: "instance" | "name") => {
     }
   });
 };
+const genToken = () => {
+  dataForm.token = Math.random().toString(36).slice(2, 18);
+};
 
 // 表单提交
 const dataFormSubmitHandle = () => {
@@ -152,16 +162,21 @@ const dataFormSubmitHandle = () => {
     delete submitData.createDate;
     delete submitData.updater;
     delete submitData.updateDate;
-    (!dataForm.id ? baseService.post : baseService.put)("/ops/backupagent", submitData).then((res) => {
-      ElMessage.success({
-        message: '成功',
-        duration: 500,
-        onClose: () => {
-          visible.value = false;
-          emit("refreshDataList");
-        }
+    submitLoading.value = true;
+    (!dataForm.id ? baseService.post : baseService.put)("/ops/backupagent", submitData)
+      .then(() => {
+        ElMessage.success({
+          message: "成功",
+          duration: 500,
+          onClose: () => {
+            visible.value = false;
+            emit("refreshDataList");
+          }
+        });
+      })
+      .finally(() => {
+        submitLoading.value = false;
       });
-    });
   });
 };
 
@@ -179,3 +194,24 @@ defineExpose({
   }
 });
 </script>
+
+<style scoped>
+.agent-form {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+.form-section-title {
+  margin: 4px 0 10px;
+  padding-left: 8px;
+  border-left: 3px solid #409eff;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 13px;
+}
+.token-wrap {
+  width: 100%;
+  display: flex;
+  gap: 8px;
+}
+</style>
