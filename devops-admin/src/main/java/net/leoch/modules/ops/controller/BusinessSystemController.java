@@ -42,6 +42,13 @@ public class BusinessSystemController {
         return new Result<PageData<BusinessSystemDTO>>().ok(businessSystemService.page(request));
     }
 
+    @GetMapping("summary")
+    @Operation(summary = "状态汇总")
+    @SaCheckPermission("ops:businesssystem:page")
+    public Result<OpsHostStatusSummaryDTO> summary(@Parameter(hidden = true) BusinessSystemPageRequest request){
+        return new Result<OpsHostStatusSummaryDTO>().ok(businessSystemService.summary(request));
+    }
+
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("ops:businesssystem:info")

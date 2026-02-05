@@ -9,16 +9,11 @@
           <el-button :icon="Filter" @click="filterDrawer = true">筛选<span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span></el-button>
         </div>
         <div class="ops-toolbar__group ops-actions">
-          <el-radio-group v-model="onlineQuickFilter" size="small">
-            <el-radio-button label="">全部</el-radio-button>
-            <el-radio-button label="online">在线</el-radio-button>
-            <el-radio-button label="offline">离线</el-radio-button>
-          </el-radio-group>
           <div class="host-stats">
             <span class="host-stats__item host-stats__item--on">启用 {{ enabledCount }}</span>
             <span class="host-stats__item host-stats__item--off">禁用 {{ disabledCount }}</span>
             <span class="host-stats__item host-stats__item--online">在线 {{ onlineCount }}</span>
-            <span class="host-stats__item host-stats__item--filter">显示 {{ filteredCount }}</span>
+            <span class="host-stats__item host-stats__item--filter">离线 {{ offlineCount }}</span>
           </div>
           <el-button v-if="state.hasPermission('ops:windowhost:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
           <el-button v-if="state.hasPermission('ops:windowhost:update')" type="success" @click="handleBatchToggle">启用/禁用</el-button>
@@ -54,7 +49,7 @@
         <el-button type="primary" @click="handleFilterConfirm">确定</el-button>
       </template>
     </el-drawer>
-    <el-table v-loading="state.dataListLoading" :data="filteredDataList" border @selection-change="state.dataListSelectionChangeHandle" @sort-change="state.dataListSortChangeHandle" class="ops-table-nowrap" style="width: 100%">
+    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" @sort-change="state.dataListSortChangeHandle" class="ops-table-nowrap" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
               <el-table-column prop="instance" label="地址" header-align="center" align="center" min-width="180"></el-table-column>
               <el-table-column prop="name" label="名称" header-align="center" align="center"></el-table-column>
@@ -114,7 +109,7 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {computed, reactive, ref, toRefs} from "vue";
+import {computed, reactive, ref, toRefs, watch} from "vue";
 import AddOrUpdate from "./windowhost-add-or-update.vue";
 import baseService from "@/service/baseService";
 import {ElMessage, ElMessageBox} from "element-plus";
@@ -141,20 +136,16 @@ const view = reactive({
 });
 
 const state = reactive({ ...useView(view), ...toRefs(view) });
-const onlineQuickFilter = ref("");
-const enabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 1).length);
-const disabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 0).length);
-const onlineCount = computed(() => (state.dataList || []).filter((item: any) => item?.onlineStatus === true).length);
-const filteredDataList = computed(() => {
-  if (!onlineQuickFilter.value) {
-    return state.dataList || [];
-  }
-  if (onlineQuickFilter.value === "online") {
-    return (state.dataList || []).filter((item: any) => item?.onlineStatus === true);
-  }
-  return (state.dataList || []).filter((item: any) => item?.onlineStatus === false);
+const statusSummary = ref({
+  enabledCount: 0,
+  disabledCount: 0,
+  onlineCount: 0,
+  offlineCount: 0
 });
-const filteredCount = computed(() => filteredDataList.value.length);
+const enabledCount = computed(() => statusSummary.value.enabledCount);
+const disabledCount = computed(() => statusSummary.value.disabledCount);
+const onlineCount = computed(() => statusSummary.value.onlineCount);
+const offlineCount = computed(() => statusSummary.value.offlineCount);
 
 const filterDrawer = ref(false);
 
@@ -221,6 +212,35 @@ const handleImportSuccess = (res: IObject) => {
 const handleTemplateDownload = () => {
   window.location.href = templateUrl;
 };
+
+const loadStatusSummary = () => {
+  baseService
+    .get("/ops/windowhost/summary", { ...state.dataForm })
+    .then((res) => {
+      statusSummary.value = {
+        enabledCount: Number(res.data?.enabledCount || 0),
+        disabledCount: Number(res.data?.disabledCount || 0),
+        onlineCount: Number(res.data?.onlineCount || 0),
+        offlineCount: Number(res.data?.offlineCount || 0)
+      };
+    })
+    .catch(() => {
+      statusSummary.value = {
+        enabledCount: 0,
+        disabledCount: 0,
+        onlineCount: 0,
+        offlineCount: 0
+      };
+    });
+};
+
+watch(
+  () => state.dataList,
+  () => {
+    loadStatusSummary();
+  },
+  { immediate: true }
+);
 
 const handleBatchToggle = () => {
   if (!state.dataListSelections || state.dataListSelections.length === 0) {
@@ -317,8 +337,8 @@ const updateStatusHandle = (status: number) => {
   background: #dbeafe;
 }
 .host-stats__item--filter {
-  color: #4338ca;
-  background: #e0e7ff;
+  color: #991b1b;
+  background: #fee2e2;
 }
 .ops-filters .el-form-item {
   margin-bottom: 0;

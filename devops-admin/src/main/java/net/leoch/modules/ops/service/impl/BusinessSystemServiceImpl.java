@@ -132,6 +132,37 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
     }
 
     @Override
+    public OpsHostStatusSummaryDTO summary(BusinessSystemPageRequest request) {
+        LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
+        applyCommonFilters(wrapper, request);
+        wrapper.select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getStatus);
+        List<BusinessSystemEntity> list = baseDao.selectList(wrapper);
+        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBusinessSystemOnlineKey());
+        OpsHostStatusSummaryDTO summary = new OpsHostStatusSummaryDTO();
+        summary.setTotalCount((long) list.size());
+        for (BusinessSystemEntity item : list) {
+            if (item == null) {
+                continue;
+            }
+            Integer status = item.getStatus();
+            if (Integer.valueOf(1).equals(status)) {
+                summary.setEnabledCount(summary.getEnabledCount() + 1);
+            } else if (Integer.valueOf(0).equals(status)) {
+                summary.setDisabledCount(summary.getDisabledCount() + 1);
+            }
+            Boolean onlineStatus = OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(item.getInstance()));
+            if (Boolean.TRUE.equals(onlineStatus)) {
+                summary.setOnlineCount(summary.getOnlineCount() + 1);
+            } else if (Boolean.FALSE.equals(onlineStatus)) {
+                summary.setOfflineCount(summary.getOfflineCount() + 1);
+            } else {
+                summary.setUnknownCount(summary.getUnknownCount() + 1);
+            }
+        }
+        return summary;
+    }
+
+    @Override
     public boolean check(BusinessSystemCheckRequest request) {
         if (request == null) {
             return false;

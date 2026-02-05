@@ -37,4 +37,6 @@ public interface WindowHostService extends CrudService<WindowHostEntity, WindowH
     void updateStatus(Long[] ids, Integer status);
 
     boolean existsByInstanceOrName(String instance, String name, Long excludeId);
+
+    OpsHostStatusSummaryDTO summary(WindowHostPageRequest request);
 }

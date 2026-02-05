@@ -42,6 +42,13 @@ public class LinuxHostController {
         return new Result<PageData<LinuxHostDTO>>().ok(linuxHostService.page(request));
     }
 
+    @GetMapping("summary")
+    @Operation(summary = "状态汇总")
+    @SaCheckPermission("ops:linuxhost:page")
+    public Result<OpsHostStatusSummaryDTO> summary(@Parameter(hidden = true) LinuxHostPageRequest request) {
+        return new Result<OpsHostStatusSummaryDTO>().ok(linuxHostService.summary(request));
+    }
+
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("ops:linuxhost:info")

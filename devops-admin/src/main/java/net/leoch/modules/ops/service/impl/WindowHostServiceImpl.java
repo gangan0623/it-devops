@@ -134,6 +134,37 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
     }
 
     @Override
+    public OpsHostStatusSummaryDTO summary(WindowHostPageRequest request) {
+        LambdaQueryWrapper<WindowHostEntity> wrapper = new LambdaQueryWrapper<>();
+        applyCommonFilters(wrapper, request);
+        wrapper.select(WindowHostEntity::getInstance, WindowHostEntity::getStatus);
+        List<WindowHostEntity> list = baseDao.selectList(wrapper);
+        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getWindowHostOnlineKey());
+        OpsHostStatusSummaryDTO summary = new OpsHostStatusSummaryDTO();
+        summary.setTotalCount((long) list.size());
+        for (WindowHostEntity item : list) {
+            if (item == null) {
+                continue;
+            }
+            Integer status = item.getStatus();
+            if (Integer.valueOf(1).equals(status)) {
+                summary.setEnabledCount(summary.getEnabledCount() + 1);
+            } else if (Integer.valueOf(0).equals(status)) {
+                summary.setDisabledCount(summary.getDisabledCount() + 1);
+            }
+            Boolean onlineStatus = OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(item.getInstance()));
+            if (Boolean.TRUE.equals(onlineStatus)) {
+                summary.setOnlineCount(summary.getOnlineCount() + 1);
+            } else if (Boolean.FALSE.equals(onlineStatus)) {
+                summary.setOfflineCount(summary.getOfflineCount() + 1);
+            } else {
+                summary.setUnknownCount(summary.getUnknownCount() + 1);
+            }
+        }
+        return summary;
+    }
+
+    @Override
     public boolean check(WindowHostCheckRequest request) {
         if (request == null) {
             return false;

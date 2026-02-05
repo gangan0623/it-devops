@@ -145,6 +145,9 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
         for (Map<String, Object> alert : alerts) {
             Map<String, Object> labels = toMap(alert.get("labels"));
             Map<String, Object> annotations = toMap(alert.get("annotations"));
+            if (shouldIgnoreAlert(labels, annotations, commonLabels, commonAnnotations)) {
+                continue;
+            }
             String alertName = getValue(labels, commonLabels, "alertname");
             String instance = getValue(labels, commonLabels, "instance", getValue(labels, commonLabels, "service"));
             String alertStatus = toStr(alert.get("status"), status);
@@ -169,6 +172,23 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
         if (saved) {
             alertSseService.publishRecentAlerts();
         }
+    }
+
+    private boolean shouldIgnoreAlert(Map<String, Object> labels,
+                                      Map<String, Object> annotations,
+                                      Map<String, Object> commonLabels,
+                                      Map<String, Object> commonAnnotations) {
+        String mountpoint = getValue(labels, commonLabels, "mountpoint");
+        if ("/etc/resolv.conf".equals(mountpoint)) {
+            return true;
+        }
+        String summary = getValue(annotations, commonAnnotations, "summary");
+        String description = getValue(annotations, commonAnnotations, "description");
+        return containsResolvConf(summary) || containsResolvConf(description);
+    }
+
+    private boolean containsResolvConf(String text) {
+        return StrUtil.isNotBlank(text) && text.contains("/etc/resolv.conf");
     }
 
     @Override

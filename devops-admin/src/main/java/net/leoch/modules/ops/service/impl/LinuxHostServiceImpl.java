@@ -134,6 +134,37 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
     }
 
     @Override
+    public OpsHostStatusSummaryDTO summary(LinuxHostPageRequest request) {
+        LambdaQueryWrapper<LinuxHostEntity> wrapper = new LambdaQueryWrapper<>();
+        applyCommonFilters(wrapper, request);
+        wrapper.select(LinuxHostEntity::getInstance, LinuxHostEntity::getStatus);
+        List<LinuxHostEntity> list = baseDao.selectList(wrapper);
+        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getLinuxHostOnlineKey());
+        OpsHostStatusSummaryDTO summary = new OpsHostStatusSummaryDTO();
+        summary.setTotalCount((long) list.size());
+        for (LinuxHostEntity item : list) {
+            if (item == null) {
+                continue;
+            }
+            Integer status = item.getStatus();
+            if (Integer.valueOf(1).equals(status)) {
+                summary.setEnabledCount(summary.getEnabledCount() + 1);
+            } else if (Integer.valueOf(0).equals(status)) {
+                summary.setDisabledCount(summary.getDisabledCount() + 1);
+            }
+            Boolean onlineStatus = OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(item.getInstance()));
+            if (Boolean.TRUE.equals(onlineStatus)) {
+                summary.setOnlineCount(summary.getOnlineCount() + 1);
+            } else if (Boolean.FALSE.equals(onlineStatus)) {
+                summary.setOfflineCount(summary.getOfflineCount() + 1);
+            } else {
+                summary.setUnknownCount(summary.getUnknownCount() + 1);
+            }
+        }
+        return summary;
+    }
+
+    @Override
     public boolean check(LinuxHostCheckRequest request) {
         if (request == null) {
             return false;

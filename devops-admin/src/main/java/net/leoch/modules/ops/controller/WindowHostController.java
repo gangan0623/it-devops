@@ -44,6 +44,13 @@ public class WindowHostController {
         return new Result<PageData<WindowHostDTO>>().ok(windowHostService.page(request));
     }
 
+    @GetMapping("summary")
+    @Operation(summary = "状态汇总")
+    @SaCheckPermission("ops:windowhost:page")
+    public Result<OpsHostStatusSummaryDTO> summary(@Parameter(hidden = true) WindowHostPageRequest request){
+        return new Result<OpsHostStatusSummaryDTO>().ok(windowHostService.summary(request));
+    }
+
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("ops:windowhost:info")
