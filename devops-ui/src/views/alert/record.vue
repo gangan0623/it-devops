@@ -17,6 +17,16 @@
           </el-form-item>
         </div>
         <div class="ops-toolbar__group ops-actions">
+          <el-radio-group v-model="quickSeverity" size="small" @change="handleQuickSeverityChange">
+            <el-radio-button label="">全部</el-radio-button>
+            <el-radio-button label="critical">灾难</el-radio-button>
+            <el-radio-button label="warning">重要</el-radio-button>
+            <el-radio-button label="info">信息</el-radio-button>
+          </el-radio-group>
+          <div class="record-stats">
+            <span class="record-stats__item record-stats__item--bad">告警 {{ firingCount }}</span>
+            <span class="record-stats__item record-stats__item--ok">恢复 {{ resolvedCount }}</span>
+          </div>
           <el-button v-if="state.hasPermission('alert:record:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
         </div>
       </div>
@@ -242,6 +252,7 @@ const view = reactive({
 
 const state = reactive({ ...useView(view), ...toRefs(view) });
 const filterDrawer = ref(false);
+const quickSeverity = ref("");
 const activeFilterCount = computed(() => {
   let count = 0;
   if (state.dataForm.deviceType) count++;
@@ -250,6 +261,12 @@ const activeFilterCount = computed(() => {
   if (state.dataForm.status) count++;
   return count;
 });
+const firingCount = computed(
+  () => (state.dataList || []).filter((item: any) => String(item?.status || "").toLowerCase() === "firing").length
+);
+const resolvedCount = computed(
+  () => (state.dataList || []).filter((item: any) => String(item?.status || "").toLowerCase() !== "firing").length
+);
 const handleFilterConfirm = () => {
   filterDrawer.value = false;
   state.getDataList();
@@ -259,6 +276,12 @@ const handleFilterReset = () => {
   state.dataForm.instance = "";
   state.dataForm.severity = "";
   state.dataForm.status = "";
+  quickSeverity.value = "";
+};
+const handleQuickSeverityChange = () => {
+  state.dataForm.severity = quickSeverity.value;
+  state.page = 1;
+  state.getDataList();
 };
 const detailVisible = ref(false);
 const detail = reactive({
@@ -497,6 +520,24 @@ const formatEndTime = (row: any) => {
   gap: 8px;
   flex-wrap: nowrap;
   white-space: nowrap;
+}
+.record-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.record-stats__item {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.record-stats__item--bad {
+  color: #991b1b;
+  background: #fee2e2;
+}
+.record-stats__item--ok {
+  color: #166534;
+  background: #dcfce7;
 }
 .query-input {
   width: 220px;
