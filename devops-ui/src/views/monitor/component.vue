@@ -17,6 +17,11 @@
           </el-form-item>
         </div>
         <div class="ops-toolbar__group ops-actions">
+          <div class="component-stats">
+            <span class="component-stats__item component-stats__item--online">在线 {{ onlineCount }}</span>
+            <span class="component-stats__item component-stats__item--offline">离线 {{ offlineCount }}</span>
+            <span class="component-stats__item component-stats__item--upgrade">可更新 {{ updatableCount }}</span>
+          </div>
           <el-button v-if="state.hasPermission('ops:monitorcomponent:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
           <el-button v-if="state.hasPermission('ops:monitorcomponent:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
         </div>
@@ -68,7 +73,7 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {reactive, ref, toRefs, watch} from "vue";
+import {computed, reactive, ref, toRefs, watch} from "vue";
 import baseService from "@/service/baseService";
 import {ElMessage} from "element-plus";
 import AddOrUpdate from "./component-add-or-update.vue";
@@ -86,6 +91,9 @@ const view = reactive({
 });
 
 const state = reactive({ ...useView(view), ...toRefs(view) });
+const onlineCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.onlineStatus) === 1).length);
+const offlineCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.onlineStatus) === 0).length);
+const updatableCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.updateAvailable) === 1).length);
 const addOrUpdateRef = ref();
 
 const typeLabels: Record<string, string> = {
@@ -161,7 +169,32 @@ watch(
   flex-wrap: nowrap;
   white-space: nowrap;
 }
+.component-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.component-stats__item {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.component-stats__item--online {
+  color: #065f46;
+  background: #d1fae5;
+}
+.component-stats__item--offline {
+  color: #991b1b;
+  background: #fee2e2;
+}
+.component-stats__item--upgrade {
+  color: #9a3412;
+  background: #ffedd5;
+}
 .ops-filters .el-form-item {
   margin-bottom: 0;
+}
+.ops-table-nowrap :deep(.el-table__row:hover > td) {
+  background: #f8fafc;
 }
 </style>
