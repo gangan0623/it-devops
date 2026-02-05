@@ -1,13 +1,13 @@
 <template>
   <div class="mod-ops__devicebackup-record">
-    <el-form :inline="true" :model="state.dataForm" @keyup.enter="state.getDataList()" class="ops-toolbar">
+    <el-form :inline="true" :model="state.dataForm" @keyup.enter="queryList()" class="ops-toolbar">
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
           <el-form-item>
-            <el-input v-model="state.dataForm.name" placeholder="主机名" clearable></el-input>
+            <el-input v-model="state.dataForm.name" class="query-input" placeholder="主机名" clearable></el-input>
           </el-form-item>
           <el-form-item>
-            <el-input v-model="state.dataForm.ip" placeholder="IP" clearable></el-input>
+            <el-input v-model="state.dataForm.ip" class="query-input" placeholder="IP" clearable></el-input>
           </el-form-item>
           <el-form-item>
             <el-select v-model="state.dataForm.status" placeholder="状态" clearable>
@@ -16,7 +16,10 @@
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-button @click="state.getDataList()">查询</el-button>
+            <el-button class="query-btn" :loading="state.dataListLoading" @click="queryList()">查询</el-button>
+          </el-form-item>
+          <el-form-item>
+            <el-button class="query-btn" @click="handleToolbarReset">重置</el-button>
           </el-form-item>
         </div>
         <div class="ops-toolbar__group ops-actions">
@@ -163,6 +166,15 @@ const diffLines = ref<any[]>([]);
 const currentIp = ref("");
 const previewVisible = ref(false);
 const previewContent = ref("");
+const queryList = () => {
+  state.getDataList();
+};
+const handleToolbarReset = () => {
+  state.dataForm.name = "";
+  state.dataForm.ip = "";
+  state.dataForm.status = "";
+  queryList();
+};
 const historySuccessCount = computed(() => (historyList.value || []).filter((item: any) => Number(item?.backupStatus) === 1).length);
 const historyFailCount = computed(() => (historyList.value || []).filter((item: any) => Number(item?.backupStatus) === 0).length);
 const filteredHistoryList = computed(() => {
@@ -347,6 +359,17 @@ const setupPreviewSync = () => {
 }
 .ops-filters .el-form-item {
   margin-bottom: 0;
+}
+.query-input {
+  width: 180px;
+}
+.query-btn {
+  height: 32px;
+  padding: 0 14px;
+}
+.ops-toolbar__group :deep(.el-input__wrapper),
+.ops-toolbar__group :deep(.el-select__wrapper) {
+  height: 32px;
 }
 .mod-ops__devicebackup-record :deep(.el-table .cell) {
   white-space: nowrap;
