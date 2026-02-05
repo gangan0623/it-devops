@@ -1,10 +1,10 @@
 <template>
   <div class="mod-alert__media">
-    <el-form :inline="true" :model="state.dataForm" @keyup.enter="state.getDataList()" class="ops-toolbar">
+    <el-form :inline="true" :model="state.dataForm" @keyup.enter="queryList()" class="ops-toolbar">
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
           <el-form-item>
-            <el-input v-model="state.dataForm.name" placeholder="媒介名称" clearable></el-input>
+            <el-input v-model="state.dataForm.name" class="query-input" placeholder="媒介名称" clearable></el-input>
           </el-form-item>
           <el-form-item>
             <el-select v-model="state.dataForm.status" placeholder="状态" clearable>
@@ -13,7 +13,10 @@
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-button @click="state.getDataList()">查询</el-button>
+            <el-button class="query-btn" :loading="state.dataListLoading" @click="queryList()">查询</el-button>
+          </el-form-item>
+          <el-form-item>
+            <el-button class="query-btn" @click="handleReset">重置</el-button>
           </el-form-item>
         </div>
         <div class="ops-toolbar__group ops-actions">
@@ -59,9 +62,9 @@
       @current-change="state.pageCurrentChangeHandle"
     ></el-pagination>
 
-    <add-or-update ref="addOrUpdateRef" @refreshDataList="state.getDataList"></add-or-update>
+    <add-or-update ref="addOrUpdateRef" @refreshDataList="queryList"></add-or-update>
 
-    <el-dialog v-model="testVisible" title="媒介测试" width="680px" :close-on-click-modal="false">
+    <el-dialog v-model="testVisible" title="媒介测试" width="720px" :close-on-click-modal="false" class="test-dialog">
       <div class="test-meta">
         <span class="test-meta__label">当前媒介</span>
         <span class="test-meta__value">{{ currentMediaName || "-" }}</span>
@@ -118,6 +121,16 @@ const testForm = reactive({
 });
 const enabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 1).length);
 const disabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 0).length);
+
+const queryList = () => {
+  state.getDataList();
+};
+
+const handleReset = () => {
+  state.dataForm.name = "";
+  state.dataForm.status = "";
+  queryList();
+};
 
 const addOrUpdateHandle = (id?: number) => {
   addOrUpdateRef.value.init(id);
@@ -186,6 +199,17 @@ const sendTest = () => {
 .ops-filters .el-form-item {
   margin-bottom: 0;
 }
+.query-input {
+  width: 220px;
+}
+.query-btn {
+  height: 32px;
+  padding: 0 14px;
+}
+.ops-toolbar__group :deep(.el-input__wrapper),
+.ops-toolbar__group :deep(.el-select__wrapper) {
+  height: 32px;
+}
 .media-stats {
   display: flex;
   align-items: center;
@@ -226,5 +250,9 @@ const sendTest = () => {
 }
 .test-form :deep(.el-form-item) {
   margin-bottom: 14px;
+}
+.test-dialog :deep(.el-dialog__body) {
+  max-height: 62vh;
+  overflow-y: auto;
 }
 </style>
