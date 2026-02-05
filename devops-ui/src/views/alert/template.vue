@@ -60,7 +60,11 @@
     <add-or-update ref="addOrUpdateRef" @refreshDataList="state.getDataList"></add-or-update>
 
     <el-dialog v-model="testVisible" title="模板测试" width="920px" :close-on-click-modal="false">
-      <el-form :model="testForm" label-width="100px">
+      <div class="test-meta">
+        <span class="test-meta__label">当前模板</span>
+        <span class="test-meta__value">{{ currentTemplateName || "-" }}</span>
+      </div>
+      <el-form :model="testForm" label-width="100px" class="test-form">
         <el-form-item label="模板">
           <el-select v-model="testForm.templateId" placeholder="选择模板">
             <el-option v-for="item in templateOptions" :key="item.id" :label="item.name" :value="item.id"></el-option>
@@ -87,6 +91,8 @@
       <template #footer>
         <el-button @click="testVisible = false">取消</el-button>
         <el-button @click="resetTestForm">重置</el-button>
+        <el-button @click="fillSampleJson">填充样例</el-button>
+        <el-button @click="formatRawJson">格式化JSON</el-button>
         <el-button :loading="previewLoading" @click="handlePreview">预览</el-button>
         <el-button type="primary" :loading="sendLoading" @click="handleTestSend">发送测试</el-button>
       </template>
@@ -119,9 +125,10 @@ const previewLoading = ref(false);
 const sendLoading = ref(false);
 const templateOptions = ref<any[]>([]);
 const triggerOptions = ref<any[]>([]);
+const sampleRawJson = `{\"receiver\":\"web.hook.prometheusalert\",\"status\":\"resolved\",\"alerts\":[{\"status\":\"resolved\",\"labels\":{\"alertname\":\"MerchantServiceHighErrorRate\",\"method\":\"check\",\"service\":\"merchant_service\",\"severity\":\"warning\",\"util_class\":\"ShanDaiMiao11Util\"},\"annotations\":{\"description\":\"工具类 ShanDaiMiao11Util 的 check 方法10分钟内错误率为 5.556%，超过5%阈值\",\"summary\":\"机构服务错误率过高\"},\"startsAt\":\"2026-01-22T10:46:17.966Z\",\"endsAt\":\"2026-01-22T10:55:02.966Z\",\"generatorURL\":\"http://build:9090/graph?g0.expr=(sum+by+(util_class,+method)+(increase(merchant_service_method_calls_total{status=\\\"error\\\"}[10m]))+/+sum+by+(util_class,+method)+(increase(merchant_service_method_calls_total[10m])))+>+0.05+and+sum+by+(util_class,+method)+(increase(merchant_service_method_calls_total[10m]))+>+0&g0.tab=1\",\"fingerprint\":\"fb2ce429827b0ff3\"}],\"groupLabels\":{},\"commonLabels\":{\"alertname\":\"MerchantServiceHighErrorRate\",\"method\":\"check\",\"service\":\"merchant_service\",\"severity\":\"warning\",\"util_class\":\"ShanDaiMiao11Util\"},\"commonAnnotations\":{\"description\":\"工具类 ShanDaiMiao11Util 的 check 方法10分钟内错误率为 5.556%，超过5%阈值\",\"summary\":\"机构服务错误率过高\"},\"externalURL\":\"http://gitlab:9093\",\"version\":\"4\",\"groupKey\":\"{}:{}\",\"truncatedAlerts\":0}`;
 const testForm = reactive({
   templateId: "",
-  rawJson: `{\"receiver\":\"web.hook.prometheusalert\",\"status\":\"resolved\",\"alerts\":[{\"status\":\"resolved\",\"labels\":{\"alertname\":\"MerchantServiceHighErrorRate\",\"method\":\"check\",\"service\":\"merchant_service\",\"severity\":\"warning\",\"util_class\":\"ShanDaiMiao11Util\"},\"annotations\":{\"description\":\"工具类 ShanDaiMiao11Util 的 check 方法10分钟内错误率为 5.556%，超过5%阈值\",\"summary\":\"机构服务错误率过高\"},\"startsAt\":\"2026-01-22T10:46:17.966Z\",\"endsAt\":\"2026-01-22T10:55:02.966Z\",\"generatorURL\":\"http://build:9090/graph?g0.expr=(sum+by+(util_class,+method)+(increase(merchant_service_method_calls_total{status=\\\"error\\\"}[10m]))+/+sum+by+(util_class,+method)+(increase(merchant_service_method_calls_total[10m])))+>+0.05+and+sum+by+(util_class,+method)+(increase(merchant_service_method_calls_total[10m]))+>+0&g0.tab=1\",\"fingerprint\":\"fb2ce429827b0ff3\"}],\"groupLabels\":{},\"commonLabels\":{\"alertname\":\"MerchantServiceHighErrorRate\",\"method\":\"check\",\"service\":\"merchant_service\",\"severity\":\"warning\",\"util_class\":\"ShanDaiMiao11Util\"},\"commonAnnotations\":{\"description\":\"工具类 ShanDaiMiao11Util 的 check 方法10分钟内错误率为 5.556%，超过5%阈值\",\"summary\":\"机构服务错误率过高\"},\"externalURL\":\"http://gitlab:9093\",\"version\":\"4\",\"groupKey\":\"{}:{}\",\"truncatedAlerts\":0}`,
+  rawJson: sampleRawJson,
   previewResult: "",
   previewSubject: "",
   triggerId: ""
@@ -132,6 +139,10 @@ const disabledCount = computed(() => (state.dataList || []).filter((item: any) =
 const previewTemplateContent = computed(() => {
   const template = templateOptions.value.find((item) => item.id === testForm.templateId);
   return template?.content || "";
+});
+const currentTemplateName = computed(() => {
+  const template = templateOptions.value.find((item) => item.id === testForm.templateId);
+  return template?.name || "";
 });
 
 const addOrUpdateHandle = (id?: number) => {
@@ -165,15 +176,34 @@ const openTest = (row?: any) => {
 };
 
 const resetTestForm = () => {
-  testForm.rawJson = "";
+  testForm.rawJson = sampleRawJson;
   testForm.previewResult = "";
   testForm.previewSubject = "";
   testForm.triggerId = "";
 };
 
+const fillSampleJson = () => {
+  testForm.rawJson = sampleRawJson;
+};
+
+const formatRawJson = () => {
+  if (!testForm.rawJson.trim()) {
+    ElMessage.warning("请先输入原始内容");
+    return;
+  }
+  try {
+    testForm.rawJson = JSON.stringify(JSON.parse(testForm.rawJson), null, 2);
+  } catch (e) {
+    ElMessage.error("JSON格式不正确");
+  }
+};
+
 const handlePreview = () => {
   if (!testForm.templateId) {
     return ElMessage.warning("请选择模板");
+  }
+  if (!testForm.rawJson.trim()) {
+    return ElMessage.warning("请填写原始内容");
   }
   previewLoading.value = true;
   baseService
@@ -197,6 +227,9 @@ const handleTestSend = () => {
   if (!testForm.triggerId) {
     return ElMessage.warning("请选择触发器");
   }
+  if (!testForm.rawJson.trim()) {
+    return ElMessage.warning("请填写原始内容");
+  }
   sendLoading.value = true;
   baseService
     .post("/alert/template/test-send", {
@@ -206,6 +239,7 @@ const handleTestSend = () => {
     })
     .then(() => {
       ElMessage.success("发送成功");
+      testVisible.value = false;
     })
     .finally(() => {
       sendLoading.value = false;
@@ -267,5 +301,24 @@ const handleTestSend = () => {
   border: 1px solid #e4e7ed;
   border-radius: 6px;
   background: #fff;
+}
+.test-meta {
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+.test-meta__label {
+  margin-right: 8px;
+  color: #64748b;
+  font-size: 12px;
+}
+.test-meta__value {
+  color: #0f172a;
+  font-weight: 600;
+}
+.test-form :deep(.el-form-item) {
+  margin-bottom: 14px;
 }
 </style>
