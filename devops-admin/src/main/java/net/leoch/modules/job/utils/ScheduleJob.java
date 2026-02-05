@@ -24,6 +24,7 @@ import java.util.Date;
  */
 public class ScheduleJob extends QuartzJobBean {
 	private Logger logger = LoggerFactory.getLogger(getClass());
+	private static final int ERROR_MAX_LENGTH = 1900;
 
     @Override
     protected void executeInternal(JobExecutionContext context) {
@@ -63,11 +64,22 @@ public class ScheduleJob extends QuartzJobBean {
 			
 			//任务状态
 			log.setStatus(Constant.FAIL);
-			log.setError(ExceptionUtils.getErrorStackTrace(e));
+			log.setError(limitError(ExceptionUtils.getErrorStackTrace(e)));
 		}finally {
 			//获取spring bean
 			ScheduleJobLogService scheduleJobLogService = SpringContextUtils.getBean(ScheduleJobLogService.class);
-			scheduleJobLogService.insert(log);
+			try {
+				scheduleJobLogService.insert(log);
+			} catch (Exception ex) {
+				logger.error("任务日志保存失败，任务ID：{}", scheduleJob.getId(), ex);
+			}
 		}
     }
+
+	private String limitError(String error) {
+		if (error == null || error.length() <= ERROR_MAX_LENGTH) {
+			return error;
+		}
+		return error.substring(0, ERROR_MAX_LENGTH) + "...(truncated)";
+	}
 }

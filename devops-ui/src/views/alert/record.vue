@@ -164,41 +164,53 @@
       </template>
     </el-dialog>
 
-    <el-dialog v-model="updateVisible" title="告警更新" width="900px" :close-on-click-modal="false">
-      <div class="alert-problem">
-        <span class="alert-problem__label">问题：</span>
-        <span>{{ updateForm.problem }}</span>
+    <el-dialog v-model="updateVisible" title="告警更新" width="980px" :close-on-click-modal="false" class="update-dialog">
+      <div class="update-dialog__meta">
+        <div class="update-dialog__meta-label">问题内容</div>
+        <div class="update-dialog__meta-value">{{ updateForm.problem }}</div>
       </div>
-      <el-form label-width="100px" class="update-form">
-        <el-form-item label="消息">
-          <el-input v-model="updateForm.message" type="textarea" :rows="3" placeholder="自定义输入内容"></el-input>
-        </el-form-item>
-        <el-form-item label="更改严重性">
-          <el-select v-model="updateForm.targetSeverity" class="op-input">
-            <el-option label="信息" value="info"></el-option>
-            <el-option label="重要" value="warning"></el-option>
-            <el-option label="灾难" value="critical"></el-option>
-          </el-select>
-          <el-button :loading="actionLoading" @click="handleChangeSeverity">执行</el-button>
-        </el-form-item>
-        <el-form-item label="抑制">
-          <el-input-number v-model="updateForm.suppressDays" :min="1" :max="30" class="op-input"></el-input-number>
-          <span class="hint">天内该主机不触发该告警</span>
-          <el-button :loading="actionLoading" @click="handleSuppress">执行</el-button>
-        </el-form-item>
-        <el-form-item label="动作">
-          <el-button type="primary" :loading="actionLoading" @click="handleAck">确定</el-button>
-          <el-button type="danger" :loading="actionLoading" @click="handleClose">关闭</el-button>
-        </el-form-item>
-      </el-form>
-
-      <div class="history-title">历史记录</div>
-      <el-table :data="actionHistory" border max-height="280" v-loading="actionLoading">
-        <el-table-column prop="createDate" label="时间" width="180"></el-table-column>
-        <el-table-column prop="operatorName" label="用户" width="130"></el-table-column>
-        <el-table-column prop="action" label="用户动作" width="120"></el-table-column>
-        <el-table-column prop="message" label="消息" min-width="220"></el-table-column>
-      </el-table>
+      <div class="update-dialog__content">
+        <section class="update-card">
+          <div class="update-card__title">处理动作</div>
+          <el-form label-position="top" class="update-form">
+            <el-form-item label="处理说明">
+              <el-input v-model="updateForm.message" type="textarea" :rows="4" placeholder="可选：填写本次操作说明，方便后续追溯"></el-input>
+            </el-form-item>
+            <el-form-item label="更改严重性">
+              <div class="op-row">
+                <el-select v-model="updateForm.targetSeverity" class="op-input">
+                  <el-option label="信息" value="info"></el-option>
+                  <el-option label="重要" value="warning"></el-option>
+                  <el-option label="灾难" value="critical"></el-option>
+                </el-select>
+                <el-button type="primary" plain :loading="actionLoading" @click="handleChangeSeverity">立即执行</el-button>
+              </div>
+            </el-form-item>
+            <el-form-item label="抑制告警">
+              <div class="op-row">
+                <el-input-number v-model="updateForm.suppressDays" :min="1" :max="30" class="op-input"></el-input-number>
+                <span class="hint">在设定天数内不再触发该主机的同类告警</span>
+                <el-button type="warning" plain :loading="actionLoading" @click="handleSuppress">立即执行</el-button>
+              </div>
+            </el-form-item>
+            <el-form-item label="状态动作">
+              <div class="op-row">
+                <el-button type="success" :loading="actionLoading" @click="handleAck">确认问题</el-button>
+                <el-button type="danger" :loading="actionLoading" @click="handleClose">关闭问题</el-button>
+              </div>
+            </el-form-item>
+          </el-form>
+        </section>
+        <section class="update-card update-card--history">
+          <div class="update-card__title">历史记录</div>
+          <el-table :data="actionHistory" border max-height="420" v-loading="actionLoading" class="history-table">
+            <el-table-column prop="createDate" label="时间" width="176"></el-table-column>
+            <el-table-column prop="operatorName" label="用户" width="110"></el-table-column>
+            <el-table-column prop="action" label="动作" width="96"></el-table-column>
+            <el-table-column prop="message" label="消息"></el-table-column>
+          </el-table>
+        </section>
+      </div>
       <template #footer>
         <el-button @click="updateVisible = false">关闭</el-button>
       </template>
@@ -210,7 +222,7 @@
 import useView from "@/hooks/useView";
 import { computed, reactive, ref, toRefs } from "vue";
 import baseService from "@/service/baseService";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { Filter } from "@element-plus/icons-vue";
 
 const view = reactive({
@@ -313,27 +325,39 @@ const postAction = (path: string, data: any, doneText: string) => {
     .then(() => {
       ElMessage.success(doneText);
       state.getDataList();
-      loadHistory();
     })
     .finally(() => {
       actionLoading.value = false;
+      updateVisible.value = false;
     });
 };
 
+const confirmAndPostAction = (title: string, message: string, path: string, data: any, doneText: string) => {
+  ElMessageBox.confirm(message, title, {
+    confirmButtonText: "确认",
+    cancelButtonText: "取消",
+    type: "warning"
+  })
+    .then(() => {
+      postAction(path, data, doneText);
+    })
+    .catch(() => {});
+};
+
 const handleChangeSeverity = () => {
-  postAction("severity", { severity: updateForm.targetSeverity, message: updateForm.message }, "严重性已更新");
+  confirmAndPostAction("确认更改严重性", "确定要更改该告警的严重性吗？", "severity", { severity: updateForm.targetSeverity, message: updateForm.message }, "严重性已更新");
 };
 
 const handleSuppress = () => {
-  postAction("suppress", { days: updateForm.suppressDays, message: updateForm.message }, "抑制已生效");
+  confirmAndPostAction("确认抑制告警", "确定要执行抑制操作吗？", "suppress", { days: updateForm.suppressDays, message: updateForm.message }, "抑制已生效");
 };
 
 const handleAck = () => {
-  postAction("ack", { message: updateForm.message }, "已确定");
+  confirmAndPostAction("确认问题", "确定将该告警标记为已确认吗？", "ack", { message: updateForm.message }, "已确定");
 };
 
 const handleClose = () => {
-  postAction("close", { message: updateForm.message }, "已关闭");
+  confirmAndPostAction("关闭问题", "确定关闭该告警吗？", "close", { message: updateForm.message }, "已关闭");
 };
 
 const normalizeSeverityValue = (value: string) => {
@@ -598,31 +622,62 @@ const formatEndTime = (row: any) => {
   word-break: break-all;
   color: #111827;
 }
-.alert-problem {
-  padding: 10px 12px;
+.update-dialog__meta {
+  padding: 12px 14px;
   margin-bottom: 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
+  background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
+  border: 1px solid #dbe7ff;
+  border-radius: 8px;
 }
-.alert-problem__label {
-  color: #1f2937;
+.update-dialog__meta-label {
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: #4b5563;
+}
+.update-dialog__meta-value {
+  color: #111827;
+  line-height: 1.6;
+  word-break: break-all;
+}
+.update-dialog__content {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(400px, 1.2fr);
+  gap: 12px;
+}
+.update-card {
+  padding: 14px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+}
+.update-card__title {
+  margin-bottom: 10px;
+  font-size: 14px;
   font-weight: 600;
+  color: #0f172a;
 }
-.update-form {
-  margin-bottom: 12px;
+.update-form :deep(.el-form-item) {
+  margin-bottom: 14px;
+}
+.op-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 .op-input {
-  width: 180px;
-  margin-right: 8px;
+  width: 190px;
 }
 .hint {
-  margin-right: 8px;
-  color: #6b7280;
+  color: #64748b;
+  font-size: 12px;
 }
-.history-title {
-  margin-bottom: 8px;
-  color: #111827;
-  font-weight: 600;
+.history-table :deep(.cell) {
+  line-height: 1.5;
+}
+@media (max-width: 980px) {
+  .update-dialog__content {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
