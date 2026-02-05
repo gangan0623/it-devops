@@ -1,6 +1,6 @@
 <template>
   <div class="mod-alert__trigger">
-    <el-form :inline="true" :model="state.dataForm" @keyup.enter="state.getDataList()" class="ops-toolbar">
+    <el-form :inline="true" :model="state.dataForm" @keyup.enter="queryList()" class="ops-toolbar">
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
           <el-form-item>
@@ -13,7 +13,10 @@
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-button @click="state.getDataList()">查询</el-button>
+            <el-button :loading="state.dataListLoading" @click="queryList()">查询</el-button>
+          </el-form-item>
+          <el-form-item>
+            <el-button @click="handleReset">重置</el-button>
           </el-form-item>
         </div>
         <div class="ops-toolbar__group ops-actions">
@@ -137,6 +140,17 @@ const addOrUpdateHandle = (id?: number) => {
   addOrUpdateRef.value.init(id);
 };
 
+const queryList = () => {
+  state.getDataList();
+};
+
+const handleReset = () => {
+  state.dataForm.name = "";
+  state.dataForm.status = "";
+  severityQuickFilter.value = "";
+  queryList();
+};
+
 const loadResources = () => {
   resourceLoading.value = true;
   baseService
@@ -157,7 +171,7 @@ const loadResources = () => {
 };
 
 const refresh = () => {
-  state.getDataList();
+  queryList();
   loadResources();
 };
 
