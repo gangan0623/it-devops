@@ -17,6 +17,10 @@
           </el-form-item>
         </div>
         <div class="ops-toolbar__group ops-actions">
+          <div class="tpl-stats">
+            <span class="tpl-stats__item tpl-stats__item--on">启用 {{ enabledCount }}</span>
+            <span class="tpl-stats__item tpl-stats__item--off">禁用 {{ disabledCount }}</span>
+          </div>
           <el-button v-if="state.hasPermission('alert:template:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
           <el-button v-if="state.hasPermission('alert:template:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
           <el-button v-if="state.hasPermission('alert:template:test')" type="info" @click="openTest()">测试</el-button>
@@ -24,11 +28,11 @@
       </div>
     </el-form>
 
-    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" style="width: 100%">
+    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="tpl-table" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
-      <el-table-column prop="name" label="模板名称" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="emailSubject" label="主题" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="status" label="状态" header-align="center" align="center">
+      <el-table-column prop="name" label="模板名称" header-align="center" align="center" min-width="180" show-overflow-tooltip></el-table-column>
+      <el-table-column prop="emailSubject" label="主题" header-align="center" align="center" min-width="260" show-overflow-tooltip></el-table-column>
+      <el-table-column prop="status" label="状态" header-align="center" align="center" width="100">
         <template v-slot="scope">
           <el-tag v-if="scope.row.status === 0" size="small" type="danger">禁用</el-tag>
           <el-tag v-else size="small" type="success">启用</el-tag>
@@ -82,8 +86,9 @@
       </el-form>
       <template #footer>
         <el-button @click="testVisible = false">取消</el-button>
-        <el-button @click="handlePreview">预览</el-button>
-        <el-button type="primary" @click="handleTestSend">发送测试</el-button>
+        <el-button @click="resetTestForm">重置</el-button>
+        <el-button :loading="previewLoading" @click="handlePreview">预览</el-button>
+        <el-button type="primary" :loading="sendLoading" @click="handleTestSend">发送测试</el-button>
       </template>
     </el-dialog>
   </div>
@@ -110,6 +115,8 @@ const view = reactive({
 const state = reactive({ ...useView(view), ...toRefs(view) });
 const addOrUpdateRef = ref();
 const testVisible = ref(false);
+const previewLoading = ref(false);
+const sendLoading = ref(false);
 const templateOptions = ref<any[]>([]);
 const triggerOptions = ref<any[]>([]);
 const testForm = reactive({
@@ -119,6 +126,8 @@ const testForm = reactive({
   previewSubject: "",
   triggerId: ""
 });
+const enabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 1).length);
+const disabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 0).length);
 
 const previewTemplateContent = computed(() => {
   const template = templateOptions.value.find((item) => item.id === testForm.templateId);
@@ -149,17 +158,24 @@ const openTest = (row?: any) => {
   loadTriggers();
   loadTemplates();
   testForm.previewResult = "";
-  testForm.previewTitle = "";
   testForm.previewSubject = "";
   testForm.triggerId = "";
   testForm.templateId = row?.id || testForm.templateId;
   testVisible.value = true;
 };
 
+const resetTestForm = () => {
+  testForm.rawJson = "";
+  testForm.previewResult = "";
+  testForm.previewSubject = "";
+  testForm.triggerId = "";
+};
+
 const handlePreview = () => {
   if (!testForm.templateId) {
     return ElMessage.warning("请选择模板");
   }
+  previewLoading.value = true;
   baseService
     .post("/alert/template/preview", {
       templateId: testForm.templateId,
@@ -168,6 +184,9 @@ const handlePreview = () => {
     .then((res) => {
       testForm.previewResult = res.data.html || "";
       testForm.previewSubject = res.data.subject || "";
+    })
+    .finally(() => {
+      previewLoading.value = false;
     });
 };
 
@@ -178,6 +197,7 @@ const handleTestSend = () => {
   if (!testForm.triggerId) {
     return ElMessage.warning("请选择触发器");
   }
+  sendLoading.value = true;
   baseService
     .post("/alert/template/test-send", {
       templateId: testForm.templateId,
@@ -186,6 +206,9 @@ const handleTestSend = () => {
     })
     .then(() => {
       ElMessage.success("发送成功");
+    })
+    .finally(() => {
+      sendLoading.value = false;
     });
 };
 </script>
@@ -215,6 +238,27 @@ const handleTestSend = () => {
 }
 .ops-filters .el-form-item {
   margin-bottom: 0;
+}
+.tpl-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.tpl-stats__item {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.tpl-stats__item--on {
+  color: #065f46;
+  background: #d1fae5;
+}
+.tpl-stats__item--off {
+  color: #991b1b;
+  background: #fee2e2;
+}
+.tpl-table :deep(.el-table__row:hover > td) {
+  background: #f8fafc;
 }
 .alert-preview {
   width: 100%;
