@@ -30,7 +30,7 @@ export default defineComponent({
 <template>
   <el-drawer v-model="state.show" :append-to-body="false" size="230" :withHeader="false" direction="ltr" class="rr-setting-wrap">
     <div class="rr-header-ctx-logo rr-header-ctx-logo-mobile">
-      <logo :logoUrl="logoUrl" logoName="人人开源"></logo>
+      <logo :logoUrl="logoUrl" logoName="IT基础建设"></logo>
     </div>
     <div class="rr-sidebar-mobile-inner" style="overflow: auto; height: calc(100vh - 50px); width: initial !important">
       <base-sidebar :router="true" mode="vertical" :isMobile="true" :onSelect="onSelect"></base-sidebar>

@@ -6,9 +6,12 @@ import net.leoch.modules.alert.dao.AlertRecordDao;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
 import net.leoch.modules.ops.dao.*;
 import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.entity.DeviceBackupEntity;
 import net.leoch.modules.ops.entity.DeviceBackupRecordEntity;
+import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
+import net.leoch.modules.ops.entity.WindowHostEntity;
 import net.leoch.modules.ops.service.DashboardService;
 import net.leoch.modules.ops.service.ZabbixClient;
 import org.springframework.stereotype.Service;
@@ -140,11 +143,13 @@ public class DashboardServiceImpl implements DashboardService {
                         .orderByDesc(AlertRecordEntity::getStartsAt)
                         .last("limit 10")
         );
+        Map<String, String> hostMap = loadHostMap();
         List<DashboardAlertSummary> recentAlerts = new ArrayList<>();
         for (AlertRecordEntity alert : alerts) {
             DashboardAlertSummary item = new DashboardAlertSummary();
             item.setAlertName(alert.getAlertName());
             item.setInstance(alert.getInstance());
+            item.setHostName(hostMap.get(normalizeInstance(alert.getInstance())));
             item.setTime(alert.getStartsAt());
             item.setSeverity(alert.getSeverity());
             item.setStatus(alert.getStatus());
@@ -168,5 +173,51 @@ public class DashboardServiceImpl implements DashboardService {
         data.setMonitorComponents(monitorItems);
 
         return data;
+    }
+
+    private Map<String, String> loadHostMap() {
+        Map<String, String> map = new HashMap<>();
+        List<LinuxHostEntity> linuxList = linuxHostDao.selectList(new LambdaQueryWrapper<LinuxHostEntity>().select(LinuxHostEntity::getInstance, LinuxHostEntity::getName));
+        for (LinuxHostEntity item : linuxList) {
+            putHost(map, item.getInstance(), item.getName());
+        }
+        List<WindowHostEntity> winList = windowHostDao.selectList(new LambdaQueryWrapper<WindowHostEntity>().select(WindowHostEntity::getInstance, WindowHostEntity::getName));
+        for (WindowHostEntity item : winList) {
+            putHost(map, item.getInstance(), item.getName());
+        }
+        List<BusinessSystemEntity> businessList = businessSystemDao.selectList(new LambdaQueryWrapper<BusinessSystemEntity>().select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName));
+        for (BusinessSystemEntity item : businessList) {
+            putHost(map, item.getInstance(), item.getName());
+        }
+        return map;
+    }
+
+    private void putHost(Map<String, String> map, String instance, String name) {
+        String key = normalizeInstance(instance);
+        if (StrUtil.isBlank(key)) {
+            return;
+        }
+        map.put(key, StrUtil.blankToDefault(name, key));
+    }
+
+    private String normalizeInstance(String instance) {
+        if (StrUtil.isBlank(instance)) {
+            return null;
+        }
+        String value = instance.trim();
+        if (value.startsWith("http://")) {
+            value = value.substring(7);
+        } else if (value.startsWith("https://")) {
+            value = value.substring(8);
+        }
+        int slash = value.indexOf('/');
+        if (slash > -1) {
+            value = value.substring(0, slash);
+        }
+        int colon = value.indexOf(':');
+        if (colon > -1) {
+            value = value.substring(0, colon);
+        }
+        return value.trim();
     }
 }
