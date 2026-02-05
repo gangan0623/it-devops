@@ -22,6 +22,7 @@
             <span class="component-stats__item component-stats__item--offline">离线 {{ offlineCount }}</span>
             <span class="component-stats__item component-stats__item--upgrade">可更新 {{ updatableCount }}</span>
           </div>
+          <el-button type="warning" plain :loading="detectLoading" @click="handleDetectNow">立即检测</el-button>
           <el-button v-if="state.hasPermission('ops:monitorcomponent:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
           <el-button v-if="state.hasPermission('ops:monitorcomponent:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
         </div>
@@ -53,6 +54,13 @@
           <el-tag v-if="scope.row.updateAvailable === 1" size="small" type="warning">是</el-tag>
           <el-tag v-else-if="scope.row.updateAvailable === 0" size="small" type="success">否</el-tag>
           <el-tag v-else size="small" type="info">未检测</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="版本状态" header-align="center" align="center" min-width="120">
+        <template v-slot="scope">
+          <el-tag v-if="scope.row.updateAvailable === 1" size="small" type="warning">建议更新</el-tag>
+          <el-tag v-else-if="scope.row.updateAvailable === 0" size="small" type="success">已最新</el-tag>
+          <el-tag v-else size="small" type="info">待检测</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="lastCheckTime" label="检测时间" header-align="center" align="center" min-width="160"></el-table-column>
@@ -95,6 +103,7 @@ const onlineCount = computed(() => (state.dataList || []).filter((item: any) => 
 const offlineCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.onlineStatus) === 0).length);
 const updatableCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.updateAvailable) === 1).length);
 const addOrUpdateRef = ref();
+const detectLoading = ref(false);
 
 const typeLabels: Record<string, string> = {
   prometheus: "Prometheus",
@@ -115,11 +124,34 @@ const openLink = (row: any) => {
     const port = row.port ? `:${row.port}` : "";
     url = host ? `http://${host}${port}` : "";
   }
+  if (url && !/^https?:\/\//i.test(url)) {
+    url = `http://${url}`;
+  }
   if (!url) {
     ElMessage.warning("未配置Web地址");
     return;
   }
   window.open(url, "_blank");
+};
+
+const handleDetectNow = () => {
+  const candidates = (state.dataListSelections && state.dataListSelections.length > 0 ? state.dataListSelections : state.dataList || []).filter((item: any) => !!item?.id);
+  if (candidates.length === 0) {
+    ElMessage.warning("没有可检测的组件");
+    return;
+  }
+  detectLoading.value = true;
+  Promise.allSettled(
+    candidates.flatMap((row: { id: number }) => [
+      baseService.get("/ops/monitorcomponent/probe", { id: row.id }),
+      baseService.get("/ops/monitorcomponent/version", { id: row.id })
+    ])
+  )
+    .finally(() => {
+      detectLoading.value = false;
+      state.getDataList();
+      ElMessage.success(`已触发 ${candidates.length} 个组件检测`);
+    });
 };
 
 const autoDetect = () => {
