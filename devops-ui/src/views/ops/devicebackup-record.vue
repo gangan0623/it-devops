@@ -20,12 +20,16 @@
           </el-form-item>
         </div>
         <div class="ops-toolbar__group ops-actions">
+          <div class="record-stats">
+            <span class="record-stats__item record-stats__item--ok">已完成 {{ successCount }}</span>
+            <span class="record-stats__item record-stats__item--bad">异常 {{ failCount }}</span>
+          </div>
           <el-button v-if="state.hasPermission('ops:devicebackuprecord:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
         </div>
       </div>
     </el-form>
 
-    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" style="width: 100%">
+    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="backup-record-table" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
       <el-table-column prop="name" label="主机名" header-align="center" align="center"></el-table-column>
       <el-table-column prop="ip" label="IP" header-align="center" align="center"></el-table-column>
@@ -122,7 +126,7 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {nextTick, reactive, ref, toRefs} from "vue";
+import {computed, nextTick, reactive, ref, toRefs} from "vue";
 import baseService from "@/service/baseService";
 import app from "@/constants/app";
 import {getToken} from "@/utils/cache";
@@ -141,6 +145,8 @@ const view = reactive({
 });
 
 const state = reactive({ ...useView(view), ...toRefs(view) });
+const successCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.lastBackupStatus) === 1).length);
+const failCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.lastBackupStatus) === 0).length);
 
 const historyVisible = ref(false);
 const historyLoading = ref(false);
@@ -306,11 +312,32 @@ const setupPreviewSync = () => {
   flex-wrap: nowrap;
   white-space: nowrap;
 }
+.record-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.record-stats__item {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.record-stats__item--ok {
+  color: #166534;
+  background: #dcfce7;
+}
+.record-stats__item--bad {
+  color: #991b1b;
+  background: #fee2e2;
+}
 .ops-filters .el-form-item {
   margin-bottom: 0;
 }
 .mod-ops__devicebackup-record :deep(.el-table .cell) {
   white-space: nowrap;
+}
+.backup-record-table :deep(.el-table__row:hover > td) {
+  background: #f8fafc;
 }
 .history-toolbar {
   display: flex;
