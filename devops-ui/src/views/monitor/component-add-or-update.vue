@@ -1,12 +1,20 @@
 <template>
-  <el-dialog v-model="visible" :title="!dataForm.id ? '新增' : '修改'" :close-on-click-modal="false" :close-on-press-escape="false">
-    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px">
+  <el-dialog
+    v-model="visible"
+    :title="!dataForm.id ? '新增组件' : '修改组件'"
+    width="680px"
+    :close-on-click-modal="false"
+    :close-on-press-escape="false"
+  >
+    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="component-form">
+      <div class="form-section-title">基础信息</div>
       <el-form-item label="名称" prop="name">
         <el-input v-model="dataForm.name" placeholder="名称" @blur="checkUnique('name')"></el-input>
       </el-form-item>
       <el-form-item label="类型" prop="type">
         <ren-select v-model="dataForm.type" dict-type="monitor_component_type" placeholder="类型"></ren-select>
       </el-form-item>
+      <div class="form-section-title">网络与访问</div>
       <el-form-item label="IP" prop="ip">
         <el-input v-model="dataForm.ip" placeholder="IP" @blur="checkUnique('ip')"></el-input>
       </el-form-item>
@@ -19,7 +27,7 @@
     </el-form>
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="dataFormSubmitHandle()">确定</el-button>
+      <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
     </template>
   </el-dialog>
 </template>
@@ -33,6 +41,7 @@ const emit = defineEmits(["refreshDataList"]);
 
 const visible = ref(false);
 const dataFormRef = ref();
+const submitLoading = ref(false);
 
 const dataForm = reactive({
   id: "",
@@ -134,16 +143,21 @@ const dataFormSubmitHandle = () => {
     delete submitData.createDate;
     delete submitData.updater;
     delete submitData.updateDate;
-    (!dataForm.id ? baseService.post : baseService.put)("/ops/monitorcomponent", submitData).then(() => {
-      ElMessage.success({
-        message: "成功",
-        duration: 500,
-        onClose: () => {
-          visible.value = false;
-          emit("refreshDataList");
-        }
+    submitLoading.value = true;
+    (!dataForm.id ? baseService.post : baseService.put)("/ops/monitorcomponent", submitData)
+      .then(() => {
+        ElMessage.success({
+          message: "成功",
+          duration: 500,
+          onClose: () => {
+            visible.value = false;
+            emit("refreshDataList");
+          }
+        });
+      })
+      .finally(() => {
+        submitLoading.value = false;
       });
-    });
   });
 };
 
@@ -151,3 +165,20 @@ defineExpose({
   init
 });
 </script>
+
+<style scoped>
+.component-form {
+  max-height: 64vh;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.form-section-title {
+  margin: 4px 0 10px;
+  padding-left: 8px;
+  border-left: 3px solid #409eff;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 13px;
+}
+</style>
