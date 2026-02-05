@@ -14,6 +14,7 @@
             <span class="agent-stats__item agent-stats__item--off">禁用 {{ disabledCount }}</span>
             <span class="agent-stats__item agent-stats__item--online">在线 {{ onlineCount }}</span>
           </div>
+          <el-button type="warning" plain :loading="onlineRefreshLoading" @click="handleRefreshOnlineStatus">刷新在线状态</el-button>
           <el-button v-if="state.hasPermission('ops:backupagent:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
           <el-button v-if="state.hasPermission('ops:backupagent:update')" type="success" @click="handleBatchToggle">启用/禁用</el-button>
           <el-button v-if="state.hasPermission('ops:backupagent:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
@@ -115,6 +116,7 @@ const state = reactive({ ...useView(view), ...toRefs(view) });
 const enabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 1).length);
 const disabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 0).length);
 const onlineCount = computed(() => (state.dataList || []).filter((item: any) => item?.onlineStatus === true).length);
+const onlineRefreshLoading = ref(false);
 
 const filterDrawer = ref(false);
 
@@ -176,17 +178,20 @@ const handleTemplateDownload = () => {
   window.location.href = templateUrl;
 };
 
-const refreshOnlineStatus = () => {
+const refreshOnlineStatus = (showMessage = false) => {
   if (!state.dataList || state.dataList.length === 0) {
-    return;
+    if (showMessage) {
+      ElMessage.warning("当前列表暂无可检测节点");
+    }
+    return Promise.resolve();
   }
-  state.dataList.forEach((row: { instance?: string; onlineStatus?: boolean | null }) => {
+  const tasks = state.dataList.map((row: { instance?: string; onlineStatus?: boolean | null }) => {
     row.onlineStatus = null;
     if (!row.instance) {
       row.onlineStatus = false;
-      return;
+      return Promise.resolve();
     }
-    baseService
+    return baseService
       .get("/ops/backupagent/online", { instance: row.instance })
       .then((res) => {
         row.onlineStatus = !!res.data;
@@ -195,12 +200,24 @@ const refreshOnlineStatus = () => {
         row.onlineStatus = false;
       });
   });
+  return Promise.allSettled(tasks).then(() => {
+    if (showMessage) {
+      ElMessage.success("在线状态已刷新");
+    }
+  });
+};
+
+const handleRefreshOnlineStatus = () => {
+  onlineRefreshLoading.value = true;
+  refreshOnlineStatus(true).finally(() => {
+    onlineRefreshLoading.value = false;
+  });
 };
 
 watch(
   () => state.dataList,
   () => {
-    refreshOnlineStatus();
+    refreshOnlineStatus(false);
   }
 );
 
