@@ -4,7 +4,6 @@
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
           <el-input v-model="state.dataForm.instance" class="query-input" placeholder="地址(模糊)" clearable @keyup.enter="queryList()"></el-input>
-          <el-input v-model="state.dataForm.name" class="query-input" placeholder="名称(模糊)" clearable @keyup.enter="queryList()"></el-input>
           <el-button class="query-btn" :loading="state.dataListLoading" @click="queryList()">查询</el-button>
           <el-button class="query-btn" @click="handleToolbarReset">重置</el-button>
           <el-button :icon="Filter" @click="filterDrawer = true">筛选<span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span></el-button>
@@ -31,6 +30,9 @@
         </el-form-item>
         <el-form-item label="区域名称">
           <ren-select v-model="state.dataForm.areaName" dict-type="area_name_type" label-field="dictValue" value-field="dictLabel" placeholder="全部"></ren-select>
+        </el-form-item>
+        <el-form-item label="名称(模糊)">
+          <el-input v-model="state.dataForm.name" placeholder="名称(模糊)" clearable></el-input>
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="state.dataForm.status" placeholder="全部" clearable>
@@ -154,6 +156,7 @@ const activeFilterCount = computed(() => {
   let count = 0;
   if (state.dataForm.siteLocation) count++;
   if (state.dataForm.areaName) count++;
+  if (state.dataForm.name) count++;
   if (state.dataForm.status !== "" && state.dataForm.status !== null && state.dataForm.status !== undefined) count++;
   if (state.dataForm.menuName) count++;
   if (state.dataForm.type) count++;
@@ -175,7 +178,6 @@ const handleFilterReset = () => {
 
 const handleToolbarReset = () => {
   state.dataForm.instance = "";
-  state.dataForm.name = "";
   handleFilterReset();
   queryList();
 };
@@ -375,7 +377,8 @@ const updateStatusHandle = (status: number) => {
   height: 32px;
 }
 .filter-form .el-select,
-.filter-form .ren-select {
+.filter-form .ren-select,
+.filter-form .el-input {
   width: 100%;
 }
 .filter-form .el-form-item {
