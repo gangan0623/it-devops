@@ -6,9 +6,13 @@ import net.leoch.common.redis.RedisKeys;
 import net.leoch.common.redis.RedisUtils;
 import net.leoch.common.utils.PingUtils;
 import net.leoch.modules.ops.dao.BusinessSystemDao;
+import net.leoch.modules.ops.dao.BackupAgentDao;
+import net.leoch.modules.ops.dao.DeviceBackupDao;
 import net.leoch.modules.ops.dao.LinuxHostDao;
 import net.leoch.modules.ops.dao.WindowHostDao;
+import net.leoch.modules.ops.entity.BackupAgentEntity;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
+import net.leoch.modules.ops.entity.DeviceBackupEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
 import net.leoch.modules.ops.util.MetricsUtils;
@@ -35,15 +39,21 @@ public class OnlineStatusRefreshTask implements ITask {
     private final LinuxHostDao linuxHostDao;
     private final WindowHostDao windowHostDao;
     private final BusinessSystemDao businessSystemDao;
+    private final BackupAgentDao backupAgentDao;
+    private final DeviceBackupDao deviceBackupDao;
     private final RedisUtils redisUtils;
 
     public OnlineStatusRefreshTask(LinuxHostDao linuxHostDao,
                                    WindowHostDao windowHostDao,
                                    BusinessSystemDao businessSystemDao,
+                                   BackupAgentDao backupAgentDao,
+                                   DeviceBackupDao deviceBackupDao,
                                    RedisUtils redisUtils) {
         this.linuxHostDao = linuxHostDao;
         this.windowHostDao = windowHostDao;
         this.businessSystemDao = businessSystemDao;
+        this.backupAgentDao = backupAgentDao;
+        this.deviceBackupDao = deviceBackupDao;
         this.redisUtils = redisUtils;
     }
 
@@ -53,6 +63,8 @@ public class OnlineStatusRefreshTask implements ITask {
         refreshLinux();
         refreshWindows();
         refreshBusinessSystems();
+        refreshBackupAgents();
+        refreshDeviceBackups();
         logger.info("OnlineStatusRefreshTask finished in {} ms", System.currentTimeMillis() - start);
     }
 
@@ -78,6 +90,21 @@ public class OnlineStatusRefreshTask implements ITask {
         Map<String, Object> statusMap = refreshWithThreads(list, BusinessSystemEntity::getInstance,
                 instance -> PingUtils.isReachable(instance, 2000));
         refreshCache(RedisKeys.getBusinessSystemOnlineKey(), statusMap);
+    }
+
+    private void refreshBackupAgents() {
+        List<BackupAgentEntity> list = backupAgentDao.selectList(new LambdaQueryWrapper<BackupAgentEntity>()
+                .select(BackupAgentEntity::getInstance));
+        Map<String, Object> statusMap = refreshWithThreads(list, BackupAgentEntity::getInstance, this::checkBackupAgentHealth);
+        refreshCache(RedisKeys.getBackupAgentOnlineKey(), statusMap);
+    }
+
+    private void refreshDeviceBackups() {
+        List<DeviceBackupEntity> list = deviceBackupDao.selectList(new LambdaQueryWrapper<DeviceBackupEntity>()
+                .select(DeviceBackupEntity::getInstance));
+        Map<String, Object> statusMap = refreshWithThreads(list, DeviceBackupEntity::getInstance,
+                instance -> PingUtils.isReachable(instance, 2000));
+        refreshCache(RedisKeys.getDeviceBackupOnlineKey(), statusMap);
     }
 
     private void refreshCache(String key, Map<String, Object> statusMap) {
@@ -123,6 +150,33 @@ public class OnlineStatusRefreshTask implements ITask {
             executor.shutdownNow();
         }
         return statusMap;
+    }
+
+    private boolean checkBackupAgentHealth(String instance) {
+        if (StrUtil.isBlank(instance)) {
+            return false;
+        }
+        String base = instance.trim();
+        if (!base.startsWith("http://") && !base.startsWith("https://")) {
+            base = "http://" + base;
+        }
+        String url = base.endsWith("/") ? (base + "health") : (base + "/health");
+        try {
+            java.net.HttpURLConnection conn = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
+            conn.setRequestMethod("GET");
+            conn.setConnectTimeout(2000);
+            conn.setReadTimeout(2000);
+            conn.connect();
+            if (conn.getResponseCode() != 200) {
+                return false;
+            }
+            try (java.io.InputStream in = conn.getInputStream()) {
+                String body = new String(in.readAllBytes());
+                return body.contains("\"status\":\"ok\"") || body.contains("\"status\" : \"ok\"") || body.contains("\"status\": \"ok\"");
+            }
+        } catch (Exception ignore) {
+            return false;
+        }
     }
 
 }

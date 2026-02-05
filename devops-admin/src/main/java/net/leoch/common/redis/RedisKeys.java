@@ -70,4 +70,12 @@ public class RedisKeys {
     public static String getBusinessSystemOnlineKey() {
         return "ops:online:businesssystem";
     }
+
+    public static String getBackupAgentOnlineKey() {
+        return "ops:online:backupagent";
+    }
+
+    public static String getDeviceBackupOnlineKey() {
+        return "ops:online:devicebackup";
+    }
 }

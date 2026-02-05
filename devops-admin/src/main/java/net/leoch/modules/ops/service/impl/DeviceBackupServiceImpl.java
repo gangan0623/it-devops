@@ -13,6 +13,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.RenException;
 import net.leoch.common.page.PageData;
+import net.leoch.common.redis.RedisKeys;
+import net.leoch.common.redis.RedisUtils;
 import net.leoch.common.service.impl.CrudServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.ExcelUtils;
@@ -45,9 +47,11 @@ import java.util.stream.Collectors;
 public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, DeviceBackupEntity, DeviceBackupDTO> implements DeviceBackupService {
 
     private final BackupAgentDao backupAgentDao;
+    private final RedisUtils redisUtils;
 
-    public DeviceBackupServiceImpl(BackupAgentDao backupAgentDao) {
+    public DeviceBackupServiceImpl(BackupAgentDao backupAgentDao, RedisUtils redisUtils) {
         this.backupAgentDao = backupAgentDao;
+        this.redisUtils = redisUtils;
     }
 
     @Override
@@ -86,6 +90,7 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
         Page<DeviceBackupEntity> page = buildPage(request);
         IPage<DeviceBackupEntity> result = baseDao.selectPage(page, wrapper);
         List<DeviceBackupDTO> list = ConvertUtils.sourceToTarget(result.getRecords(), DeviceBackupDTO.class);
+        fillOnlineStatus(list);
         fillAgentNames(list);
         maskPasswords(list);
         return new PageData<>(list, result.getTotal());
@@ -99,6 +104,7 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
         DeviceBackupEntity entity = baseDao.selectById(request.getId());
         DeviceBackupDTO dto = ConvertUtils.sourceToTarget(entity, DeviceBackupDTO.class);
         if (dto != null) {
+            fillOnlineStatus(Arrays.asList(dto));
             fillAgentNames(Arrays.asList(dto));
             maskPassword(dto);
         }
@@ -147,6 +153,36 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
             return false;
         }
         return existsByInstanceOrName(request.getInstance(), request.getName(), request.getId());
+    }
+
+    @Override
+    public OpsHostStatusSummaryDTO summary(DeviceBackupPageRequest request) {
+        LambdaQueryWrapper<DeviceBackupEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(DeviceBackupEntity::getInstance, DeviceBackupEntity::getStatus);
+        List<DeviceBackupEntity> list = baseDao.selectList(wrapper);
+        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getDeviceBackupOnlineKey());
+        OpsHostStatusSummaryDTO summary = new OpsHostStatusSummaryDTO();
+        summary.setTotalCount((long) list.size());
+        for (DeviceBackupEntity item : list) {
+            if (item == null) {
+                continue;
+            }
+            Integer status = item.getStatus();
+            if (Integer.valueOf(1).equals(status)) {
+                summary.setEnabledCount(summary.getEnabledCount() + 1);
+            } else if (Integer.valueOf(0).equals(status)) {
+                summary.setDisabledCount(summary.getDisabledCount() + 1);
+            }
+            Boolean onlineStatus = OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(item.getInstance()));
+            if (Boolean.TRUE.equals(onlineStatus)) {
+                summary.setOnlineCount(summary.getOnlineCount() + 1);
+            } else if (Boolean.FALSE.equals(onlineStatus)) {
+                summary.setOfflineCount(summary.getOfflineCount() + 1);
+            } else {
+                summary.setUnknownCount(summary.getUnknownCount() + 1);
+            }
+        }
+        return summary;
     }
 
     @Override
@@ -313,6 +349,17 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
             if (dto.getAgentId() != null) {
                 dto.setAgentName(agentNameMap.get(dto.getAgentId()));
             }
+        }
+    }
+
+    private void fillOnlineStatus(List<DeviceBackupDTO> list) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getDeviceBackupOnlineKey());
+        for (DeviceBackupDTO dto : list) {
+            String instance = dto.getInstance();
+            dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
         }
     }
 

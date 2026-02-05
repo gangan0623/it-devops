@@ -39,4 +39,6 @@ public interface DeviceBackupService extends CrudService<DeviceBackupEntity, Dev
     void updateStatus(Long[] ids, Integer status);
 
     boolean existsByInstanceOrName(String instance, String name, Long excludeId);
+
+    OpsHostStatusSummaryDTO summary(DeviceBackupPageRequest request);
 }

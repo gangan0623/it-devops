@@ -39,6 +39,9 @@ public class BackupAgentDTO implements Serializable {
 	@SchemaProperty(name = "状态 0禁用 1启用")
 	private Integer status;
 
+	@SchemaProperty(name = "在线状态")
+	private Boolean onlineStatus;
+
 	@SchemaProperty(name = "创建者")
 	private Long creator;
 

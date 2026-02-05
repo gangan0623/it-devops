@@ -44,7 +44,14 @@ public class DeviceBackupController {
         return new Result<PageData<DeviceBackupDTO>>().ok(deviceBackupService.page(request));
     }
 
-    @GetMapping("{id}")
+    @GetMapping("summary")
+    @Operation(summary = "状态汇总")
+    @SaCheckPermission("ops:devicebackup:page")
+    public Result<OpsHostStatusSummaryDTO> summary(@Parameter(hidden = true) DeviceBackupPageRequest request){
+        return new Result<OpsHostStatusSummaryDTO>().ok(deviceBackupService.summary(request));
+    }
+
+    @GetMapping("{id:\\d+}")
     @Operation(summary = "信息")
     @SaCheckPermission("ops:devicebackup:info")
     public Result<DeviceBackupDTO> get(@PathVariable Long id){

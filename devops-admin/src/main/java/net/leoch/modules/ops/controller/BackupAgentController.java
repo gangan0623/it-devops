@@ -43,7 +43,14 @@ public class BackupAgentController {
         return new Result<PageData<BackupAgentDTO>>().ok(backupAgentService.page(request));
     }
 
-    @GetMapping("{id}")
+    @GetMapping("summary")
+    @Operation(summary = "状态汇总")
+    @SaCheckPermission("ops:backupagent:page")
+    public Result<OpsHostStatusSummaryDTO> summary(@Parameter(hidden = true) BackupAgentPageRequest request){
+        return new Result<OpsHostStatusSummaryDTO>().ok(backupAgentService.summary(request));
+    }
+
+    @GetMapping("{id:\\d+}")
     @Operation(summary = "信息")
     @SaCheckPermission("ops:backupagent:info")
     public Result<BackupAgentDTO> get(@PathVariable("id") Long id){

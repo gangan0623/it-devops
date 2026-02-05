@@ -3,24 +3,18 @@
     <div class="ops-toolbar">
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
-          <el-input v-model="state.dataForm.instance" placeholder="地址(模糊)" clearable @keyup.enter="state.getDataList()"></el-input>
-          <el-input v-model="state.dataForm.name" placeholder="名称(模糊)" clearable @keyup.enter="state.getDataList()"></el-input>
-          <el-button @click="state.getDataList()">查询</el-button>
+          <el-input v-model="state.dataForm.instance" placeholder="地址(模糊)" clearable @keyup.enter="queryList()"></el-input>
+          <el-input v-model="state.dataForm.name" placeholder="名称(模糊)" clearable @keyup.enter="queryList()"></el-input>
+          <el-button @click="queryList()">查询</el-button>
           <el-button :icon="Filter" @click="filterDrawer = true">筛选<span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span></el-button>
         </div>
         <div class="ops-toolbar__group ops-actions">
-          <el-radio-group v-model="onlineQuickFilter" size="small">
-            <el-radio-button label="">全部</el-radio-button>
-            <el-radio-button label="online">在线</el-radio-button>
-            <el-radio-button label="offline">离线</el-radio-button>
-          </el-radio-group>
           <div class="agent-stats">
             <span class="agent-stats__item agent-stats__item--on">启用 {{ enabledCount }}</span>
             <span class="agent-stats__item agent-stats__item--off">禁用 {{ disabledCount }}</span>
             <span class="agent-stats__item agent-stats__item--online">在线 {{ onlineCount }}</span>
-            <span class="agent-stats__item agent-stats__item--filter">显示 {{ filteredCount }}</span>
+            <span class="agent-stats__item agent-stats__item--filter">离线 {{ offlineCount }}</span>
           </div>
-          <el-button type="warning" plain :loading="onlineRefreshLoading" @click="handleRefreshOnlineStatus">刷新在线状态</el-button>
           <el-button v-if="state.hasPermission('ops:backupagent:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
           <el-button v-if="state.hasPermission('ops:backupagent:update')" type="success" @click="handleBatchToggle">启用/禁用</el-button>
           <el-button v-if="state.hasPermission('ops:backupagent:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
@@ -46,7 +40,7 @@
         <el-button type="primary" @click="handleFilterConfirm">确定</el-button>
       </template>
     </el-drawer>
-    <el-table v-loading="state.dataListLoading" :data="filteredDataList" border @selection-change="state.dataListSelectionChangeHandle" class="agent-table" style="width: 100%">
+    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="agent-table" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
               <el-table-column prop="instance" label="地址" header-align="center" align="center"></el-table-column>
               <el-table-column prop="name" label="名称" header-align="center" align="center"></el-table-column>
@@ -89,13 +83,13 @@
       </div>
     </el-dialog>
     <!-- 弹窗, 新增 / 修改 -->
-    <add-or-update ref="addOrUpdateRef" @refreshDataList="state.getDataList">确定</add-or-update>
+    <add-or-update ref="addOrUpdateRef" @refreshDataList="queryList">确定</add-or-update>
   </div>
 </template>
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {computed, reactive, ref, toRefs, watch} from "vue";
+import {computed, onMounted, reactive, ref, toRefs} from "vue";
 import AddOrUpdate from "./backupagent-add-or-update.vue";
 import baseService from "@/service/baseService";
 import {ElMessage, ElMessageBox} from "element-plus";
@@ -119,21 +113,16 @@ const view = reactive({
 });
 
 const state = reactive({ ...useView(view), ...toRefs(view) });
-const onlineQuickFilter = ref("");
-const enabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 1).length);
-const disabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 0).length);
-const onlineCount = computed(() => (state.dataList || []).filter((item: any) => item?.onlineStatus === true).length);
-const filteredDataList = computed(() => {
-  if (!onlineQuickFilter.value) {
-    return state.dataList || [];
-  }
-  if (onlineQuickFilter.value === "online") {
-    return (state.dataList || []).filter((item: any) => item?.onlineStatus === true);
-  }
-  return (state.dataList || []).filter((item: any) => item?.onlineStatus === false);
+const statusSummary = ref({
+  enabledCount: 0,
+  disabledCount: 0,
+  onlineCount: 0,
+  offlineCount: 0
 });
-const filteredCount = computed(() => filteredDataList.value.length);
-const onlineRefreshLoading = ref(false);
+const enabledCount = computed(() => statusSummary.value.enabledCount);
+const disabledCount = computed(() => statusSummary.value.disabledCount);
+const onlineCount = computed(() => statusSummary.value.onlineCount);
+const offlineCount = computed(() => statusSummary.value.offlineCount);
 
 const filterDrawer = ref(false);
 
@@ -146,7 +135,7 @@ const activeFilterCount = computed(() => {
 
 const handleFilterConfirm = () => {
   filterDrawer.value = false;
-  state.getDataList();
+  queryList();
 };
 
 const handleFilterReset = () => {
@@ -184,9 +173,9 @@ const handleImportSuccess = (res: IObject) => {
   }
   ElMessage.success({
     message: "成功",
-    duration: 500,
-    onClose: () => {
-      state.getDataList();
+      duration: 500,
+      onClose: () => {
+      queryList();
     }
   });
 };
@@ -195,48 +184,35 @@ const handleTemplateDownload = () => {
   window.location.href = templateUrl;
 };
 
-const refreshOnlineStatus = (showMessage = false) => {
-  if (!state.dataList || state.dataList.length === 0) {
-    if (showMessage) {
-      ElMessage.warning("当前列表暂无可检测节点");
-    }
-    return Promise.resolve();
-  }
-  const tasks = state.dataList.map((row: { instance?: string; onlineStatus?: boolean | null }) => {
-    row.onlineStatus = null;
-    if (!row.instance) {
-      row.onlineStatus = false;
-      return Promise.resolve();
-    }
-    return baseService
-      .get("/ops/backupagent/online", { instance: row.instance })
-      .then((res) => {
-        row.onlineStatus = !!res.data;
-      })
-      .catch(() => {
-        row.onlineStatus = false;
-      });
-  });
-  return Promise.allSettled(tasks).then(() => {
-    if (showMessage) {
-      ElMessage.success("在线状态已刷新");
-    }
-  });
+const loadStatusSummary = () => {
+  baseService
+    .get("/ops/backupagent/summary")
+    .then((res) => {
+      statusSummary.value = {
+        enabledCount: Number(res.data?.enabledCount || 0),
+        disabledCount: Number(res.data?.disabledCount || 0),
+        onlineCount: Number(res.data?.onlineCount || 0),
+        offlineCount: Number(res.data?.offlineCount || 0)
+      };
+    })
+    .catch(() => {
+      statusSummary.value = {
+        enabledCount: 0,
+        disabledCount: 0,
+        onlineCount: 0,
+        offlineCount: 0
+      };
+    });
 };
 
-const handleRefreshOnlineStatus = () => {
-  onlineRefreshLoading.value = true;
-  refreshOnlineStatus(true).finally(() => {
-    onlineRefreshLoading.value = false;
-  });
+const queryList = () => {
+  state.getDataList();
+  loadStatusSummary();
 };
 
-watch(
-  () => state.dataList,
-  () => {
-    refreshOnlineStatus(false);
-  }
-);
+onMounted(() => {
+  loadStatusSummary();
+});
 
 const handleBatchToggle = () => {
   if (!state.dataListSelections || state.dataListSelections.length === 0) {
@@ -279,7 +255,7 @@ const updateStatusHandle = (status: number) => {
         message: "成功",
         duration: 500,
         onClose: () => {
-          state.getDataList();
+          queryList();
         }
       });
     });

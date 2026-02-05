@@ -54,6 +54,9 @@ public class DeviceBackupDTO implements Serializable {
 	@SchemaProperty(name = "节点名称")
 	private String agentName;
 
+	@SchemaProperty(name = "在线状态")
+	private Boolean onlineStatus;
+
 	@SchemaProperty(name = "创建者")
 	private Long creator;
 

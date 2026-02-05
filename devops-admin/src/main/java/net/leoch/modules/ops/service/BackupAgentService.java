@@ -39,4 +39,6 @@ public interface BackupAgentService extends CrudService<BackupAgentEntity, Backu
     void updateStatus(Long[] ids, Integer status);
 
     boolean existsByInstanceOrName(String instance, String name, Long excludeId);
+
+    OpsHostStatusSummaryDTO summary(BackupAgentPageRequest request);
 }

@@ -13,6 +13,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.RenException;
 import net.leoch.common.page.PageData;
+import net.leoch.common.redis.RedisKeys;
+import net.leoch.common.redis.RedisUtils;
 import net.leoch.common.service.impl.CrudServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.ExcelUtils;
@@ -47,9 +49,11 @@ import java.util.*;
 public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, BackupAgentEntity, BackupAgentDTO> implements BackupAgentService {
 
     private final DeviceBackupDao deviceBackupDao;
+    private final RedisUtils redisUtils;
 
-    public BackupAgentServiceImpl(DeviceBackupDao deviceBackupDao) {
+    public BackupAgentServiceImpl(DeviceBackupDao deviceBackupDao, RedisUtils redisUtils) {
         this.deviceBackupDao = deviceBackupDao;
+        this.redisUtils = redisUtils;
     }
 
     @Override
@@ -79,6 +83,7 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
         Page<BackupAgentEntity> page = buildPage(request);
         IPage<BackupAgentEntity> result = baseDao.selectPage(page, wrapper);
         List<BackupAgentDTO> list = ConvertUtils.sourceToTarget(result.getRecords(), BackupAgentDTO.class);
+        fillOnlineStatus(list);
         maskTokens(list);
         return new PageData<>(list, result.getTotal());
     }
@@ -90,6 +95,9 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
         }
         BackupAgentEntity entity = baseDao.selectById(request.getId());
         BackupAgentDTO dto = ConvertUtils.sourceToTarget(entity, BackupAgentDTO.class);
+        if (dto != null) {
+            fillOnlineStatus(Collections.singletonList(dto));
+        }
         maskToken(dto);
         return dto;
     }
@@ -136,6 +144,36 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
             return false;
         }
         return existsByInstanceOrName(request.getInstance(), request.getName(), request.getId());
+    }
+
+    @Override
+    public OpsHostStatusSummaryDTO summary(BackupAgentPageRequest request) {
+        LambdaQueryWrapper<BackupAgentEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(BackupAgentEntity::getInstance, BackupAgentEntity::getStatus);
+        List<BackupAgentEntity> list = baseDao.selectList(wrapper);
+        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBackupAgentOnlineKey());
+        OpsHostStatusSummaryDTO summary = new OpsHostStatusSummaryDTO();
+        summary.setTotalCount((long) list.size());
+        for (BackupAgentEntity item : list) {
+            if (item == null) {
+                continue;
+            }
+            Integer status = item.getStatus();
+            if (Integer.valueOf(1).equals(status)) {
+                summary.setEnabledCount(summary.getEnabledCount() + 1);
+            } else if (Integer.valueOf(0).equals(status)) {
+                summary.setDisabledCount(summary.getDisabledCount() + 1);
+            }
+            Boolean onlineStatus = OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(item.getInstance()));
+            if (Boolean.TRUE.equals(onlineStatus)) {
+                summary.setOnlineCount(summary.getOnlineCount() + 1);
+            } else if (Boolean.FALSE.equals(onlineStatus)) {
+                summary.setOfflineCount(summary.getOfflineCount() + 1);
+            } else {
+                summary.setUnknownCount(summary.getUnknownCount() + 1);
+            }
+        }
+        return summary;
     }
 
     @Override
@@ -285,6 +323,17 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
         }
         for (BackupAgentDTO dto : list) {
             maskToken(dto);
+        }
+    }
+
+    private void fillOnlineStatus(List<BackupAgentDTO> list) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBackupAgentOnlineKey());
+        for (BackupAgentDTO dto : list) {
+            String instance = dto.getInstance();
+            dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
         }
     }
 
