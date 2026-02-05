@@ -1,7 +1,8 @@
 <template>
-  <el-dialog v-model="visible" :title="!dataForm.id ? '新增' : '修改'" :close-on-click-modal="false" :close-on-press-escape="false">
-    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px">
-          <el-form-item label="地址" prop="instance">
+  <el-dialog v-model="visible" :title="!dataForm.id ? '新增Linux主机' : '修改Linux主机'" width="760px" :close-on-click-modal="false" :close-on-press-escape="false">
+    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="host-form">
+      <div class="form-section-title">主机信息</div>
+      <el-form-item label="地址" prop="instance">
         <div class="host-instance">
           <el-input v-model="dataForm.ip" placeholder="IP" @blur="handleInstanceBlur"></el-input>
           <span class="host-instance__sep">:</span>
@@ -29,7 +30,8 @@
           placeholder="站点位置"
         ></ren-select>
       </el-form-item>
-          <el-form-item label="分组名称" prop="menuName">
+      <div class="form-section-title">资产归属</div>
+      <el-form-item label="分组名称" prop="menuName">
         <ren-select
           v-model="dataForm.menuName"
           dict-type="server_host_group"
@@ -59,7 +61,7 @@
               </el-form>
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="dataFormSubmitHandle()">确定</el-button>
+      <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
     </template>
   </el-dialog>
 </template>
@@ -73,6 +75,7 @@ const emit = defineEmits(["refreshDataList"]);
 
 const visible = ref(false);
 const dataFormRef = ref();
+const submitLoading = ref(false);
 
 const dataForm = reactive({
   id: "",
@@ -207,16 +210,21 @@ const dataFormSubmitHandle = () => {
     delete submitData.createDate;
     delete submitData.updater;
     delete submitData.updateDate;
-    (!dataForm.id ? baseService.post : baseService.put)("/ops/linuxhost", submitData).then((res) => {
-      ElMessage.success({
-        message: '成功',
-        duration: 500,
-        onClose: () => {
-          visible.value = false;
-          emit("refreshDataList");
-        }
+    submitLoading.value = true;
+    (!dataForm.id ? baseService.post : baseService.put)("/ops/linuxhost", submitData)
+      .then(() => {
+        ElMessage.success({
+          message: "成功",
+          duration: 500,
+          onClose: () => {
+            visible.value = false;
+            emit("refreshDataList");
+          }
+        });
+      })
+      .finally(() => {
+        submitLoading.value = false;
       });
-    });
   });
 };
 
@@ -273,6 +281,19 @@ const parseInstance = (instance: string) => {
   display: flex;
   align-items: center;
   width: 100%;
+}
+.host-form {
+  max-height: 64vh;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+.form-section-title {
+  margin: 4px 0 10px;
+  padding-left: 8px;
+  border-left: 3px solid #409eff;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 13px;
 }
 .host-instance__sep {
   margin: 0 8px;
