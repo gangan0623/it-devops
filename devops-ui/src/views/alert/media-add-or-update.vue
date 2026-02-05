@@ -1,6 +1,7 @@
 <template>
-  <el-dialog v-model="visible" :title="!dataForm.id ? '新增' : '修改'" :close-on-click-modal="false" :close-on-press-escape="false">
-    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px">
+  <el-dialog v-model="visible" :title="!dataForm.id ? '新增媒介' : '修改媒介'" width="760px" :close-on-click-modal="false" :close-on-press-escape="false">
+    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="media-form">
+      <div class="form-section-title">基础信息</div>
       <el-form-item label="媒介名称" prop="name">
         <el-input v-model="dataForm.name" placeholder="媒介名称"></el-input>
       </el-form-item>
@@ -19,6 +20,7 @@
       <el-form-item label="协议" prop="protocol">
         <el-input v-model="dataForm.protocol" placeholder="smtp"></el-input>
       </el-form-item>
+      <div class="form-section-title">安全与连接</div>
       <el-form-item label="SMTP认证" prop="smtpAuth">
         <el-switch v-model="dataForm.smtpAuth" :active-value="1" :inactive-value="0"></el-switch>
       </el-form-item>
@@ -40,7 +42,7 @@
     </el-form>
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="dataFormSubmitHandle()">确定</el-button>
+      <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
     </template>
   </el-dialog>
 </template>
@@ -53,6 +55,7 @@ import {ElMessage} from "element-plus";
 const emit = defineEmits(["refreshDataList"]);
 const visible = ref(false);
 const dataFormRef = ref();
+const submitLoading = ref(false);
 
 const dataForm = reactive({
   id: "",
@@ -61,7 +64,7 @@ const dataForm = reactive({
   port: "",
   username: "",
   password: "",
-  protocol: "",
+  protocol: "smtp",
   smtpAuth: 1,
   starttlsEnable: 0,
   tlsEnable: 0,
@@ -85,6 +88,7 @@ const init = (id?: number) => {
   dataForm.smtpAuth = 1;
   dataForm.starttlsEnable = 0;
   dataForm.tlsEnable = 0;
+  dataForm.protocol = "smtp";
   if (dataFormRef.value) {
     dataFormRef.value.resetFields();
   }
@@ -101,18 +105,39 @@ const dataFormSubmitHandle = () => {
       return false;
     }
     const submitData = { ...dataForm } as Record<string, any>;
-    (!dataForm.id ? baseService.post : baseService.put)("/alert/media", submitData).then(() => {
-      ElMessage.success({
-        message: "成功",
-        duration: 500,
-        onClose: () => {
-          visible.value = false;
-          emit("refreshDataList");
-        }
+    submitLoading.value = true;
+    (!dataForm.id ? baseService.post : baseService.put)("/alert/media", submitData)
+      .then(() => {
+        ElMessage.success({
+          message: "成功",
+          duration: 500,
+          onClose: () => {
+            visible.value = false;
+            emit("refreshDataList");
+          }
+        });
+      })
+      .finally(() => {
+        submitLoading.value = false;
       });
-    });
   });
 };
 
 defineExpose({ init });
 </script>
+
+<style lang="less" scoped>
+.media-form {
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+.form-section-title {
+  margin: 4px 0 10px;
+  padding-left: 8px;
+  border-left: 3px solid #409eff;
+  color: #1e293b;
+  font-weight: 600;
+  font-size: 13px;
+}
+</style>
