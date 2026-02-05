@@ -3,9 +3,10 @@
     <div class="ops-toolbar">
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
-          <el-input v-model="state.dataForm.instance" placeholder="地址(模糊)" clearable @keyup.enter="queryList()"></el-input>
-          <el-input v-model="state.dataForm.name" placeholder="名称(模糊)" clearable @keyup.enter="queryList()"></el-input>
-          <el-button @click="queryList()">查询</el-button>
+          <el-input v-model="state.dataForm.instance" class="query-input" placeholder="地址(模糊)" clearable @keyup.enter="queryList()"></el-input>
+          <el-input v-model="state.dataForm.name" class="query-input" placeholder="名称(模糊)" clearable @keyup.enter="queryList()"></el-input>
+          <el-button class="query-btn" :loading="state.dataListLoading" @click="queryList()">查询</el-button>
+          <el-button class="query-btn" @click="handleToolbarReset">重置</el-button>
           <el-button :icon="Filter" @click="filterDrawer = true">筛选<span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span></el-button>
         </div>
         <div class="ops-toolbar__group ops-actions">
@@ -171,6 +172,13 @@ const handleFilterReset = () => {
   state.dataForm.deviceModel = "";
   state.dataForm.status = "";
   state.dataForm.agentId = "";
+};
+
+const handleToolbarReset = () => {
+  state.dataForm.instance = "";
+  state.dataForm.name = "";
+  handleFilterReset();
+  queryList();
 };
 
 const addOrUpdateRef = ref();
@@ -356,6 +364,17 @@ const updateStatusHandle = (status: number) => {
 }
 .ops-filters .el-form-item {
   margin-bottom: 0;
+}
+.query-input {
+  width: 220px;
+}
+.query-btn {
+  height: 32px;
+  padding: 0 14px;
+}
+.ops-toolbar__group :deep(.el-input__wrapper),
+.ops-toolbar__group :deep(.el-select__wrapper) {
+  height: 32px;
 }
 .mod-ops__devicebackup :deep(.el-table .cell) {
   white-space: nowrap;
