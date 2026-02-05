@@ -61,8 +61,12 @@
 
     <add-or-update ref="addOrUpdateRef" @refreshDataList="state.getDataList"></add-or-update>
 
-    <el-dialog v-model="testVisible" title="媒介测试" :close-on-click-modal="false">
-      <el-form :model="testForm" label-width="100px">
+    <el-dialog v-model="testVisible" title="媒介测试" width="680px" :close-on-click-modal="false">
+      <div class="test-meta">
+        <span class="test-meta__label">当前媒介</span>
+        <span class="test-meta__value">{{ currentMediaName || "-" }}</span>
+      </div>
+      <el-form :model="testForm" label-width="100px" class="test-form">
         <el-form-item label="收件人">
           <el-input v-model="testForm.to" placeholder="多个邮箱用逗号分隔"></el-input>
         </el-form-item>
@@ -75,6 +79,8 @@
       </el-form>
       <template #footer>
         <el-button @click="testVisible = false">取消</el-button>
+        <el-button @click="fillTestExample">填充示例</el-button>
+        <el-button @click="resetTestForm">重置</el-button>
         <el-button type="primary" :loading="testSending" @click="sendTest">发送测试</el-button>
       </template>
     </el-dialog>
@@ -103,6 +109,7 @@ const state = reactive({ ...useView(view), ...toRefs(view) });
 const addOrUpdateRef = ref();
 const testVisible = ref(false);
 const testSending = ref(false);
+const currentMediaName = ref("");
 const testForm = reactive({
   mediaId: "",
   to: "",
@@ -118,13 +125,28 @@ const addOrUpdateHandle = (id?: number) => {
 
 const openTest = (row: any) => {
   testForm.mediaId = row.id;
-  testForm.to = "";
-  testForm.subject = "告警媒介连通性测试";
-  testForm.html = "<p>这是一条媒介测试消息，用于校验 SMTP 配置是否可用。</p>";
+  currentMediaName.value = row.name || "";
+  resetTestForm();
   testVisible.value = true;
 };
 
+const resetTestForm = () => {
+  testForm.to = "";
+  testForm.subject = "告警媒介连通性测试";
+  testForm.html = "<p>这是一条媒介测试消息，用于校验 SMTP 配置是否可用。</p>";
+};
+
+const fillTestExample = () => {
+  testForm.to = testForm.to || "ops@example.com";
+  testForm.subject = "【测试】告警媒介连通性测试";
+  testForm.html = "<p>这是一条媒介测试消息，用于校验 SMTP 配置是否可用。</p><p>发送时间：{{ now }}</p>";
+};
+
 const sendTest = () => {
+  if (!testForm.to.trim()) {
+    ElMessage.warning("请填写收件人");
+    return;
+  }
   testSending.value = true;
   baseService
     .post("/alert/media/test", testForm)
@@ -185,5 +207,24 @@ const sendTest = () => {
 }
 .media-table :deep(.el-table__row:hover > td) {
   background: #f8fafc;
+}
+.test-meta {
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+.test-meta__label {
+  margin-right: 8px;
+  color: #64748b;
+  font-size: 12px;
+}
+.test-meta__value {
+  color: #0f172a;
+  font-weight: 600;
+}
+.test-form :deep(.el-form-item) {
+  margin-bottom: 14px;
 }
 </style>
