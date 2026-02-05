@@ -17,17 +17,25 @@
           </el-form-item>
         </div>
         <div class="ops-toolbar__group ops-actions">
+          <el-radio-group v-model="severityQuickFilter" size="small">
+            <el-radio-button label="">全部级别</el-radio-button>
+            <el-radio-button label="critical">灾难</el-radio-button>
+            <el-radio-button label="warning">重要</el-radio-button>
+            <el-radio-button label="info">信息</el-radio-button>
+          </el-radio-group>
           <div class="trigger-stats">
             <span class="trigger-stats__item trigger-stats__item--on">启用 {{ enabledCount }}</span>
             <span class="trigger-stats__item trigger-stats__item--critical">含灾难 {{ criticalCount }}</span>
+            <span class="trigger-stats__item trigger-stats__item--filter">显示 {{ filteredCount }}</span>
           </div>
+          <el-button type="warning" plain :loading="resourceLoading" @click="loadResources">刷新资源</el-button>
           <el-button v-if="state.hasPermission('alert:trigger:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
           <el-button v-if="state.hasPermission('alert:trigger:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
         </div>
       </div>
     </el-form>
 
-    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="trigger-table" style="width: 100%">
+    <el-table v-loading="state.dataListLoading" :data="filteredDataList" border @selection-change="state.dataListSelectionChangeHandle" class="trigger-table" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
       <el-table-column prop="name" label="触发器名称" header-align="center" align="center" min-width="180" show-overflow-tooltip></el-table-column>
       <el-table-column prop="templateId" label="模板" header-align="center" align="center" min-width="160" show-overflow-tooltip>
@@ -88,6 +96,8 @@ const view = reactive({
 
 const state = reactive({ ...useView(view), ...toRefs(view) });
 const addOrUpdateRef = ref();
+const resourceLoading = ref(false);
+const severityQuickFilter = ref("");
 const severityLabelMap: Record<string, string> = {
   critical: "灾难告警",
   warning: "重要告警",
@@ -114,20 +124,36 @@ const enabledCount = computed(() => (state.dataList || []).filter((item: any) =>
 const criticalCount = computed(() =>
   (state.dataList || []).filter((item: any) => String(item?.severity || "").toLowerCase().includes("critical")).length
 );
+const filteredDataList = computed(() => {
+  if (!severityQuickFilter.value) {
+    return state.dataList || [];
+  }
+  const target = severityQuickFilter.value.toLowerCase();
+  return (state.dataList || []).filter((item: any) => String(item?.severity || "").toLowerCase().includes(target));
+});
+const filteredCount = computed(() => filteredDataList.value.length);
 
 const addOrUpdateHandle = (id?: number) => {
   addOrUpdateRef.value.init(id);
 };
 
 const loadResources = () => {
-  baseService.get("/alert/trigger/resources").then((res) => {
-    (res.data.templates || []).forEach((item: any) => {
-      templateMap[item.id] = item.name;
+  resourceLoading.value = true;
+  baseService
+    .get("/alert/trigger/resources")
+    .then((res) => {
+      Object.keys(templateMap).forEach((key) => delete templateMap[key]);
+      Object.keys(mediaMap).forEach((key) => delete mediaMap[key]);
+      (res.data.templates || []).forEach((item: any) => {
+        templateMap[item.id] = item.name;
+      });
+      (res.data.medias || []).forEach((item: any) => {
+        mediaMap[item.id] = item.name;
+      });
+    })
+    .finally(() => {
+      resourceLoading.value = false;
     });
-    (res.data.medias || []).forEach((item: any) => {
-      mediaMap[item.id] = item.name;
-    });
-  });
 };
 
 const refresh = () => {
@@ -183,6 +209,10 @@ onMounted(() => {
 .trigger-stats__item--critical {
   color: #9a3412;
   background: #ffedd5;
+}
+.trigger-stats__item--filter {
+  color: #1d4ed8;
+  background: #dbeafe;
 }
 .trigger-table :deep(.el-table__row:hover > td) {
   background: #f8fafc;
