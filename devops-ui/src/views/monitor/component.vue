@@ -1,19 +1,22 @@
 <template>
   <div class="mod-monitor__component">
-    <el-form :inline="true" :model="state.dataForm" @keyup.enter="state.getDataList()" class="ops-toolbar">
+    <el-form :inline="true" :model="state.dataForm" @keyup.enter="queryList()" class="ops-toolbar">
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
           <el-form-item>
-            <el-input v-model="state.dataForm.name" placeholder="名称" clearable></el-input>
+            <el-input v-model="state.dataForm.name" class="query-input" placeholder="名称" clearable></el-input>
           </el-form-item>
           <el-form-item>
-            <el-input v-model="state.dataForm.ip" placeholder="IP" clearable></el-input>
+            <el-input v-model="state.dataForm.ip" class="query-input" placeholder="IP" clearable></el-input>
           </el-form-item>
           <el-form-item>
             <ren-select v-model="state.dataForm.type" dict-type="monitor_component_type" placeholder="类型"></ren-select>
           </el-form-item>
           <el-form-item>
-            <el-button @click="state.getDataList()">查询</el-button>
+            <el-button class="query-btn" :loading="state.dataListLoading" @click="queryList()">查询</el-button>
+          </el-form-item>
+          <el-form-item>
+            <el-button class="query-btn" @click="handleReset">重置</el-button>
           </el-form-item>
         </div>
         <div class="ops-toolbar__group ops-actions">
@@ -115,6 +118,17 @@ const typeLabels: Record<string, string> = {
 
 const addOrUpdateHandle = (id?: number) => {
   addOrUpdateRef.value.init(id);
+};
+
+const queryList = () => {
+  state.getDataList();
+};
+
+const handleReset = () => {
+  state.dataForm.name = "";
+  state.dataForm.ip = "";
+  state.dataForm.type = "";
+  queryList();
 };
 
 const openLink = (row: any) => {
@@ -225,6 +239,17 @@ watch(
 }
 .ops-filters .el-form-item {
   margin-bottom: 0;
+}
+.query-input {
+  width: 200px;
+}
+.query-btn {
+  height: 32px;
+  padding: 0 14px;
+}
+.ops-toolbar__group :deep(.el-input__wrapper),
+.ops-toolbar__group :deep(.el-select__wrapper) {
+  height: 32px;
 }
 .ops-table-nowrap :deep(.el-table__row:hover > td) {
   background: #f8fafc;
