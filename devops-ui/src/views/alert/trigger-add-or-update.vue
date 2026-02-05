@@ -1,16 +1,16 @@
 <template>
-  <el-dialog v-model="visible" :title="!dataForm.id ? '新增' : '修改'" width="760px" :close-on-click-modal="false" :close-on-press-escape="false">
-    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px">
+  <el-dialog v-model="visible" :title="!dataForm.id ? '新增触发器' : '修改触发器'" width="820px" :close-on-click-modal="false" :close-on-press-escape="false">
+    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="trigger-form">
       <el-form-item label="触发器名称" prop="name">
         <el-input v-model="dataForm.name" placeholder="触发器名称"></el-input>
       </el-form-item>
       <el-form-item label="模板" prop="templateId">
-        <el-select v-model="dataForm.templateId" placeholder="选择模板">
+        <el-select v-model="dataForm.templateId" filterable placeholder="选择模板">
           <el-option v-for="item in templateOptions" :key="item.id" :label="item.name" :value="item.id"></el-option>
         </el-select>
       </el-form-item>
       <el-form-item label="媒介" prop="mediaId">
-        <el-select v-model="dataForm.mediaId" placeholder="选择媒介">
+        <el-select v-model="dataForm.mediaId" filterable placeholder="选择媒介">
           <el-option v-for="item in mediaOptions" :key="item.id" :label="item.name" :value="item.id"></el-option>
         </el-select>
       </el-form-item>
@@ -42,10 +42,15 @@
           <el-option label="禁用" :value="0"></el-option>
         </el-select>
       </el-form-item>
+      <div class="match-preview">
+        <span class="match-preview__label">匹配结果预览：</span>
+        <span class="match-preview__value">{{ dataForm.matchLabels || "全部匹配" }}</span>
+      </div>
     </el-form>
     <template #footer>
       <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="dataFormSubmitHandle()">确定</el-button>
+      <el-button @click="clearMatchLabels">清空匹配标签</el-button>
+      <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
     </template>
   </el-dialog>
 </template>
@@ -59,6 +64,7 @@ import {QuestionFilled} from "@element-plus/icons-vue";
 const emit = defineEmits(["refreshDataList"]);
 const visible = ref(false);
 const dataFormRef = ref();
+const submitLoading = ref(false);
 
 const templateOptions = ref<any[]>([]);
 const mediaOptions = ref<any[]>([]);
@@ -146,6 +152,10 @@ const buildMatchLabels = () => {
   dataForm.severity = severity.value.length ? severity.value.join(",") : "";
   return true;
 };
+const clearMatchLabels = () => {
+  matchLabelsExtra.value = "";
+  dataForm.matchLabels = "";
+};
 
 const dataFormSubmitHandle = () => {
   dataFormRef.value.validate((valid: boolean) => {
@@ -156,16 +166,21 @@ const dataFormSubmitHandle = () => {
       return;
     }
     const submitData = { ...dataForm } as Record<string, any>;
-    (!dataForm.id ? baseService.post : baseService.put)("/alert/trigger", submitData).then(() => {
-      ElMessage.success({
-        message: "成功",
-        duration: 500,
-        onClose: () => {
-          visible.value = false;
-          emit("refreshDataList");
-        }
+    submitLoading.value = true;
+    (!dataForm.id ? baseService.post : baseService.put)("/alert/trigger", submitData)
+      .then(() => {
+        ElMessage.success({
+          message: "成功",
+          duration: 500,
+          onClose: () => {
+            visible.value = false;
+            emit("refreshDataList");
+          }
+        });
+      })
+      .finally(() => {
+        submitLoading.value = false;
       });
-    });
   });
 };
 
@@ -177,5 +192,26 @@ defineExpose({ init });
   margin-left: 6px;
   color: #909399;
   cursor: pointer;
+}
+.trigger-form {
+  max-height: 64vh;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+.match-preview {
+  margin-top: 6px;
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 12px;
+}
+.match-preview__label {
+  color: #64748b;
+}
+.match-preview__value {
+  margin-left: 4px;
+  color: #0f172a;
+  word-break: break-all;
 }
 </style>
