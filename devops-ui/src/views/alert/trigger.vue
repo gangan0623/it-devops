@@ -17,27 +17,31 @@
           </el-form-item>
         </div>
         <div class="ops-toolbar__group ops-actions">
+          <div class="trigger-stats">
+            <span class="trigger-stats__item trigger-stats__item--on">启用 {{ enabledCount }}</span>
+            <span class="trigger-stats__item trigger-stats__item--critical">含灾难 {{ criticalCount }}</span>
+          </div>
           <el-button v-if="state.hasPermission('alert:trigger:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
           <el-button v-if="state.hasPermission('alert:trigger:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
         </div>
       </div>
     </el-form>
 
-    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" style="width: 100%">
+    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="trigger-table" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
-      <el-table-column prop="name" label="触发器名称" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="templateId" label="模板" header-align="center" align="center">
+      <el-table-column prop="name" label="触发器名称" header-align="center" align="center" min-width="180" show-overflow-tooltip></el-table-column>
+      <el-table-column prop="templateId" label="模板" header-align="center" align="center" min-width="160" show-overflow-tooltip>
         <template v-slot="scope">{{ templateMap[scope.row.templateId] || scope.row.templateId }}</template>
       </el-table-column>
-      <el-table-column prop="mediaId" label="媒介" header-align="center" align="center">
+      <el-table-column prop="mediaId" label="媒介" header-align="center" align="center" min-width="150" show-overflow-tooltip>
         <template v-slot="scope">{{ mediaMap[scope.row.mediaId] || scope.row.mediaId }}</template>
       </el-table-column>
-      <el-table-column prop="severity" label="告警级别" header-align="center" align="center">
+      <el-table-column prop="severity" label="告警级别" header-align="center" align="center" min-width="180" show-overflow-tooltip>
         <template v-slot="scope">
-          <span>{{ formatSeverity(scope.row.severity) }}</span>
+          <el-tag size="small" type="warning" effect="plain">{{ formatSeverity(scope.row.severity) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="status" label="状态" header-align="center" align="center">
+      <el-table-column prop="status" label="状态" header-align="center" align="center" width="90">
         <template v-slot="scope">
           <el-tag v-if="scope.row.status === 0" size="small" type="danger">禁用</el-tag>
           <el-tag v-else size="small" type="success">启用</el-tag>
@@ -67,7 +71,7 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {onMounted, reactive, ref, toRefs} from "vue";
+import {computed, onMounted, reactive, ref, toRefs} from "vue";
 import baseService from "@/service/baseService";
 import AddOrUpdate from "./trigger-add-or-update.vue";
 
@@ -106,6 +110,10 @@ const formatSeverity = (value?: string) => {
 };
 const templateMap = reactive({} as Record<string, string>);
 const mediaMap = reactive({} as Record<string, string>);
+const enabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 1).length);
+const criticalCount = computed(() =>
+  (state.dataList || []).filter((item: any) => String(item?.severity || "").toLowerCase().includes("critical")).length
+);
 
 const addOrUpdateHandle = (id?: number) => {
   addOrUpdateRef.value.init(id);
@@ -157,5 +165,26 @@ onMounted(() => {
 }
 .ops-filters .el-form-item {
   margin-bottom: 0;
+}
+.trigger-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.trigger-stats__item {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.trigger-stats__item--on {
+  color: #065f46;
+  background: #d1fae5;
+}
+.trigger-stats__item--critical {
+  color: #9a3412;
+  background: #ffedd5;
+}
+.trigger-table :deep(.el-table__row:hover > td) {
+  background: #f8fafc;
 }
 </style>
