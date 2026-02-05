@@ -49,7 +49,7 @@ public class LinuxHostController {
         return new Result<OpsHostStatusSummaryDTO>().ok(linuxHostService.summary(request));
     }
 
-    @GetMapping("{id}")
+    @GetMapping("{id:\\d+}")
     @Operation(summary = "信息")
     @SaCheckPermission("ops:linuxhost:info")
     public Result<LinuxHostDTO> get(@PathVariable Long id) {

@@ -49,7 +49,7 @@ public class BusinessSystemController {
         return new Result<OpsHostStatusSummaryDTO>().ok(businessSystemService.summary(request));
     }
 
-    @GetMapping("{id}")
+    @GetMapping("{id:\\d+}")
     @Operation(summary = "信息")
     @SaCheckPermission("ops:businesssystem:info")
     public Result<BusinessSystemDTO> get(@PathVariable("id") Long id){

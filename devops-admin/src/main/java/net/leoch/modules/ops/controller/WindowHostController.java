@@ -51,7 +51,7 @@ public class WindowHostController {
         return new Result<OpsHostStatusSummaryDTO>().ok(windowHostService.summary(request));
     }
 
-    @GetMapping("{id}")
+    @GetMapping("{id:\\d+}")
     @Operation(summary = "信息")
     @SaCheckPermission("ops:windowhost:info")
     public Result<WindowHostDTO> get(@PathVariable Long id){
