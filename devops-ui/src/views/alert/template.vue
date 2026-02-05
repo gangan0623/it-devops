@@ -1,10 +1,10 @@
 <template>
   <div class="mod-alert__template">
-    <el-form :inline="true" :model="state.dataForm" @keyup.enter="state.getDataList()" class="ops-toolbar">
+    <el-form :inline="true" :model="state.dataForm" @keyup.enter="queryList()" class="ops-toolbar">
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
           <el-form-item>
-            <el-input v-model="state.dataForm.name" placeholder="模板名称" clearable></el-input>
+            <el-input v-model="state.dataForm.name" class="query-input" placeholder="模板名称" clearable></el-input>
           </el-form-item>
           <el-form-item>
             <el-select v-model="state.dataForm.status" placeholder="状态" clearable>
@@ -13,7 +13,10 @@
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-button @click="state.getDataList()">查询</el-button>
+            <el-button class="query-btn" :loading="state.dataListLoading" @click="queryList()">查询</el-button>
+          </el-form-item>
+          <el-form-item>
+            <el-button class="query-btn" @click="handleReset">重置</el-button>
           </el-form-item>
         </div>
         <div class="ops-toolbar__group ops-actions">
@@ -57,9 +60,9 @@
       @current-change="state.pageCurrentChangeHandle"
     ></el-pagination>
 
-    <add-or-update ref="addOrUpdateRef" @refreshDataList="state.getDataList"></add-or-update>
+    <add-or-update ref="addOrUpdateRef" @refreshDataList="queryList"></add-or-update>
 
-    <el-dialog v-model="testVisible" title="模板测试" width="920px" :close-on-click-modal="false">
+    <el-dialog v-model="testVisible" title="模板测试" width="960px" :close-on-click-modal="false" class="test-dialog">
       <div class="test-meta">
         <span class="test-meta__label">当前模板</span>
         <span class="test-meta__value">{{ currentTemplateName || "-" }}</span>
@@ -144,6 +147,16 @@ const currentTemplateName = computed(() => {
   const template = templateOptions.value.find((item) => item.id === testForm.templateId);
   return template?.name || "";
 });
+
+const queryList = () => {
+  state.getDataList();
+};
+
+const handleReset = () => {
+  state.dataForm.name = "";
+  state.dataForm.status = "";
+  queryList();
+};
 
 const addOrUpdateHandle = (id?: number) => {
   addOrUpdateRef.value.init(id);
@@ -273,6 +286,17 @@ const handleTestSend = () => {
 .ops-filters .el-form-item {
   margin-bottom: 0;
 }
+.query-input {
+  width: 220px;
+}
+.query-btn {
+  height: 32px;
+  padding: 0 14px;
+}
+.ops-toolbar__group :deep(.el-input__wrapper),
+.ops-toolbar__group :deep(.el-select__wrapper) {
+  height: 32px;
+}
 .tpl-stats {
   display: flex;
   align-items: center;
@@ -320,5 +344,9 @@ const handleTestSend = () => {
 }
 .test-form :deep(.el-form-item) {
   margin-bottom: 14px;
+}
+.test-dialog :deep(.el-dialog__body) {
+  max-height: 68vh;
+  overflow-y: auto;
 }
 </style>
