@@ -17,20 +17,24 @@
           </el-form-item>
         </div>
         <div class="ops-toolbar__group ops-actions">
+          <div class="media-stats">
+            <span class="media-stats__item media-stats__item--on">启用 {{ enabledCount }}</span>
+            <span class="media-stats__item media-stats__item--off">禁用 {{ disabledCount }}</span>
+          </div>
           <el-button v-if="state.hasPermission('alert:media:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
           <el-button v-if="state.hasPermission('alert:media:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
         </div>
       </div>
     </el-form>
 
-    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" style="width: 100%">
+    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="media-table" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
-      <el-table-column prop="name" label="媒介名称" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="host" label="SMTP Host" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="port" label="端口" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="username" label="用户名" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="fromAddr" label="发件人" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="status" label="状态" header-align="center" align="center">
+      <el-table-column prop="name" label="媒介名称" header-align="center" align="center" min-width="130" show-overflow-tooltip></el-table-column>
+      <el-table-column prop="host" label="SMTP Host" header-align="center" align="center" min-width="180" show-overflow-tooltip></el-table-column>
+      <el-table-column prop="port" label="端口" header-align="center" align="center" width="90"></el-table-column>
+      <el-table-column prop="username" label="用户名" header-align="center" align="center" min-width="120" show-overflow-tooltip></el-table-column>
+      <el-table-column prop="fromAddr" label="发件人" header-align="center" align="center" min-width="160" show-overflow-tooltip></el-table-column>
+      <el-table-column prop="status" label="状态" header-align="center" align="center" width="90">
         <template v-slot="scope">
           <el-tag v-if="scope.row.status === 0" size="small" type="danger">禁用</el-tag>
           <el-tag v-else size="small" type="success">启用</el-tag>
@@ -71,7 +75,7 @@
       </el-form>
       <template #footer>
         <el-button @click="testVisible = false">取消</el-button>
-        <el-button type="primary" @click="sendTest">发送测试</el-button>
+        <el-button type="primary" :loading="testSending" @click="sendTest">发送测试</el-button>
       </template>
     </el-dialog>
   </div>
@@ -79,7 +83,7 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {reactive, ref, toRefs} from "vue";
+import {computed, reactive, ref, toRefs} from "vue";
 import baseService from "@/service/baseService";
 import {ElMessage} from "element-plus";
 import AddOrUpdate from "./media-add-or-update.vue";
@@ -98,12 +102,15 @@ const view = reactive({
 const state = reactive({ ...useView(view), ...toRefs(view) });
 const addOrUpdateRef = ref();
 const testVisible = ref(false);
+const testSending = ref(false);
 const testForm = reactive({
   mediaId: "",
   to: "",
-  subject: "",
-  html: ""
+  subject: "告警媒介连通性测试",
+  html: "<p>这是一条媒介测试消息，用于校验 SMTP 配置是否可用。</p>"
 });
+const enabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 1).length);
+const disabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 0).length);
 
 const addOrUpdateHandle = (id?: number) => {
   addOrUpdateRef.value.init(id);
@@ -112,16 +119,22 @@ const addOrUpdateHandle = (id?: number) => {
 const openTest = (row: any) => {
   testForm.mediaId = row.id;
   testForm.to = "";
-  testForm.subject = "";
-  testForm.html = "";
+  testForm.subject = "告警媒介连通性测试";
+  testForm.html = "<p>这是一条媒介测试消息，用于校验 SMTP 配置是否可用。</p>";
   testVisible.value = true;
 };
 
 const sendTest = () => {
-  baseService.post("/alert/media/test", testForm).then(() => {
-    ElMessage.success("发送成功");
-    testVisible.value = false;
-  });
+  testSending.value = true;
+  baseService
+    .post("/alert/media/test", testForm)
+    .then(() => {
+      ElMessage.success("发送成功");
+      testVisible.value = false;
+    })
+    .finally(() => {
+      testSending.value = false;
+    });
 };
 </script>
 
@@ -150,5 +163,27 @@ const sendTest = () => {
 }
 .ops-filters .el-form-item {
   margin-bottom: 0;
+}
+.media-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: 4px;
+}
+.media-stats__item {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.media-stats__item--on {
+  color: #0f766e;
+  background: #ccfbf1;
+}
+.media-stats__item--off {
+  color: #991b1b;
+  background: #fee2e2;
+}
+.media-table :deep(.el-table__row:hover > td) {
+  background: #f8fafc;
 }
 </style>
