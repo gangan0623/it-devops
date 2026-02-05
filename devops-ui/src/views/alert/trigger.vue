@@ -4,7 +4,7 @@
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
           <el-form-item>
-            <el-input v-model="state.dataForm.name" placeholder="触发器名称" clearable></el-input>
+            <el-input v-model="state.dataForm.name" class="query-input" placeholder="触发器名称" clearable></el-input>
           </el-form-item>
           <el-form-item>
             <el-select v-model="state.dataForm.status" placeholder="状态" clearable>
@@ -13,10 +13,10 @@
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-button :loading="state.dataListLoading" @click="queryList()">查询</el-button>
+            <el-button class="query-btn" :loading="state.dataListLoading" @click="queryList()">查询</el-button>
           </el-form-item>
           <el-form-item>
-            <el-button @click="handleReset">重置</el-button>
+            <el-button class="query-btn" @click="handleReset">重置</el-button>
           </el-form-item>
         </div>
         <div class="ops-toolbar__group ops-actions">
@@ -205,6 +205,17 @@ onMounted(() => {
 }
 .ops-filters .el-form-item {
   margin-bottom: 0;
+}
+.query-input {
+  width: 220px;
+}
+.query-btn {
+  height: 32px;
+  padding: 0 14px;
+}
+.ops-toolbar__group :deep(.el-input__wrapper),
+.ops-toolbar__group :deep(.el-select__wrapper) {
+  height: 32px;
 }
 .trigger-stats {
   display: flex;
