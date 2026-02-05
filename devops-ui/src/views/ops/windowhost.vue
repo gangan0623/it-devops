@@ -9,6 +9,11 @@
           <el-button :icon="Filter" @click="filterDrawer = true">筛选<span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span></el-button>
         </div>
         <div class="ops-toolbar__group ops-actions">
+          <div class="host-stats">
+            <span class="host-stats__item host-stats__item--on">启用 {{ enabledCount }}</span>
+            <span class="host-stats__item host-stats__item--off">禁用 {{ disabledCount }}</span>
+            <span class="host-stats__item host-stats__item--online">在线 {{ onlineCount }}</span>
+          </div>
           <el-button v-if="state.hasPermission('ops:windowhost:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
           <el-button v-if="state.hasPermission('ops:windowhost:update')" type="success" @click="handleBatchToggle">启用/禁用</el-button>
           <el-button v-if="state.hasPermission('ops:windowhost:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
@@ -130,6 +135,9 @@ const view = reactive({
 });
 
 const state = reactive({ ...useView(view), ...toRefs(view) });
+const enabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 1).length);
+const disabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 0).length);
+const onlineCount = computed(() => (state.dataList || []).filter((item: any) => item?.onlineStatus === true).length);
 
 const filterDrawer = ref(false);
 
@@ -269,6 +277,28 @@ const updateStatusHandle = (status: number) => {
   flex-wrap: nowrap;
   white-space: nowrap;
 }
+.host-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.host-stats__item {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+}
+.host-stats__item--on {
+  color: #065f46;
+  background: #d1fae5;
+}
+.host-stats__item--off {
+  color: #991b1b;
+  background: #fee2e2;
+}
+.host-stats__item--online {
+  color: #1d4ed8;
+  background: #dbeafe;
+}
 .ops-filters .el-form-item {
   margin-bottom: 0;
 }
@@ -297,5 +327,8 @@ const updateStatusHandle = (status: number) => {
   display: flex;
   align-items: center;
   gap: 12px;
+}
+.ops-table-nowrap :deep(.el-table__row:hover > td) {
+  background: #f8fafc;
 }
 </style>
