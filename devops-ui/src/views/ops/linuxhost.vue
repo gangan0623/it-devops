@@ -9,10 +9,16 @@
           <el-button :icon="Filter" @click="filterDrawer = true">筛选<span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span></el-button>
         </div>
         <div class="ops-toolbar__group ops-actions">
+          <el-radio-group v-model="onlineQuickFilter" size="small">
+            <el-radio-button label="">全部</el-radio-button>
+            <el-radio-button label="online">在线</el-radio-button>
+            <el-radio-button label="offline">离线</el-radio-button>
+          </el-radio-group>
           <div class="host-stats">
             <span class="host-stats__item host-stats__item--on">启用 {{ enabledCount }}</span>
             <span class="host-stats__item host-stats__item--off">禁用 {{ disabledCount }}</span>
             <span class="host-stats__item host-stats__item--online">在线 {{ onlineCount }}</span>
+            <span class="host-stats__item host-stats__item--filter">显示 {{ filteredCount }}</span>
           </div>
           <el-button v-if="state.hasPermission('ops:linuxhost:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
           <el-button v-if="state.hasPermission('ops:linuxhost:update')" type="success" @click="handleBatchToggle">启用/禁用</el-button>
@@ -48,7 +54,7 @@
         <el-button type="primary" @click="handleFilterConfirm">确定</el-button>
       </template>
     </el-drawer>
-    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" @sort-change="state.dataListSortChangeHandle" class="ops-table-nowrap" style="width: 100%">
+    <el-table v-loading="state.dataListLoading" :data="filteredDataList" border @selection-change="state.dataListSelectionChangeHandle" @sort-change="state.dataListSortChangeHandle" class="ops-table-nowrap" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
               <el-table-column prop="instance" label="地址" header-align="center" align="center" min-width="180"></el-table-column>
               <el-table-column prop="name" label="名称" header-align="center" align="center" min-width="180"></el-table-column>
@@ -135,9 +141,20 @@ const view = reactive({
 });
 
 const state = reactive({ ...useView(view), ...toRefs(view) });
+const onlineQuickFilter = ref("");
 const enabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 1).length);
 const disabledCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.status) === 0).length);
 const onlineCount = computed(() => (state.dataList || []).filter((item: any) => item?.onlineStatus === true).length);
+const filteredDataList = computed(() => {
+  if (!onlineQuickFilter.value) {
+    return state.dataList || [];
+  }
+  if (onlineQuickFilter.value === "online") {
+    return (state.dataList || []).filter((item: any) => item?.onlineStatus === true);
+  }
+  return (state.dataList || []).filter((item: any) => item?.onlineStatus === false);
+});
+const filteredCount = computed(() => filteredDataList.value.length);
 
 const filterDrawer = ref(false);
 
@@ -298,6 +315,10 @@ const updateStatusHandle = (status: number) => {
 .host-stats__item--online {
   color: #1d4ed8;
   background: #dbeafe;
+}
+.host-stats__item--filter {
+  color: #4338ca;
+  background: #e0e7ff;
 }
 .filter-badge {
   display: inline-flex;
