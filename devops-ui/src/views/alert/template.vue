@@ -62,40 +62,54 @@
 
     <add-or-update ref="addOrUpdateRef" @refreshDataList="queryList"></add-or-update>
 
-    <el-dialog v-model="testVisible" title="模板测试" width="960px" :close-on-click-modal="false" class="test-dialog">
-      <div class="test-meta">
-        <span class="test-meta__label">当前模板</span>
-        <span class="test-meta__value">{{ currentTemplateName || "-" }}</span>
+    <el-dialog v-model="testVisible" title="模板测试" width="1020px" :close-on-click-modal="false" class="test-dialog">
+      <div class="test-header">
+        <div class="test-meta">
+          <span class="test-meta__label">当前模板</span>
+          <span class="test-meta__value">{{ currentTemplateName || "-" }}</span>
+        </div>
+        <div class="test-actions">
+          <el-button @click="resetTestForm">重置</el-button>
+          <el-button @click="fillSampleJson">填充样例</el-button>
+          <el-button @click="formatRawJson">格式化JSON</el-button>
+        </div>
       </div>
-      <el-form :model="testForm" label-width="100px" class="test-form">
-        <el-form-item label="模板">
-          <el-select v-model="testForm.templateId" placeholder="选择模板">
-            <el-option v-for="item in templateOptions" :key="item.id" :label="item.name" :value="item.id"></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="模板内容">
-          <el-input :model-value="previewTemplateContent" type="textarea" :rows="4" readonly></el-input>
-        </el-form-item>
-        <el-form-item label="原始内容">
-          <el-input v-model="testForm.rawJson" type="textarea" :rows="6" placeholder="alertmanager原始JSON"></el-input>
-        </el-form-item>
-        <el-form-item label="格式化内容">
-          <div class="alert-preview" v-html="testForm.previewResult"></div>
-        </el-form-item>
-        <el-form-item label="主题">
-          <el-input :model-value="testForm.previewSubject" readonly></el-input>
-        </el-form-item>
-        <el-form-item label="触发器">
-          <el-select v-model="testForm.triggerId" placeholder="选择触发器" clearable>
-            <el-option v-for="item in triggerOptions" :key="item.id" :label="item.name" :value="item.id"></el-option>
-          </el-select>
-        </el-form-item>
-      </el-form>
+      <div class="test-grid">
+        <section class="test-card">
+          <div class="test-card__title">模板与输入</div>
+          <el-form :model="testForm" label-width="90px" class="test-form">
+            <el-form-item label="模板">
+              <el-select v-model="testForm.templateId" placeholder="选择模板">
+                <el-option v-for="item in templateOptions" :key="item.id" :label="item.name" :value="item.id"></el-option>
+              </el-select>
+            </el-form-item>
+            <el-form-item label="模板内容">
+              <el-input :model-value="previewTemplateContent" type="textarea" :rows="5" readonly></el-input>
+            </el-form-item>
+            <el-form-item label="原始内容">
+              <el-input v-model="testForm.rawJson" type="textarea" :rows="10" placeholder="alertmanager原始JSON"></el-input>
+            </el-form-item>
+            <el-form-item label="触发器">
+              <el-select v-model="testForm.triggerId" placeholder="选择触发器" clearable>
+                <el-option v-for="item in triggerOptions" :key="item.id" :label="item.name" :value="item.id"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-form>
+        </section>
+        <section class="test-card">
+          <div class="test-card__title">渲染预览</div>
+          <div class="preview-block">
+            <div class="preview-block__label">主题</div>
+            <el-input :model-value="testForm.previewSubject" readonly></el-input>
+          </div>
+          <div class="preview-block">
+            <div class="preview-block__label">格式化内容</div>
+            <div class="alert-preview" v-html="testForm.previewResult"></div>
+          </div>
+        </section>
+      </div>
       <template #footer>
         <el-button @click="testVisible = false">取消</el-button>
-        <el-button @click="resetTestForm">重置</el-button>
-        <el-button @click="fillSampleJson">填充样例</el-button>
-        <el-button @click="formatRawJson">格式化JSON</el-button>
         <el-button :loading="previewLoading" @click="handlePreview">预览</el-button>
         <el-button type="primary" :loading="sendLoading" @click="handleTestSend">发送测试</el-button>
       </template>
@@ -318,17 +332,19 @@ const handleTestSend = () => {
 .tpl-table :deep(.el-table__row:hover > td) {
   background: #f8fafc;
 }
-.alert-preview {
-  width: 100%;
-  min-height: 180px;
-  padding: 12px;
-  border: 1px solid #e4e7ed;
-  border-radius: 6px;
-  background: #fff;
+.test-dialog :deep(.el-dialog__body) {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.test-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
 }
 .test-meta {
-  padding: 10px 12px;
-  margin-bottom: 10px;
+  padding: 8px 12px;
   background: #f8fafc;
   border: 1px solid #e2e8f0;
   border-radius: 6px;
@@ -342,11 +358,50 @@ const handleTestSend = () => {
   color: #0f172a;
   font-weight: 600;
 }
-.test-form :deep(.el-form-item) {
-  margin-bottom: 14px;
+.test-actions {
+  display: flex;
+  gap: 8px;
 }
-.test-dialog :deep(.el-dialog__body) {
-  max-height: 68vh;
-  overflow-y: auto;
+.test-grid {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr);
+  gap: 12px;
+}
+.test-card {
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: #fff;
+}
+.test-card__title {
+  margin-bottom: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+}
+.test-form :deep(.el-form-item) {
+  margin-bottom: 12px;
+}
+.preview-block {
+  margin-bottom: 12px;
+}
+.preview-block__label {
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #64748b;
+}
+.alert-preview {
+  width: 100%;
+  min-height: 260px;
+  padding: 12px;
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+  background: #fff;
+  overflow: auto;
+}
+@media (max-width: 1024px) {
+  .test-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>
