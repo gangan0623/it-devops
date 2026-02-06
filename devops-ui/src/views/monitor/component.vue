@@ -4,19 +4,19 @@
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
           <el-form-item>
-            <el-input v-model="state.dataForm.name" class="query-input" placeholder="名称" clearable></el-input>
-          </el-form-item>
-          <el-form-item>
             <el-input v-model="state.dataForm.ip" class="query-input" placeholder="IP" clearable></el-input>
-          </el-form-item>
-          <el-form-item>
-            <ren-select v-model="state.dataForm.type" dict-type="monitor_component_type" placeholder="类型"></ren-select>
           </el-form-item>
           <el-form-item>
             <el-button class="query-btn" :loading="state.dataListLoading" @click="queryList()">查询</el-button>
           </el-form-item>
           <el-form-item>
             <el-button class="query-btn" @click="handleReset">重置</el-button>
+          </el-form-item>
+          <el-form-item>
+            <el-button class="query-btn" :icon="Filter" @click="filterDrawer = true">
+              筛选
+              <span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span>
+            </el-button>
           </el-form-item>
         </div>
         <div class="ops-toolbar__group ops-actions">
@@ -31,6 +31,21 @@
         </div>
       </div>
     </el-form>
+
+    <el-drawer v-model="filterDrawer" title="筛选条件" size="360px" :append-to-body="true">
+      <el-form label-position="top" class="filter-form">
+        <el-form-item label="名称(模糊)">
+          <el-input v-model="state.dataForm.name" clearable></el-input>
+        </el-form-item>
+        <el-form-item label="类型">
+          <ren-select v-model="state.dataForm.type" dict-type="monitor_component_type" placeholder="全部"></ren-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="handleFilterReset">重置</el-button>
+        <el-button type="primary" @click="handleFilterConfirm">确定</el-button>
+      </template>
+    </el-drawer>
 
     <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="ops-table-nowrap" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
@@ -88,6 +103,7 @@ import {computed, reactive, ref, toRefs, watch} from "vue";
 import baseService from "@/service/baseService";
 import {ElMessage} from "element-plus";
 import AddOrUpdate from "./component-add-or-update.vue";
+import {Filter} from "@element-plus/icons-vue";
 
 const view = reactive({
   deleteIsBatch: true,
@@ -102,11 +118,18 @@ const view = reactive({
 });
 
 const state = reactive({ ...useView(view), ...toRefs(view) });
+const filterDrawer = ref(false);
 const onlineCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.onlineStatus) === 1).length);
 const offlineCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.onlineStatus) === 0).length);
 const updatableCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.updateAvailable) === 1).length);
 const addOrUpdateRef = ref();
 const detectLoading = ref(false);
+const activeFilterCount = computed(() => {
+  let count = 0;
+  if (state.dataForm.name) count++;
+  if (state.dataForm.type) count++;
+  return count;
+});
 
 const typeLabels: Record<string, string> = {
   prometheus: "Prometheus",
@@ -129,6 +152,16 @@ const handleReset = () => {
   state.dataForm.ip = "";
   state.dataForm.type = "";
   queryList();
+};
+
+const handleFilterConfirm = () => {
+  filterDrawer.value = false;
+  queryList();
+};
+
+const handleFilterReset = () => {
+  state.dataForm.name = "";
+  state.dataForm.type = "";
 };
 
 const openLink = (row: any) => {
@@ -250,6 +283,28 @@ watch(
 .ops-toolbar__group :deep(.el-input__wrapper),
 .ops-toolbar__group :deep(.el-select__wrapper) {
   height: 32px;
+}
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  margin-left: 4px;
+  padding: 0 4px;
+  font-size: 11px;
+  line-height: 1;
+  color: #fff;
+  background: #409eff;
+  border-radius: 8px;
+}
+.filter-form .el-select,
+.filter-form .el-input,
+.filter-form .ren-select {
+  width: 100%;
+}
+.filter-form .el-form-item {
+  margin-bottom: 18px;
 }
 .ops-table-nowrap :deep(.el-table__row:hover > td) {
   background: #f8fafc;
