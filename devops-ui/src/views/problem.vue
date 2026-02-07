@@ -37,7 +37,7 @@
       <el-form label-position="top" class="filter-form">
         <el-form-item label="分类">
           <el-select v-model="filters.category" @change="onCategoryChange">
-            <el-option label="实时告警情况" value="realtime" />
+            <el-option label="实时告警" value="realtime" />
             <el-option label="历史告警" value="history" />
           </el-select>
         </el-form-item>

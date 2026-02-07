@@ -1,5 +1,3 @@
-
-
 package net.leoch.modules.job.service.impl;
 
 import cn.hutool.core.util.StrUtil;
@@ -14,8 +12,7 @@ import net.leoch.modules.job.dao.ScheduleJobDao;
 import net.leoch.modules.job.dto.ScheduleJobDTO;
 import net.leoch.modules.job.entity.ScheduleJobEntity;
 import net.leoch.modules.job.service.ScheduleJobService;
-import net.leoch.modules.job.utils.ScheduleUtils;
-import org.quartz.Scheduler;
+import net.leoch.modules.job.utils.DynamicScheduleManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,7 +23,8 @@ import java.util.Map;
 @Service
 @AllArgsConstructor
 public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, ScheduleJobEntity> implements ScheduleJobService {
-    private final Scheduler scheduler;
+
+    private final DynamicScheduleManager scheduleManager;
 
     @Override
     public PageData<ScheduleJobDTO> page(Map<String, Object> params) {
@@ -40,7 +38,6 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
     @Override
     public ScheduleJobDTO get(Long id) {
         ScheduleJobEntity entity = baseDao.selectById(id);
-
         return ConvertUtils.sourceToTarget(entity, ScheduleJobDTO.class);
     }
 
@@ -57,31 +54,28 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
     @Transactional(rollbackFor = Exception.class)
     public void save(ScheduleJobDTO dto) {
         ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
-
         entity.setStatus(Constant.ScheduleStatus.NORMAL.getValue());
         this.insert(entity);
 
-        ScheduleUtils.createScheduleJob(scheduler, entity);
+        scheduleManager.addJob(entity);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(ScheduleJobDTO dto) {
         ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
-
-        ScheduleUtils.updateScheduleJob(scheduler, entity);
-
         this.updateById(entity);
+
+        scheduleManager.updateJob(entity);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteBatch(Long[] ids) {
         for (Long id : ids) {
-            ScheduleUtils.deleteScheduleJob(scheduler, id);
+            scheduleManager.removeJob(id);
         }
 
-        //删除数据
         this.deleteBatchIds(Arrays.asList(ids));
     }
 
@@ -97,7 +91,7 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
     @Transactional(rollbackFor = Exception.class)
     public void run(Long[] ids) {
         for (Long id : ids) {
-            ScheduleUtils.run(scheduler, this.selectById(id));
+            scheduleManager.runOnce(this.selectById(id));
         }
     }
 
@@ -105,7 +99,7 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
     @Transactional(rollbackFor = Exception.class)
     public void pause(Long[] ids) {
         for (Long id : ids) {
-            ScheduleUtils.pauseJob(scheduler, id);
+            scheduleManager.pauseJob(id);
         }
 
         updateBatch(ids, Constant.ScheduleStatus.PAUSE.getValue());
@@ -115,10 +109,10 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
     @Transactional(rollbackFor = Exception.class)
     public void resume(Long[] ids) {
         for (Long id : ids) {
-            ScheduleUtils.resumeJob(scheduler, id);
+            ScheduleJobEntity entity = this.selectById(id);
+            scheduleManager.resumeJob(entity);
         }
 
         updateBatch(ids, Constant.ScheduleStatus.NORMAL.getValue());
     }
-
 }

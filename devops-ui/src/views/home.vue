@@ -1,117 +1,48 @@
 <template>
   <div class="mod-home">
-    <div class="home-grid">
-      <div class="home-overview">
-        <el-card shadow="never" class="home-card home-card--overview top-card">
-          <div class="overview-top">
-            <div class="card-title">总览</div>
-            <div class="metric-grid">
-              <div class="metric-item">
-                <div class="metric-value">{{ summary.hostCounts.windows }}</div>
-                <div class="metric-label">Windows</div>
-              </div>
-              <div class="metric-item">
-                <div class="metric-value">{{ summary.hostCounts.linux }}</div>
-                <div class="metric-label">Linux</div>
-              </div>
-              <div class="metric-item">
-                <div class="metric-value">{{ summary.hostCounts.business }}</div>
-                <div class="metric-label">业务系统</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="backup-divider"></div>
-
-          <div class="overview-bottom">
-            <div class="card-title card-title--row">
-              <span>最近备份</span>
-              <span class="card-link" @click="goBackupRecord">详情</span>
-            </div>
-            <div class="backup-panel">
-              <div class="backup-chart">
-                <el-progress type="dashboard" :percentage="backupSuccessRate" :width="110" :stroke-width="8" :color="backupColors">
-                  <template #default="{ percentage }">
-                    <div class="backup-percentage-value">{{ percentage }}%</div>
-                    <div class="backup-percentage-label">成功率</div>
-                  </template>
-                </el-progress>
-              </div>
-              <div class="backup-info">
-                <div class="backup-round-tag">第 {{ summary.backupStats.round || 0 }} 轮</div>
-                <div class="backup-detail-grid">
-                  <div class="backup-detail-item">
-                    <div class="label">总数</div>
-                    <div class="value">{{ summary.backupStats.total || 0 }}</div>
-                  </div>
-                  <div class="backup-detail-item">
-                    <div class="label">失败</div>
-                    <div class="value danger">{{ summary.backupStats.fail || 0 }}</div>
-                  </div>
-                </div>
-                <div class="backup-time-row">
-                  <div class="label">最近时间</div>
-                  <div class="value">{{ summary.backupStats.lastTime || "-" }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </el-card>
+    <!-- 顶部指标条 -->
+    <div class="stat-strip">
+      <div class="stat-card">
+        <div class="stat-card__value">{{ summary.hostCounts.windows }}</div>
+        <div class="stat-card__label">Windows</div>
       </div>
-
-      <div class="home-diff">
-        <el-card shadow="never" class="home-card home-card--diff top-card">
-          <div class="card-title card-title--row">
-            <span>设备差异对比</span>
-            <el-button-group>
-              <el-button size="small" class="diff-switch" :type="activeDiff === 'backupOnly' ? 'primary' : 'default'" @click="activeDiff = 'backupOnly'">
-                备份有 ({{ summary.deviceDiff.backupOnly.length || 0 }})
-              </el-button>
-              <el-button size="small" class="diff-switch" :type="activeDiff === 'zabbixOnly' ? 'primary' : 'default'" @click="activeDiff = 'zabbixOnly'">
-                Zabbix有 ({{ summary.deviceDiff.zabbixOnly.length || 0 }})
-              </el-button>
-            </el-button-group>
-          </div>
-          <el-input v-model="filters.diff" placeholder="搜索 IP/名称" size="default" clearable class="diff-search" />
-          <el-table :data="filteredDiffList" class="flex-table" border>
-            <el-table-column prop="ip" label="IP" min-width="120" />
-            <el-table-column prop="name" label="主机名称" min-width="140" show-overflow-tooltip />
-          </el-table>
-        </el-card>
+      <div class="stat-card">
+        <div class="stat-card__value">{{ summary.hostCounts.linux }}</div>
+        <div class="stat-card__label">Linux</div>
       </div>
-
-      <div class="home-monitor">
-        <el-card shadow="never" class="home-card home-card--monitor top-card">
-          <div class="card-title card-title--row">
-            <span>监控组件预览</span>
-            <el-button size="small" @click="handleMonitorRefresh">刷新</el-button>
-          </div>
-          <el-table :data="summary.monitorComponents" class="flex-table" border>
-            <el-table-column prop="name" label="名称" min-width="140" show-overflow-tooltip />
-            <el-table-column prop="onlineStatus" label="在线" width="80">
-              <template v-slot="scope">
-                <el-tag v-if="scope.row.onlineStatus === 1" size="small" type="success" effect="plain">在线</el-tag>
-                <el-tag v-else-if="scope.row.onlineStatus === 0" size="small" type="danger" effect="plain">离线</el-tag>
-                <el-tag v-else size="small" type="info" effect="plain">未知</el-tag>
-              </template>
-            </el-table-column>
-            <el-table-column prop="updateAvailable" label="可更新" width="80">
-              <template v-slot="scope">
-                <el-tag v-if="scope.row.updateAvailable === 1" size="small" type="warning" effect="plain">是</el-tag>
-                <el-tag v-else-if="scope.row.updateAvailable === 0" size="small" type="success" effect="plain">否</el-tag>
-                <el-tag v-else size="small" type="info" effect="plain">未知</el-tag>
-              </template>
-            </el-table-column>
-          </el-table>
-        </el-card>
+      <div class="stat-card">
+        <div class="stat-card__value">{{ summary.hostCounts.business }}</div>
+        <div class="stat-card__label">业务系统</div>
       </div>
+      <div class="stat-card stat-card--backup" @click="goBackupRecord">
+        <div class="backup-bar">
+          <div class="backup-bar__label">备份成功率</div>
+          <div class="backup-bar__track">
+            <div class="backup-bar__fill" :style="{ width: backupSuccessRate + '%' }" :class="backupRateClass"></div>
+          </div>
+          <div class="backup-bar__pct">{{ backupSuccessRate }}%</div>
+        </div>
+        <div class="backup-meta">
+          <span>第 {{ summary.backupStats.round || 0 }} 轮</span>
+          <span class="backup-meta__sep"></span>
+          <span>总数 {{ summary.backupStats.total || 0 }}</span>
+          <span class="backup-meta__sep"></span>
+          <span :class="{ 'backup-meta--danger': summary.backupStats.fail > 0 }">失败 {{ summary.backupStats.fail || 0 }}</span>
+          <span class="backup-meta__sep"></span>
+          <span class="backup-meta--time">{{ summary.backupStats.lastTime || "-" }}</span>
+        </div>
+      </div>
+    </div>
 
+    <!-- 主内容区 -->
+    <div class="main-grid">
+      <!-- 左：实时告警 -->
       <el-card shadow="never" class="home-card home-card--alerts">
-        <div class="card-title card-title--row">
-          <span>实时告警情况</span>
+        <div class="card-header">
+          <span class="card-header__title">实时告警</span>
           <span class="card-link" @click="goProblem">查看详情</span>
         </div>
-        <el-table :data="summary.recentAlerts" height="280" border class="alert-record-table">
+        <el-table :data="summary.recentAlerts" border class="alert-table" max-height="520">
           <el-table-column prop="time" label="时间" header-align="center" align="center" width="165" />
           <el-table-column label="严重性" header-align="center" align="center" width="90">
             <template #default="scope">
@@ -123,7 +54,7 @@
               <span :class="statusClass(scope.row.status)">{{ formatStatus(scope.row.status) }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="hostName" label="主机名" header-align="center" align="center" min-width="180">
+          <el-table-column prop="hostName" label="主机名" header-align="center" align="center" min-width="160">
             <template #default="scope">
               <el-tooltip placement="top" effect="light" :show-after="250">
                 <template #content>
@@ -145,7 +76,7 @@
               </el-tooltip>
             </template>
           </el-table-column>
-          <el-table-column prop="alertName" label="告警名称" header-align="center" align="center" min-width="220">
+          <el-table-column prop="alertName" label="告警名称" header-align="center" align="center" min-width="200">
             <template #default="scope">
               <el-tooltip placement="top" effect="light" :show-after="250">
                 <template #content>
@@ -169,16 +100,59 @@
           </el-table-column>
         </el-table>
       </el-card>
+
+      <!-- 右侧栏 -->
+      <div class="side-stack">
+        <!-- 监控组件 -->
+        <el-card shadow="never" class="home-card home-card--monitor">
+          <div class="card-header">
+            <span class="card-header__title">监控组件</span>
+            <el-button size="small" text type="primary" @click="handleMonitorRefresh">刷新</el-button>
+          </div>
+          <el-table :data="summary.monitorComponents" border height="100%">
+            <el-table-column prop="name" label="名称" min-width="120" show-overflow-tooltip />
+            <el-table-column prop="onlineStatus" label="在线" width="70" align="center">
+              <template #default="scope">
+                <span :class="onlineClass(scope.row.onlineStatus)">{{ onlineText(scope.row.onlineStatus) }}</span>
+              </template>
+            </el-table-column>
+            <el-table-column prop="updateAvailable" label="更新" width="70" align="center">
+              <template #default="scope">
+                <span :class="updateClass(scope.row.updateAvailable)">{{ updateText(scope.row.updateAvailable) }}</span>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-card>
+
+        <!-- 设备差异 -->
+        <el-card shadow="never" class="home-card home-card--diff">
+          <div class="card-header">
+            <el-input v-model="filters.diff" placeholder="搜索 IP/名称" clearable class="diff-search" />
+            <el-button-group>
+              <el-button size="small" :type="activeDiff === 'backupOnly' ? 'primary' : 'default'" @click="activeDiff = 'backupOnly'">
+                备份有 ({{ summary.deviceDiff.backupOnly.length || 0 }})
+              </el-button>
+              <el-button size="small" :type="activeDiff === 'zabbixOnly' ? 'primary' : 'default'" @click="activeDiff = 'zabbixOnly'">
+                Zabbix有 ({{ summary.deviceDiff.zabbixOnly.length || 0 }})
+              </el-button>
+            </el-button-group>
+          </div>
+          <el-table :data="filteredDiffList" border height="100%">
+            <el-table-column prop="ip" label="IP" min-width="110" />
+            <el-table-column prop="name" label="主机名称" min-width="120" show-overflow-tooltip />
+          </el-table>
+        </el-card>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import {computed, onBeforeUnmount, onMounted, reactive, ref} from "vue";
+import { computed, onBeforeUnmount, onMounted, reactive, ref } from "vue";
 import baseService from "@/service/baseService";
-import {useRouter} from "vue-router";
+import { useRouter } from "vue-router";
 import app from "@/constants/app";
-import {getToken} from "@/utils/cache";
+import { getToken } from "@/utils/cache";
 
 const router = useRouter();
 
@@ -215,11 +189,12 @@ const backupSuccessRate = computed(() => {
   return Math.floor((success / total) * 100);
 });
 
-const backupColors = [
-  { color: '#f56c6c', percentage: 60 },
-  { color: '#e6a23c', percentage: 90 },
-  { color: '#5cb87a', percentage: 100 },
-];
+const backupRateClass = computed(() => {
+  const rate = backupSuccessRate.value;
+  if (rate >= 90) return "backup-bar__fill--ok";
+  if (rate >= 60) return "backup-bar__fill--warn";
+  return "backup-bar__fill--bad";
+});
 
 const filteredDiffList = computed(() => {
   const q = filters.diff.trim().toLowerCase();
@@ -270,7 +245,7 @@ const goBackupRecord = () => {
 };
 
 const goProblem = () => {
-  router.push({ path: "/alert/problem" });
+  router.push({ path: "/problem" });
 };
 
 const formatSeverity = (value: string) => {
@@ -302,6 +277,27 @@ const statusClass = (value: string) => {
   const s = String(value || "").toLowerCase();
   if (s === "resolved") return "status-tag status-tag--ok";
   return "status-tag status-tag--bad";
+};
+
+const onlineClass = (v: number) => {
+  if (v === 1) return "dot-tag dot-tag--ok";
+  if (v === 0) return "dot-tag dot-tag--bad";
+  return "dot-tag dot-tag--unknown";
+};
+const onlineText = (v: number) => {
+  if (v === 1) return "在线";
+  if (v === 0) return "离线";
+  return "未知";
+};
+const updateClass = (v: number) => {
+  if (v === 1) return "dot-tag dot-tag--warn";
+  if (v === 0) return "dot-tag dot-tag--ok";
+  return "dot-tag dot-tag--unknown";
+};
+const updateText = (v: number) => {
+  if (v === 1) return "是";
+  if (v === 0) return "否";
+  return "未知";
 };
 
 const sseRef = ref<EventSource | null>(null);
@@ -340,228 +336,154 @@ onBeforeUnmount(() => {
 <style scoped>
 .mod-home {
   padding: 16px;
-}
-
-.home-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  grid-template-areas:
-    "overview diff monitor"
-    "alerts alerts alerts";
+  display: flex;
+  flex-direction: column;
   gap: 14px;
 }
 
-.home-overview { grid-area: overview; }
-.home-diff { grid-area: diff; }
-.home-monitor { grid-area: monitor; }
-.home-card--alerts { grid-area: alerts; }
+/* ========== 顶部指标条 ========== */
+.stat-strip {
+  display: flex;
+  gap: 14px;
+}
+
+.stat-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  flex: 0 0 130px;
+  transition: border-color 0.15s;
+}
+
+.stat-card:hover {
+  border-color: #cbd5e1;
+}
+
+.stat-card__value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.stat-card__label {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+/* 备份卡片 */
+.stat-card--backup {
+  flex: 1;
+  align-items: stretch;
+  cursor: pointer;
+  padding: 14px 20px;
+  gap: 8px;
+}
+
+.backup-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.backup-bar__label {
+  font-size: 12px;
+  color: #64748b;
+  white-space: nowrap;
+  font-weight: 500;
+}
+
+.backup-bar__track {
+  flex: 1;
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.backup-bar__fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+.backup-bar__fill--ok { background: #10b981; }
+.backup-bar__fill--warn { background: #f59e0b; }
+.backup-bar__fill--bad { background: #ef4444; }
+
+.backup-bar__pct {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  min-width: 36px;
+  text-align: right;
+}
+
+.backup-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.backup-meta__sep {
+  width: 1px;
+  height: 10px;
+  background: #e2e8f0;
+}
+
+.backup-meta--danger {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.backup-meta--time {
+  margin-left: auto;
+  color: #94a3b8;
+}
+
+/* ========== 主内容区 ========== */
+.main-grid {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 14px;
+  align-items: stretch;
+}
 
 .home-card {
   border-radius: 8px;
   border: 1px solid #e2e8f0;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
 }
 
-/* 顶部三个卡片高度统一 */
-.top-card {
-  height: 360px !important;
-}
-
-/* 表格 Flex 自适应填充 */
-.flex-table {
-  flex: 1;
-  width: 100%;
-}
-
-/* 卡片内部结构 */
-.home-card--overview :deep(.el-card__body),
-.home-card--diff :deep(.el-card__body),
-.home-card--monitor :deep(.el-card__body) {
+.home-card :deep(.el-card__body) {
   display: flex;
   flex-direction: column;
-  height: 100%;
-  padding: 20px;
+  padding: 16px;
 }
 
-/* --- 总览卡片 --- */
-.overview-top {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 0;
-}
-
-.overview-bottom {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  min-height: 0;
-  padding-top: 8px;
-}
-
-.backup-panel {
+.card-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 24px;
-  margin-top: 4px;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  flex-shrink: 0;
 }
 
-.backup-chart {
-  flex: 1;
-  display: flex;
-  justify-content: flex-end;
-}
-
-.backup-percentage-value {
-  font-size: 22px;
-  font-weight: 700;
-  color: #0f172a;
-  line-height: 1.2;
-}
-
-.backup-percentage-label {
-  font-size: 12px;
-  color: #64748b;
-}
-
-.backup-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  align-items: flex-start;
-}
-
-.backup-round-tag {
-  align-self: flex-start;
-  background: #f1f5f9;
-  color: #475569;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.backup-detail-grid {
-  display: flex;
-  gap: 24px;
-}
-
-.backup-detail-item .label {
-  font-size: 12px;
-  color: #64748b;
-  margin-bottom: 2px;
-}
-
-.backup-detail-item .value {
+.card-header__title {
   font-size: 14px;
   font-weight: 600;
   color: #0f172a;
 }
 
-.backup-time-row .label {
-  font-size: 12px;
-  color: #64748b;
-  display: none;
-}
-
-.backup-time-row .value {
-  font-size: 12px;
-  color: #64748b;
-}
-
-/* 指标网格 */
-.metric-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 14px;
-}
-
-.metric-item {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  padding: 14px 8px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s ease;
-}
-
-.metric-item:hover {
-  background: #f1f5f9;
-  border-color: #cbd5e1;
-}
-
-.metric-value {
-  font-size: 26px;
-  font-weight: 700;
-  color: #0f172a;
-  line-height: 1.2;
-}
-
-.metric-label {
-  font-size: 13px;
-  color: #475569;
-  margin-top: 4px;
-  font-weight: 500;
-}
-
-.backup-divider {
-  height: 1px;
-  background: #e2e8f0;
-  margin: 14px 0;
-  flex-shrink: 0;
-}
-
-.backup-stats {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.backup-row {
-  display: flex;
-  justify-content: space-between;
-  font-size: 14px;
-  line-height: 1.5;
-  color: #334155;
-}
-
-/* 卡片标题 */
-.card-title {
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 14px;
-  color: #0f172a;
-  flex-shrink: 0;
-}
-
-.card-title--row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  font-size: 15px;
-  font-weight: 600;
-  margin-bottom: 14px;
-  color: #0f172a;
-  flex-shrink: 0;
-}
-
-.card-title--link {
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-/* 卡片链接按钮 */
 .card-link {
   cursor: pointer;
   font-size: 12px;
@@ -570,23 +492,64 @@ onBeforeUnmount(() => {
   border-radius: 4px;
   background: #3b82f6;
   color: #fff;
-  transition: background 0.15s ease;
+  transition: background 0.15s;
 }
 
 .card-link:hover {
   background: #2563eb;
 }
 
-.success { color: #10b981; }
-.danger { color: #ef4444; }
-.diff-search { margin-bottom: 12px; flex-shrink: 0; }
-.card-title--row .el-button-group { flex-shrink: 0; }
-.diff-switch { padding: 5px 10px; }
-
 /* 告警表格 */
-.alert-record-table :deep(.cell) {
+.alert-table :deep(.cell) {
   white-space: nowrap;
 }
+
+/* 右侧栏 */
+.side-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.home-card--monitor,
+.home-card--diff {
+  height: 260px;
+  overflow: hidden;
+}
+
+.side-stack .home-card :deep(.el-card__body) {
+  height: 100%;
+}
+
+.diff-search {
+  width: 250px;
+  flex-shrink: 0;
+}
+
+/* 小圆点状态标签 */
+.dot-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.dot-tag::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.dot-tag--ok { color: #10b981; }
+.dot-tag--ok::before { background: #10b981; }
+.dot-tag--bad { color: #ef4444; }
+.dot-tag--bad::before { background: #ef4444; }
+.dot-tag--warn { color: #f59e0b; }
+.dot-tag--warn::before { background: #f59e0b; }
+.dot-tag--unknown { color: #94a3b8; }
+.dot-tag--unknown::before { background: #94a3b8; }
 
 /* 事件提示框 */
 .event-tip {
@@ -635,9 +598,35 @@ onBeforeUnmount(() => {
 }
 
 @media (max-width: 1200px) {
-  .home-grid {
+  .stat-strip {
+    flex-wrap: wrap;
+  }
+
+  .stat-card {
+    flex: 1 1 100px;
+  }
+
+  .stat-card--backup {
+    flex-basis: 100%;
+  }
+
+  .main-grid {
     grid-template-columns: 1fr;
-    grid-template-areas: "overview" "diff" "monitor" "alerts";
+  }
+
+  .side-stack {
+    flex-direction: row;
+  }
+
+  .home-card--monitor,
+  .home-card--diff {
+    flex: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .side-stack {
+    flex-direction: column;
   }
 }
 </style>

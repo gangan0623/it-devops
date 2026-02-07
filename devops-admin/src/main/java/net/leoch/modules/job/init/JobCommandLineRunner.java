@@ -1,13 +1,11 @@
-
-
 package net.leoch.modules.job.init;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.constant.Constant;
 import net.leoch.modules.job.dao.ScheduleJobDao;
 import net.leoch.modules.job.entity.ScheduleJobEntity;
-import net.leoch.modules.job.utils.ScheduleUtils;
-import org.quartz.CronTrigger;
-import org.quartz.Scheduler;
+import net.leoch.modules.job.utils.DynamicScheduleManager;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
@@ -15,26 +13,23 @@ import java.util.List;
 
 /**
  * 初始化定时任务数据
- *
- * @author Taohongqiang
  */
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
+@Slf4j
 public class JobCommandLineRunner implements CommandLineRunner {
-    private final Scheduler scheduler;
+
     private final ScheduleJobDao scheduleJobDao;
+    private final DynamicScheduleManager scheduleManager;
 
     @Override
     public void run(String... args) {
         List<ScheduleJobEntity> scheduleJobList = scheduleJobDao.selectList(null);
         for (ScheduleJobEntity scheduleJob : scheduleJobList) {
-            CronTrigger cronTrigger = ScheduleUtils.getCronTrigger(scheduler, scheduleJob.getId());
-            //如果不存在，则创建
-            if (cronTrigger == null) {
-                ScheduleUtils.createScheduleJob(scheduler, scheduleJob);
-            } else {
-                ScheduleUtils.updateScheduleJob(scheduler, scheduleJob);
+            if (scheduleJob.getStatus() == Constant.ScheduleStatus.NORMAL.getValue()) {
+                scheduleManager.addJob(scheduleJob);
             }
         }
+        log.info("[定时任务] 初始化完成，共加载 {} 个任务", scheduleJobList.size());
     }
 }
