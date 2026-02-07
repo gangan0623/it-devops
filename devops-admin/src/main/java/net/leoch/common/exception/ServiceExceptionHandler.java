@@ -30,14 +30,14 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 @AllArgsConstructor
-public class RenExceptionHandler {
+public class ServiceExceptionHandler {
     private final SysLogErrorService sysLogErrorService;
 
     /**
      * 处理自定义异常
      */
-    @ExceptionHandler(RenException.class)
-    public Result<Object> handleRenException(RenException ex) {
+    @ExceptionHandler(ServiceException.class)
+    public Result<Object> handleRenException(ServiceException ex) {
         Result result = new Result();
         result.error(ex.getCode(), ex.getMsg());
 

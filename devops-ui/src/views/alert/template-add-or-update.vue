@@ -1,6 +1,6 @@
 <template>
   <el-dialog v-model="visible" :title="!dataForm.id ? '新增模板' : '修改模板'" width="820px" :close-on-click-modal="false" :close-on-press-escape="false">
-    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="template-form">
+    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="dialog-form">
       <el-form-item prop="name">
         <template #label>
           <span>模板名称</span>
@@ -36,9 +36,11 @@
       </el-form-item>
     </el-form>
     <template #footer>
-      <el-button @click="visible = false">取消</el-button>
-      <el-button @click="fillSample">填充示例</el-button>
-      <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
+      <div class="dialog-footer">
+        <el-button @click="visible = false">取消</el-button>
+        <el-button @click="fillSample">填充示例</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
+      </div>
     </template>
   </el-dialog>
 </template>
@@ -126,15 +128,10 @@ const dataFormSubmitHandle = () => {
 defineExpose({ init });
 </script>
 
-<style lang="less" scoped>
+<style scoped>
 .help-icon {
   margin-left: 6px;
-  color: #909399;
+  color: #94a3b8;
   cursor: pointer;
-}
-.template-form {
-  max-height: 64vh;
-  overflow-y: auto;
-  padding-right: 6px;
 }
 </style>

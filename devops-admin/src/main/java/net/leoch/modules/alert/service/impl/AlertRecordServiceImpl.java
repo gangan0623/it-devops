@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.service.impl.CrudServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
@@ -209,7 +209,7 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
         AlertRecordEntity record = requireRecord(recordId);
         String normalized = normalizeSeverity(severity);
         if (StrUtil.isBlank(normalized)) {
-            throw new RenException("请选择严重性");
+            throw new ServiceException("请选择严重性");
         }
         String oldSeverity = record.getSeverity();
         record.setSeverity(normalized);
@@ -223,7 +223,7 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
     public void suppress(Long recordId, Integer days, String message) {
         AlertRecordEntity record = requireRecord(recordId);
         if (days == null || days <= 0) {
-            throw new RenException("抑制天数必须大于0");
+            throw new ServiceException("抑制天数必须大于0");
         }
         Date until = Date.from(Instant.now().plusSeconds(days.longValue() * 24 * 3600));
         LambdaUpdateWrapper<AlertRecordEntity> updateWrapper = new LambdaUpdateWrapper<>();
@@ -265,7 +265,8 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
     @Override
     public PageData<AlertProblemDTO> problemPage(Map<String, Object> params) {
         String category = toStr(params.get("category"), "realtime");
-        String severity = normalizeSeverityForQuery(toStr(params.get("severity")));
+        String severityRaw = toStr(params.get("severity"));
+        List<String> severityList = parseSeverityList(severityRaw);
         String deviceType = toStr(params.get("deviceType"));
         String hostName = toStr(params.get("hostName"));
         String instance = toStr(params.get("instance"));
@@ -277,7 +278,7 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
         int limit = parseInt(toStr(params.get("limit")), 10);
 
         LambdaQueryWrapper<AlertRecordEntity> wrapper = new LambdaQueryWrapper<AlertRecordEntity>()
-            .eq(StrUtil.isNotBlank(severity), AlertRecordEntity::getSeverity, severity)
+            .in(!severityList.isEmpty(), AlertRecordEntity::getSeverity, severityList)
             .orderByDesc(AlertRecordEntity::getStartsAt);
 
         if (StrUtil.isNotBlank(hostName)) {
@@ -351,10 +352,23 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
             all.add(dto);
         }
         int total = all.size();
+        int firingCount = 0;
+        int resolvedCount = 0;
+        for (AlertProblemDTO dto : all) {
+            String s = StrUtil.blankToDefault(dto.getStatus(), "").toLowerCase();
+            if ("auto".equals(s) || "manual".equals(s) || "resolved".equals(s)) {
+                resolvedCount++;
+            } else {
+                firingCount++;
+            }
+        }
         int start = Math.max((page - 1) * limit, 0);
         int end = Math.min(start + limit, total);
         List<AlertProblemDTO> list = start >= total ? new ArrayList<>() : all.subList(start, end);
-        return new PageData<>(list, total);
+        PageData<AlertProblemDTO> pageData = new PageData<>(list, total);
+        pageData.setFiringCount(firingCount);
+        pageData.setResolvedCount(resolvedCount);
+        return pageData;
     }
 
     private void sendRecoveryMail(AlertRecordEntity record, String message) {
@@ -391,11 +405,11 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
 
     private AlertRecordEntity requireRecord(Long recordId) {
         if (recordId == null) {
-            throw new RenException("告警记录不存在");
+            throw new ServiceException("告警记录不存在");
         }
         AlertRecordEntity record = baseDao.selectById(recordId);
         if (record == null) {
-            throw new RenException("告警记录不存在");
+            throw new ServiceException("告警记录不存在");
         }
         return record;
     }
@@ -875,6 +889,20 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
             }
         }
         return keys.stream().filter(StrUtil::isNotBlank).distinct().collect(Collectors.toList());
+    }
+
+    private List<String> parseSeverityList(String severity) {
+        if (StrUtil.isBlank(severity)) {
+            return new ArrayList<>();
+        }
+        List<String> result = new ArrayList<>();
+        for (String s : severity.split(",")) {
+            String normalized = normalizeSeverityForQuery(s.trim());
+            if (StrUtil.isNotBlank(normalized)) {
+                result.add(normalized);
+            }
+        }
+        return result.stream().distinct().collect(Collectors.toList());
     }
 
     private String normalizeSeverityForQuery(String severity) {

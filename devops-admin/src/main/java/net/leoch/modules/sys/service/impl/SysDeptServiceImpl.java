@@ -6,7 +6,7 @@ import com.qiniu.util.StringUtils;
 import lombok.AllArgsConstructor;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.service.impl.BaseServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.TreeUtils;
@@ -76,13 +76,13 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptDao, SysDeptEntit
 
         //上级部门不能为自身
         if (entity.getId().equals(entity.getPid())) {
-            throw new RenException(ErrorCode.SUPERIOR_DEPT_ERROR);
+            throw new ServiceException(ErrorCode.SUPERIOR_DEPT_ERROR);
         }
 
         //上级部门不能为下级部门
         List<Long> subDeptList = getSubDeptIdList(entity.getId());
         if (subDeptList.contains(entity.getPid())) {
-            throw new RenException(ErrorCode.SUPERIOR_DEPT_ERROR);
+            throw new ServiceException(ErrorCode.SUPERIOR_DEPT_ERROR);
         }
 
         entity.setPids(getPidList(entity.getPid()));
@@ -95,13 +95,13 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptDao, SysDeptEntit
         //判断是否有子部门
         List<Long> subList = getSubDeptIdList(id);
         if (subList.size() > 1) {
-            throw new RenException(ErrorCode.DEPT_SUB_DELETE_ERROR);
+            throw new ServiceException(ErrorCode.DEPT_SUB_DELETE_ERROR);
         }
 
         //判断部门下面是否有用户
         int count = sysUserDao.getCountByDeptId(id);
         if (count > 0) {
-            throw new RenException(ErrorCode.DEPT_USER_DELETE_ERROR);
+            throw new ServiceException(ErrorCode.DEPT_USER_DELETE_ERROR);
         }
 
         //删除

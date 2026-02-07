@@ -1,7 +1,9 @@
 package net.leoch.modules.ops.service;
 
 import net.leoch.common.service.CrudService;
+import net.leoch.modules.ops.dto.OpsHostStatusSummaryDTO;
 import net.leoch.modules.ops.dto.WindowHostDTO;
+import net.leoch.modules.ops.dto.WindowHostPageRequest;
 import net.leoch.modules.ops.entity.WindowHostEntity;
 
 /**

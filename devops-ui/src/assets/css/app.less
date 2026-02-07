@@ -573,3 +573,491 @@ body {
     }
   }
 }
+
+// ========================================
+// 商务极简风全局样式系统
+// ========================================
+
+// 颜色变量 - 低饱和度商务色系
+@biz-primary: #3b82f6;           // 主色调-蓝
+@biz-success: #10b981;           // 成功-绿
+@biz-warning: #f59e0b;           // 警告-橙
+@biz-danger: #ef4444;            // 危险-红
+@biz-info: #6366f1;              // 信息-紫
+
+@biz-text-primary: #0f172a;      // 主文字
+@biz-text-secondary: #475569;    // 次要文字
+@biz-text-muted: #94a3b8;        // 弱化文字
+
+@biz-bg-page: #f8fafc;           // 页面背景
+@biz-bg-card: #ffffff;           // 卡片背景
+@biz-bg-hover: #f1f5f9;          // 悬浮背景
+
+@biz-border-light: #e2e8f0;      // 浅边框
+@biz-border-default: #cbd5e1;    // 默认边框
+
+// 阴影 - 更轻柔现代
+@biz-shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+@biz-shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+@biz-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -4px rgba(0, 0, 0, 0.03);
+
+// 圆角
+@biz-radius-sm: 4px;
+@biz-radius-md: 6px;
+@biz-radius-lg: 8px;
+
+// 过渡
+@biz-transition: all 0.15s ease;
+
+// ========================================
+// 通用工具栏样式 (.ops-toolbar)
+// ========================================
+.ops-toolbar {
+  padding: 14px 18px;
+  margin-bottom: 14px;
+  background: @biz-bg-card;
+  border-radius: @biz-radius-lg;
+  box-shadow: @biz-shadow-md;
+  border: 1px solid @biz-border-light;
+}
+
+.ops-toolbar__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+}
+
+.ops-toolbar__group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+.ops-filters .el-form-item {
+  margin-bottom: 0;
+  margin-right: 12px !important;
+}
+.ops-filters .el-form-item:last-child {
+  margin-right: 0 !important;
+}
+
+// 查询输入框
+.query-input {
+  width: 200px;
+}
+
+// 查询按钮
+.query-btn {
+  height: 32px;
+  padding: 0 16px;
+  font-weight: 500;
+}
+
+// 工具栏内输入框高度统一
+.ops-toolbar__group :deep(.el-input__wrapper),
+.ops-toolbar__group :deep(.el-select__wrapper) {
+  height: 32px;
+}
+
+// ========================================
+// 筛选徽章
+// ========================================
+.filter-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  margin-left: 6px;
+  padding: 0 5px;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1;
+  color: #fff;
+  background: @biz-primary;
+  border-radius: 9px;
+}
+
+// ========================================
+// 筛选抽屉表单
+// ========================================
+.filter-form {
+  .el-select,
+  .ren-select,
+  .el-input,
+  .el-date-editor {
+    width: 100%;
+  }
+  .el-form-item {
+    margin-bottom: 20px;
+  }
+}
+
+// ========================================
+// 统计标签组 - 商务极简风
+// ========================================
+.biz-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.biz-stats__item {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+// 状态标签配色
+.biz-stats__item--enabled,
+.host-stats__item--on,
+.device-stats__item--on,
+.agent-stats__item--on,
+.media-stats__item--on,
+.tpl-stats__item--on,
+.trigger-stats__item--on,
+.record-stats__item--ok {
+  color: #065f46;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.biz-stats__item--disabled,
+.host-stats__item--off,
+.device-stats__item--off,
+.agent-stats__item--off,
+.media-stats__item--off,
+.tpl-stats__item--off,
+.record-stats__item--bad {
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.biz-stats__item--online,
+.host-stats__item--online,
+.device-stats__item--online,
+.agent-stats__item--online {
+  color: #1e40af;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+.biz-stats__item--offline,
+.host-stats__item--filter,
+.device-stats__item--filter,
+.agent-stats__item--filter {
+  color: #7c2d12;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+}
+
+.trigger-stats__item--critical {
+  color: #9a3412;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+}
+
+.trigger-stats__item--filter {
+  color: #1e40af;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+
+// ========================================
+// 表格优化
+// ========================================
+.el-table {
+  --el-table-border-color: @biz-border-light;
+  --el-table-header-bg-color: @biz-bg-page;
+  --el-table-row-hover-bg-color: @biz-bg-hover;
+
+  border-radius: @biz-radius-lg;
+  overflow: hidden;
+
+  thead th {
+    font-weight: 600;
+    color: @biz-text-primary;
+  }
+
+  .el-table__row:hover > td {
+    background: @biz-bg-hover !important;
+  }
+}
+
+// 表格内文字不换行
+.ops-table-nowrap :deep(.cell) {
+  white-space: nowrap;
+}
+
+// ========================================
+// 导入弹窗
+// ========================================
+.import-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+// ========================================
+// 严重性/状态标签 - 告警专用
+// ========================================
+.severity-tag,
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 52px;
+  height: 24px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: 4px;
+}
+
+.severity-tag {
+  color: #fff;
+}
+
+.severity-tag--critical {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+.severity-tag--warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+}
+
+.severity-tag--info {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+}
+
+.severity-tag--resolved {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.status-tag--bad {
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+.status-tag--ok {
+  color: #065f46;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+// ========================================
+// 对话框/弹窗优化
+// ========================================
+.el-dialog {
+  border-radius: @biz-radius-lg;
+  box-shadow: @biz-shadow-lg;
+
+  .el-dialog__header {
+    padding: 16px 20px;
+    border-bottom: 1px solid @biz-border-light;
+
+    .el-dialog__title {
+      font-size: 16px;
+      font-weight: 600;
+      color: @biz-text-primary;
+    }
+  }
+
+  .el-dialog__body {
+    padding: 20px;
+  }
+
+  .el-dialog__footer {
+    padding: 14px 20px;
+    border-top: 1px solid @biz-border-light;
+  }
+}
+
+// ========================================
+// 弹窗表单 - 商务极简风统一样式
+// ========================================
+
+// 表单容器（所有弹窗表单统一使用）
+.dialog-form {
+  max-height: 62vh;
+  overflow-y: auto;
+  padding-right: 6px;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: @biz-border-default;
+    border-radius: 2px;
+  }
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+// 分段标题
+.form-section-title {
+  display: flex;
+  align-items: center;
+  margin: 2px 0 14px;
+  padding: 0 0 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: @biz-text-primary;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid @biz-border-light;
+
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 3px;
+    height: 14px;
+    margin-right: 8px;
+    background: @biz-primary;
+    border-radius: 1.5px;
+  }
+}
+
+// 底部按钮区
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+
+  :deep(.el-button) {
+    height: 34px;
+    padding: 0 18px;
+    font-size: 13px;
+    border-radius: @biz-radius-md;
+  }
+}
+
+// ========================================
+// 测试弹窗 - 商务极简风统一样式
+// ========================================
+
+// 元信息条
+.test-meta {
+  display: flex;
+  align-items: center;
+  padding: 10px 14px;
+  background: @biz-bg-page;
+  border: 1px solid @biz-border-light;
+  border-radius: @biz-radius-md;
+}
+
+.test-meta__label {
+  margin-right: 10px;
+  font-size: 12px;
+  color: @biz-text-muted;
+}
+
+.test-meta__value {
+  font-weight: 600;
+  color: @biz-text-primary;
+}
+
+// 测试弹窗头部
+.test-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.test-actions {
+  display: flex;
+  gap: 8px;
+}
+
+// 双栏网格
+.test-grid {
+  display: grid;
+  grid-template-columns: minmax(340px, 1fr) minmax(340px, 1fr);
+  gap: 16px;
+
+  @media (max-width: 1024px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+// 测试卡片
+.test-card {
+  padding: 16px;
+  border: 1px solid @biz-border-light;
+  border-radius: @biz-radius-lg;
+  background: @biz-bg-card;
+}
+
+.test-card__title {
+  margin-bottom: 14px;
+  font-size: 13px;
+  font-weight: 600;
+  color: @biz-text-primary;
+  letter-spacing: 0.03em;
+}
+
+// 测试表单间距
+.test-form :deep(.el-form-item) {
+  margin-bottom: 14px;
+}
+
+// 预览块
+.preview-block {
+  margin-bottom: 14px;
+}
+
+.preview-block__label {
+  margin-bottom: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: @biz-text-muted;
+}
+
+// 渲染预览区
+.alert-preview {
+  width: 100%;
+  min-height: 240px;
+  padding: 14px;
+  border: 1px solid @biz-border-light;
+  border-radius: @biz-radius-md;
+  background: @biz-bg-page;
+  overflow: auto;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+// 测试弹窗 body 高度
+.test-dialog :deep(.el-dialog__body) {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+// ========================================
+// 分页优化
+// ========================================
+.el-pagination {
+  margin-top: 16px !important;
+  padding: 12px 0;
+}
+
+// ========================================
+// 抽屉底部按钮统一
+// ========================================
+.el-drawer__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid @biz-border-light;
+}

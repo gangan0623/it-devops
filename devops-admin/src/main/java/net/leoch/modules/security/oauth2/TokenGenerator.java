@@ -2,7 +2,7 @@
 
 package net.leoch.modules.security.oauth2;
 
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 
 import java.security.MessageDigest;
 import java.util.UUID;
@@ -40,7 +40,7 @@ public class TokenGenerator {
             byte[] messageDigest = algorithm.digest();
             return toHexString(messageDigest);
         } catch (Exception e) {
-            throw new RenException("token invalid", e);
+            throw new ServiceException("token invalid", e);
         }
     }
 }

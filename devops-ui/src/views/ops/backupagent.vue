@@ -272,95 +272,18 @@ const updateStatusHandle = (status: number) => {
 </script>
 
 <style scoped>
-.ops-toolbar {
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-}
-.ops-toolbar__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-.ops-toolbar__group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-}
+/* 统计标签容器 */
 .agent-stats {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
+
+/* 统计标签基础样式 */
 .agent-stats__item {
-  padding: 2px 8px;
-  border-radius: 999px;
+  padding: 4px 10px;
+  border-radius: 4px;
   font-size: 12px;
-}
-.agent-stats__item--on {
-  color: #065f46;
-  background: #d1fae5;
-}
-.agent-stats__item--off {
-  color: #991b1b;
-  background: #fee2e2;
-}
-.agent-stats__item--online {
-  color: #1d4ed8;
-  background: #dbeafe;
-}
-.agent-stats__item--filter {
-  color: #4338ca;
-  background: #e0e7ff;
-}
-.ops-filters .el-form-item {
-  margin-bottom: 0;
-}
-.query-input {
-  width: 220px;
-}
-.query-btn {
-  height: 32px;
-  padding: 0 14px;
-}
-.ops-toolbar__group :deep(.el-input__wrapper),
-.ops-toolbar__group :deep(.el-select__wrapper) {
-  height: 32px;
-}
-.filter-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 16px;
-  height: 16px;
-  margin-left: 4px;
-  padding: 0 4px;
-  font-size: 11px;
-  line-height: 1;
-  color: #fff;
-  background: #409eff;
-  border-radius: 8px;
-}
-.filter-form .el-select,
-.filter-form .ren-select {
-  width: 100%;
-}
-.filter-form .el-form-item {
-  margin-bottom: 18px;
-}
-.import-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.agent-table :deep(.el-table__row:hover > td) {
-  background: #f8fafc;
+  font-weight: 500;
 }
 </style>

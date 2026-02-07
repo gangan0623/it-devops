@@ -81,10 +81,12 @@
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="testVisible = false">取消</el-button>
-        <el-button @click="fillTestExample">填充示例</el-button>
-        <el-button @click="resetTestForm">重置</el-button>
-        <el-button type="primary" :loading="testSending" @click="sendTest">发送测试</el-button>
+        <div class="dialog-footer">
+          <el-button @click="testVisible = false">取消</el-button>
+          <el-button @click="fillTestExample">填充示例</el-button>
+          <el-button @click="resetTestForm">重置</el-button>
+          <el-button type="primary" :loading="testSending" @click="sendTest">发送测试</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -174,85 +176,23 @@ const sendTest = () => {
 </script>
 
 <style lang="less" scoped>
-.ops-toolbar {
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-}
-.ops-toolbar__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-.ops-toolbar__group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-}
-.ops-filters .el-form-item {
-  margin-bottom: 0;
-}
-.query-input {
-  width: 220px;
-}
-.query-btn {
-  height: 32px;
-  padding: 0 14px;
-}
-.ops-toolbar__group :deep(.el-input__wrapper),
-.ops-toolbar__group :deep(.el-select__wrapper) {
-  height: 32px;
-}
+/* 统计标签容器 */
 .media-stats {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-right: 4px;
+  gap: 8px;
 }
+
+/* 统计标签基础样式 */
 .media-stats__item {
-  padding: 2px 8px;
-  border-radius: 999px;
+  padding: 4px 10px;
+  border-radius: 4px;
   font-size: 12px;
+  font-weight: 500;
 }
-.media-stats__item--on {
-  color: #0f766e;
-  background: #ccfbf1;
-}
-.media-stats__item--off {
-  color: #991b1b;
-  background: #fee2e2;
-}
-.media-table :deep(.el-table__row:hover > td) {
-  background: #f8fafc;
-}
+
+/* 测试弹窗 - 元信息区（全局样式覆盖） */
 .test-meta {
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-}
-.test-meta__label {
-  margin-right: 8px;
-  color: #64748b;
-  font-size: 12px;
-}
-.test-meta__value {
-  color: #0f172a;
-  font-weight: 600;
-}
-.test-form :deep(.el-form-item) {
   margin-bottom: 14px;
-}
-.test-dialog :deep(.el-dialog__body) {
-  max-height: 62vh;
-  overflow-y: auto;
 }
 </style>

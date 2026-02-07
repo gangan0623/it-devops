@@ -11,7 +11,7 @@ import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.constant.Constant;
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.redis.RedisKeys;
 import net.leoch.common.redis.RedisUtils;
@@ -179,11 +179,11 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
     @Override
     public void importExcel(BackupAgentImportRequest request) throws Exception {
         if (request == null || request.getFile() == null || request.getFile().isEmpty()) {
-            throw new RenException("上传文件不能为空");
+            throw new ServiceException("上传文件不能为空");
         }
         List<BackupAgentImportExcel> dataList = EasyExcel.read(request.getFile().getInputStream()).head(BackupAgentImportExcel.class).sheet().doReadSync();
         if (CollUtil.isEmpty(dataList)) {
-            throw new RenException("导入数据不能为空");
+            throw new ServiceException("导入数据不能为空");
         }
         List<BackupAgentEntity> entityList = new ArrayList<>(dataList.size());
         for (BackupAgentImportExcel item : dataList) {
@@ -281,7 +281,7 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
         wrapper.in(DeviceBackupEntity::getAgentId, Arrays.asList(ids));
         int used = Math.toIntExact(deviceBackupDao.selectCount(wrapper));
         if (used > 0) {
-            throw new RenException("存在绑定的备份设备，无法删除");
+            throw new ServiceException("存在绑定的备份设备，无法删除");
         }
         super.delete(ids);
     }
@@ -313,7 +313,7 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
 
     private void validateUnique(BackupAgentDTO dto) {
         if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
-            throw new RenException("地址或名称已存在");
+            throw new ServiceException("地址或名称已存在");
         }
     }
 

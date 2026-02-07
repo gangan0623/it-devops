@@ -4,7 +4,7 @@ package net.leoch.modules.job.utils;
 
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.modules.job.entity.ScheduleJobEntity;
 import org.quartz.*;
 
@@ -41,7 +41,7 @@ public class ScheduleUtils {
         try {
             return (CronTrigger) scheduler.getTrigger(getTriggerKey(jobId));
         } catch (SchedulerException e) {
-            throw new RenException(ErrorCode.JOB_ERROR, e);
+            throw new ServiceException(ErrorCode.JOB_ERROR, e);
         }
     }
 
@@ -70,7 +70,7 @@ public class ScheduleUtils {
             	pauseJob(scheduler, scheduleJob.getId());
             }
         } catch (SchedulerException e) {
-            throw new RenException(ErrorCode.JOB_ERROR, e);
+            throw new ServiceException(ErrorCode.JOB_ERROR, e);
         }
     }
     
@@ -101,7 +101,7 @@ public class ScheduleUtils {
             }
             
         } catch (SchedulerException e) {
-            throw new RenException(ErrorCode.JOB_ERROR, e);
+            throw new ServiceException(ErrorCode.JOB_ERROR, e);
         }
     }
 
@@ -116,7 +116,7 @@ public class ScheduleUtils {
         	
             scheduler.triggerJob(getJobKey(scheduleJob.getId()), dataMap);
         } catch (SchedulerException e) {
-            throw new RenException(ErrorCode.JOB_ERROR, e);
+            throw new ServiceException(ErrorCode.JOB_ERROR, e);
         }
     }
 
@@ -127,7 +127,7 @@ public class ScheduleUtils {
         try {
             scheduler.pauseJob(getJobKey(jobId));
         } catch (SchedulerException e) {
-            throw new RenException(ErrorCode.JOB_ERROR, e);
+            throw new ServiceException(ErrorCode.JOB_ERROR, e);
         }
     }
 
@@ -138,7 +138,7 @@ public class ScheduleUtils {
         try {
             scheduler.resumeJob(getJobKey(jobId));
         } catch (SchedulerException e) {
-            throw new RenException(ErrorCode.JOB_ERROR, e);
+            throw new ServiceException(ErrorCode.JOB_ERROR, e);
         }
     }
 
@@ -149,7 +149,7 @@ public class ScheduleUtils {
         try {
             scheduler.deleteJob(getJobKey(jobId));
         } catch (SchedulerException e) {
-            throw new RenException(ErrorCode.JOB_ERROR, e);
+            throw new ServiceException(ErrorCode.JOB_ERROR, e);
         }
     }
 }

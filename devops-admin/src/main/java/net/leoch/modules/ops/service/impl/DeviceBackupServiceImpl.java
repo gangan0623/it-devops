@@ -11,7 +11,7 @@ import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.constant.Constant;
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.redis.RedisKeys;
 import net.leoch.common.redis.RedisUtils;
@@ -188,11 +188,11 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
     @Override
     public void importExcel(DeviceBackupImportRequest request) throws Exception {
         if (request == null || request.getFile() == null || request.getFile().isEmpty()) {
-            throw new RenException("上传文件不能为空");
+            throw new ServiceException("上传文件不能为空");
         }
         List<DeviceBackupImportExcel> dataList = EasyExcel.read(request.getFile().getInputStream()).head(DeviceBackupImportExcel.class).sheet().doReadSync();
         if (CollUtil.isEmpty(dataList)) {
-            throw new RenException("导入数据不能为空");
+            throw new ServiceException("导入数据不能为空");
         }
         List<DeviceBackupEntity> entityList = new ArrayList<>(dataList.size());
         for (DeviceBackupImportExcel item : dataList) {
@@ -321,7 +321,7 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
 
     private void validateUnique(DeviceBackupDTO dto) {
         if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
-            throw new RenException("地址或名称已存在");
+            throw new ServiceException("地址或名称已存在");
         }
     }
 

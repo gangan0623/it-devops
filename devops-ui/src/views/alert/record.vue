@@ -160,20 +160,34 @@
       @current-change="state.pageCurrentChangeHandle"
     ></el-pagination>
 
-    <el-dialog v-model="detailVisible" title="告警详情" width="760px" :close-on-click-modal="false">
-      <el-form :model="detail" label-width="100px">
-        <el-form-item label="告警名称">{{ detail.alertName }}</el-form-item>
-        <el-form-item label="级别">{{ formatSeverity(detail.severity) }}</el-form-item>
-        <el-form-item label="状态">{{ formatStatus(detail.status) }}</el-form-item>
-        <el-form-item label="实例">{{ detail.instance }}</el-form-item>
-        <el-form-item label="摘要">{{ detail.summary }}</el-form-item>
-        <el-form-item label="描述">{{ detail.description }}</el-form-item>
-        <el-form-item label="原始JSON">
-          <el-input :model-value="detail.rawJson" type="textarea" :rows="10" readonly></el-input>
-        </el-form-item>
-      </el-form>
+    <el-dialog v-model="detailVisible" title="告警详情" width="760px" :close-on-click-modal="false" class="detail-dialog">
+      <div class="detail-header">
+        <span :class="severityClass(detail)">{{ formatSeverity(detail.severity) }}</span>
+        <span :class="statusClass(detail.status)">{{ formatStatus(detail.status) }}</span>
+        <span class="detail-header__name">{{ detail.alertName || "-" }}</span>
+      </div>
+      <div class="detail-grid">
+        <div class="detail-item">
+          <div class="detail-item__label">实例</div>
+          <div class="detail-item__value">{{ detail.instance || "-" }}</div>
+        </div>
+        <div class="detail-item">
+          <div class="detail-item__label">摘要</div>
+          <div class="detail-item__value">{{ detail.summary || "-" }}</div>
+        </div>
+        <div class="detail-item detail-item--full">
+          <div class="detail-item__label">描述</div>
+          <div class="detail-item__value">{{ detail.description || "-" }}</div>
+        </div>
+      </div>
+      <div class="detail-json">
+        <div class="detail-json__title">原始 JSON</div>
+        <pre class="detail-json__code">{{ formatJson(detail.rawJson) }}</pre>
+      </div>
       <template #footer>
-        <el-button @click="detailVisible = false">关闭</el-button>
+        <div class="dialog-footer">
+          <el-button @click="detailVisible = false">关闭</el-button>
+        </div>
       </template>
     </el-dialog>
 
@@ -501,6 +515,15 @@ const formatDuration = (row: any) => {
   return `${minutes}分钟`;
 };
 
+const formatJson = (raw: string) => {
+  if (!raw) return "-";
+  try {
+    return JSON.stringify(JSON.parse(raw), null, 2);
+  } catch {
+    return raw;
+  }
+};
+
 const formatEndTime = (row: any) => {
   if (!row || String(row.status || "").toLowerCase() !== "resolved") {
     return "-";
@@ -510,223 +533,243 @@ const formatEndTime = (row: any) => {
 </script>
 
 <style lang="less" scoped>
-.ops-toolbar {
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-}
-.ops-toolbar__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-.ops-toolbar__group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-}
+/* 统计标签容器 */
 .record-stats {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
+
+/* 统计标签基础样式 */
 .record-stats__item {
-  padding: 2px 8px;
-  border-radius: 999px;
+  padding: 4px 10px;
+  border-radius: 4px;
   font-size: 12px;
+  font-weight: 500;
 }
-.record-stats__item--bad {
-  color: #991b1b;
-  background: #fee2e2;
-}
-.record-stats__item--ok {
-  color: #166534;
-  background: #dcfce7;
-}
-.query-input {
-  width: 220px;
-}
-.query-btn {
-  height: 32px;
-  padding: 0 14px;
-}
-.ops-toolbar__group :deep(.el-input__wrapper) {
-  height: 32px;
-}
-.filter-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 16px;
-  height: 16px;
-  margin-left: 4px;
-  padding: 0 4px;
-  font-size: 11px;
-  line-height: 1;
-  color: #fff;
-  background: #409eff;
-  border-radius: 8px;
-}
-.filter-form .el-select,
-.filter-form .el-input {
-  width: 100%;
-}
-.filter-form .el-form-item {
-  margin-bottom: 18px;
-}
-.ops-filters .el-form-item {
-  margin-bottom: 0;
-}
-.status-tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 48px;
-  height: 22px;
-  padding: 0 8px;
-  font-size: 12px;
-  border-radius: 999px;
-}
-.status-tag--bad {
-  color: #b91c1c;
-  background: #fee2e2;
-}
-.status-tag--ok {
-  color: #166534;
-  background: #dcfce7;
-}
-.severity-tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 48px;
-  height: 22px;
-  padding: 0 8px;
-  font-size: 12px;
-  border-radius: 999px;
-  color: #fff;
-}
-.severity-tag--critical {
-  background: #e45959;
-}
-.severity-tag--warning {
-  background: #ffa059;
-}
-.severity-tag--info {
-  background: #7499ff;
-}
-.severity-tag--resolved {
-  background: #4caf50;
-}
+
+/* 表格单元格不换行 */
 .alert-record-table :deep(.cell) {
   white-space: nowrap;
 }
+
 .alert-record-table :deep(.cell-wrap .cell) {
   white-space: normal;
   word-break: break-all;
 }
+
+/* 事件提示框 */
 .event-tip {
   min-width: 320px;
   max-width: 420px;
 }
+
 .event-tip__title {
-  margin-bottom: 8px;
-  padding-bottom: 6px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
   font-size: 13px;
-  font-weight: 700;
-  color: #111827;
-  border-bottom: 1px solid #e5e7eb;
+  font-weight: 600;
+  color: #0f172a;
+  border-bottom: 1px solid #e2e8f0;
 }
+
 .event-tip__group {
-  margin-bottom: 8px;
-  padding: 8px;
+  margin-bottom: 10px;
+  padding: 10px;
   background: #f8fafc;
   border-radius: 6px;
 }
+
 .event-tip__group-title {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-size: 12px;
-  color: #2563eb;
+  font-weight: 500;
+  color: #3b82f6;
 }
+
 .event-tip__row {
   display: flex;
-  gap: 10px;
-  margin-bottom: 4px;
+  gap: 12px;
+  margin-bottom: 6px;
   line-height: 1.5;
 }
+
 .event-tip__row:last-child {
   margin-bottom: 0;
 }
+
 .event-tip__key {
   flex: 0 0 64px;
-  color: #6b7280;
+  color: #64748b;
+  font-size: 12px;
 }
+
 .event-tip__value {
   flex: 1;
   white-space: normal;
   word-break: break-all;
-  color: #111827;
+  color: #0f172a;
 }
-.update-dialog__meta {
-  padding: 12px 14px;
-  margin-bottom: 12px;
-  background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
-  border: 1px solid #dbe7ff;
+
+/* 详情弹窗 */
+.detail-dialog :deep(.el-dialog__body) {
+  max-height: 72vh;
+  overflow-y: auto;
+}
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
 }
-.update-dialog__meta-label {
+
+.detail-header__name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  margin-bottom: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.detail-item {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.detail-item:nth-child(odd) {
+  border-right: 1px solid #f1f5f9;
+}
+
+.detail-item--full {
+  grid-column: 1 / -1;
+  border-right: none;
+}
+
+.detail-item:last-child,
+.detail-item:nth-last-child(2):nth-child(odd) {
+  border-bottom: none;
+}
+
+.detail-item__label {
   margin-bottom: 4px;
   font-size: 12px;
-  color: #4b5563;
+  color: #94a3b8;
 }
+
+.detail-item__value {
+  font-size: 13px;
+  color: #0f172a;
+  line-height: 1.5;
+  word-break: break-all;
+}
+
+.detail-json {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.detail-json__title {
+  padding: 8px 16px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.detail-json__code {
+  margin: 0;
+  padding: 14px 16px;
+  max-height: 300px;
+  overflow: auto;
+  font-family: "SF Mono", Consolas, "Courier New", monospace;
+  font-size: 12px;
+  line-height: 1.6;
+  color: #334155;
+  background: #fafafa;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* 更新弹窗 */
+.update-dialog__meta {
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.update-dialog__meta-label {
+  margin-bottom: 6px;
+  font-size: 12px;
+  color: #64748b;
+}
+
 .update-dialog__meta-value {
-  color: #111827;
+  color: #0f172a;
   line-height: 1.6;
   word-break: break-all;
 }
+
 .update-dialog__content {
   display: grid;
   grid-template-columns: minmax(360px, 1fr) minmax(400px, 1.2fr);
-  gap: 12px;
+  gap: 14px;
 }
+
 .update-card {
-  padding: 14px;
+  padding: 16px;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
 }
+
 .update-card__title {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   font-size: 14px;
   font-weight: 600;
   color: #0f172a;
 }
+
 .update-form :deep(.el-form-item) {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
+
 .op-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
+
 .op-input {
   width: 190px;
 }
+
 .hint {
   color: #64748b;
   font-size: 12px;
 }
+
 .history-table :deep(.cell) {
   line-height: 1.5;
 }
+
 @media (max-width: 980px) {
   .update-dialog__content {
     grid-template-columns: 1fr;

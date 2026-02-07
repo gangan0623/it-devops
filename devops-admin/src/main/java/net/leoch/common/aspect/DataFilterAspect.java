@@ -8,7 +8,7 @@ import com.qiniu.util.StringUtils;
 import net.leoch.common.annotation.DataFilter;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.interceptor.DataScope;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
@@ -61,7 +61,7 @@ public class DataFilterAspect {
             return;
         }
 
-        throw new RenException(ErrorCode.DATA_SCOPE_PARAMS_ERROR);
+        throw new ServiceException(ErrorCode.DATA_SCOPE_PARAMS_ERROR);
     }
 
     /**

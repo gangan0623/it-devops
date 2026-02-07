@@ -4,7 +4,7 @@ package net.leoch.common.xss;
 
 import cn.hutool.core.util.StrUtil;
 import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 
 /**
  * SQL过滤
@@ -37,7 +37,7 @@ public class SqlFilter {
         //判断是否包含非法字符
         for (String keyword : keywords) {
             if (str.contains(keyword)) {
-                throw new RenException(ErrorCode.INVALID_SYMBOL);
+                throw new ServiceException(ErrorCode.INVALID_SYMBOL);
             }
         }
 

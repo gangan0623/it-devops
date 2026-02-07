@@ -109,9 +109,11 @@
         </section>
       </div>
       <template #footer>
-        <el-button @click="testVisible = false">取消</el-button>
-        <el-button :loading="previewLoading" @click="handlePreview">预览</el-button>
-        <el-button type="primary" :loading="sendLoading" @click="handleTestSend">发送测试</el-button>
+        <div class="dialog-footer">
+          <el-button @click="testVisible = false">取消</el-button>
+          <el-button :loading="previewLoading" @click="handlePreview">预览</el-button>
+          <el-button type="primary" :loading="sendLoading" @click="handleTestSend">发送测试</el-button>
+        </div>
       </template>
     </el-dialog>
   </div>
@@ -275,133 +277,20 @@ const handleTestSend = () => {
 </script>
 
 <style lang="less" scoped>
-.ops-toolbar {
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-}
-.ops-toolbar__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-.ops-toolbar__group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-}
-.ops-filters .el-form-item {
-  margin-bottom: 0;
-}
-.query-input {
-  width: 220px;
-}
-.query-btn {
-  height: 32px;
-  padding: 0 14px;
-}
-.ops-toolbar__group :deep(.el-input__wrapper),
-.ops-toolbar__group :deep(.el-select__wrapper) {
-  height: 32px;
-}
+/* 统计标签容器 */
 .tpl-stats {
   display: flex;
   align-items: center;
-  gap: 6px;
-}
-.tpl-stats__item {
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-}
-.tpl-stats__item--on {
-  color: #065f46;
-  background: #d1fae5;
-}
-.tpl-stats__item--off {
-  color: #991b1b;
-  background: #fee2e2;
-}
-.tpl-table :deep(.el-table__row:hover > td) {
-  background: #f8fafc;
-}
-.test-dialog :deep(.el-dialog__body) {
-  max-height: 70vh;
-  overflow-y: auto;
-}
-.test-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 12px;
-}
-.test-meta {
-  padding: 8px 12px;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 6px;
-}
-.test-meta__label {
-  margin-right: 8px;
-  color: #64748b;
-  font-size: 12px;
-}
-.test-meta__value {
-  color: #0f172a;
-  font-weight: 600;
-}
-.test-actions {
-  display: flex;
   gap: 8px;
 }
-.test-grid {
-  display: grid;
-  grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr);
-  gap: 12px;
-}
-.test-card {
-  padding: 12px;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  background: #fff;
-}
-.test-card__title {
-  margin-bottom: 10px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #0f172a;
-}
-.test-form :deep(.el-form-item) {
-  margin-bottom: 12px;
-}
-.preview-block {
-  margin-bottom: 12px;
-}
-.preview-block__label {
-  margin-bottom: 6px;
+
+/* 统计标签基础样式 */
+.tpl-stats__item {
+  padding: 4px 10px;
+  border-radius: 4px;
   font-size: 12px;
-  color: #64748b;
+  font-weight: 500;
 }
-.alert-preview {
-  width: 100%;
-  min-height: 260px;
-  padding: 12px;
-  border: 1px solid #e4e7ed;
-  border-radius: 6px;
-  background: #fff;
-  overflow: auto;
-}
-@media (max-width: 1024px) {
-  .test-grid {
-    grid-template-columns: 1fr;
-  }
-}
+
+/* 测试弹窗 - 样式由全局 app.less 统一管理 */
 </style>

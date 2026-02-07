@@ -1,6 +1,6 @@
 <template>
   <el-dialog v-model="visible" :title="!dataForm.id ? '新增媒介' : '修改媒介'" width="760px" :close-on-click-modal="false" :close-on-press-escape="false">
-    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="media-form">
+    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="dialog-form">
       <div class="form-section-title">基础信息</div>
       <el-form-item label="媒介名称" prop="name">
         <el-input v-model="dataForm.name" placeholder="媒介名称"></el-input>
@@ -128,27 +128,5 @@ const dataFormSubmitHandle = () => {
 defineExpose({ init });
 </script>
 
-<style lang="less" scoped>
-.media-form {
-  max-height: 60vh;
-  overflow-y: auto;
-  padding-right: 6px;
-}
-.form-section-title {
-  margin: 4px 0 10px;
-  padding-left: 8px;
-  border-left: 3px solid #409eff;
-  color: #1e293b;
-  font-weight: 600;
-  font-size: 13px;
-}
-.dialog-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-.dialog-footer :deep(.el-button) {
-  height: 32px;
-  padding: 0 16px;
-}
+<style scoped>
 </style>

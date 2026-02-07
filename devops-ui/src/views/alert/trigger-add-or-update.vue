@@ -1,6 +1,6 @@
 <template>
   <el-dialog v-model="visible" :title="!dataForm.id ? '新增触发器' : '修改触发器'" width="820px" :close-on-click-modal="false" :close-on-press-escape="false">
-    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="trigger-form">
+    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="dialog-form">
       <el-form-item label="触发器名称" prop="name">
         <el-input v-model="dataForm.name" placeholder="触发器名称"></el-input>
       </el-form-item>
@@ -48,9 +48,11 @@
       </div>
     </el-form>
     <template #footer>
-      <el-button @click="visible = false">取消</el-button>
-      <el-button @click="clearMatchLabels">清空匹配标签</el-button>
-      <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
+      <div class="dialog-footer">
+        <el-button @click="visible = false">取消</el-button>
+        <el-button @click="clearMatchLabels">清空匹配标签</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
+      </div>
     </template>
   </el-dialog>
 </template>
@@ -187,27 +189,22 @@ const dataFormSubmitHandle = () => {
 defineExpose({ init });
 </script>
 
-<style lang="less" scoped>
+<style scoped>
 .help-icon {
   margin-left: 6px;
-  color: #909399;
+  color: #94a3b8;
   cursor: pointer;
 }
-.trigger-form {
-  max-height: 64vh;
-  overflow-y: auto;
-  padding-right: 6px;
-}
 .match-preview {
-  margin-top: 6px;
-  padding: 8px 10px;
+  margin-top: 4px;
+  padding: 10px 12px;
   border-radius: 6px;
   border: 1px solid #e2e8f0;
   background: #f8fafc;
   font-size: 12px;
 }
 .match-preview__label {
-  color: #64748b;
+  color: #94a3b8;
 }
 .match-preview__value {
   margin-left: 4px;

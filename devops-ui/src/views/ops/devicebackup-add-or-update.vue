@@ -1,6 +1,6 @@
 <template>
   <el-dialog v-model="visible" :title="!dataForm.id ? '新增备份设备' : '修改备份设备'" width="780px" :close-on-click-modal="false" :close-on-press-escape="false">
-    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="device-form">
+    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="dialog-form">
       <div class="form-section-title">设备凭据</div>
       <el-form-item label="地址" prop="instance">
         <el-input v-model="dataForm.instance" placeholder="地址" @blur="checkUnique('instance')"></el-input>
@@ -55,8 +55,10 @@
       </el-form-item>
               </el-form>
     <template #footer>
-      <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
+      <div class="dialog-footer">
+        <el-button @click="visible = false">取消</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
+      </div>
     </template>
   </el-dialog>
 </template>
@@ -255,17 +257,4 @@ defineExpose({
 </script>
 
 <style scoped>
-.device-form {
-  max-height: 64vh;
-  overflow-y: auto;
-  padding-right: 6px;
-}
-.form-section-title {
-  margin: 4px 0 10px;
-  padding-left: 8px;
-  border-left: 3px solid #409eff;
-  color: #1e293b;
-  font-weight: 600;
-  font-size: 13px;
-}
 </style>

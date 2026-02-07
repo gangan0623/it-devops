@@ -10,7 +10,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.redis.RedisKeys;
 import net.leoch.common.redis.RedisUtils;
@@ -175,11 +175,11 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
     @Transactional
     public void importExcel(WindowHostImportRequest request) throws Exception {
         if (request == null || request.getFile() == null || request.getFile().isEmpty()) {
-            throw new RenException("上传文件不能为空");
+            throw new ServiceException("上传文件不能为空");
         }
         List<WindowHostImportExcel> dataList = EasyExcel.read(request.getFile().getInputStream()).head(WindowHostImportExcel.class).sheet().doReadSync();
         if (CollUtil.isEmpty(dataList)) {
-            throw new RenException("导入数据不能为空");
+            throw new ServiceException("导入数据不能为空");
         }
         List<WindowHostEntity> entityList = new ArrayList<>(dataList.size());
         for (WindowHostImportExcel item : dataList) {
@@ -286,7 +286,7 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
 
     private void validateUnique(WindowHostDTO dto) {
         if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
-            throw new RenException("地址或名称已存在");
+            throw new ServiceException("地址或名称已存在");
         }
     }
 

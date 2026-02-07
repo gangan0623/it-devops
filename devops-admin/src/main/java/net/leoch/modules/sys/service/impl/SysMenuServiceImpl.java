@@ -5,7 +5,7 @@ package net.leoch.modules.sys.service.impl;
 import lombok.AllArgsConstructor;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.service.impl.BaseServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.TreeUtils;
@@ -51,7 +51,7 @@ public class SysMenuServiceImpl extends BaseServiceImpl<SysMenuDao, SysMenuEntit
 
         //上级菜单不能为自身
         if (entity.getId().equals(entity.getPid())) {
-            throw new RenException(ErrorCode.SUPERIOR_MENU_ERROR);
+            throw new ServiceException(ErrorCode.SUPERIOR_MENU_ERROR);
         }
 
         //更新菜单

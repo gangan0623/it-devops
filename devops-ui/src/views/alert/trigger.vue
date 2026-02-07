@@ -181,65 +181,18 @@ onMounted(() => {
 </script>
 
 <style lang="less" scoped>
-.ops-toolbar {
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-}
-.ops-toolbar__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-.ops-toolbar__group {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
-}
-.ops-filters .el-form-item {
-  margin-bottom: 0;
-}
-.query-input {
-  width: 220px;
-}
-.query-btn {
-  height: 32px;
-  padding: 0 14px;
-}
-.ops-toolbar__group :deep(.el-input__wrapper),
-.ops-toolbar__group :deep(.el-select__wrapper) {
-  height: 32px;
-}
+/* 统计标签容器 */
 .trigger-stats {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
+
+/* 统计标签基础样式 */
 .trigger-stats__item {
-  padding: 2px 8px;
-  border-radius: 999px;
+  padding: 4px 10px;
+  border-radius: 4px;
   font-size: 12px;
-}
-.trigger-stats__item--on {
-  color: #065f46;
-  background: #d1fae5;
-}
-.trigger-stats__item--critical {
-  color: #9a3412;
-  background: #ffedd5;
-}
-.trigger-stats__item--filter {
-  color: #1d4ed8;
-  background: #dbeafe;
-}
-.trigger-table :deep(.el-table__row:hover > td) {
-  background: #f8fafc;
+  font-weight: 500;
 }
 </style>

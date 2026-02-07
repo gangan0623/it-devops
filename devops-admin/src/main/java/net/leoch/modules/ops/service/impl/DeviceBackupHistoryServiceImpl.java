@@ -3,7 +3,7 @@ package net.leoch.modules.ops.service.impl;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.service.impl.CrudServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.ops.dao.DeviceBackupHistoryDao;
@@ -62,12 +62,12 @@ public class DeviceBackupHistoryServiceImpl extends CrudServiceImpl<DeviceBackup
     @Override
     public List<Map<String, Object>> diffById(Long leftId, Long rightId) {
         if (leftId == null || rightId == null) {
-            throw new RenException("请选择两条记录进行对比");
+            throw new ServiceException("请选择两条记录进行对比");
         }
         DeviceBackupHistoryEntity left = baseDao.selectById(leftId);
         DeviceBackupHistoryEntity right = baseDao.selectById(rightId);
         if (left == null || right == null) {
-            throw new RenException("历史记录不存在");
+            throw new ServiceException("历史记录不存在");
         }
         List<String> leftLines = readLines(left.getUrl());
         List<String> rightLines = readLines(right.getUrl());
@@ -94,14 +94,14 @@ public class DeviceBackupHistoryServiceImpl extends CrudServiceImpl<DeviceBackup
             connection.setReadTimeout(15000);
             int code = connection.getResponseCode();
             if (code != 200) {
-                throw new RenException("备份文件读取失败，HTTP " + code);
+                throw new ServiceException("备份文件读取失败，HTTP " + code);
             }
             try (InputStream in = connection.getInputStream()) {
                 byte[] bytes = in.readAllBytes();
                 return new String(bytes, StandardCharsets.UTF_8);
             }
         } catch (Exception e) {
-            throw new RenException("备份文件读取失败: " + e.getMessage());
+            throw new ServiceException("备份文件读取失败: " + e.getMessage());
         } finally {
             if (connection != null) {
                 connection.disconnect();
@@ -121,7 +121,7 @@ public class DeviceBackupHistoryServiceImpl extends CrudServiceImpl<DeviceBackup
             connection.setReadTimeout(15000);
             int code = connection.getResponseCode();
             if (code != 200) {
-                throw new RenException("备份文件读取失败，HTTP " + code);
+                throw new ServiceException("备份文件读取失败，HTTP " + code);
             }
             try (InputStream in = connection.getInputStream()) {
                 byte[] bytes = in.readAllBytes();
@@ -134,7 +134,7 @@ public class DeviceBackupHistoryServiceImpl extends CrudServiceImpl<DeviceBackup
                 return list;
             }
         } catch (Exception e) {
-            throw new RenException("备份文件读取失败: " + e.getMessage());
+            throw new ServiceException("备份文件读取失败: " + e.getMessage());
         } finally {
             if (connection != null) {
                 connection.disconnect();

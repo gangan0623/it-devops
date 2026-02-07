@@ -3,7 +3,7 @@
 package net.leoch.common.aspect;
 
 import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -28,7 +28,7 @@ public class RedisAspect {
             result = point.proceed();
         } catch (Exception e) {
             logger.error("redis error", e);
-            throw new RenException(ErrorCode.REDIS_ERROR);
+            throw new ServiceException(ErrorCode.REDIS_ERROR);
         }
         return result;
     }

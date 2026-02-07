@@ -109,27 +109,64 @@
       <el-card shadow="never" class="home-card home-card--alerts">
         <div class="card-title card-title--row">
           <span>实时告警情况</span>
-          <span class="card-link" @click="goAlertRecord">查看详情</span>
+          <span class="card-link" @click="goProblem">查看详情</span>
         </div>
-        <el-table :data="summary.recentAlerts" height="280" border>
-          <el-table-column prop="instance" label="实例" min-width="140" show-overflow-tooltip />
-          <el-table-column prop="hostName" label="主机名" min-width="140" show-overflow-tooltip />
-          <el-table-column prop="alertName" label="告警名称" min-width="160" show-overflow-tooltip />
-          <el-table-column prop="severity" label="级别" min-width="80">
-            <template v-slot="scope">
-              <el-tag v-if="scope.row.severity === 'critical'" size="small" type="danger">灾难</el-tag>
-              <el-tag v-else-if="scope.row.severity === 'warning'" size="small" type="warning">重要</el-tag>
-              <el-tag v-else-if="scope.row.severity === 'info'" size="small" type="info">信息</el-tag>
-              <el-tag v-else size="small" type="success">恢复</el-tag>
+        <el-table :data="summary.recentAlerts" height="280" border class="alert-record-table">
+          <el-table-column prop="time" label="时间" header-align="center" align="center" width="165" />
+          <el-table-column label="严重性" header-align="center" align="center" width="90">
+            <template #default="scope">
+              <span :class="severityClass(scope.row)">{{ formatSeverity(scope.row.severity) }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="status" label="状态" min-width="80">
-            <template v-slot="scope">
-              <el-tag v-if="scope.row.status === 'firing'" size="small" type="danger">告警中</el-tag>
-              <el-tag v-else size="small" type="success">已恢复</el-tag>
+          <el-table-column label="状态" header-align="center" align="center" width="90">
+            <template #default="scope">
+              <span :class="statusClass(scope.row.status)">{{ formatStatus(scope.row.status) }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="time" label="时间" min-width="150" />
+          <el-table-column prop="hostName" label="主机名" header-align="center" align="center" min-width="180">
+            <template #default="scope">
+              <el-tooltip placement="top" effect="light" :show-after="250">
+                <template #content>
+                  <div class="event-tip">
+                    <div class="event-tip__title">主机信息</div>
+                    <div class="event-tip__group">
+                      <div class="event-tip__row">
+                        <span class="event-tip__key">主机名</span>
+                        <span class="event-tip__value">{{ scope.row.hostName || "-" }}</span>
+                      </div>
+                      <div class="event-tip__row">
+                        <span class="event-tip__key">实例</span>
+                        <span class="event-tip__value">{{ scope.row.instance || "-" }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+                <span>{{ scope.row.hostName || "-" }}</span>
+              </el-tooltip>
+            </template>
+          </el-table-column>
+          <el-table-column prop="alertName" label="告警名称" header-align="center" align="center" min-width="220">
+            <template #default="scope">
+              <el-tooltip placement="top" effect="light" :show-after="250">
+                <template #content>
+                  <div class="event-tip">
+                    <div class="event-tip__title">告警详情</div>
+                    <div class="event-tip__group">
+                      <div class="event-tip__row">
+                        <span class="event-tip__key">告警名</span>
+                        <span class="event-tip__value">{{ scope.row.alertName || "-" }}</span>
+                      </div>
+                      <div class="event-tip__row">
+                        <span class="event-tip__key">实例</span>
+                        <span class="event-tip__value">{{ scope.row.instance || "-" }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+                <span>{{ scope.row.alertName || "-" }}</span>
+              </el-tooltip>
+            </template>
+          </el-table-column>
         </el-table>
       </el-card>
     </div>
@@ -232,8 +269,39 @@ const goBackupRecord = () => {
   router.push({ path: "/ops/devicebackup-record" });
 };
 
-const goAlertRecord = () => {
-  router.push({ path: "/alert/record" });
+const goProblem = () => {
+  router.push({ path: "/alert/problem" });
+};
+
+const formatSeverity = (value: string) => {
+  const s = String(value || "").toLowerCase();
+  if (s === "critical") return "灾难";
+  if (s === "warning") return "重要";
+  if (s === "info") return "信息";
+  if (s === "recover" || s === "resolved") return "恢复";
+  return value;
+};
+
+const formatStatus = (value: string) => {
+  const s = String(value || "").toLowerCase();
+  if (s === "firing") return "告警";
+  if (s === "resolved") return "恢复";
+  return value;
+};
+
+const severityClass = (row: any) => {
+  const status = String(row?.status || "").toLowerCase();
+  if (status === "resolved") return "severity-tag severity-tag--resolved";
+  const severity = String(row?.severity || "").toLowerCase();
+  if (severity === "critical") return "severity-tag severity-tag--critical";
+  if (severity === "warning") return "severity-tag severity-tag--warning";
+  return "severity-tag severity-tag--info";
+};
+
+const statusClass = (value: string) => {
+  const s = String(value || "").toLowerCase();
+  if (s === "resolved") return "status-tag status-tag--ok";
+  return "status-tag status-tag--bad";
 };
 
 const sseRef = ref<EventSource | null>(null);
@@ -280,7 +348,7 @@ onBeforeUnmount(() => {
   grid-template-areas:
     "overview diff monitor"
     "alerts alerts alerts";
-  gap: 12px;
+  gap: 14px;
 }
 
 .home-overview { grid-area: overview; }
@@ -290,9 +358,11 @@ onBeforeUnmount(() => {
 
 .home-card {
   border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04), 0 2px 4px -2px rgba(0, 0, 0, 0.02);
 }
 
-/* 统一顶部三个卡片高度：改为 360px，更透气 */
+/* 顶部三个卡片高度统一 */
 .top-card {
   height: 360px !important;
 }
@@ -310,15 +380,15 @@ onBeforeUnmount(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
-  padding: 24px; /* 内部 Padding 再次加大 */
+  padding: 20px;
 }
 
-/* --- 总览卡片样式优化 --- */
+/* --- 总览卡片 --- */
 .overview-top {
   flex: 1;
   display: flex;
   flex-direction: column;
-  justify-content: center; /* 关键：垂直居中，消除上下留白 */
+  justify-content: center;
   min-height: 0;
 }
 
@@ -346,15 +416,15 @@ onBeforeUnmount(() => {
 }
 
 .backup-percentage-value {
-  font-size: 20px;
+  font-size: 22px;
   font-weight: 700;
-  color: #334155;
+  color: #0f172a;
   line-height: 1.2;
 }
 
 .backup-percentage-label {
   font-size: 12px;
-  color: #94a3b8;
+  color: #64748b;
 }
 
 .backup-info {
@@ -368,8 +438,8 @@ onBeforeUnmount(() => {
 .backup-round-tag {
   align-self: flex-start;
   background: #f1f5f9;
-  color: #64748b;
-  padding: 2px 8px;
+  color: #475569;
+  padding: 4px 10px;
   border-radius: 4px;
   font-size: 12px;
   font-weight: 500;
@@ -382,81 +452,91 @@ onBeforeUnmount(() => {
 
 .backup-detail-item .label {
   font-size: 12px;
-  color: #94a3b8;
+  color: #64748b;
   margin-bottom: 2px;
 }
 
 .backup-detail-item .value {
   font-size: 14px;
   font-weight: 600;
-  color: #334155;
+  color: #0f172a;
 }
 
 .backup-time-row .label {
   font-size: 12px;
-  color: #94a3b8;
+  color: #64748b;
   display: none;
 }
 
 .backup-time-row .value {
   font-size: 12px;
-  color: #94a3b8;
+  color: #64748b;
 }
 
+/* 指标网格 */
 .metric-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 16px; /* 间距加大 */
+  gap: 14px;
 }
 
 .metric-item {
   background: #f8fafc;
-  border-radius: 8px; /* 圆角加大 */
-  padding: 16px 8px; /* 方块高度加大 */
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 14px 8px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.metric-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
 }
 
 .metric-value {
-  font-size: 24px; /* 数字变大 */
+  font-size: 26px;
   font-weight: 700;
   color: #0f172a;
   line-height: 1.2;
 }
 
 .metric-label {
-  font-size: 13px; /* 文字微调 */
-  color: #64748b;
+  font-size: 13px;
+  color: #475569;
   margin-top: 4px;
+  font-weight: 500;
 }
 
 .backup-divider {
   height: 1px;
-  background: #e2e8f0; /* 颜色更淡一点 */
-  margin: 16px 0; /* 分割线间距加大 */
+  background: #e2e8f0;
+  margin: 14px 0;
   flex-shrink: 0;
 }
 
 .backup-stats {
   display: flex;
   flex-direction: column;
-  gap: 12px; /* 统计行间距加大 */
+  gap: 12px;
 }
 
 .backup-row {
   display: flex;
   justify-content: space-between;
-  font-size: 14px; /* 字号微调 */
+  font-size: 14px;
   line-height: 1.5;
   color: #334155;
 }
 
+/* 卡片标题 */
 .card-title {
-  font-size: 16px; /* 标题加大 */
+  font-size: 15px;
   font-weight: 600;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   color: #0f172a;
   flex-shrink: 0;
 }
@@ -465,10 +545,10 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
-  font-size: 16px; /* 标题加大 */
+  gap: 10px;
+  font-size: 15px;
   font-weight: 600;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   color: #0f172a;
   flex-shrink: 0;
 }
@@ -478,24 +558,81 @@ onBeforeUnmount(() => {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
 }
 
+/* 卡片链接按钮 */
 .card-link {
   cursor: pointer;
   font-size: 12px;
-  padding: 1px 8px;
-  border-radius: 999px;
-  background: #0ea5e9;
+  font-weight: 500;
+  padding: 4px 10px;
+  border-radius: 4px;
+  background: #3b82f6;
   color: #fff;
-  transform: scale(0.9);
+  transition: background 0.15s ease;
 }
 
-.success { color: #16a34a; }
-.danger { color: #dc2626; }
+.card-link:hover {
+  background: #2563eb;
+}
+
+.success { color: #10b981; }
+.danger { color: #ef4444; }
 .diff-search { margin-bottom: 12px; flex-shrink: 0; }
 .card-title--row .el-button-group { flex-shrink: 0; }
-.diff-switch { padding: 5px 8px; }
+.diff-switch { padding: 5px 10px; }
+
+/* 告警表格 */
+.alert-record-table :deep(.cell) {
+  white-space: nowrap;
+}
+
+/* 事件提示框 */
+.event-tip {
+  min-width: 320px;
+  max-width: 420px;
+}
+
+.event-tip__title {
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f172a;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.event-tip__group {
+  margin-bottom: 10px;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 6px;
+}
+
+.event-tip__row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 6px;
+  line-height: 1.5;
+}
+
+.event-tip__row:last-child {
+  margin-bottom: 0;
+}
+
+.event-tip__key {
+  flex: 0 0 64px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.event-tip__value {
+  flex: 1;
+  white-space: normal;
+  word-break: break-all;
+  color: #0f172a;
+}
 
 @media (max-width: 1200px) {
   .home-grid {

@@ -3,67 +3,58 @@
 package net.leoch.common.exception;
 
 
+import lombok.Getter;
+import lombok.Setter;
 import net.leoch.common.utils.MessageUtils;
+
+import java.io.Serial;
 
 /**
  * 自定义异常
  *
  * @author Taohongqiang
  */
-public class RenException extends RuntimeException {
-	private static final long serialVersionUID = 1L;
+@Setter
+@Getter
+public class ServiceException extends RuntimeException {
+	@Serial
+    private static final long serialVersionUID = 1L;
 
     private int code;
 	private String msg;
 
-	public RenException(int code) {
+	public ServiceException(int code) {
 		this.code = code;
 		this.msg = MessageUtils.getMessage(code);
 	}
 
-	public RenException(int code, String... params) {
+	public ServiceException(int code, String... params) {
 		this.code = code;
 		this.msg = MessageUtils.getMessage(code, params);
 	}
 
-	public RenException(int code, Throwable e) {
+	public ServiceException(int code, Throwable e) {
 		super(e);
 		this.code = code;
 		this.msg = MessageUtils.getMessage(code);
 	}
 
-	public RenException(int code, Throwable e, String... params) {
+	public ServiceException(int code, Throwable e, String... params) {
 		super(e);
 		this.code = code;
 		this.msg = MessageUtils.getMessage(code, params);
 	}
 
-	public RenException(String msg) {
+	public ServiceException(String msg) {
 		super(msg);
 		this.code = ErrorCode.INTERNAL_SERVER_ERROR;
 		this.msg = msg;
 	}
 
-	public RenException(String msg, Throwable e) {
+	public ServiceException(String msg, Throwable e) {
 		super(msg, e);
 		this.code = ErrorCode.INTERNAL_SERVER_ERROR;
 		this.msg = msg;
-	}
-
-	public String getMsg() {
-		return msg;
-	}
-
-	public void setMsg(String msg) {
-		this.msg = msg;
-	}
-
-	public int getCode() {
-		return code;
-	}
-
-	public void setCode(int code) {
-		this.code = code;
 	}
 
 }

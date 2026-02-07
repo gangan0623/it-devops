@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import lombok.AllArgsConstructor;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.service.impl.BaseServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
@@ -121,7 +121,7 @@ public class SysParamsServiceImpl extends BaseServiceImpl<SysParamsDao, SysParam
         try {
             return clazz.newInstance();
         } catch (Exception e) {
-            throw new RenException(ErrorCode.PARAMS_GET_ERROR);
+            throw new ServiceException(ErrorCode.PARAMS_GET_ERROR);
         }
     }
 

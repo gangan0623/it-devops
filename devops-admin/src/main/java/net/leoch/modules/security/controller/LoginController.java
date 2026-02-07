@@ -10,7 +10,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.utils.IpUtils;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
@@ -89,7 +89,7 @@ public class LoginController {
             log.setCreatorName(login.getUsername());
             sysLogLoginService.save(log);
 
-            throw new RenException(ErrorCode.ACCOUNT_PASSWORD_ERROR);
+            throw new ServiceException(ErrorCode.ACCOUNT_PASSWORD_ERROR);
         }
 
         //密码错误
@@ -99,7 +99,7 @@ public class LoginController {
             log.setCreatorName(user.getUsername());
             sysLogLoginService.save(log);
 
-            throw new RenException(ErrorCode.ACCOUNT_PASSWORD_ERROR);
+            throw new ServiceException(ErrorCode.ACCOUNT_PASSWORD_ERROR);
         }
 
         //账号停用
@@ -109,7 +109,7 @@ public class LoginController {
             log.setCreatorName(user.getUsername());
             sysLogLoginService.save(log);
 
-            throw new RenException(ErrorCode.ACCOUNT_DISABLE);
+            throw new ServiceException(ErrorCode.ACCOUNT_DISABLE);
         }
 
         //登录成功

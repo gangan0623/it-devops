@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.constant.Constant;
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.service.impl.CrudServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
@@ -111,11 +111,11 @@ public class DeviceBackupRecordServiceImpl extends CrudServiceImpl<DeviceBackupR
         }
         DeviceBackupRecordDTO current = getByIp(request.getIp());
         if (current == null || current.getUrl() == null) {
-            throw new RenException("当前记录不存在或URL为空");
+            throw new ServiceException("当前记录不存在或URL为空");
         }
         DeviceBackupHistoryDTO history = deviceBackupHistoryService.get(request.getHistoryId());
         if (history == null || history.getUrl() == null) {
-            throw new RenException("历史记录不存在或URL为空");
+            throw new ServiceException("历史记录不存在或URL为空");
         }
         List<java.util.Map<String, Object>> data = deviceBackupHistoryService.diffByUrls(history.getUrl(), current.getUrl());
         return toDiffLines(data);

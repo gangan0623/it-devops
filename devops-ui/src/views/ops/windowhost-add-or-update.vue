@@ -1,6 +1,6 @@
 <template>
   <el-dialog v-model="visible" :title="!dataForm.id ? '新增Windows主机' : '修改Windows主机'" width="760px" :close-on-click-modal="false" :close-on-press-escape="false">
-    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="host-form">
+    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="dialog-form">
       <div class="form-section-title">主机信息</div>
       <el-form-item label="地址" prop="instance">
         <div class="host-instance">
@@ -60,8 +60,10 @@
       </el-form-item>
               </el-form>
     <template #footer>
-      <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
+      <div class="dialog-footer">
+        <el-button @click="visible = false">取消</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
+      </div>
     </template>
   </el-dialog>
 </template>
@@ -282,21 +284,9 @@ const parseInstance = (instance: string) => {
   align-items: center;
   width: 100%;
 }
-.host-form {
-  max-height: 64vh;
-  overflow-y: auto;
-  padding-right: 6px;
-}
-.form-section-title {
-  margin: 4px 0 10px;
-  padding-left: 8px;
-  border-left: 3px solid #409eff;
-  color: #1e293b;
-  font-weight: 600;
-  font-size: 13px;
-}
 .host-instance__sep {
   margin: 0 8px;
+  color: #94a3b8;
 }
 .host-instance__port {
   width: 120px;

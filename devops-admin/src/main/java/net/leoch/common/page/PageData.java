@@ -24,6 +24,12 @@ public class PageData<T> implements Serializable {
     @Schema(title = "列表数据")
     private List<T> list;
 
+    @Schema(title = "告警数量（问题页专用）")
+    private int firingCount;
+
+    @Schema(title = "恢复数量（问题页专用）")
+    private int resolvedCount;
+
     /**
      * 分页
      * @param list   列表数据

@@ -8,7 +8,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import net.leoch.common.constant.Constant;
-import net.leoch.common.exception.RenException;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.service.impl.CrudServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
@@ -136,7 +136,7 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         if (entity == null) {
             return null;
         }
-        String current = fetchVersion(entity);
+        String current = stripVersionPrefix(fetchVersion(entity));
         String latest = fetchLatestVersion(normalizeType(entity.getType()));
         Integer updateAvailable = null;
         if (StrUtil.isNotBlank(current) && StrUtil.isNotBlank(latest)) {
@@ -218,7 +218,7 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
 
     private void validateUnique(MonitorComponentDTO dto) {
         if (dto != null && existsByIpPortOrName(dto.getIp(), dto.getPort(), dto.getName(), dto.getId())) {
-            throw new RenException("IP端口或名称已存在");
+            throw new ServiceException("IP端口或名称已存在");
         }
     }
 
@@ -275,7 +275,7 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         if (StrUtil.isBlank(base)) {
             return null;
         }
-        if (TYPE_PROMETHEUS.equals(type) || TYPE_VICTORIAMETRICS.equals(type)) {
+        if (TYPE_PROMETHEUS.equals(type)) {
             String json = httpGet(base + "/api/v1/status/buildinfo");
             String version = parseJsonVersion(json, "data", "version");
             if (StrUtil.isNotBlank(version)) {
@@ -327,7 +327,14 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         if (StrUtil.isBlank(tag)) {
             return null;
         }
-        return tag.startsWith("v") ? tag.substring(1) : tag;
+        return stripVersionPrefix(tag);
+    }
+
+    private String stripVersionPrefix(String version) {
+        if (StrUtil.isBlank(version)) {
+            return version;
+        }
+        return version.startsWith("v") ? version.substring(1) : version;
     }
 
     private String parseJsonVersion(String json, String... keys) {

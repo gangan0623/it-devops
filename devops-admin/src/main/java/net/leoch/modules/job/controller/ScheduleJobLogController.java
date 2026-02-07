@@ -41,9 +41,7 @@ public class ScheduleJobLogController {
     })
     @SaCheckPermission("sys:schedule:log")
     public Result<PageData<ScheduleJobLogDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
-        PageData<ScheduleJobLogDTO> page = scheduleJobLogService.page(params);
-
-        return new Result<PageData<ScheduleJobLogDTO>>().ok(page);
+        return new Result<PageData<ScheduleJobLogDTO>>().ok(scheduleJobLogService.page(params));
     }
 
     @GetMapping("{id}")
