@@ -3,6 +3,7 @@
 package net.leoch.modules.oss.cloud;
 
 import net.leoch.common.constant.Constant;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.utils.SpringContextUtils;
 import net.leoch.modules.oss.service.SysOssConfigService;
 
@@ -31,7 +32,7 @@ public final class OSSFactory {
             return new MinioCloudStorageService(config);
         }
 
-        return null;
+        throw new ServiceException("不支持的存储类型: " + config.getType());
     }
 
 }

@@ -2,7 +2,7 @@
 
 package net.leoch.modules.job.dao;
 
-import net.leoch.common.dao.BaseDao;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import net.leoch.modules.job.entity.ScheduleJobLogEntity;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -12,6 +12,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @author Taohongqiang
  */
 @Mapper
-public interface ScheduleJobLogDao extends BaseDao<ScheduleJobLogEntity> {
+public interface ScheduleJobLogDao extends BaseMapper<ScheduleJobLogEntity> {
 	
 }

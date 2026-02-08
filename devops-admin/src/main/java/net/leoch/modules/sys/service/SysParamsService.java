@@ -1,15 +1,12 @@
-
-
 package net.leoch.modules.sys.service;
 
-
+import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.common.service.BaseService;
 import net.leoch.modules.sys.dto.SysParamsDTO;
+import net.leoch.modules.sys.dto.SysParamsPageRequest;
 import net.leoch.modules.sys.entity.SysParamsEntity;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 参数管理
@@ -17,11 +14,11 @@ import java.util.Map;
  * @author Taohongqiang
  * @since 1.0.0
  */
-public interface SysParamsService extends BaseService<SysParamsEntity> {
+public interface SysParamsService extends IService<SysParamsEntity> {
 
-    PageData<SysParamsDTO> page(Map<String, Object> params);
+    PageData<SysParamsDTO> page(SysParamsPageRequest request);
 
-    List<SysParamsDTO> list(Map<String, Object> params);
+    List<SysParamsDTO> list(SysParamsPageRequest request);
 
     SysParamsDTO get(Long id);
 

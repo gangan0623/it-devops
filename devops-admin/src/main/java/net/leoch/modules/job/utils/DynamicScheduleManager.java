@@ -127,7 +127,7 @@ public class DynamicScheduleManager {
             jobLog.setError(limitError(ExceptionUtils.getErrorStackTrace(e)));
         } finally {
             try {
-                scheduleJobLogService.insert(jobLog);
+                scheduleJobLogService.save(jobLog);
             } catch (Exception ex) {
                 log.error("[定时任务] 任务日志保存失败，任务ID: {}", job.getId(), ex);
             }

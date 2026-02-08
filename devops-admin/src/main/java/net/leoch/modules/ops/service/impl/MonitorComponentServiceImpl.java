@@ -2,15 +2,14 @@ package net.leoch.modules.ops.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
-import net.leoch.common.service.impl.CrudServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.common.validator.ValidatorUtils;
@@ -22,6 +21,7 @@ import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
 import net.leoch.modules.ops.service.MonitorComponentService;
 import net.leoch.modules.security.user.SecurityUser;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -29,15 +29,19 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 监控组件
  */
+@Slf4j
 @Service
-public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponentDao, MonitorComponentEntity, MonitorComponentDTO> implements MonitorComponentService {
+public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentDao, MonitorComponentEntity> implements MonitorComponentService {
 
     private static final String TYPE_PROMETHEUS = "prometheus";
     private static final String TYPE_VMALERT = "vmalert";
@@ -46,26 +50,13 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
     private static final String TYPE_BLACKBOX = "blackbox";
 
     @Override
-    public QueryWrapper<MonitorComponentEntity> getWrapper(Map<String, Object> params) {
-        QueryWrapper<MonitorComponentEntity> wrapper = new QueryWrapper<>();
-        LambdaQueryWrapper<MonitorComponentEntity> lambda = wrapper.lambda();
-        String name = (String) params.get("name");
-        String type = (String) params.get("type");
-        String ip = (String) params.get("ip");
-        lambda.like(StrUtil.isNotBlank(name), MonitorComponentEntity::getName, name);
-        lambda.eq(StrUtil.isNotBlank(type), MonitorComponentEntity::getType, type);
-        lambda.like(StrUtil.isNotBlank(ip), MonitorComponentEntity::getIp, ip);
-        return wrapper;
-    }
-
-    @Override
     public PageData<MonitorComponentDTO> page(MonitorComponentPageRequest request) {
         LambdaQueryWrapper<MonitorComponentEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StrUtil.isNotBlank(request.getName()), MonitorComponentEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getType()), MonitorComponentEntity::getType, normalizeType(request.getType()));
         wrapper.like(StrUtil.isNotBlank(request.getIp()), MonitorComponentEntity::getIp, request.getIp());
         Page<MonitorComponentEntity> page = buildPage(request);
-        IPage<MonitorComponentEntity> result = baseDao.selectPage(page, wrapper);
+        IPage<MonitorComponentEntity> result = this.page(page, wrapper);
         return new PageData<>(ConvertUtils.sourceToTarget(result.getRecords(), MonitorComponentDTO.class), result.getTotal());
     }
 
@@ -74,7 +65,7 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         if (request == null || request.getId() == null) {
             return null;
         }
-        return ConvertUtils.sourceToTarget(baseDao.selectById(request.getId()), MonitorComponentDTO.class);
+        return ConvertUtils.sourceToTarget(this.getById(request.getId()), MonitorComponentDTO.class);
     }
 
     @Override
@@ -84,7 +75,8 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         if (request != null && request.getType() != null) {
             request.setType(normalizeType(request.getType()));
         }
-        super.save(request);
+        MonitorComponentEntity entity = ConvertUtils.sourceToTarget(request, MonitorComponentEntity.class);
+        this.save(entity);
     }
 
     @Override
@@ -94,7 +86,8 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         if (request != null && request.getType() != null) {
             request.setType(normalizeType(request.getType()));
         }
-        super.update(request);
+        MonitorComponentEntity entity = ConvertUtils.sourceToTarget(request, MonitorComponentEntity.class);
+        this.updateById(entity);
     }
 
     @Override
@@ -102,7 +95,7 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
-        super.delete(request.getIds());
+        this.removeByIds(Arrays.asList(request.getIds()));
     }
 
     @Override
@@ -118,7 +111,7 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         if (request == null || request.getId() == null) {
             return false;
         }
-        MonitorComponentEntity entity = baseDao.selectById(request.getId());
+        MonitorComponentEntity entity = this.getById(request.getId());
         if (entity == null) {
             return false;
         }
@@ -132,7 +125,7 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         if (request == null || request.getId() == null) {
             return null;
         }
-        MonitorComponentEntity entity = baseDao.selectById(request.getId());
+        MonitorComponentEntity entity = this.getById(request.getId());
         if (entity == null) {
             return null;
         }
@@ -151,8 +144,8 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         update.setLastCheckTime(new Date());
         update.setUpdater(SecurityUser.getUserId());
         update.setUpdateDate(new Date());
-        baseDao.update(update, wrapper);
-        MonitorComponentEntity refreshed = baseDao.selectById(entity.getId());
+        this.update(update, wrapper);
+        MonitorComponentEntity refreshed = this.getById(entity.getId());
         return ConvertUtils.sourceToTarget(refreshed, MonitorComponentDTO.class);
     }
 
@@ -160,7 +153,7 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
     public List<MonitorComponentDTO> list(MonitorComponentListRequest request) {
         LambdaQueryWrapper<MonitorComponentEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByDesc(MonitorComponentEntity::getUpdateDate);
-        List<MonitorComponentEntity> list = baseDao.selectList(wrapper);
+        List<MonitorComponentEntity> list = this.list(wrapper);
         return ConvertUtils.sourceToTarget(list, MonitorComponentDTO.class);
     }
 
@@ -183,12 +176,7 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         if (excludeId != null) {
             wrapper.ne(MonitorComponentEntity::getId, excludeId);
         }
-        return baseDao.selectCount(wrapper) > 0;
-    }
-
-    @Override
-    public PageData<MonitorComponentDTO> page(Map<String, Object> params) {
-        return super.page(params);
+        return this.count(wrapper) > 0;
     }
 
     private Page<MonitorComponentEntity> buildPage(MonitorComponentPageRequest request) {
@@ -237,7 +225,7 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         update.setUpdateDate(new Date());
         LambdaUpdateWrapper<MonitorComponentEntity> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(MonitorComponentEntity::getId, id);
-        baseDao.update(update, wrapper);
+        this.update(update, wrapper);
     }
 
     private boolean probeByType(MonitorComponentEntity entity) {
@@ -371,8 +359,8 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
                 continue;
             }
             String labels = line.substring(braceStart + 1, braceEnd);
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(^|,)\\s*" + java.util.regex.Pattern.quote(key) + "=\"([^\"]*)\"");
-            java.util.regex.Matcher matcher = pattern.matcher(labels);
+            Pattern pattern = Pattern.compile("(^|,)\\s*" + Pattern.quote(key) + "=\"([^\"]*)\"");
+            Matcher matcher = pattern.matcher(labels);
             if (matcher.find()) {
                 return matcher.group(2);
             }

@@ -1,17 +1,11 @@
-
-
 package net.leoch.modules.sys.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
-import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
@@ -27,14 +21,13 @@ import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.dto.PasswordDTO;
 import net.leoch.modules.sys.dto.SysUserDTO;
+import net.leoch.modules.sys.dto.SysUserPageRequest;
 import net.leoch.modules.sys.excel.SysUserExcel;
 import net.leoch.modules.sys.service.SysRoleUserService;
 import net.leoch.modules.sys.service.SysUserService;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 用户管理
@@ -51,18 +44,9 @@ public class SysUserController {
 
     @GetMapping("page")
     @Operation(summary = "分页")
-    @Parameters({
-            @Parameter(name = Constant.PAGE, description = "当前页码，从1开始", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.LIMIT, description = "每页显示记录数", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = "username", description = "用户名", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = "gender", description = "性别", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = "deptId", description = "部门ID", in = ParameterIn.QUERY, ref = "String")
-    })
     @SaCheckPermission("sys:user:page")
-    public Result<PageData<SysUserDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
-        PageData<SysUserDTO> page = sysUserService.page(params);
+    public Result<PageData<SysUserDTO>> page(SysUserPageRequest request) {
+        PageData<SysUserDTO> page = sysUserService.page(request);
 
         return new Result<PageData<SysUserDTO>>().ok(page);
     }
@@ -140,7 +124,7 @@ public class SysUserController {
         //效验数据
         AssertUtils.isArrayEmpty(ids, "id");
 
-        sysUserService.deleteBatchIds(Arrays.asList(ids));
+        sysUserService.delete(ids);
 
         return new Result<>();
     }
@@ -149,9 +133,8 @@ public class SysUserController {
     @Operation(summary = "导出")
     @LogOperation("导出")
     @SaCheckPermission("sys:user:export")
-    @Parameter(name = "username", description = "用户名", in = ParameterIn.QUERY, ref = "String")
-    public void export(@Parameter(hidden = true) @RequestParam Map<String, Object> params, HttpServletResponse response) throws Exception {
-        List<SysUserDTO> list = sysUserService.list(params);
+    public void export(SysUserPageRequest request, HttpServletResponse response) throws Exception {
+        List<SysUserDTO> list = sysUserService.list(request);
 
         ExcelUtils.exportExcelToTarget(response, null, "用户管理", list, SysUserExcel.class);
     }

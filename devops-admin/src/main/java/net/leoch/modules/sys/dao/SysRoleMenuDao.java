@@ -2,7 +2,7 @@
 
 package net.leoch.modules.sys.dao;
 
-import net.leoch.common.dao.BaseDao;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import net.leoch.modules.sys.entity.SysRoleMenuEntity;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -14,7 +14,7 @@ import java.util.List;
  * @author Taohongqiang
  */
 @Mapper
-public interface SysRoleMenuDao extends BaseDao<SysRoleMenuEntity> {
+public interface SysRoleMenuDao extends BaseMapper<SysRoleMenuEntity> {
 
 	/**
 	 * 根据角色ID，获取菜单ID列表

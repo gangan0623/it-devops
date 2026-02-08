@@ -4,8 +4,7 @@ package net.leoch.common.utils;
 
 import cn.hutool.core.util.StrUtil;
 import jakarta.servlet.http.HttpServletRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 
 
 /**
@@ -13,8 +12,8 @@ import org.slf4j.LoggerFactory;
  *
  * @author Taohongqiang
  */
+@Slf4j
 public class IpUtils {
-	private static Logger logger = LoggerFactory.getLogger(IpUtils.class);
 
 	/**
 	 * 获取IP地址
@@ -43,7 +42,7 @@ public class IpUtils {
                 ip = request.getRemoteAddr();
             }
         } catch (Exception e) {
-        	logger.error("IPUtils ERROR ", e);
+        	log.error("[IP工具] 获取IP地址失败", e);
         }
 
         return ip;

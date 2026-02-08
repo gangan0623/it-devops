@@ -1,9 +1,9 @@
 package net.leoch.modules.ops.service;
 
-import net.leoch.common.service.CrudService;
-import net.leoch.modules.ops.dto.OpsHostStatusSummaryDTO;
-import net.leoch.modules.ops.dto.WindowHostDTO;
-import net.leoch.modules.ops.dto.WindowHostPageRequest;
+import com.baomidou.mybatisplus.extension.service.IService;
+import jakarta.servlet.http.HttpServletResponse;
+import net.leoch.common.page.PageData;
+import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.WindowHostEntity;
 
 /**
@@ -12,29 +12,29 @@ import net.leoch.modules.ops.entity.WindowHostEntity;
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
-public interface WindowHostService extends CrudService<WindowHostEntity, WindowHostDTO> {
+public interface WindowHostService extends IService<WindowHostEntity> {
 
-    net.leoch.common.page.PageData<WindowHostDTO> page(net.leoch.modules.ops.dto.WindowHostPageRequest request);
+    PageData<WindowHostDTO> page(WindowHostPageRequest request);
 
-    WindowHostDTO get(net.leoch.modules.ops.dto.WindowHostIdRequest request);
+    WindowHostDTO get(WindowHostIdRequest request);
 
     void save(WindowHostDTO dto);
 
     void update(WindowHostDTO dto);
 
-    void updateStatus(net.leoch.modules.ops.dto.WindowHostStatusUpdateRequest request);
+    void updateStatus(WindowHostStatusUpdateRequest request);
 
-    boolean online(net.leoch.modules.ops.dto.WindowHostOnlineRequest request);
+    boolean online(WindowHostOnlineRequest request);
 
-    boolean check(net.leoch.modules.ops.dto.WindowHostCheckRequest request);
+    boolean check(WindowHostCheckRequest request);
 
-    void importExcel(net.leoch.modules.ops.dto.WindowHostImportRequest request) throws Exception;
+    void importExcel(WindowHostImportRequest request) throws Exception;
 
-    void template(jakarta.servlet.http.HttpServletResponse response) throws Exception;
+    void template(HttpServletResponse response) throws Exception;
 
-    void export(net.leoch.modules.ops.dto.WindowHostPageRequest request, jakarta.servlet.http.HttpServletResponse response) throws Exception;
+    void export(WindowHostPageRequest request, HttpServletResponse response) throws Exception;
 
-    void delete(net.leoch.modules.ops.dto.WindowHostDeleteRequest request);
+    void delete(WindowHostDeleteRequest request);
 
     void updateStatus(Long[] ids, Integer status);
 

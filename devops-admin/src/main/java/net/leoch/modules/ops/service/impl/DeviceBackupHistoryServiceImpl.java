@@ -2,14 +2,14 @@ package net.leoch.modules.ops.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import net.leoch.common.exception.ServiceException;
-import net.leoch.common.service.impl.CrudServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.ops.dao.DeviceBackupHistoryDao;
 import net.leoch.modules.ops.dto.DeviceBackupHistoryDTO;
 import net.leoch.modules.ops.entity.DeviceBackupHistoryEntity;
 import net.leoch.modules.ops.service.DeviceBackupHistoryService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -21,17 +21,9 @@ import java.util.*;
 /**
  * 设备备份历史表
  */
+@Slf4j
 @Service
-public class DeviceBackupHistoryServiceImpl extends CrudServiceImpl<DeviceBackupHistoryDao, DeviceBackupHistoryEntity, DeviceBackupHistoryDTO> implements DeviceBackupHistoryService {
-
-    @Override
-    public QueryWrapper<DeviceBackupHistoryEntity> getWrapper(Map<String, Object> params) {
-        String ip = (String) params.get("ip");
-        QueryWrapper<DeviceBackupHistoryEntity> wrapper = new QueryWrapper<>();
-        wrapper.lambda().eq(StrUtil.isNotBlank(ip), DeviceBackupHistoryEntity::getIp, ip);
-        wrapper.lambda().orderByDesc(DeviceBackupHistoryEntity::getBackupTime);
-        return wrapper;
-    }
+public class DeviceBackupHistoryServiceImpl extends ServiceImpl<DeviceBackupHistoryDao, DeviceBackupHistoryEntity> implements DeviceBackupHistoryService {
 
     @Override
     public void saveHistory(String name, String ip, String url, Integer status) {
@@ -44,7 +36,7 @@ public class DeviceBackupHistoryServiceImpl extends CrudServiceImpl<DeviceBackup
         entity.setUrl(url);
         entity.setBackupTime(new Date());
         entity.setBackupStatus(status);
-        baseDao.insert(entity);
+        this.getBaseMapper().insert(entity);
     }
 
     @Override
@@ -55,8 +47,17 @@ public class DeviceBackupHistoryServiceImpl extends CrudServiceImpl<DeviceBackup
         if (limit != null && limit > 0) {
             wrapper.last("limit " + Math.min(limit, 200));
         }
-        List<DeviceBackupHistoryEntity> list = baseDao.selectList(wrapper);
+        List<DeviceBackupHistoryEntity> list = this.list(wrapper);
         return ConvertUtils.sourceToTarget(list, DeviceBackupHistoryDTO.class);
+    }
+
+    @Override
+    public DeviceBackupHistoryDTO get(Long id) {
+        if (id == null) {
+            return null;
+        }
+        DeviceBackupHistoryEntity entity = this.getById(id);
+        return ConvertUtils.sourceToTarget(entity, DeviceBackupHistoryDTO.class);
     }
 
     @Override
@@ -64,8 +65,8 @@ public class DeviceBackupHistoryServiceImpl extends CrudServiceImpl<DeviceBackup
         if (leftId == null || rightId == null) {
             throw new ServiceException("请选择两条记录进行对比");
         }
-        DeviceBackupHistoryEntity left = baseDao.selectById(leftId);
-        DeviceBackupHistoryEntity right = baseDao.selectById(rightId);
+        DeviceBackupHistoryEntity left = this.getById(leftId);
+        DeviceBackupHistoryEntity right = this.getById(rightId);
         if (left == null || right == null) {
             throw new ServiceException("历史记录不存在");
         }
@@ -186,7 +187,7 @@ public class DeviceBackupHistoryServiceImpl extends CrudServiceImpl<DeviceBackup
                 i--;
             }
         }
-        java.util.Collections.reverse(result);
+        Collections.reverse(result);
         return result;
     }
 }

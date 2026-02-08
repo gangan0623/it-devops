@@ -1,25 +1,26 @@
-
-
 package net.leoch.modules.sys.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import net.leoch.common.service.impl.BaseServiceImpl;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.sys.dao.SysRoleMenuDao;
 import net.leoch.modules.sys.entity.SysRoleMenuEntity;
 import net.leoch.modules.sys.service.SysRoleMenuService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 
 /**
  * 角色与菜单对应关系
- * 
+ *
  * @author Taohongqiang
  */
+@Slf4j
 @Service
-public class SysRoleMenuServiceImpl extends BaseServiceImpl<SysRoleMenuDao, SysRoleMenuEntity> implements SysRoleMenuService {
+public class SysRoleMenuServiceImpl extends ServiceImpl<SysRoleMenuDao, SysRoleMenuEntity> implements SysRoleMenuService {
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
@@ -33,31 +34,31 @@ public class SysRoleMenuServiceImpl extends BaseServiceImpl<SysRoleMenuDao, SysR
 		}
 
 		//保存角色菜单关系
+		List<SysRoleMenuEntity> entityList = new ArrayList<>();
 		for(Long menuId : menuIdList){
 			SysRoleMenuEntity sysRoleMenuEntity = new SysRoleMenuEntity();
 			sysRoleMenuEntity.setMenuId(menuId);
 			sysRoleMenuEntity.setRoleId(roleId);
-
-			//保存
-			insert(sysRoleMenuEntity);
+			entityList.add(sysRoleMenuEntity);
 		}
+		this.saveBatch(entityList);
 	}
 
 	@Override
 	public List<Long> getMenuIdList(Long roleId){
-		return baseDao.getMenuIdList(roleId);
+		return this.getBaseMapper().getMenuIdList(roleId);
 	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public void deleteByRoleIds(Long[] roleIds) {
-		baseDao.deleteByRoleIds(roleIds);
+		this.getBaseMapper().deleteByRoleIds(roleIds);
 	}
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)
 	public void deleteByMenuId(Long menuId) {
-		baseDao.deleteByMenuId(menuId);
+		this.getBaseMapper().deleteByMenuId(menuId);
 	}
 
 }

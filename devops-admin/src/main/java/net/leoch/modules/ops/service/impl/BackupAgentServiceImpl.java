@@ -4,18 +4,17 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.redis.RedisKeys;
 import net.leoch.common.redis.RedisUtils;
-import net.leoch.common.service.impl.CrudServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.ExcelUtils;
 import net.leoch.common.validator.ValidatorUtils;
@@ -31,7 +30,9 @@ import net.leoch.modules.ops.excel.BackupAgentExcel;
 import net.leoch.modules.ops.excel.template.BackupAgentImportExcel;
 import net.leoch.modules.ops.service.BackupAgentService;
 import net.leoch.modules.security.user.SecurityUser;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -45,8 +46,9 @@ import java.util.*;
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
+@Slf4j
 @Service
-public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, BackupAgentEntity, BackupAgentDTO> implements BackupAgentService {
+public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentDao, BackupAgentEntity> implements BackupAgentService {
 
     private final DeviceBackupDao deviceBackupDao;
     private final RedisUtils redisUtils;
@@ -57,31 +59,15 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
     }
 
     @Override
-    public QueryWrapper<BackupAgentEntity> getWrapper(Map<String, Object> params) {
-        QueryWrapper<BackupAgentEntity> wrapper = new QueryWrapper<>();
-        LambdaQueryWrapper<BackupAgentEntity> lambda = wrapper.lambda();
-        String id = (String) params.get("id");
-        String instance = (String) params.get("instance");
-        String name = (String) params.get("name");
-        String areaName = (String) params.get("areaName");
-        String status = (String) params.get("status");
-        lambda.eq(StrUtil.isNotBlank(id), BackupAgentEntity::getId, id);
-        lambda.like(StrUtil.isNotBlank(instance), BackupAgentEntity::getInstance, instance);
-        lambda.like(StrUtil.isNotBlank(name), BackupAgentEntity::getName, name);
-        lambda.eq(StrUtil.isNotBlank(areaName), BackupAgentEntity::getAreaName, areaName);
-        lambda.eq(StrUtil.isNotBlank(status), BackupAgentEntity::getStatus, status);
-        return wrapper;
-    }
-
-    @Override
     public PageData<BackupAgentDTO> page(BackupAgentPageRequest request) {
-        LambdaQueryWrapper<BackupAgentEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(StrUtil.isNotBlank(request.getInstance()), BackupAgentEntity::getInstance, request.getInstance());
-        wrapper.like(StrUtil.isNotBlank(request.getName()), BackupAgentEntity::getName, request.getName());
-        wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), BackupAgentEntity::getAreaName, request.getAreaName());
-        wrapper.eq(StrUtil.isNotBlank(request.getStatus()), BackupAgentEntity::getStatus, request.getStatus());
         Page<BackupAgentEntity> page = buildPage(request);
-        IPage<BackupAgentEntity> result = baseDao.selectPage(page, wrapper);
+        IPage<BackupAgentEntity> result = this.page(page,
+                new LambdaQueryWrapper<BackupAgentEntity>()
+                        .like(StrUtil.isNotBlank(request.getInstance()), BackupAgentEntity::getInstance, request.getInstance())
+                        .like(StrUtil.isNotBlank(request.getName()), BackupAgentEntity::getName, request.getName())
+                        .eq(StrUtil.isNotBlank(request.getAreaName()), BackupAgentEntity::getAreaName, request.getAreaName())
+                        .eq(StrUtil.isNotBlank(request.getStatus()), BackupAgentEntity::getStatus, request.getStatus())
+        );
         List<BackupAgentDTO> list = ConvertUtils.sourceToTarget(result.getRecords(), BackupAgentDTO.class);
         fillOnlineStatus(list);
         maskTokens(list);
@@ -93,7 +79,7 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
         if (request == null || request.getId() == null) {
             return null;
         }
-        BackupAgentEntity entity = baseDao.selectById(request.getId());
+        BackupAgentEntity entity = this.getById(request.getId());
         BackupAgentDTO dto = ConvertUtils.sourceToTarget(entity, BackupAgentDTO.class);
         if (dto != null) {
             fillOnlineStatus(Collections.singletonList(dto));
@@ -106,7 +92,8 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
     public void save(BackupAgentSaveRequest request) {
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
         validateUnique(request);
-        super.save(request);
+        BackupAgentEntity entity = ConvertUtils.sourceToTarget(request, BackupAgentEntity.class);
+        this.save(entity);
     }
 
     @Override
@@ -114,12 +101,13 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
         validateUnique(request);
         if (request != null && request.getId() != null && StrUtil.isBlank(request.getToken())) {
-            BackupAgentEntity existing = baseDao.selectById(request.getId());
+            BackupAgentEntity existing = this.getById(request.getId());
             if (existing != null) {
                 request.setToken(existing.getToken());
             }
         }
-        super.update(request);
+        BackupAgentEntity entity = ConvertUtils.sourceToTarget(request, BackupAgentEntity.class);
+        this.updateById(entity);
     }
 
     @Override
@@ -150,7 +138,7 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
     public OpsHostStatusSummaryDTO summary(BackupAgentPageRequest request) {
         LambdaQueryWrapper<BackupAgentEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.select(BackupAgentEntity::getInstance, BackupAgentEntity::getStatus);
-        List<BackupAgentEntity> list = baseDao.selectList(wrapper);
+        List<BackupAgentEntity> list = this.list(wrapper);
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBackupAgentOnlineKey());
         OpsHostStatusSummaryDTO summary = new OpsHostStatusSummaryDTO();
         summary.setTotalCount((long) list.size());
@@ -177,6 +165,7 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void importExcel(BackupAgentImportRequest request) throws Exception {
         if (request == null || request.getFile() == null || request.getFile().isEmpty()) {
             throw new ServiceException("上传文件不能为空");
@@ -195,7 +184,7 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
             entity.setStatus(item.getStatus());
             entityList.add(entity);
         }
-        insertBatch(entityList);
+        this.saveBatch(entityList);
     }
 
     @Override
@@ -210,7 +199,7 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
         wrapper.like(StrUtil.isNotBlank(request.getName()), BackupAgentEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), BackupAgentEntity::getAreaName, request.getAreaName());
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), BackupAgentEntity::getStatus, request.getStatus());
-        List<BackupAgentEntity> list = baseDao.selectList(wrapper);
+        List<BackupAgentEntity> list = this.list(wrapper);
         List<BackupAgentDTO> dtoList = ConvertUtils.sourceToTarget(list, BackupAgentDTO.class);
         maskTokens(dtoList);
         ExcelUtils.exportExcelToTarget(response, null, "备份节点表", dtoList, BackupAgentExcel.class);
@@ -221,21 +210,14 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
-        delete(request.getIds());
-    }
-
-    @Override
-    public List<BackupAgentDTO> list(Map<String, Object> params) {
-        List<BackupAgentDTO> list = super.list(params);
-        maskTokens(list);
-        return list;
-    }
-
-    @Override
-    public BackupAgentDTO get(Long id) {
-        BackupAgentDTO dto = super.get(id);
-        maskToken(dto);
-        return dto;
+        Long[] ids = request.getIds();
+        LambdaQueryWrapper<DeviceBackupEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(DeviceBackupEntity::getAgentId, Arrays.asList(ids));
+        int used = Math.toIntExact(deviceBackupDao.selectCount(wrapper));
+        if (used > 0) {
+            throw new ServiceException("存在绑定的备份设备，无法删除");
+        }
+        this.removeByIds(Arrays.asList(ids));
     }
 
     @Override
@@ -255,7 +237,7 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
         if (excludeId != null) {
             wrapper.ne(BackupAgentEntity::getId, excludeId);
         }
-        return baseDao.selectCount(wrapper) > 0;
+        return this.count(wrapper) > 0;
     }
 
     @Override
@@ -269,21 +251,7 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
         entity.setUpdateDate(new Date());
         LambdaUpdateWrapper<BackupAgentEntity> wrapper = new LambdaUpdateWrapper<>();
         wrapper.in(BackupAgentEntity::getId, Arrays.asList(ids));
-        baseDao.update(entity, wrapper);
-    }
-
-    @Override
-    public void delete(Long[] ids) {
-        if (ids == null || ids.length == 0) {
-            return;
-        }
-        LambdaQueryWrapper<DeviceBackupEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(DeviceBackupEntity::getAgentId, Arrays.asList(ids));
-        int used = Math.toIntExact(deviceBackupDao.selectCount(wrapper));
-        if (used > 0) {
-            throw new ServiceException("存在绑定的备份设备，无法删除");
-        }
-        super.delete(ids);
+        this.update(entity, wrapper);
     }
 
     private Page<BackupAgentEntity> buildPage(BackupAgentPageRequest request) {
@@ -365,7 +333,8 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
                 String body = new String(bytes);
                 return body.contains("\"status\":\"ok\"") || body.contains("\"status\" : \"ok\"") || body.contains("\"status\": \"ok\"");
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.debug("[备份节点] 健康检查失败, instance: {}", instance, e);
             return false;
         } finally {
             if (connection != null) {
@@ -395,7 +364,8 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
                 if (parts.length > 1) {
                     try {
                         port = Integer.parseInt(parts[1]);
-                    } catch (Exception ignore) {
+                    } catch (Exception e) {
+                        log.debug("[备份节点] 端口解析失败, value: {}", parts[1], e);
                         port = -1;
                     }
                 }
@@ -414,7 +384,8 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
                 }
             }
             return new URI(scheme, null, host, port, path, null, null).toString();
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.debug("[备份节点] 健康检查URL构建失败, instance: {}", trimmed, e);
             if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
                 return trimmed.endsWith("/healthz") ? trimmed : trimmed + (trimmed.endsWith("/") ? "healthz" : "/healthz");
             }

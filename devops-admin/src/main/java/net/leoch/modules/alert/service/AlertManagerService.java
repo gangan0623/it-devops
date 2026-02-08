@@ -1,11 +1,13 @@
 package net.leoch.modules.alert.service;
 
 import cn.hutool.core.util.StrUtil;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
 import net.leoch.modules.ops.dao.MonitorComponentDao;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
 import net.leoch.modules.security.user.SecurityUser;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -20,11 +22,14 @@ import java.util.*;
 /**
  * Alertmanager操作
  */
+@Slf4j
 @Service
 public class AlertManagerService {
 
     private static final String TYPE_ALERTMANAGER = "alertmanager";
-    private static final String DEFAULT_ALERTMANAGER_URL = "http://192.168.17.121:9093";
+
+    @Value("${alert.manager.url:http://192.168.17.121:9093}")
+    private String defaultAlertmanagerUrl;
 
     private final MonitorComponentDao monitorComponentDao;
 
@@ -59,7 +64,8 @@ public class AlertManagerService {
             Map<String, Object> response = JsonUtils.parseObject(result, Map.class);
             Object silenceId = response.get("silenceID");
             return silenceId == null ? null : String.valueOf(silenceId);
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.error("[告警管理] 解析silence响应失败", e);
             return null;
         }
     }
@@ -115,7 +121,7 @@ public class AlertManagerService {
                 }
             }
         }
-        return DEFAULT_ALERTMANAGER_URL;
+        return defaultAlertmanagerUrl;
     }
 
     private String buildBaseUrl(MonitorComponentEntity entity) {
@@ -167,7 +173,8 @@ public class AlertManagerService {
                 }
             }
             return null;
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.error("[告警管理] 请求失败, url: {}", target, e);
             return null;
         } finally {
             if (connection != null) {

@@ -15,6 +15,7 @@ import net.leoch.modules.alert.dto.AlertRecordActionDTO;
 import net.leoch.modules.alert.dto.AlertRecordActionRequest;
 import net.leoch.modules.alert.dto.AlertProblemDTO;
 import net.leoch.modules.alert.dto.AlertRecordDTO;
+import net.leoch.modules.alert.dto.AlertRecordPageRequest;
 import net.leoch.modules.alert.service.AlertRecordService;
 import net.leoch.modules.alert.service.AlertSseService;
 import org.springframework.web.bind.annotation.*;
@@ -51,8 +52,8 @@ public class AlertRecordController {
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("alert:record:page")
-    public Result<PageData<AlertRecordDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params){
-        PageData<AlertRecordDTO> page = alertRecordService.page(params);
+    public Result<PageData<AlertRecordDTO>> page(AlertRecordPageRequest request){
+        PageData<AlertRecordDTO> page = alertRecordService.page(request);
 
         return new Result<PageData<AlertRecordDTO>>().ok(page);
     }

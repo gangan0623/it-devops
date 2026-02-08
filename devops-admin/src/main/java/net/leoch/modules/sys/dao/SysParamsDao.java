@@ -2,7 +2,7 @@
 
 package net.leoch.modules.sys.dao;
 
-import net.leoch.common.dao.BaseDao;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import net.leoch.modules.sys.entity.SysParamsEntity;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -16,7 +16,7 @@ import java.util.List;
  * @since 1.0.0
  */
 @Mapper
-public interface SysParamsDao extends BaseDao<SysParamsEntity> {
+public interface SysParamsDao extends BaseMapper<SysParamsEntity> {
     /**
      * 根据参数编码，查询value
      * @param paramCode 参数编码

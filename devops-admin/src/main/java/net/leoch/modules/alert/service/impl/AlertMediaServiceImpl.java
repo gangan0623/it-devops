@@ -1,15 +1,22 @@
 package net.leoch.modules.alert.service.impl;
 
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import net.leoch.common.service.impl.CrudServiceImpl;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import net.leoch.common.page.PageData;
+import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.alert.dao.AlertMediaDao;
 import net.leoch.modules.alert.dto.AlertMediaDTO;
+import net.leoch.modules.alert.dto.AlertMediaPageRequest;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
 import net.leoch.modules.alert.service.AlertMediaService;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
-import java.util.Map;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * 告警媒介
@@ -17,18 +24,49 @@ import java.util.Map;
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
+@Slf4j
 @Service
-public class AlertMediaServiceImpl extends CrudServiceImpl<AlertMediaDao, AlertMediaEntity, AlertMediaDTO> implements AlertMediaService {
+public class AlertMediaServiceImpl extends ServiceImpl<AlertMediaDao, AlertMediaEntity> implements AlertMediaService {
 
     @Override
-    public QueryWrapper<AlertMediaEntity> getWrapper(Map<String, Object> params) {
-        String name = (String) params.get("name");
-        String status = (String) params.get("status");
+    public PageData<AlertMediaDTO> page(AlertMediaPageRequest request) {
+        IPage<AlertMediaEntity> page = this.page(request.buildPage(),
+            new LambdaQueryWrapper<AlertMediaEntity>()
+                .like(StrUtil.isNotBlank(request.getName()), AlertMediaEntity::getName, request.getName())
+                .eq(StrUtil.isNotBlank(request.getStatus()), AlertMediaEntity::getStatus, request.getStatus())
+        );
+        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), AlertMediaDTO.class), page.getTotal());
+    }
 
-        QueryWrapper<AlertMediaEntity> wrapper = new QueryWrapper<>();
-        wrapper.like(StrUtil.isNotBlank(name), "name", name);
-        wrapper.eq(StrUtil.isNotBlank(status), "status", status);
+    @Override
+    public List<AlertMediaDTO> list(AlertMediaPageRequest request) {
+        List<AlertMediaEntity> entityList = this.list(
+            new LambdaQueryWrapper<AlertMediaEntity>()
+                .like(request != null && StrUtil.isNotBlank(request.getName()), AlertMediaEntity::getName, request != null ? request.getName() : null)
+                .eq(request != null && StrUtil.isNotBlank(request.getStatus()), AlertMediaEntity::getStatus, request != null ? request.getStatus() : null)
+        );
+        return ConvertUtils.sourceToTarget(entityList, AlertMediaDTO.class);
+    }
 
-        return wrapper;
+    @Override
+    public AlertMediaDTO get(Long id) {
+        return ConvertUtils.sourceToTarget(this.getById(id), AlertMediaDTO.class);
+    }
+
+    @Override
+    public void save(AlertMediaDTO dto) {
+        AlertMediaEntity entity = ConvertUtils.sourceToTarget(dto, AlertMediaEntity.class);
+        this.save(entity);
+        BeanUtils.copyProperties(entity, dto);
+    }
+
+    @Override
+    public void update(AlertMediaDTO dto) {
+        this.updateById(ConvertUtils.sourceToTarget(dto, AlertMediaEntity.class));
+    }
+
+    @Override
+    public void delete(Long[] ids) {
+        this.removeByIds(Arrays.asList(ids));
     }
 }

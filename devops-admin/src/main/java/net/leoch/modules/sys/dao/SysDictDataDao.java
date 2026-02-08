@@ -2,7 +2,7 @@
 
 package net.leoch.modules.sys.dao;
 
-import net.leoch.common.dao.BaseDao;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import net.leoch.modules.sys.entity.DictData;
 import net.leoch.modules.sys.entity.SysDictDataEntity;
 import org.apache.ibatis.annotations.Mapper;
@@ -16,7 +16,7 @@ import java.util.List;
  * @author Taohongqiang
  */
 @Mapper
-public interface SysDictDataDao extends BaseDao<SysDictDataEntity> {
+public interface SysDictDataDao extends BaseMapper<SysDictDataEntity> {
 
     /**
      * 字典数据列表

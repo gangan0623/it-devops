@@ -1,8 +1,6 @@
-
-
 package net.leoch.modules.sys.service;
 
-import net.leoch.common.service.BaseService;
+import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.modules.sys.entity.SysRoleMenuEntity;
 
 import java.util.List;
@@ -10,10 +8,10 @@ import java.util.List;
 
 /**
  * 角色与菜单对应关系
- * 
+ *
  * @author Taohongqiang
  */
-public interface SysRoleMenuService extends BaseService<SysRoleMenuEntity> {
+public interface SysRoleMenuService extends IService<SysRoleMenuEntity> {
 
 	/**
 	 * 根据角色ID，获取菜单ID列表

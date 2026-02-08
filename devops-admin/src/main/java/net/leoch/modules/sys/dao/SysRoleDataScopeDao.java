@@ -2,7 +2,7 @@
 
 package net.leoch.modules.sys.dao;
 
-import net.leoch.common.dao.BaseDao;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import net.leoch.modules.sys.entity.SysRoleDataScopeEntity;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -15,7 +15,7 @@ import java.util.List;
  * @since 1.0.0
  */
 @Mapper
-public interface SysRoleDataScopeDao extends BaseDao<SysRoleDataScopeEntity> {
+public interface SysRoleDataScopeDao extends BaseMapper<SysRoleDataScopeEntity> {
 
     /**
      * 根据角色ID，获取部门ID列表

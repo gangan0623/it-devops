@@ -14,6 +14,7 @@ import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.alert.dto.AlertTemplateDTO;
+import net.leoch.modules.alert.dto.AlertTemplatePageRequest;
 import net.leoch.modules.alert.dto.AlertTemplatePreviewDTO;
 import net.leoch.modules.alert.dto.AlertTemplateSendTestDTO;
 import net.leoch.modules.alert.service.AlertTemplateService;
@@ -56,8 +57,8 @@ public class AlertTemplateController {
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("alert:template:page")
-    public Result<PageData<AlertTemplateDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params){
-        PageData<AlertTemplateDTO> page = alertTemplateService.page(params);
+    public Result<PageData<AlertTemplateDTO>> page(AlertTemplatePageRequest request){
+        PageData<AlertTemplateDTO> page = alertTemplateService.page(request);
 
         return new Result<PageData<AlertTemplateDTO>>().ok(page);
     }

@@ -2,8 +2,7 @@
 
 package net.leoch.common.utils;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 
 import java.util.ArrayList;
@@ -15,8 +14,8 @@ import java.util.List;
  *
  * @author Taohongqiang
  */
+@Slf4j
 public class ConvertUtils {
-    private static Logger logger = LoggerFactory.getLogger(ConvertUtils.class);
 
     public static <T> T sourceToTarget(Object source, Class<T> target){
         if(source == null){
@@ -27,7 +26,7 @@ public class ConvertUtils {
             targetObject = target.newInstance();
             BeanUtils.copyProperties(source, targetObject);
         } catch (Exception e) {
-            logger.error("convert error ", e);
+            log.error("[对象转换] 转换失败", e);
         }
 
         return targetObject;
@@ -46,7 +45,7 @@ public class ConvertUtils {
                 targetList.add(targetObject);
             }
         }catch (Exception e){
-            logger.error("convert error ", e);
+            log.error("[对象转换] 转换失败", e);
         }
 
         return targetList;

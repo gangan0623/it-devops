@@ -2,7 +2,7 @@
 
 package net.leoch.modules.log.dao;
 
-import net.leoch.common.dao.BaseDao;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import net.leoch.modules.log.entity.SysLogLoginEntity;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -13,6 +13,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 1.0.0
  */
 @Mapper
-public interface SysLogLoginDao extends BaseDao<SysLogLoginEntity> {
+public interface SysLogLoginDao extends BaseMapper<SysLogLoginEntity> {
 	
 }

@@ -1,45 +1,47 @@
-
-
 package net.leoch.modules.sys.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.page.PageData;
-import net.leoch.common.service.impl.BaseServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.sys.dao.SysDictDataDao;
 import net.leoch.modules.sys.dto.SysDictDataDTO;
+import net.leoch.modules.sys.dto.SysDictDataPageRequest;
 import net.leoch.modules.sys.entity.SysDictDataEntity;
 import net.leoch.modules.sys.service.SysDictDataService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
-import java.util.Map;
 
 /**
  * 字典类型
  *
  * @author Taohongqiang
  */
+@Slf4j
 @Service
-public class SysDictDataServiceImpl extends BaseServiceImpl<SysDictDataDao, SysDictDataEntity> implements SysDictDataService {
+public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataDao, SysDictDataEntity> implements SysDictDataService {
 
     @Override
-    public PageData<SysDictDataDTO> page(Map<String, Object> params) {
-        IPage<SysDictDataEntity> page = baseDao.selectPage(
-            getPage(params, "sort", true),
-            getWrapper(params)
+    public PageData<SysDictDataDTO> page(SysDictDataPageRequest request) {
+        IPage<SysDictDataEntity> page = this.page(
+            request.<SysDictDataEntity>buildPage().addOrder(
+                com.baomidou.mybatisplus.core.metadata.OrderItem.asc("sort")
+            ),
+            getWrapper(request)
         );
 
-        return getPageData(page, SysDictDataDTO.class);
+        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysDictDataDTO.class), page.getTotal());
     }
 
-    private QueryWrapper<SysDictDataEntity> getWrapper(Map<String, Object> params){
-        Long dictTypeId = Long.parseLong((String) params.get("dictTypeId"));
-        String dictLabel = (String) params.get("dictLabel");
-        String dictValue = (String) params.get("dictValue");
+    private QueryWrapper<SysDictDataEntity> getWrapper(SysDictDataPageRequest request) {
+        Long dictTypeId = Long.parseLong(request.getDictTypeId());
+        String dictLabel = request.getDictLabel();
+        String dictValue = request.getDictValue();
 
         QueryWrapper<SysDictDataEntity> wrapper = new QueryWrapper<>();
         wrapper.eq("dict_type_id", dictTypeId);
@@ -51,7 +53,7 @@ public class SysDictDataServiceImpl extends BaseServiceImpl<SysDictDataDao, SysD
 
     @Override
     public SysDictDataDTO get(Long id) {
-        SysDictDataEntity entity = baseDao.selectById(id);
+        SysDictDataEntity entity = this.getById(id);
 
         return ConvertUtils.sourceToTarget(entity, SysDictDataDTO.class);
     }
@@ -61,7 +63,7 @@ public class SysDictDataServiceImpl extends BaseServiceImpl<SysDictDataDao, SysD
     public void save(SysDictDataDTO dto) {
         SysDictDataEntity entity = ConvertUtils.sourceToTarget(dto, SysDictDataEntity.class);
 
-        insert(entity);
+        this.save(entity);
     }
 
     @Override
@@ -69,14 +71,14 @@ public class SysDictDataServiceImpl extends BaseServiceImpl<SysDictDataDao, SysD
     public void update(SysDictDataDTO dto) {
         SysDictDataEntity entity = ConvertUtils.sourceToTarget(dto, SysDictDataEntity.class);
 
-        updateById(entity);
+        this.updateById(entity);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long[] ids) {
         //删除
-        deleteBatchIds(Arrays.asList(ids));
+        this.removeByIds(Arrays.asList(ids));
     }
 
 }

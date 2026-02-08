@@ -4,6 +4,7 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import net.leoch.common.exception.ServiceException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +21,7 @@ public class JsonUtils {
         try {
             return objectMapper.writeValueAsString(object);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new ServiceException("JSON处理失败: " + e.getMessage());
         }
     }
 
@@ -31,7 +32,7 @@ public class JsonUtils {
         try {
             return objectMapper.readValue(text, clazz);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new ServiceException("JSON处理失败: " + e.getMessage());
         }
     }
 
@@ -42,7 +43,7 @@ public class JsonUtils {
         try {
             return objectMapper.readValue(bytes, clazz);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new ServiceException("JSON处理失败: " + e.getMessage());
         }
     }
 
@@ -50,7 +51,7 @@ public class JsonUtils {
         try {
             return objectMapper.readValue(text, typeReference);
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new ServiceException("JSON处理失败: " + e.getMessage());
         }
     }
 
@@ -61,7 +62,7 @@ public class JsonUtils {
         try {
             return objectMapper.readValue(text, objectMapper.getTypeFactory().constructCollectionType(List.class, clazz));
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new ServiceException("JSON处理失败: " + e.getMessage());
         }
     }
 

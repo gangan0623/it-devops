@@ -12,14 +12,9 @@ import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
-import net.leoch.modules.alert.dto.AlertMediaDTO;
-import net.leoch.modules.alert.dto.AlertTemplateDTO;
 import net.leoch.modules.alert.dto.AlertTriggerDTO;
-import net.leoch.modules.alert.service.AlertMediaService;
-import net.leoch.modules.alert.service.AlertTemplateService;
+import net.leoch.modules.alert.dto.AlertTriggerPageRequest;
 import net.leoch.modules.alert.service.AlertTriggerService;
-import net.leoch.modules.sys.dao.SysUserDao;
-import net.leoch.modules.sys.entity.SysUserEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -39,15 +34,9 @@ import java.util.stream.Collectors;
 public class AlertTriggerController {
 
     private final AlertTriggerService alertTriggerService;
-    private final AlertTemplateService alertTemplateService;
-    private final AlertMediaService alertMediaService;
-    private final SysUserDao sysUserDao;
 
-    public AlertTriggerController(AlertTriggerService alertTriggerService, AlertTemplateService alertTemplateService, AlertMediaService alertMediaService, SysUserDao sysUserDao) {
+    public AlertTriggerController(AlertTriggerService alertTriggerService) {
         this.alertTriggerService = alertTriggerService;
-        this.alertTemplateService = alertTemplateService;
-        this.alertMediaService = alertMediaService;
-        this.sysUserDao = sysUserDao;
     }
 
     @GetMapping("page")
@@ -59,8 +48,8 @@ public class AlertTriggerController {
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("alert:trigger:page")
-    public Result<PageData<AlertTriggerDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params){
-        PageData<AlertTriggerDTO> page = alertTriggerService.page(params);
+    public Result<PageData<AlertTriggerDTO>> page(AlertTriggerPageRequest request){
+        PageData<AlertTriggerDTO> page = alertTriggerService.page(request);
         alertTriggerService.fillReceiverUserIdList(page.getList());
 
         return new Result<PageData<AlertTriggerDTO>>().ok(page);
@@ -113,40 +102,14 @@ public class AlertTriggerController {
     @Operation(summary = "资源")
     @SaCheckPermission("alert:trigger:page")
     public Result<Map<String, Object>> resources() {
-        Map<String, Object> result = new HashMap<>();
-        List<AlertTemplateDTO> templates = alertTemplateService.list(new HashMap<>());
-        List<AlertMediaDTO> medias = alertMediaService.list(new HashMap<>());
-        List<SysUserEntity> users = sysUserDao.selectList(new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<SysUserEntity>()
-            .select("id", "username", "email")
-            .isNotNull("email")
-        );
-        result.put("templates", templates.stream().map(item -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", item.getId());
-            map.put("name", item.getName());
-            return map;
-        }).collect(Collectors.toList()));
-        result.put("medias", medias.stream().map(item -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", item.getId());
-            map.put("name", item.getName());
-            return map;
-        }).collect(Collectors.toList()));
-        result.put("users", users.stream().map(item -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", item.getId());
-            map.put("name", item.getUsername());
-            map.put("email", item.getEmail());
-            return map;
-        }).collect(Collectors.toList()));
-        return new Result<Map<String, Object>>().ok(result);
+        return new Result<Map<String, Object>>().ok(alertTriggerService.resources());
     }
 
     @GetMapping("options")
     @Operation(summary = "触发器选项")
     @SaCheckPermission("alert:trigger:page")
     public Result<List<Map<String, Object>>> options() {
-        List<AlertTriggerDTO> list = alertTriggerService.list(new HashMap<>());
+        List<AlertTriggerDTO> list = alertTriggerService.list(new AlertTriggerPageRequest());
         List<Map<String, Object>> options = list.stream().map(item -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", item.getId());

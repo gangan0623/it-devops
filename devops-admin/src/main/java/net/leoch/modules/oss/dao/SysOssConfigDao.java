@@ -1,6 +1,6 @@
 package net.leoch.modules.oss.dao;
 
-import net.leoch.common.dao.BaseDao;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import net.leoch.modules.oss.entity.SysOssConfigEntity;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -10,5 +10,5 @@ import org.apache.ibatis.annotations.Mapper;
  * @author Taohongqiang
  */
 @Mapper
-public interface SysOssConfigDao extends BaseDao<SysOssConfigEntity> {
+public interface SysOssConfigDao extends BaseMapper<SysOssConfigEntity> {
 }

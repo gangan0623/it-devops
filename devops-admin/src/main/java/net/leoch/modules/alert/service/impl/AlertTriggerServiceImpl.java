@@ -2,16 +2,22 @@ package net.leoch.modules.alert.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import lombok.extern.slf4j.Slf4j;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
-import net.leoch.common.service.impl.CrudServiceImpl;
+import net.leoch.common.page.PageData;
+import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.alert.dao.AlertMediaDao;
-import net.leoch.modules.alert.dao.AlertNotifyLogDao;
+import net.leoch.modules.alert.service.AlertNotifyLogService;
 import net.leoch.modules.alert.dao.AlertRecordDao;
 import net.leoch.modules.alert.dao.AlertTemplateDao;
 import net.leoch.modules.alert.dao.AlertTriggerDao;
 import net.leoch.modules.alert.dto.AlertTriggerDTO;
+import net.leoch.modules.alert.dto.AlertTriggerPageRequest;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
 import net.leoch.modules.alert.entity.AlertNotifyLogEntity;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
@@ -24,9 +30,11 @@ import net.leoch.modules.alert.utils.AlertPayloadUtils;
 import net.leoch.modules.alert.utils.AlertTemplateRenderer;
 import net.leoch.modules.sys.dao.SysUserDao;
 import net.leoch.modules.sys.entity.SysUserEntity;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -39,40 +47,101 @@ import java.util.stream.Collectors;
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
+@Slf4j
 @Service
-public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, AlertTriggerEntity, AlertTriggerDTO> implements AlertTriggerService {
+public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerDao, AlertTriggerEntity> implements AlertTriggerService {
 
     private final AlertTemplateDao alertTemplateDao;
     private final AlertMediaDao alertMediaDao;
     private final SysUserDao sysUserDao;
     private final AlertMailService alertMailService;
-    private final AlertNotifyLogDao alertNotifyLogDao;
+    private final AlertNotifyLogService alertNotifyLogService;
     private final AlertRecordDao alertRecordDao;
 
     public AlertTriggerServiceImpl(AlertTemplateDao alertTemplateDao,
                                    AlertMediaDao alertMediaDao,
                                    SysUserDao sysUserDao,
                                    AlertMailService alertMailService,
-                                   AlertNotifyLogDao alertNotifyLogDao,
+                                   AlertNotifyLogService alertNotifyLogService,
                                    AlertRecordDao alertRecordDao) {
         this.alertTemplateDao = alertTemplateDao;
         this.alertMediaDao = alertMediaDao;
         this.sysUserDao = sysUserDao;
         this.alertMailService = alertMailService;
-        this.alertNotifyLogDao = alertNotifyLogDao;
+        this.alertNotifyLogService = alertNotifyLogService;
         this.alertRecordDao = alertRecordDao;
     }
 
     @Override
-    public QueryWrapper<AlertTriggerEntity> getWrapper(Map<String, Object> params) {
-        String name = (String) params.get("name");
-        String status = (String) params.get("status");
+    public PageData<AlertTriggerDTO> page(AlertTriggerPageRequest request) {
+        IPage<AlertTriggerEntity> page = this.page(request.buildPage(),
+            new LambdaQueryWrapper<AlertTriggerEntity>()
+                .like(StrUtil.isNotBlank(request.getName()), AlertTriggerEntity::getName, request.getName())
+        );
+        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), AlertTriggerDTO.class), page.getTotal());
+    }
 
-        QueryWrapper<AlertTriggerEntity> wrapper = new QueryWrapper<>();
-        wrapper.like(StrUtil.isNotBlank(name), "name", name);
-        wrapper.eq(StrUtil.isNotBlank(status), "status", status);
+    @Override
+    public List<AlertTriggerDTO> list(AlertTriggerPageRequest request) {
+        List<AlertTriggerEntity> entityList = this.list(
+            new LambdaQueryWrapper<AlertTriggerEntity>()
+                .like(request != null && StrUtil.isNotBlank(request.getName()), AlertTriggerEntity::getName, request != null ? request.getName() : null)
+        );
+        return ConvertUtils.sourceToTarget(entityList, AlertTriggerDTO.class);
+    }
 
-        return wrapper;
+    @Override
+    public AlertTriggerDTO get(Long id) {
+        return ConvertUtils.sourceToTarget(this.getById(id), AlertTriggerDTO.class);
+    }
+
+    @Override
+    public void save(AlertTriggerDTO dto) {
+        AlertTriggerEntity entity = ConvertUtils.sourceToTarget(dto, AlertTriggerEntity.class);
+        this.save(entity);
+        BeanUtils.copyProperties(entity, dto);
+    }
+
+    @Override
+    public void update(AlertTriggerDTO dto) {
+        this.updateById(ConvertUtils.sourceToTarget(dto, AlertTriggerEntity.class));
+    }
+
+    @Override
+    public void delete(Long[] ids) {
+        this.removeByIds(Arrays.asList(ids));
+    }
+
+    @Override
+    public Map<String, Object> resources() {
+        Map<String, Object> result = new HashMap<>();
+        List<AlertTemplateEntity> templates = alertTemplateDao.selectList(null);
+        List<AlertMediaEntity> medias = alertMediaDao.selectList(null);
+        List<SysUserEntity> users = sysUserDao.selectList(
+            new QueryWrapper<SysUserEntity>()
+                .select("id", "username", "email")
+                .isNotNull("email")
+        );
+        result.put("templates", templates.stream().map(item -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", item.getId());
+            map.put("name", item.getName());
+            return map;
+        }).collect(Collectors.toList()));
+        result.put("medias", medias.stream().map(item -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", item.getId());
+            map.put("name", item.getName());
+            return map;
+        }).collect(Collectors.toList()));
+        result.put("users", users.stream().map(item -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", item.getId());
+            map.put("name", item.getUsername());
+            map.put("email", item.getEmail());
+            return map;
+        }).collect(Collectors.toList()));
+        return result;
     }
 
     @Override
@@ -98,7 +167,7 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
         if (payload == null) {
             return;
         }
-        List<AlertTriggerEntity> triggers = baseDao.selectList(new QueryWrapper<AlertTriggerEntity>().eq("status", 1));
+        List<AlertTriggerEntity> triggers = this.list(new LambdaQueryWrapper<AlertTriggerEntity>().eq(AlertTriggerEntity::getStatus, 1));
         if (CollUtil.isEmpty(triggers)) {
             return;
         }
@@ -120,7 +189,7 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
 
     @Override
     public void sendTest(Long templateId, Long triggerId, String rawJson) {
-        AlertTriggerEntity trigger = triggerId == null ? null : baseDao.selectById(triggerId);
+        AlertTriggerEntity trigger = triggerId == null ? null : this.getById(triggerId);
         if (trigger == null) {
             return;
         }
@@ -179,7 +248,7 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
             log.setSendStatus(0);
             log.setErrorMessage(StrUtil.sub(e.getMessage(), 0, 500));
         } finally {
-            alertNotifyLogDao.insert(log);
+            alertNotifyLogService.save(log);
         }
     }
 

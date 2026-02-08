@@ -2,28 +2,16 @@ package net.leoch.modules.ops.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-
-import java.io.Serializable;
+import lombok.EqualsAndHashCode;
+import net.leoch.common.page.BasePage;
 
 /**
  * Window host page request.
  */
 @Data
+@EqualsAndHashCode(callSuper = true)
 @Schema(name = "WindowHostPageRequest")
-public class WindowHostPageRequest implements Serializable {
-    private static final long serialVersionUID = 1L;
-
-    @Schema(description = "Page number, starting at 1")
-    private String page;
-
-    @Schema(description = "Page size")
-    private String limit;
-
-    @Schema(description = "Order field")
-    private String orderField;
-
-    @Schema(description = "Order direction: asc, desc")
-    private String order;
+public class WindowHostPageRequest extends BasePage {
 
     @Schema(description = "Instance")
     private String instance;

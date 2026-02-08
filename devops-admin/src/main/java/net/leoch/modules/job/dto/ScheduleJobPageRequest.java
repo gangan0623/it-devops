@@ -1,0 +1,18 @@
+package net.leoch.modules.job.dto;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import net.leoch.common.page.BasePage;
+
+/**
+ * 定时任务分页请求
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@Schema(name = "ScheduleJobPageRequest")
+public class ScheduleJobPageRequest extends BasePage {
+
+    @Schema(description = "beanName")
+    private String beanName;
+}

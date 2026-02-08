@@ -5,6 +5,8 @@ package net.leoch.common.interceptor;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.toolkit.PluginUtils;
 import com.baomidou.mybatisplus.extension.plugins.inner.InnerInterceptor;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.exception.ServiceException;
 import net.sf.jsqlparser.JSQLParserException;
 import net.sf.jsqlparser.expression.Expression;
 import net.sf.jsqlparser.expression.StringValue;
@@ -25,6 +27,7 @@ import java.util.Map;
  *
  * @author Taohongqiang
  */
+@Slf4j
 public class DataFilterInterceptor implements InnerInterceptor {
 
     @Override
@@ -77,7 +80,8 @@ public class DataFilterInterceptor implements InnerInterceptor {
 
             return select.toString().replaceAll("'", "");
         }catch (JSQLParserException e){
-            return buildSql;
+            log.error("[数据过滤] SQL解析失败, sql: {}", buildSql, e);
+            throw new ServiceException("数据过滤SQL解析失败");
         }
     }
 }

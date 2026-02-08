@@ -1,6 +1,6 @@
 package net.leoch.modules.ops.service;
 
-import net.leoch.common.service.CrudService;
+import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.modules.ops.dto.DeviceBackupHistoryDTO;
 import net.leoch.modules.ops.entity.DeviceBackupHistoryEntity;
 
@@ -10,7 +10,7 @@ import java.util.Map;
 /**
  * 设备备份历史表
  */
-public interface DeviceBackupHistoryService extends CrudService<DeviceBackupHistoryEntity, DeviceBackupHistoryDTO> {
+public interface DeviceBackupHistoryService extends IService<DeviceBackupHistoryEntity> {
 
     void saveHistory(String name, String ip, String url, Integer status);
 
@@ -21,4 +21,6 @@ public interface DeviceBackupHistoryService extends CrudService<DeviceBackupHist
     List<Map<String, Object>> diffByUrls(String leftUrl, String rightUrl);
 
     String previewByUrl(String url);
+
+    DeviceBackupHistoryDTO get(Long id);
 }

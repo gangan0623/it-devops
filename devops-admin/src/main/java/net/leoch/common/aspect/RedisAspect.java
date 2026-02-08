@@ -2,13 +2,12 @@
 
 package net.leoch.common.aspect;
 
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -16,10 +15,10 @@ import org.springframework.stereotype.Component;
  *
  * @author Taohongqiang
  */
+@Slf4j
 @Aspect
 @Component
 public class RedisAspect {
-    private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @Around("execution(* net.leoch.common.redis.RedisUtils.*(..))")
     public Object around(ProceedingJoinPoint point) throws Throwable {
@@ -27,7 +26,7 @@ public class RedisAspect {
         try {
             result = point.proceed();
         } catch (Exception e) {
-            logger.error("redis error", e);
+            log.error("[Redis] 操作异常", e);
             throw new ServiceException(ErrorCode.REDIS_ERROR);
         }
         return result;

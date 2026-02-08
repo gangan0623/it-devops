@@ -1,20 +1,19 @@
-
-
 package net.leoch.modules.sys.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.AllArgsConstructor;
-import net.leoch.common.constant.Constant;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
-import net.leoch.common.service.impl.BaseServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.sys.dao.SysParamsDao;
 import net.leoch.modules.sys.dto.SysParamsDTO;
+import net.leoch.modules.sys.dto.SysParamsPageRequest;
 import net.leoch.modules.sys.entity.SysParamsEntity;
 import net.leoch.modules.sys.redis.SysParamsRedis;
 import net.leoch.modules.sys.service.SysParamsService;
@@ -23,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 参数管理
@@ -31,30 +29,33 @@ import java.util.Map;
  * @author Taohongqiang
  * @since 1.0.0
  */
+@Slf4j
 @Service
 @AllArgsConstructor
-public class SysParamsServiceImpl extends BaseServiceImpl<SysParamsDao, SysParamsEntity> implements SysParamsService {
+public class SysParamsServiceImpl extends ServiceImpl<SysParamsDao, SysParamsEntity> implements SysParamsService {
     private final SysParamsRedis sysParamsRedis;
 
     @Override
-    public PageData<SysParamsDTO> page(Map<String, Object> params) {
-        IPage<SysParamsEntity> page = baseDao.selectPage(
-                getPage(params, Constant.CREATE_DATE, false),
-                getWrapper(params)
+    public PageData<SysParamsDTO> page(SysParamsPageRequest request) {
+        IPage<SysParamsEntity> page = this.page(
+                request.<SysParamsEntity>buildPage().addOrder(
+                    com.baomidou.mybatisplus.core.metadata.OrderItem.desc("create_date")
+                ),
+                getWrapper(request)
         );
 
-        return getPageData(page, SysParamsDTO.class);
+        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysParamsDTO.class), page.getTotal());
     }
 
     @Override
-    public List<SysParamsDTO> list(Map<String, Object> params) {
-        List<SysParamsEntity> entityList = baseDao.selectList(getWrapper(params));
+    public List<SysParamsDTO> list(SysParamsPageRequest request) {
+        List<SysParamsEntity> entityList = this.list(getWrapper(request));
 
         return ConvertUtils.sourceToTarget(entityList, SysParamsDTO.class);
     }
 
-    private QueryWrapper<SysParamsEntity> getWrapper(Map<String, Object> params) {
-        String paramCode = (String) params.get("paramCode");
+    private QueryWrapper<SysParamsEntity> getWrapper(SysParamsPageRequest request) {
+        String paramCode = request.getParamCode();
 
         QueryWrapper<SysParamsEntity> wrapper = new QueryWrapper<>();
         wrapper.eq("param_type", 1);
@@ -65,7 +66,7 @@ public class SysParamsServiceImpl extends BaseServiceImpl<SysParamsDao, SysParam
 
     @Override
     public SysParamsDTO get(Long id) {
-        SysParamsEntity entity = baseDao.selectById(id);
+        SysParamsEntity entity = this.getById(id);
 
         return ConvertUtils.sourceToTarget(entity, SysParamsDTO.class);
     }
@@ -74,7 +75,7 @@ public class SysParamsServiceImpl extends BaseServiceImpl<SysParamsDao, SysParam
     @Transactional(rollbackFor = Exception.class)
     public void save(SysParamsDTO dto) {
         SysParamsEntity entity = ConvertUtils.sourceToTarget(dto, SysParamsEntity.class);
-        insert(entity);
+        this.save(entity);
 
         sysParamsRedis.set(entity.getParamCode(), entity.getParamValue());
     }
@@ -83,7 +84,7 @@ public class SysParamsServiceImpl extends BaseServiceImpl<SysParamsDao, SysParam
     @Transactional(rollbackFor = Exception.class)
     public void update(SysParamsDTO dto) {
         SysParamsEntity entity = ConvertUtils.sourceToTarget(dto, SysParamsEntity.class);
-        updateById(entity);
+        this.updateById(entity);
 
         sysParamsRedis.set(entity.getParamCode(), entity.getParamValue());
     }
@@ -92,19 +93,19 @@ public class SysParamsServiceImpl extends BaseServiceImpl<SysParamsDao, SysParam
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long[] ids) {
         //删除Redis数据
-        List<String> paramCodeList = baseDao.getParamCodeList(ids);
+        List<String> paramCodeList = this.getBaseMapper().getParamCodeList(ids);
         String[] paramCodes = paramCodeList.toArray(new String[paramCodeList.size()]);
         sysParamsRedis.delete(paramCodes);
 
         //删除
-        deleteBatchIds(Arrays.asList(ids));
+        this.removeByIds(Arrays.asList(ids));
     }
 
     @Override
     public String getValue(String paramCode) {
         String paramValue = sysParamsRedis.get(paramCode);
         if (paramValue == null) {
-            paramValue = baseDao.getValueByCode(paramCode);
+            paramValue = this.getBaseMapper().getValueByCode(paramCode);
 
             sysParamsRedis.set(paramCode, paramValue);
         }
@@ -128,7 +129,7 @@ public class SysParamsServiceImpl extends BaseServiceImpl<SysParamsDao, SysParam
     @Override
     @Transactional(rollbackFor = Exception.class)
     public int updateValueByCode(String paramCode, String paramValue) {
-        int count = baseDao.updateValueByCode(paramCode, paramValue);
+        int count = this.getBaseMapper().updateValueByCode(paramCode, paramValue);
         sysParamsRedis.set(paramCode, paramValue);
         return count;
     }

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import net.leoch.modules.alert.dao.AlertRecordDao;
 import net.leoch.modules.alert.dto.AlertRealtimeDTO;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.service.AlertSseService;
 import net.leoch.modules.ops.dao.BusinessSystemDao;
 import net.leoch.modules.ops.dao.LinuxHostDao;
@@ -12,8 +13,6 @@ import net.leoch.modules.ops.dao.WindowHostDao;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -27,10 +26,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * 实时告警 SSE
  */
+@Slf4j
 @Service
 public class AlertSseServiceImpl implements AlertSseService {
 
-    private static final Logger logger = LoggerFactory.getLogger(AlertSseServiceImpl.class);
     private final AlertRecordDao alertRecordDao;
     private final LinuxHostDao linuxHostDao;
     private final WindowHostDao windowHostDao;
@@ -99,7 +98,7 @@ public class AlertSseServiceImpl implements AlertSseService {
                 emitter.send(SseEmitter.event().name("recentAlerts").data(data));
             } catch (IOException e) {
                 emitters.remove(emitter);
-                logger.debug("SSE发送失败，移除连接: {}", e.getMessage());
+                log.debug("SSE发送失败，移除连接: {}", e.getMessage());
             }
         }
     }

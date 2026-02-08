@@ -46,12 +46,18 @@ public class HttpContextUtils {
 
 	public static String getDomain(){
 		HttpServletRequest request = getHttpServletRequest();
+		if (request == null) {
+			return "";
+		}
 		StringBuffer url = request.getRequestURL();
 		return url.delete(url.length() - request.getRequestURI().length(), url.length()).toString();
 	}
 
 	public static String getOrigin(){
 		HttpServletRequest request = getHttpServletRequest();
+		if (request == null) {
+			return "";
+		}
 		return request.getHeader(HttpHeaders.ORIGIN);
 	}
 }

@@ -1,15 +1,17 @@
 package net.leoch.modules.job.service.impl;
 
 import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
-import net.leoch.common.service.impl.BaseServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.job.dao.ScheduleJobDao;
 import net.leoch.modules.job.dto.ScheduleJobDTO;
+import net.leoch.modules.job.dto.ScheduleJobPageRequest;
 import net.leoch.modules.job.entity.ScheduleJobEntity;
 import net.leoch.modules.job.service.ScheduleJobService;
 import net.leoch.modules.job.utils.DynamicScheduleManager;
@@ -20,34 +22,27 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Service
 @AllArgsConstructor
-public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, ScheduleJobEntity> implements ScheduleJobService {
+public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobDao, ScheduleJobEntity> implements ScheduleJobService {
 
     private final DynamicScheduleManager scheduleManager;
 
     @Override
-    public PageData<ScheduleJobDTO> page(Map<String, Object> params) {
-        IPage<ScheduleJobEntity> page = baseDao.selectPage(
-                getPage(params, Constant.CREATE_DATE, false),
-                getWrapper(params)
+    public PageData<ScheduleJobDTO> page(ScheduleJobPageRequest request) {
+        IPage<ScheduleJobEntity> page = this.page(request.buildPage(),
+            new LambdaQueryWrapper<ScheduleJobEntity>()
+                .like(StrUtil.isNotBlank(request.getBeanName()), ScheduleJobEntity::getBeanName, request.getBeanName())
+                .orderByDesc(ScheduleJobEntity::getCreateDate)
         );
-        return getPageData(page, ScheduleJobDTO.class);
+        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), ScheduleJobDTO.class), page.getTotal());
     }
 
     @Override
     public ScheduleJobDTO get(Long id) {
-        ScheduleJobEntity entity = baseDao.selectById(id);
+        ScheduleJobEntity entity = this.getById(id);
         return ConvertUtils.sourceToTarget(entity, ScheduleJobDTO.class);
-    }
-
-    private QueryWrapper<ScheduleJobEntity> getWrapper(Map<String, Object> params) {
-        String beanName = (String) params.get("beanName");
-
-        QueryWrapper<ScheduleJobEntity> wrapper = new QueryWrapper<>();
-        wrapper.like(StrUtil.isNotBlank(beanName), "bean_name", beanName);
-
-        return wrapper;
     }
 
     @Override
@@ -55,8 +50,7 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
     public void save(ScheduleJobDTO dto) {
         ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
         entity.setStatus(Constant.ScheduleStatus.NORMAL.getValue());
-        this.insert(entity);
-
+        this.save(entity);
         scheduleManager.addJob(entity);
     }
 
@@ -65,7 +59,6 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
     public void update(ScheduleJobDTO dto) {
         ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
         this.updateById(entity);
-
         scheduleManager.updateJob(entity);
     }
 
@@ -75,8 +68,7 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
         for (Long id : ids) {
             scheduleManager.removeJob(id);
         }
-
-        this.deleteBatchIds(Arrays.asList(ids));
+        this.removeByIds(Arrays.asList(ids));
     }
 
     @Override
@@ -84,14 +76,14 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
         Map<String, Object> map = new HashMap<>(2);
         map.put("ids", ids);
         map.put("status", status);
-        return baseDao.updateBatch(map);
+        return this.getBaseMapper().updateBatch(map);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void run(Long[] ids) {
         for (Long id : ids) {
-            scheduleManager.runOnce(this.selectById(id));
+            scheduleManager.runOnce(this.getById(id));
         }
     }
 
@@ -101,7 +93,6 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
         for (Long id : ids) {
             scheduleManager.pauseJob(id);
         }
-
         updateBatch(ids, Constant.ScheduleStatus.PAUSE.getValue());
     }
 
@@ -109,10 +100,9 @@ public class ScheduleJobServiceImpl extends BaseServiceImpl<ScheduleJobDao, Sche
     @Transactional(rollbackFor = Exception.class)
     public void resume(Long[] ids) {
         for (Long id : ids) {
-            ScheduleJobEntity entity = this.selectById(id);
+            ScheduleJobEntity entity = this.getById(id);
             scheduleManager.resumeJob(entity);
         }
-
         updateBatch(ids, Constant.ScheduleStatus.NORMAL.getValue());
     }
 }

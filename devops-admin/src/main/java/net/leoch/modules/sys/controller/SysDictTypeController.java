@@ -1,16 +1,10 @@
-
-
 package net.leoch.modules.sys.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
-import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
@@ -18,12 +12,12 @@ import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.dto.SysDictTypeDTO;
+import net.leoch.modules.sys.dto.SysDictTypePageRequest;
 import net.leoch.modules.sys.entity.DictType;
 import net.leoch.modules.sys.service.SysDictTypeService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 字典类型
@@ -39,18 +33,10 @@ public class SysDictTypeController {
 
     @GetMapping("page")
     @Operation(summary = "字典类型")
-    @Parameters({
-            @Parameter(name = Constant.PAGE, description = "当前页码，从1开始", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.LIMIT, description = "每页显示记录数", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = "dictType", description = "字典类型", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = "dictName", description = "字典名称", in = ParameterIn.QUERY, ref = "String")
-    })
     @SaCheckPermission("sys:dict:page")
-    public Result<PageData<SysDictTypeDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
+    public Result<PageData<SysDictTypeDTO>> page(SysDictTypePageRequest request) {
         //字典类型
-        PageData<SysDictTypeDTO> page = sysDictTypeService.page(params);
+        PageData<SysDictTypeDTO> page = sysDictTypeService.page(request);
 
         return new Result<PageData<SysDictTypeDTO>>().ok(page);
     }

@@ -1,26 +1,24 @@
-
-
 package net.leoch.modules.sys.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.common.service.BaseService;
 import net.leoch.modules.sys.dto.SysUserDTO;
+import net.leoch.modules.sys.dto.SysUserPageRequest;
 import net.leoch.modules.sys.entity.SysUserEntity;
 
 import java.util.List;
-import java.util.Map;
 
 
 /**
  * 系统用户
- * 
+ *
  * @author Taohongqiang
  */
-public interface SysUserService extends BaseService<SysUserEntity> {
+public interface SysUserService extends IService<SysUserEntity> {
 
-	PageData<SysUserDTO> page(Map<String, Object> params);
+	PageData<SysUserDTO> page(SysUserPageRequest request);
 
-	List<SysUserDTO> list(Map<String, Object> params);
+	List<SysUserDTO> list(SysUserPageRequest request);
 
 	SysUserDTO get(Long id);
 

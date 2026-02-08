@@ -2,6 +2,7 @@ package net.leoch.modules.alert.service;
 
 import cn.hutool.core.util.StrUtil;
 import jakarta.mail.internet.MimeMessage;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -55,7 +56,7 @@ public class AlertMailService {
             LOGGER.info("Alert mail sent. host={}, to={}, subject={}", media.getHost(), receivers, subject);
         } catch (Exception e) {
             LOGGER.error("Alert mail send failed. host={}, to={}, subject={}, error={}", media.getHost(), receivers, subject, e.getMessage(), e);
-            throw new RuntimeException("发送邮件失败: " + e.getMessage(), e);
+            throw new ServiceException("发送邮件失败: " + e.getMessage());
         }
     }
 

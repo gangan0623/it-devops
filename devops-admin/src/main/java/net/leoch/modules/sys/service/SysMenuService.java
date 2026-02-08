@@ -1,8 +1,6 @@
-
-
 package net.leoch.modules.sys.service;
 
-import net.leoch.common.service.BaseService;
+import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.dto.SysMenuDTO;
 import net.leoch.modules.sys.entity.SysMenuEntity;
@@ -12,10 +10,10 @@ import java.util.List;
 
 /**
  * 菜单管理
- * 
+ *
  * @author Taohongqiang
  */
-public interface SysMenuService extends BaseService<SysMenuEntity> {
+public interface SysMenuService extends IService<SysMenuEntity> {
 
 	SysMenuDTO get(Long id);
 

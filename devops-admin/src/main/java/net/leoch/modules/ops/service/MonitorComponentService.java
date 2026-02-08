@@ -1,17 +1,16 @@
 package net.leoch.modules.ops.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.common.service.CrudService;
 import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 监控组件
  */
-public interface MonitorComponentService extends CrudService<MonitorComponentEntity, MonitorComponentDTO> {
+public interface MonitorComponentService extends IService<MonitorComponentEntity> {
     PageData<MonitorComponentDTO> page(MonitorComponentPageRequest request);
 
     MonitorComponentDTO get(MonitorComponentIdRequest request);
@@ -31,6 +30,4 @@ public interface MonitorComponentService extends CrudService<MonitorComponentEnt
     List<MonitorComponentDTO> list(MonitorComponentListRequest request);
 
     boolean existsByIpPortOrName(String ip, Integer port, String name, Long excludeId);
-
-    PageData<MonitorComponentDTO> page(Map<String, Object> params);
 }

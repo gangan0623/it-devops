@@ -5,6 +5,7 @@ package net.leoch.common.aspect;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.qiniu.util.StringUtils;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.annotation.DataFilter;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ErrorCode;
@@ -29,6 +30,7 @@ import java.util.Map;
  *
  * @author Taohongqiang
  */
+@Slf4j
 @Aspect
 @Component
 public class DataFilterAspect {
@@ -55,7 +57,8 @@ public class DataFilterAspect {
                 String sqlFilter = getSqlFilter(user, point);
                 map.put(Constant.SQL_FILTER, new DataScope(sqlFilter));
             } catch (Exception e) {
-
+                log.error("[数据过滤] 获取数据过滤SQL失败，拒绝访问", e);
+                throw new ServiceException(ErrorCode.DATA_SCOPE_PARAMS_ERROR);
             }
 
             return;

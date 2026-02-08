@@ -1,15 +1,15 @@
-
-
 package net.leoch.modules.sys.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
-import net.leoch.common.service.impl.BaseServiceImpl;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.sys.dao.SysRoleDataScopeDao;
 import net.leoch.modules.sys.entity.SysRoleDataScopeEntity;
 import net.leoch.modules.sys.service.SysRoleDataScopeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,13 +18,14 @@ import java.util.List;
  * @author Taohongqiang
  * @since 1.0.0
  */
+@Slf4j
 @Service
-public class SysRoleDataScopeServiceImpl extends BaseServiceImpl<SysRoleDataScopeDao, SysRoleDataScopeEntity>
+public class SysRoleDataScopeServiceImpl extends ServiceImpl<SysRoleDataScopeDao, SysRoleDataScopeEntity>
         implements SysRoleDataScopeService {
 
     @Override
     public List<Long> getDeptIdList(Long roleId) {
-        return baseDao.getDeptIdList(roleId);
+        return this.getBaseMapper().getDeptIdList(roleId);
     }
 
     @Override
@@ -39,18 +40,19 @@ public class SysRoleDataScopeServiceImpl extends BaseServiceImpl<SysRoleDataScop
         }
 
         //保存角色数据权限关系
+        List<SysRoleDataScopeEntity> entityList = new ArrayList<>();
         for(Long deptId : deptIdList){
             SysRoleDataScopeEntity sysRoleDataScopeEntity = new SysRoleDataScopeEntity();
             sysRoleDataScopeEntity.setDeptId(deptId);
             sysRoleDataScopeEntity.setRoleId(roleId);
-
-            //保存
-            insert(sysRoleDataScopeEntity);
+            entityList.add(sysRoleDataScopeEntity);
         }
+        this.saveBatch(entityList);
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteByRoleIds(Long[] roleIds) {
-        baseDao.deleteByRoleIds(roleIds);
+        this.getBaseMapper().deleteByRoleIds(roleIds);
     }
 }

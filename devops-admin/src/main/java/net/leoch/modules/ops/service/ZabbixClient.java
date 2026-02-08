@@ -5,8 +5,7 @@ import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.ops.config.ZabbixConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.OutputStream;
@@ -21,9 +20,9 @@ import java.util.Map;
 /**
  * Zabbix API client
  */
+@Slf4j
 @Service
 public class ZabbixClient {
-    private static final Logger logger = LoggerFactory.getLogger(ZabbixClient.class);
     private final ZabbixConfigService configService;
 
     public ZabbixClient(ZabbixConfigService configService) {
@@ -139,7 +138,7 @@ public class ZabbixClient {
             }
             int code = connection.getResponseCode();
             if (code != 200) {
-                logger.warn("Zabbix接口响应异常 code={}", code);
+                log.warn("[Zabbix] 接口响应异常, code={}", code);
                 return null;
             }
             byte[] bytes = connection.getInputStream().readAllBytes();
@@ -148,12 +147,12 @@ public class ZabbixClient {
                 return null;
             }
             if (resp.get("error") != null) {
-                logger.warn("Zabbix接口返回错误: {}", resp.get("error"));
+                log.warn("[Zabbix] 接口返回错误: {}", resp.get("error"));
                 return null;
             }
             return resp.get("result");
         } catch (Exception e) {
-            logger.warn("Zabbix接口调用失败: {}", e.getMessage());
+            log.warn("[Zabbix] 接口调用失败", e);
             return null;
         } finally {
             if (connection != null) {

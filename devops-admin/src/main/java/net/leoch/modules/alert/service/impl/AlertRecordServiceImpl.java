@@ -2,23 +2,25 @@ package net.leoch.modules.alert.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
-import net.leoch.common.service.impl.CrudServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.JsonUtils;
-import net.leoch.modules.alert.dao.AlertNotifyLogDao;
-import net.leoch.modules.alert.dao.AlertRecordActionDao;
 import net.leoch.modules.alert.dao.AlertRecordDao;
 import net.leoch.modules.alert.dto.AlertRecordActionDTO;
 import net.leoch.modules.alert.dto.AlertProblemDTO;
 import net.leoch.modules.alert.dto.AlertRecordDTO;
+import net.leoch.modules.alert.dto.AlertRecordPageRequest;
 import net.leoch.modules.alert.entity.AlertNotifyLogEntity;
 import net.leoch.modules.alert.entity.AlertRecordActionEntity;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
 import net.leoch.modules.alert.service.AlertManagerService;
+import net.leoch.modules.alert.service.AlertNotifyLogService;
+import net.leoch.modules.alert.service.AlertRecordActionService;
 import net.leoch.modules.alert.service.AlertRecordService;
 import net.leoch.modules.alert.service.AlertSseService;
 import net.leoch.modules.alert.service.AlertTriggerService;
@@ -31,6 +33,7 @@ import net.leoch.modules.ops.entity.WindowHostEntity;
 import net.leoch.modules.sys.dao.SysUserDao;
 import net.leoch.modules.sys.entity.SysUserEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.*;
@@ -42,90 +45,99 @@ import java.util.stream.Collectors;
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
+@Slf4j
 @Service
-public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, AlertRecordEntity, AlertRecordDTO> implements AlertRecordService {
+public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordDao, AlertRecordEntity> implements AlertRecordService {
 
     private final AlertSseService alertSseService;
-    private final AlertRecordActionDao alertRecordActionDao;
+    private final AlertRecordActionService alertRecordActionService;
     private final AlertManagerService alertManagerService;
     private final AlertTriggerService alertTriggerService;
+    private final AlertNotifyLogService alertNotifyLogService;
     private final SysUserDao sysUserDao;
-    private final AlertNotifyLogDao alertNotifyLogDao;
     private final LinuxHostDao linuxHostDao;
     private final WindowHostDao windowHostDao;
     private final BusinessSystemDao businessSystemDao;
 
     public AlertRecordServiceImpl(AlertSseService alertSseService,
-                                  AlertRecordActionDao alertRecordActionDao,
+                                  AlertRecordActionService alertRecordActionService,
                                   AlertManagerService alertManagerService,
                                   AlertTriggerService alertTriggerService,
+                                  AlertNotifyLogService alertNotifyLogService,
                                   SysUserDao sysUserDao,
-                                  AlertNotifyLogDao alertNotifyLogDao,
                                   LinuxHostDao linuxHostDao,
                                   WindowHostDao windowHostDao,
                                   BusinessSystemDao businessSystemDao) {
         this.alertSseService = alertSseService;
-        this.alertRecordActionDao = alertRecordActionDao;
+        this.alertRecordActionService = alertRecordActionService;
         this.alertManagerService = alertManagerService;
         this.alertTriggerService = alertTriggerService;
+        this.alertNotifyLogService = alertNotifyLogService;
         this.sysUserDao = sysUserDao;
-        this.alertNotifyLogDao = alertNotifyLogDao;
         this.linuxHostDao = linuxHostDao;
         this.windowHostDao = windowHostDao;
         this.businessSystemDao = businessSystemDao;
     }
 
     @Override
-    public QueryWrapper<AlertRecordEntity> getWrapper(Map<String, Object> params) {
-        String alertName = (String) params.get("alertName");
-        String instance = (String) params.get("instance");
-        String hostName = (String) params.get("hostName");
-        String severity = normalizeSeverityForQuery((String) params.get("severity"));
-        String status = (String) params.get("status");
-        String deviceType = (String) params.get("deviceType");
+    public PageData<AlertRecordDTO> page(AlertRecordPageRequest request) {
+        String alertName = request.getAlertName();
+        String instance = request.getInstance();
+        String hostName = request.getHostName();
+        String severity = normalizeSeverityForQuery(request.getSeverity());
+        String status = request.getStatus();
+        String deviceType = request.getDeviceType();
 
-        QueryWrapper<AlertRecordEntity> wrapper = new QueryWrapper<>();
-        wrapper.like(StrUtil.isNotBlank(alertName), "alert_name", alertName);
-        wrapper.like(StrUtil.isNotBlank(instance), "instance", instance);
+        LambdaQueryWrapper<AlertRecordEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.like(StrUtil.isNotBlank(alertName), AlertRecordEntity::getAlertName, alertName);
+        wrapper.like(StrUtil.isNotBlank(instance), AlertRecordEntity::getInstance, instance);
         if (StrUtil.isNotBlank(hostName)) {
             List<String> instancesByName = listInstancesByHostName(hostName, deviceType);
             if (instancesByName.isEmpty()) {
-                wrapper.eq("id", -1L);
+                wrapper.eq(AlertRecordEntity::getId, -1L);
             } else {
                 applyInstanceLikeFilter(wrapper, instancesByName);
             }
         }
-        wrapper.eq(StrUtil.isNotBlank(severity), "severity", severity);
-        wrapper.eq(StrUtil.isNotBlank(status), "status", status);
+        wrapper.eq(StrUtil.isNotBlank(severity), AlertRecordEntity::getSeverity, severity);
+        wrapper.eq(StrUtil.isNotBlank(status), AlertRecordEntity::getStatus, status);
         if (StrUtil.isNotBlank(deviceType)) {
             List<String> instances = listInstancesByType(deviceType);
             if (instances.isEmpty()) {
-                wrapper.eq("id", -1L);
+                wrapper.eq(AlertRecordEntity::getId, -1L);
             } else {
                 applyInstanceLikeFilter(wrapper, instances);
             }
         }
-        wrapper.orderByDesc("starts_at");
+        wrapper.orderByDesc(AlertRecordEntity::getStartsAt);
 
-        return wrapper;
-    }
+        IPage<AlertRecordEntity> page = this.page(request.buildPage(), wrapper);
+        PageData<AlertRecordDTO> pageData = new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), AlertRecordDTO.class), page.getTotal());
 
-    @Override
-    public PageData<AlertRecordDTO> page(Map<String, Object> params) {
-        PageData<AlertRecordDTO> page = super.page(params);
-        if (page == null || page.getList() == null || page.getList().isEmpty()) {
-            return page;
+        if (pageData.getList() == null || pageData.getList().isEmpty()) {
+            return pageData;
         }
         Map<String, HostInfo> hostMap = loadHostInfoMap();
-        for (AlertRecordDTO dto : page.getList()) {
+        for (AlertRecordDTO dto : pageData.getList()) {
             if (dto == null) {
                 continue;
             }
             dto.setHostName(resolveHostName(dto.getInstance(), hostMap));
         }
-        return page;
+        return pageData;
     }
 
+    @Override
+    public AlertRecordDTO get(Long id) {
+        return ConvertUtils.sourceToTarget(this.getById(id), AlertRecordDTO.class);
+    }
+
+    @Override
+    public void delete(Long[] ids) {
+        this.removeByIds(Arrays.asList(ids));
+    }
+
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void saveFromWebhook(Map<String, Object> payload, String rawJson, String severityFromPath) {
         if (payload == null) {
@@ -163,7 +175,7 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
             entity.setReceiver(receiver);
             entity.setRawJson(rawJson);
             entity.setClosed(0);
-            baseDao.insert(entity);
+            this.getBaseMapper().insert(entity);
             saved = true;
         }
         if (saved) {
@@ -173,35 +185,7 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
 
     @Override
     public List<AlertRecordActionDTO> history(Long recordId) {
-        if (recordId == null) {
-            return new ArrayList<>();
-        }
-        List<AlertRecordActionEntity> actions = alertRecordActionDao.selectList(
-            new LambdaQueryWrapper<AlertRecordActionEntity>()
-                .eq(AlertRecordActionEntity::getRecordId, recordId)
-                .orderByDesc(AlertRecordActionEntity::getCreateDate)
-        );
-        List<AlertRecordActionDTO> result = ConvertUtils.sourceToTarget(actions, AlertRecordActionDTO.class);
-        List<Long> userIds = result.stream()
-            .map(AlertRecordActionDTO::getCreator)
-            .filter(Objects::nonNull)
-            .distinct()
-            .collect(Collectors.toList());
-        Map<Long, String> userMap = new HashMap<>();
-        if (!userIds.isEmpty()) {
-            List<SysUserEntity> users = sysUserDao.selectList(
-                new LambdaQueryWrapper<SysUserEntity>()
-                    .select(SysUserEntity::getId, SysUserEntity::getUsername)
-                    .in(SysUserEntity::getId, userIds)
-            );
-            for (SysUserEntity user : users) {
-                userMap.put(user.getId(), user.getUsername());
-            }
-        }
-        for (AlertRecordActionDTO dto : result) {
-            dto.setOperatorName(userMap.get(dto.getCreator()));
-        }
-        return result;
+        return alertRecordActionService.listByRecordId(recordId);
     }
 
     @Override
@@ -213,7 +197,7 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
         }
         String oldSeverity = record.getSeverity();
         record.setSeverity(normalized);
-        baseDao.updateById(record);
+        this.updateById(record);
         saveAction(recordId, "更改严重性", message,
             "from=" + StrUtil.nullToEmpty(oldSeverity) + ",to=" + normalized);
         alertSseService.publishRecentAlerts();
@@ -230,7 +214,7 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
         updateWrapper.eq(AlertRecordEntity::getAlertName, record.getAlertName())
             .eq(AlertRecordEntity::getInstance, record.getInstance())
             .set(AlertRecordEntity::getSuppressedUntil, until);
-        baseDao.update(null, updateWrapper);
+        this.update(null, updateWrapper);
 
         String silenceId = alertManagerService.createSilence(record, days, message);
         String details = "days=" + days + ",until=" + until;
@@ -252,9 +236,9 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
         AlertRecordEntity record = requireRecord(recordId);
         record.setClosed(1);
         record.setStatus("resolved");
-        // 手动关闭时，恢复时间以“点击关闭”的操作时间为准
+        // 手动关闭时，恢复时间以"点击关闭"的操作时间为准
         record.setEndsAt(new Date());
-        baseDao.updateById(record);
+        this.updateById(record);
 
         alertManagerService.sendResolvedAlert(record, message);
         sendRecoveryMail(record, message);
@@ -319,13 +303,16 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
             wrapper.last("limit 5000");
         }
 
-        List<AlertRecordEntity> records = baseDao.selectList(wrapper);
+        List<AlertRecordEntity> records = this.list(wrapper);
 
         Map<String, HostInfo> hostMap = loadHostInfoMap();
-        Map<Long, Boolean> ackMap = loadAckMap(records);
+        List<Long> recordIds = records.stream().map(AlertRecordEntity::getId).collect(Collectors.toList());
+        Map<Long, Boolean> ackMap = alertRecordActionService.loadAckMap(recordIds);
         Map<Long, ActionMeta> actionMetaMap = loadActionMetaMap(records);
-        Map<Long, AlertNotifyLogEntity> latestNotifyMap = loadLatestNotifyMap(records);
-        Map<String, AlertNotifyLogEntity> latestNotifyByAlert = loadLatestNotifyByAlert(records);
+        Map<Long, AlertNotifyLogEntity> latestNotifyMap = alertNotifyLogService.loadLatestByRecordIds(recordIds);
+        Set<String> alertNames = records.stream().map(AlertRecordEntity::getAlertName).filter(StrUtil::isNotBlank).collect(Collectors.toSet());
+        Set<String> instanceSet = records.stream().map(AlertRecordEntity::getInstance).filter(StrUtil::isNotBlank).collect(Collectors.toSet());
+        Map<String, AlertNotifyLogEntity> latestNotifyByAlert = alertNotifyLogService.loadLatestByAlerts(new ArrayList<>(alertNames), new ArrayList<>(instanceSet));
 
         List<AlertProblemDTO> all = new ArrayList<>();
         for (AlertRecordEntity record : records) {
@@ -407,7 +394,7 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
         if (recordId == null) {
             throw new ServiceException("告警记录不存在");
         }
-        AlertRecordEntity record = baseDao.selectById(recordId);
+        AlertRecordEntity record = this.getById(recordId);
         if (record == null) {
             throw new ServiceException("告警记录不存在");
         }
@@ -415,12 +402,7 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
     }
 
     private void saveAction(Long recordId, String action, String message, String details) {
-        AlertRecordActionEntity history = new AlertRecordActionEntity();
-        history.setRecordId(recordId);
-        history.setAction(action);
-        history.setMessage(message);
-        history.setDetails(details);
-        alertRecordActionDao.insert(history);
+        alertRecordActionService.saveAction(recordId, action, message, details);
     }
 
     private String normalizeSeverity(String severity) {
@@ -444,7 +426,7 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
         if (StrUtil.isBlank(alertName) || StrUtil.isBlank(instance)) {
             return false;
         }
-        return baseDao.selectCount(
+        return this.count(
             new LambdaQueryWrapper<AlertRecordEntity>()
                 .eq(AlertRecordEntity::getAlertName, alertName)
                 .eq(AlertRecordEntity::getInstance, instance)
@@ -507,32 +489,13 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
         return info == null ? null : info.name;
     }
 
-    private Map<Long, Boolean> loadAckMap(List<AlertRecordEntity> records) {
-        Map<Long, Boolean> ackMap = new HashMap<>();
-        if (records == null || records.isEmpty()) {
-            return ackMap;
-        }
-        List<Long> ids = records.stream().map(AlertRecordEntity::getId).collect(Collectors.toList());
-        List<AlertRecordActionEntity> actions = alertRecordActionDao.selectList(
-            new LambdaQueryWrapper<AlertRecordActionEntity>()
-                .select(AlertRecordActionEntity::getRecordId, AlertRecordActionEntity::getAction)
-                .in(AlertRecordActionEntity::getRecordId, ids)
-        );
-        for (AlertRecordActionEntity item : actions) {
-            if ("确定".equals(item.getAction())) {
-                ackMap.put(item.getRecordId(), true);
-            }
-        }
-        return ackMap;
-    }
-
     private Map<Long, ActionMeta> loadActionMetaMap(List<AlertRecordEntity> records) {
         Map<Long, ActionMeta> result = new HashMap<>();
         if (records == null || records.isEmpty()) {
             return result;
         }
         List<Long> ids = records.stream().map(AlertRecordEntity::getId).collect(Collectors.toList());
-        List<AlertRecordActionEntity> actions = alertRecordActionDao.selectList(
+        List<AlertRecordActionEntity> actions = alertRecordActionService.list(
             new LambdaQueryWrapper<AlertRecordActionEntity>()
                 .select(AlertRecordActionEntity::getRecordId,
                     AlertRecordActionEntity::getAction,
@@ -550,17 +513,7 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
             .filter(Objects::nonNull)
             .distinct()
             .collect(Collectors.toList());
-        Map<Long, String> userMap = new HashMap<>();
-        if (!userIds.isEmpty()) {
-            List<SysUserEntity> users = sysUserDao.selectList(
-                new LambdaQueryWrapper<SysUserEntity>()
-                    .select(SysUserEntity::getId, SysUserEntity::getUsername)
-                    .in(SysUserEntity::getId, userIds)
-            );
-            for (SysUserEntity user : users) {
-                userMap.put(user.getId(), user.getUsername());
-            }
-        }
+        Map<Long, String> userMap = loadUserMap(userIds);
         for (AlertRecordActionEntity action : actions) {
             if (action.getRecordId() == null || StrUtil.isBlank(action.getAction())) {
                 continue;
@@ -581,57 +534,20 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
         return result;
     }
 
-    private Map<Long, AlertNotifyLogEntity> loadLatestNotifyMap(List<AlertRecordEntity> records) {
-        Map<Long, AlertNotifyLogEntity> result = new HashMap<>();
-        if (records == null || records.isEmpty()) {
-            return result;
+    private Map<Long, String> loadUserMap(List<Long> userIds) {
+        Map<Long, String> userMap = new HashMap<>();
+        if (userIds == null || userIds.isEmpty()) {
+            return userMap;
         }
-        List<Long> ids = records.stream().map(AlertRecordEntity::getId).collect(Collectors.toList());
-        List<AlertNotifyLogEntity> logs = alertNotifyLogDao.selectList(
-            new LambdaQueryWrapper<AlertNotifyLogEntity>()
-                .in(AlertNotifyLogEntity::getRecordId, ids)
-                .orderByDesc(AlertNotifyLogEntity::getSendTime)
+        List<SysUserEntity> users = sysUserDao.selectList(
+            new LambdaQueryWrapper<SysUserEntity>()
+                .select(SysUserEntity::getId, SysUserEntity::getUsername)
+                .in(SysUserEntity::getId, userIds)
         );
-        for (AlertNotifyLogEntity log : logs) {
-            if (log.getRecordId() == null || result.containsKey(log.getRecordId())) {
-                continue;
-            }
-            result.put(log.getRecordId(), log);
+        for (SysUserEntity user : users) {
+            userMap.put(user.getId(), user.getUsername());
         }
-        return result;
-    }
-
-    private Map<String, AlertNotifyLogEntity> loadLatestNotifyByAlert(List<AlertRecordEntity> records) {
-        Map<String, AlertNotifyLogEntity> result = new HashMap<>();
-        if (records == null || records.isEmpty()) {
-            return result;
-        }
-        Set<String> alertNames = records.stream()
-            .map(AlertRecordEntity::getAlertName)
-            .filter(StrUtil::isNotBlank)
-            .collect(Collectors.toSet());
-        Set<String> instances = records.stream()
-            .map(AlertRecordEntity::getInstance)
-            .filter(StrUtil::isNotBlank)
-            .collect(Collectors.toSet());
-        if (alertNames.isEmpty() || instances.isEmpty()) {
-            return result;
-        }
-        List<AlertNotifyLogEntity> logs = alertNotifyLogDao.selectList(
-            new LambdaQueryWrapper<AlertNotifyLogEntity>()
-                .in(AlertNotifyLogEntity::getAlertName, alertNames)
-                .in(AlertNotifyLogEntity::getInstance, instances)
-                .orderByDesc(AlertNotifyLogEntity::getSendTime)
-                .last("limit 2000")
-        );
-        for (AlertNotifyLogEntity log : logs) {
-            String key = buildAlertKey(log.getAlertName(), log.getInstance());
-            if (StrUtil.isBlank(key) || result.containsKey(key)) {
-                continue;
-            }
-            result.put(key, log);
-        }
-        return result;
+        return userMap;
     }
 
     private String buildAlertKey(String alertName, String instance) {
@@ -833,25 +749,6 @@ public class AlertRecordServiceImpl extends CrudServiceImpl<AlertRecordDao, Aler
             list.forEach(item -> instances.add(item.getInstance()));
         }
         return instances.stream().filter(StrUtil::isNotBlank).distinct().collect(Collectors.toList());
-    }
-
-    private void applyInstanceLikeFilter(QueryWrapper<AlertRecordEntity> wrapper, List<String> instances) {
-        List<String> keys = buildInstanceLikeKeys(instances);
-        if (keys.isEmpty()) {
-            wrapper.eq("id", -1L);
-            return;
-        }
-        wrapper.and(w -> {
-            boolean first = true;
-            for (String key : keys) {
-                if (first) {
-                    w.like("instance", key);
-                    first = false;
-                } else {
-                    w.or().like("instance", key);
-                }
-            }
-        });
     }
 
     private void applyInstanceLikeFilter(LambdaQueryWrapper<AlertRecordEntity> wrapper, List<String> instances) {

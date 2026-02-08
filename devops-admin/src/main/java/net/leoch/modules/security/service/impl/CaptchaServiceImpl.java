@@ -6,6 +6,7 @@ import com.wf.captcha.SpecCaptcha;
 import com.wf.captcha.base.Captcha;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.redis.RedisKeys;
 import net.leoch.common.redis.RedisUtils;
 import net.leoch.modules.security.service.CaptchaService;
@@ -18,6 +19,7 @@ import java.io.IOException;
  *
  * @author Taohongqiang
  */
+@Slf4j
 @Service
 public class CaptchaServiceImpl implements CaptchaService {
     @Resource

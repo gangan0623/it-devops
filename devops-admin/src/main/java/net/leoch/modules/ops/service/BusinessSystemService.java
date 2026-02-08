@@ -1,9 +1,9 @@
 package net.leoch.modules.ops.service;
 
-import net.leoch.common.service.CrudService;
-import net.leoch.modules.ops.dto.BusinessSystemDTO;
-import net.leoch.modules.ops.dto.BusinessSystemPageRequest;
-import net.leoch.modules.ops.dto.OpsHostStatusSummaryDTO;
+import com.baomidou.mybatisplus.extension.service.IService;
+import jakarta.servlet.http.HttpServletResponse;
+import net.leoch.common.page.PageData;
+import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 
 /**
@@ -12,29 +12,29 @@ import net.leoch.modules.ops.entity.BusinessSystemEntity;
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
-public interface BusinessSystemService extends CrudService<BusinessSystemEntity, BusinessSystemDTO> {
+public interface BusinessSystemService extends IService<BusinessSystemEntity> {
 
-    net.leoch.common.page.PageData<BusinessSystemDTO> page(net.leoch.modules.ops.dto.BusinessSystemPageRequest request);
+    PageData<BusinessSystemDTO> page(BusinessSystemPageRequest request);
 
-    BusinessSystemDTO get(net.leoch.modules.ops.dto.BusinessSystemIdRequest request);
+    BusinessSystemDTO get(BusinessSystemIdRequest request);
 
     void save(BusinessSystemDTO dto);
 
     void update(BusinessSystemDTO dto);
 
-    void updateStatus(net.leoch.modules.ops.dto.BusinessSystemStatusUpdateRequest request);
+    void updateStatus(BusinessSystemStatusUpdateRequest request);
 
-    boolean online(net.leoch.modules.ops.dto.BusinessSystemOnlineRequest request);
+    boolean online(BusinessSystemOnlineRequest request);
 
-    boolean check(net.leoch.modules.ops.dto.BusinessSystemCheckRequest request);
+    boolean check(BusinessSystemCheckRequest request);
 
-    void importExcel(net.leoch.modules.ops.dto.BusinessSystemImportRequest request) throws Exception;
+    void importExcel(BusinessSystemImportRequest request) throws Exception;
 
-    void template(jakarta.servlet.http.HttpServletResponse response) throws Exception;
+    void template(HttpServletResponse response) throws Exception;
 
-    void export(net.leoch.modules.ops.dto.BusinessSystemPageRequest request, jakarta.servlet.http.HttpServletResponse response) throws Exception;
+    void export(BusinessSystemPageRequest request, HttpServletResponse response) throws Exception;
 
-    void delete(net.leoch.modules.ops.dto.BusinessSystemDeleteRequest request);
+    void delete(BusinessSystemDeleteRequest request);
 
     void updateStatus(Long[] ids, Integer status);
 

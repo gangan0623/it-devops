@@ -2,15 +2,13 @@ package net.leoch.modules.ops.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
-import net.leoch.common.constant.Constant;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
-import net.leoch.common.service.impl.CrudServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.ops.dao.DeviceBackupRecordDao;
 import net.leoch.modules.ops.dto.*;
@@ -21,13 +19,11 @@ import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 设备备份信息表
@@ -35,8 +31,11 @@ import java.util.Map;
  * @author Taohongqiang
  * @since 1.0.0 2026-01-29
  */
+@Slf4j
 @Service
-public class DeviceBackupRecordServiceImpl extends CrudServiceImpl<DeviceBackupRecordDao, DeviceBackupRecordEntity, DeviceBackupRecordDTO> implements DeviceBackupRecordService {
+public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecordDao, DeviceBackupRecordEntity> implements DeviceBackupRecordService {
+
+    private static final Set<String> ALLOWED_DOWNLOAD_HOSTS = new HashSet<>();
 
     private final DeviceBackupHistoryService deviceBackupHistoryService;
 
@@ -45,27 +44,13 @@ public class DeviceBackupRecordServiceImpl extends CrudServiceImpl<DeviceBackupR
     }
 
     @Override
-    public QueryWrapper<DeviceBackupRecordEntity> getWrapper(Map<String, Object> params) {
-        QueryWrapper<DeviceBackupRecordEntity> wrapper = new QueryWrapper<>();
-        LambdaQueryWrapper<DeviceBackupRecordEntity> lambda = wrapper.lambda();
-        String name = (String) params.get("name");
-        String ip = (String) params.get("ip");
-        String status = (String) params.get("status");
-        lambda.like(StrUtil.isNotBlank(name), DeviceBackupRecordEntity::getName, name);
-        lambda.like(StrUtil.isNotBlank(ip), DeviceBackupRecordEntity::getIp, ip);
-        lambda.eq(StrUtil.isNotBlank(status), DeviceBackupRecordEntity::getLastBackupStatus, status);
-        lambda.orderByDesc(DeviceBackupRecordEntity::getLastBackupTime);
-        return wrapper;
-    }
-
-    @Override
     public PageData<DeviceBackupRecordDTO> page(DeviceBackupRecordPageRequest request) {
         LambdaQueryWrapper<DeviceBackupRecordEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StrUtil.isNotBlank(request.getName()), DeviceBackupRecordEntity::getName, request.getName());
         wrapper.like(StrUtil.isNotBlank(request.getIp()), DeviceBackupRecordEntity::getIp, request.getIp());
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), DeviceBackupRecordEntity::getLastBackupStatus, request.getStatus());
-        Page<DeviceBackupRecordEntity> page = buildPage(request);
-        IPage<DeviceBackupRecordEntity> result = baseDao.selectPage(page, wrapper);
+        Page<DeviceBackupRecordEntity> page = request.buildPage();
+        IPage<DeviceBackupRecordEntity> result = this.page(page, wrapper);
         List<DeviceBackupRecordDTO> list = ConvertUtils.sourceToTarget(result.getRecords(), DeviceBackupRecordDTO.class);
         return new PageData<>(list, result.getTotal());
     }
@@ -75,7 +60,7 @@ public class DeviceBackupRecordServiceImpl extends CrudServiceImpl<DeviceBackupR
         if (request == null || request.getId() == null) {
             return null;
         }
-        DeviceBackupRecordEntity entity = baseDao.selectById(request.getId());
+        DeviceBackupRecordEntity entity = this.getById(request.getId());
         return ConvertUtils.sourceToTarget(entity, DeviceBackupRecordDTO.class);
     }
 
@@ -84,7 +69,7 @@ public class DeviceBackupRecordServiceImpl extends CrudServiceImpl<DeviceBackupR
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
-        super.delete(request.getIds());
+        this.removeByIds(Arrays.asList(request.getIds()));
     }
 
     @Override
@@ -100,7 +85,7 @@ public class DeviceBackupRecordServiceImpl extends CrudServiceImpl<DeviceBackupR
         if (request == null) {
             return new ArrayList<>();
         }
-        List<java.util.Map<String, Object>> data = deviceBackupHistoryService.diffById(request.getLeftId(), request.getRightId());
+        List<Map<String, Object>> data = deviceBackupHistoryService.diffById(request.getLeftId(), request.getRightId());
         return toDiffLines(data);
     }
 
@@ -117,7 +102,7 @@ public class DeviceBackupRecordServiceImpl extends CrudServiceImpl<DeviceBackupR
         if (history == null || history.getUrl() == null) {
             throw new ServiceException("历史记录不存在或URL为空");
         }
-        List<java.util.Map<String, Object>> data = deviceBackupHistoryService.diffByUrls(history.getUrl(), current.getUrl());
+        List<Map<String, Object>> data = deviceBackupHistoryService.diffByUrls(history.getUrl(), current.getUrl());
         return toDiffLines(data);
     }
 
@@ -135,6 +120,7 @@ public class DeviceBackupRecordServiceImpl extends CrudServiceImpl<DeviceBackupR
             response.setStatus(400);
             return;
         }
+        validateDownloadUrl(request.getUrl());
         HttpURLConnection connection = null;
         try {
             connection = (HttpURLConnection) new URL(request.getUrl()).openConnection();
@@ -157,12 +143,36 @@ public class DeviceBackupRecordServiceImpl extends CrudServiceImpl<DeviceBackupR
             try (InputStream in = connection.getInputStream()) {
                 in.transferTo(response.getOutputStream());
             }
+        } catch (ServiceException e) {
+            throw e;
         } catch (Exception e) {
+            log.error("[备份下载] 下载失败, url: {}", request.getUrl(), e);
             response.setStatus(500);
         } finally {
             if (connection != null) {
                 connection.disconnect();
             }
+        }
+    }
+
+    private void validateDownloadUrl(String urlStr) {
+        try {
+            URI uri = new URI(urlStr);
+            String scheme = uri.getScheme();
+            if (scheme == null || (!scheme.equals("http") && !scheme.equals("https"))) {
+                throw new ServiceException("仅支持HTTP/HTTPS协议下载");
+            }
+            String host = uri.getHost();
+            if (host == null) {
+                throw new ServiceException("下载URL无效");
+            }
+            if (host.equals("127.0.0.1") || host.equals("localhost") || host.startsWith("169.254.") || host.equals("0.0.0.0")) {
+                throw new ServiceException("不允许访问内部地址");
+            }
+        } catch (ServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServiceException("下载URL格式无效");
         }
     }
 
@@ -173,7 +183,7 @@ public class DeviceBackupRecordServiceImpl extends CrudServiceImpl<DeviceBackupR
         }
         LambdaQueryWrapper<DeviceBackupRecordEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(DeviceBackupRecordEntity::getIp, ip);
-        DeviceBackupRecordEntity existing = baseDao.selectOne(wrapper);
+        DeviceBackupRecordEntity existing = this.getOne(wrapper);
         Date now = new Date();
         if (existing == null) {
             DeviceBackupRecordEntity entity = new DeviceBackupRecordEntity();
@@ -183,7 +193,7 @@ public class DeviceBackupRecordServiceImpl extends CrudServiceImpl<DeviceBackupR
             entity.setLastBackupTime(now);
             entity.setLastBackupStatus(success ? 1 : 0);
             entity.setBackupNum(1);
-            baseDao.insert(entity);
+            this.getBaseMapper().insert(entity);
             return;
         }
         existing.setName(name);
@@ -194,7 +204,7 @@ public class DeviceBackupRecordServiceImpl extends CrudServiceImpl<DeviceBackupR
         existing.setLastBackupStatus(success ? 1 : 0);
         Integer num = existing.getBackupNum() == null ? 0 : existing.getBackupNum();
         existing.setBackupNum(num + 1);
-        baseDao.updateById(existing);
+        this.updateById(existing);
     }
 
     @Override
@@ -204,41 +214,16 @@ public class DeviceBackupRecordServiceImpl extends CrudServiceImpl<DeviceBackupR
         }
         LambdaQueryWrapper<DeviceBackupRecordEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(DeviceBackupRecordEntity::getIp, ip).last("limit 1");
-        DeviceBackupRecordEntity existing = baseDao.selectOne(wrapper);
+        DeviceBackupRecordEntity existing = this.getOne(wrapper);
         return ConvertUtils.sourceToTarget(existing, DeviceBackupRecordDTO.class);
     }
 
-    private Page<DeviceBackupRecordEntity> buildPage(DeviceBackupRecordPageRequest request) {
-        long curPage = 1;
-        long limit = 10;
-        if (request != null) {
-            if (StrUtil.isNotBlank(request.getPage())) {
-                curPage = Long.parseLong(request.getPage());
-            }
-            if (StrUtil.isNotBlank(request.getLimit())) {
-                limit = Long.parseLong(request.getLimit());
-            }
-        }
-        Page<DeviceBackupRecordEntity> page = new Page<>(curPage, limit);
-        if (request == null) {
-            return page;
-        }
-        if (StrUtil.isNotBlank(request.getOrderField()) && StrUtil.isNotBlank(request.getOrder())) {
-            if (Constant.ASC.equalsIgnoreCase(request.getOrder())) {
-                page.addOrder(OrderItem.asc(request.getOrderField()));
-            } else {
-                page.addOrder(OrderItem.desc(request.getOrderField()));
-            }
-        }
-        return page;
-    }
-
-    private List<DeviceBackupDiffLineDTO> toDiffLines(List<java.util.Map<String, Object>> data) {
+    private List<DeviceBackupDiffLineDTO> toDiffLines(List<Map<String, Object>> data) {
         List<DeviceBackupDiffLineDTO> list = new ArrayList<>();
         if (data == null || data.isEmpty()) {
             return list;
         }
-        for (java.util.Map<String, Object> item : data) {
+        for (Map<String, Object> item : data) {
             DeviceBackupDiffLineDTO line = new DeviceBackupDiffLineDTO();
             Object type = item.get("type");
             line.setType(type == null ? "" : String.valueOf(type));

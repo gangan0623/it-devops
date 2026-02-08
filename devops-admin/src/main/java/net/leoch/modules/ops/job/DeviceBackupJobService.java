@@ -11,12 +11,12 @@ import net.leoch.modules.ops.entity.BackupAgentEntity;
 import net.leoch.modules.ops.entity.DeviceBackupEntity;
 import net.leoch.modules.ops.service.DeviceBackupHistoryService;
 import net.leoch.modules.ops.service.DeviceBackupRecordService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -25,10 +25,9 @@ import java.util.stream.Collectors;
 /**
  * 设备备份定时任务
  */
+@Slf4j
 @Service("deviceBackupJobService")
 public class DeviceBackupJobService {
-
-    private static final Logger logger = LoggerFactory.getLogger(DeviceBackupJobService.class);
     private final DeviceBackupDao deviceBackupDao;
     private final BackupAgentDao backupAgentDao;
     private final DeviceBackupRecordService deviceBackupRecordService;
@@ -69,7 +68,7 @@ public class DeviceBackupJobService {
         if (StrUtil.isBlank(token) || CollUtil.isEmpty(items)) {
             return false;
         }
-        logger.info("备份回调收到：token={}，数量={}", token, items == null ? 0 : items.size());
+        log.info("[设备备份] 备份回调收到：token={}***，数量={}", token != null && token.length() > 4 ? token.substring(0, 4) : "****", items == null ? 0 : items.size());
         BackupAgentEntity agent = backupAgentDao.selectOne(
             new LambdaQueryWrapper<BackupAgentEntity>().eq(BackupAgentEntity::getToken, token).last("limit 1")
         );
@@ -124,7 +123,7 @@ public class DeviceBackupJobService {
         }
         HttpURLConnection connection = null;
         try {
-            logger.info("触发备份节点接口（回调模式）：{}", url);
+            log.info("[设备备份] 触发备份节点接口（回调模式）：{}", url);
             connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setRequestMethod("POST");
             connection.setConnectTimeout(5000);
@@ -140,9 +139,9 @@ public class DeviceBackupJobService {
                 out.write(body.getBytes(StandardCharsets.UTF_8));
             }
             int code = connection.getResponseCode();
-            logger.info("节点{}({}) 触发响应code={}，等待回调", agent.getName(), agent.getInstance(), code);
+            log.info("[设备备份] 节点{}({}) 触发响应code={}，等待回调", agent.getName(), agent.getInstance(), code);
         } catch (Exception ignore) {
-            logger.warn("节点接口调用失败：{}", ignore.getMessage());
+            log.warn("[设备备份] 节点接口调用失败：{}", url, ignore);
         } finally {
             if (connection != null) {
                 connection.disconnect();
@@ -160,7 +159,7 @@ public class DeviceBackupJobService {
             if (!candidate.startsWith("http://") && !candidate.startsWith("https://")) {
                 candidate = "http://" + candidate;
             }
-            java.net.URI uri = new java.net.URI(candidate);
+            URI uri = new URI(candidate);
             String scheme = uri.getScheme() == null ? "http" : uri.getScheme();
             String host = uri.getHost();
             int port = uri.getPort();
@@ -192,7 +191,7 @@ public class DeviceBackupJobService {
                     path = path + "/backup";
                 }
             }
-            return new java.net.URI(scheme, null, host, port, path, null, null).toString();
+            return new URI(scheme, null, host, port, path, null, null).toString();
         } catch (Exception ignore) {
             if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
                 return trimmed.endsWith("/backup") ? trimmed : trimmed + (trimmed.endsWith("/") ? "backup" : "/backup");

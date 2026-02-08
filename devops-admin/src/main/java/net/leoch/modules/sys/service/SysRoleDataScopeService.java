@@ -1,8 +1,6 @@
-
-
 package net.leoch.modules.sys.service;
 
-import net.leoch.common.service.BaseService;
+import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.modules.sys.entity.SysRoleDataScopeEntity;
 
 import java.util.List;
@@ -13,7 +11,7 @@ import java.util.List;
  * @author Taohongqiang
  * @since 1.0.0
  */
-public interface SysRoleDataScopeService extends BaseService<SysRoleDataScopeEntity> {
+public interface SysRoleDataScopeService extends IService<SysRoleDataScopeEntity> {
 
     /**
      * 根据角色ID，获取部门ID列表

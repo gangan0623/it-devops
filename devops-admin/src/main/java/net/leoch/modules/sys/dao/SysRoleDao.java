@@ -2,7 +2,7 @@
 
 package net.leoch.modules.sys.dao;
 
-import net.leoch.common.dao.BaseDao;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import net.leoch.modules.sys.entity.SysRoleEntity;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -12,7 +12,7 @@ import org.apache.ibatis.annotations.Mapper;
  * @author Taohongqiang
  */
 @Mapper
-public interface SysRoleDao extends BaseDao<SysRoleEntity> {
+public interface SysRoleDao extends BaseMapper<SysRoleEntity> {
 	
 
 }

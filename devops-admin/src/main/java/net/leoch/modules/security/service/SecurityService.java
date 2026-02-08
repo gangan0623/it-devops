@@ -2,6 +2,9 @@
 
 package net.leoch.modules.security.service;
 
+import jakarta.servlet.http.HttpServletRequest;
+import net.leoch.common.utils.Result;
+import net.leoch.modules.security.dto.LoginDTO;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.entity.SysUserEntity;
@@ -34,4 +37,18 @@ public interface SecurityService {
      * @return        返回部门ID列表
      */
     List<Long> getDataScopeList(Long userId);
+
+    /**
+     * 用户登录
+     * @param request HTTP请求
+     * @param login   登录信息
+     * @return        登录结果
+     */
+    Result<Object> login(HttpServletRequest request, LoginDTO login);
+
+    /**
+     * 记录退出日志并注销
+     * @param request HTTP请求
+     */
+    void recordLogout(HttpServletRequest request);
 }

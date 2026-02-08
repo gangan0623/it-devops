@@ -1,12 +1,12 @@
-
-
 package net.leoch.modules.security.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.service.impl.BaseServiceImpl;
+import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.security.dao.SysUserTokenDao;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
@@ -22,15 +22,16 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @AllArgsConstructor
 @Service
-public class SysUserTokenServiceImpl extends BaseServiceImpl<SysUserTokenDao, SysUserTokenEntity> implements SysUserTokenService {
+public class SysUserTokenServiceImpl extends ServiceImpl<SysUserTokenDao, SysUserTokenEntity> implements SysUserTokenService {
 	private final SysUserService sysUserService;
 	private final SecurityService securityService;
 	/**
 	 * 12小时后过期
 	 */
-	private final static int EXPIRE = 3600 * 12;
+	private static final int EXPIRE = 3600 * 12;
 
 	@Override
 	public Result<Object> createToken(Long userId) {
@@ -43,21 +44,21 @@ public class SysUserTokenServiceImpl extends BaseServiceImpl<SysUserTokenDao, Sy
 		String token = StpUtil.getTokenValue();
 		long timeout = StpUtil.getTokenTimeout();
 
-		UserDetail userDetail = net.leoch.common.utils.ConvertUtils.sourceToTarget(user, UserDetail.class);
+		UserDetail userDetail = ConvertUtils.sourceToTarget(user, UserDetail.class);
 		userDetail.setDeptIdList(securityService.getDataScopeList(userId));
 		StpUtil.getSession().set("user", userDetail);
 
 		Date now = new Date();
 		Date expireTime = timeout > 0 ? new Date(now.getTime() + timeout * 1000) : null;
 
-		SysUserTokenEntity tokenEntity = baseDao.getByUserId(userId);
+		SysUserTokenEntity tokenEntity = this.getBaseMapper().getByUserId(userId);
 		if (tokenEntity == null) {
 			tokenEntity = new SysUserTokenEntity();
 			tokenEntity.setUserId(userId);
 			tokenEntity.setToken(token);
 			tokenEntity.setUpdateDate(now);
 			tokenEntity.setExpireDate(expireTime);
-			this.insert(tokenEntity);
+			this.save(tokenEntity);
 		} else {
 			tokenEntity.setToken(token);
 			tokenEntity.setUpdateDate(now);
@@ -75,6 +76,6 @@ public class SysUserTokenServiceImpl extends BaseServiceImpl<SysUserTokenDao, Sy
 	public void logout(Long userId) {
 		StpUtil.logout(userId);
 		String token = UUID.randomUUID().toString().replace("-", "");
-		baseDao.updateToken(userId, token);
+		this.getBaseMapper().updateToken(userId, token);
 	}
 }

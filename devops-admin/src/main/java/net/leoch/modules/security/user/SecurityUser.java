@@ -4,6 +4,7 @@ package net.leoch.modules.security.user;
 
 import cn.dev33.satoken.session.SaSession;
 import cn.dev33.satoken.stp.StpUtil;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.SpringContextUtils;
 import net.leoch.modules.security.service.SecurityService;
@@ -14,6 +15,7 @@ import net.leoch.modules.sys.entity.SysUserEntity;
  *
  * @author Taohongqiang
  */
+@Slf4j
 public class SecurityUser {
 
     /**
@@ -46,6 +48,7 @@ public class SecurityUser {
             StpUtil.getSession().set("user", user);
             return user;
         } catch (Exception e) {
+            log.warn("[安全] 获取用户信息失败", e);
             return new UserDetail();
         }
     }
@@ -57,6 +60,7 @@ public class SecurityUser {
         try {
             return StpUtil.getLoginIdAsLong();
         } catch (Exception e) {
+            log.warn("[安全] 获取用户ID失败", e);
             return null;
         }
     }

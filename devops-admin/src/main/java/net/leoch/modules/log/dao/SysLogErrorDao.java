@@ -2,7 +2,7 @@
 
 package net.leoch.modules.log.dao;
 
-import net.leoch.common.dao.BaseDao;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import net.leoch.modules.log.entity.SysLogErrorEntity;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -13,6 +13,6 @@ import org.apache.ibatis.annotations.Mapper;
  * @since 1.0.0
  */
 @Mapper
-public interface SysLogErrorDao extends BaseDao<SysLogErrorEntity> {
+public interface SysLogErrorDao extends BaseMapper<SysLogErrorEntity> {
 	
 }

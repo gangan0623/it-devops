@@ -2,7 +2,7 @@
 
 package net.leoch.modules.job.dao;
 
-import net.leoch.common.dao.BaseDao;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import net.leoch.modules.job.entity.ScheduleJobEntity;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -14,7 +14,7 @@ import java.util.Map;
  * @author Taohongqiang
  */
 @Mapper
-public interface ScheduleJobDao extends BaseDao<ScheduleJobEntity> {
+public interface ScheduleJobDao extends BaseMapper<ScheduleJobEntity> {
 	
 	/**
 	 * 批量更新状态

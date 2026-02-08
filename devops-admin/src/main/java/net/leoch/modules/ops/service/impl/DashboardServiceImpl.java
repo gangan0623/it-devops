@@ -14,6 +14,7 @@ import net.leoch.modules.ops.entity.MonitorComponentEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
 import net.leoch.modules.ops.service.DashboardService;
 import net.leoch.modules.ops.service.ZabbixClient;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -21,6 +22,7 @@ import java.util.*;
 /**
  * 工作台统计
  */
+@Slf4j
 @Service
 public class DashboardServiceImpl implements DashboardService {
 

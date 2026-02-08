@@ -2,7 +2,7 @@
 
 package net.leoch.modules.sys.dao;
 
-import net.leoch.common.dao.BaseDao;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import net.leoch.modules.sys.entity.SysRoleUserEntity;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -15,7 +15,7 @@ import java.util.List;
  * @since 1.0.0
  */
 @Mapper
-public interface SysRoleUserDao extends BaseDao<SysRoleUserEntity> {
+public interface SysRoleUserDao extends BaseMapper<SysRoleUserEntity> {
 
     /**
      * 根据角色ids，删除角色用户关系

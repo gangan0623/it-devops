@@ -2,6 +2,7 @@
 
 package net.leoch.modules.security.user;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -24,7 +25,8 @@ public class UserDetail implements Serializable {
     private String email;
     private String mobile;
     private Long deptId;
-    private String password;
+    @JsonIgnore
+    private transient String password;
     private Integer status;
     private Integer superAdmin;
     /**

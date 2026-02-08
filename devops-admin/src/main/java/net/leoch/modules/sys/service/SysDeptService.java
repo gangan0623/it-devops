@@ -1,8 +1,6 @@
-
-
 package net.leoch.modules.sys.service;
 
-import net.leoch.common.service.BaseService;
+import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.modules.sys.dto.SysDeptDTO;
 import net.leoch.modules.sys.entity.SysDeptEntity;
 
@@ -11,10 +9,10 @@ import java.util.Map;
 
 /**
  * 部门管理
- * 
+ *
  * @author Taohongqiang
  */
-public interface SysDeptService extends BaseService<SysDeptEntity> {
+public interface SysDeptService extends IService<SysDeptEntity> {
 
 	List<SysDeptDTO> list(Map<String, Object> params);
 

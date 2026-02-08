@@ -1,8 +1,6 @@
-
-
 package net.leoch.modules.sys.service;
 
-import net.leoch.common.service.BaseService;
+import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.modules.sys.entity.SysRoleUserEntity;
 
 import java.util.List;
@@ -13,7 +11,7 @@ import java.util.List;
  * @author Taohongqiang
  * @since 1.0.0
  */
-public interface SysRoleUserService extends BaseService<SysRoleUserEntity> {
+public interface SysRoleUserService extends IService<SysRoleUserEntity> {
 
     /**
      * 保存或修改

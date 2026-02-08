@@ -3,8 +3,7 @@
 package net.leoch.common.convert;
 
 import cn.hutool.core.util.StrUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
 
@@ -19,9 +18,9 @@ import java.util.List;
  *
  * @author Taohongqiang
  */
+@Slf4j
 @Component
 public class DateConverter implements Converter<String, Date> {
-    private static final Logger logger = LoggerFactory.getLogger(DateConverter.class);
     private static final List<String> formatList = new ArrayList<>(5);
 
     static {
@@ -50,7 +49,7 @@ public class DateConverter implements Converter<String, Date> {
         } else if (source.matches("^\\d{4}-\\d{1,2}-\\d{1,2}.*T.*\\d{1,2}:\\d{1,2}:\\d{1,2}.*..*$")) {
             return parseDate(source, formatList.get(4));
         } else {
-            throw new IllegalArgumentException("Invalid boolean value '" + source + "'");
+            throw new IllegalArgumentException("Invalid date value '" + source + "'");
         }
     }
 
@@ -66,7 +65,7 @@ public class DateConverter implements Converter<String, Date> {
             DateFormat dateFormat = new SimpleDateFormat(format);
             date = dateFormat.parse(dateStr);
         } catch (Exception e) {
-            logger.error("Formatted date with date: {} and format : {} ", dateStr, format);
+            log.error("[日期转换] 日期解析失败, date: {}, format: {}", dateStr, format, e);
         }
         return date;
     }

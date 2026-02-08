@@ -1,16 +1,10 @@
-
-
 package net.leoch.modules.sys.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
-import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
@@ -19,14 +13,13 @@ import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.dto.SysRoleDTO;
+import net.leoch.modules.sys.dto.SysRolePageRequest;
 import net.leoch.modules.sys.service.SysRoleDataScopeService;
 import net.leoch.modules.sys.service.SysRoleMenuService;
 import net.leoch.modules.sys.service.SysRoleService;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 角色管理
@@ -44,16 +37,9 @@ public class SysRoleController {
 
     @GetMapping("page")
     @Operation(summary = "分页")
-    @Parameters({
-            @Parameter(name = Constant.PAGE, description = "当前页码，从1开始", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.LIMIT, description = "每页显示记录数", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = "name", description = "角色名", in = ParameterIn.QUERY, ref = "String")
-    })
     @SaCheckPermission("sys:role:page")
-    public Result<PageData<SysRoleDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
-        PageData<SysRoleDTO> page = sysRoleService.page(params);
+    public Result<PageData<SysRoleDTO>> page(SysRolePageRequest request) {
+        PageData<SysRoleDTO> page = sysRoleService.page(request);
 
         return new Result<PageData<SysRoleDTO>>().ok(page);
     }
@@ -62,7 +48,7 @@ public class SysRoleController {
     @Operation(summary = "列表")
     @SaCheckPermission("sys:role:list")
     public Result<List<SysRoleDTO>> list() {
-        List<SysRoleDTO> data = sysRoleService.list(new HashMap<>(1));
+        List<SysRoleDTO> data = sysRoleService.list(new SysRolePageRequest());
 
         return new Result<List<SysRoleDTO>>().ok(data);
     }

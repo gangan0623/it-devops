@@ -4,17 +4,16 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.redis.RedisKeys;
 import net.leoch.common.redis.RedisUtils;
-import net.leoch.common.service.impl.CrudServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.ExcelUtils;
 import net.leoch.common.utils.PingUtils;
@@ -30,6 +29,8 @@ import net.leoch.modules.ops.excel.template.BusinessSystemImportExcel;
 import net.leoch.modules.ops.service.BusinessSystemService;
 import net.leoch.modules.ops.util.OpsQueryUtils;
 import net.leoch.modules.security.user.SecurityUser;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,48 +42,26 @@ import java.util.*;
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
+@Slf4j
 @Service
-public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao, BusinessSystemEntity, BusinessSystemDTO> implements BusinessSystemService {
+public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemDao, BusinessSystemEntity> implements BusinessSystemService {
 
     @Resource
     private RedisUtils redisUtils;
-
-    @Override
-    public QueryWrapper<BusinessSystemEntity> getWrapper(Map<String, Object> params){
-        QueryWrapper<BusinessSystemEntity> wrapper = new QueryWrapper<>();
-        LambdaQueryWrapper<BusinessSystemEntity> lambda = wrapper.lambda();
-        String id = (String)params.get("id");
-        String instance = (String)params.get("instance");
-        String name = (String)params.get("name");
-        String areaName = (String) params.get("areaName");
-        String siteLocation = (String) params.get("siteLocation");
-        String menuName = (String) params.get("menuName");
-        String status = (String) params.get("status");
-        lambda.eq(StrUtil.isNotBlank(id), BusinessSystemEntity::getId, id);
-        BusinessSystemPageRequest req = new BusinessSystemPageRequest();
-        req.setInstance(instance);
-        req.setName(name);
-        req.setAreaName(areaName);
-        req.setSiteLocation(siteLocation);
-        req.setMenuName(menuName);
-        req.setStatus(status);
-        applyCommonFilters(lambda, req);
-        return wrapper;
-    }
 
     @Override
     public PageData<BusinessSystemDTO> page(BusinessSystemPageRequest request) {
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
-            List<BusinessSystemEntity> list = baseDao.selectList(wrapper);
+            List<BusinessSystemEntity> list = this.list(wrapper);
             List<BusinessSystemDTO> dtoList = ConvertUtils.sourceToTarget(list, BusinessSystemDTO.class);
             fillOnlineStatus(dtoList);
             OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), BusinessSystemDTO::getOnlineStatus);
             return OnlineStatusSupport.buildPageData(dtoList, request.getPage(), request.getLimit());
         }
-        Page<BusinessSystemEntity> page = buildPage(request);
-        IPage<BusinessSystemEntity> result = baseDao.selectPage(page, wrapper);
+        Page<BusinessSystemEntity> page = request.buildPage();
+        IPage<BusinessSystemEntity> result = this.page(page, wrapper);
         List<BusinessSystemDTO> dtoList = ConvertUtils.sourceToTarget(result.getRecords(), BusinessSystemDTO.class);
         fillOnlineStatus(dtoList);
         return new PageData<>(dtoList, result.getTotal());
@@ -93,7 +72,7 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
         if (request == null || request.getId() == null) {
             return null;
         }
-        BusinessSystemEntity entity = baseDao.selectById(request.getId());
+        BusinessSystemEntity entity = this.getById(request.getId());
         BusinessSystemDTO dto = ConvertUtils.sourceToTarget(entity, BusinessSystemDTO.class);
         if (dto != null) {
             fillOnlineStatus(Collections.singletonList(dto));
@@ -105,14 +84,17 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
     public void save(BusinessSystemDTO dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         validateUnique(dto);
-        super.save(dto);
+        BusinessSystemEntity entity = ConvertUtils.sourceToTarget(dto, BusinessSystemEntity.class);
+        this.save(entity);
+        BeanUtils.copyProperties(entity, dto);
     }
 
     @Override
     public void update(BusinessSystemDTO dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         validateUnique(dto);
-        super.update(dto);
+        BusinessSystemEntity entity = ConvertUtils.sourceToTarget(dto, BusinessSystemEntity.class);
+        this.updateById(entity);
     }
 
     @Override
@@ -135,7 +117,7 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
     public OpsHostStatusSummaryDTO summary(BusinessSystemPageRequest request) {
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getStatus);
-        List<BusinessSystemEntity> list = baseDao.selectList(wrapper);
+        List<BusinessSystemEntity> list = this.list(wrapper);
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBusinessSystemOnlineKey());
         OpsHostStatusSummaryDTO summary = new OpsHostStatusSummaryDTO();
         summary.setTotalCount((long) list.size());
@@ -170,7 +152,7 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
     }
 
     @Override
-    @Transactional
+    @Transactional(rollbackFor = Exception.class)
     public void importExcel(BusinessSystemImportRequest request) throws Exception {
         if (request == null || request.getFile() == null || request.getFile().isEmpty()) {
             throw new ServiceException("上传文件不能为空");
@@ -183,7 +165,7 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
         for (BusinessSystemImportExcel item : dataList) {
             entityList.add(toEntity(item));
         }
-        insertBatch(entityList);
+        this.saveBatch(entityList);
     }
 
     @Override
@@ -195,7 +177,7 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
     public void export(BusinessSystemPageRequest request, HttpServletResponse response) throws Exception {
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
-        List<BusinessSystemEntity> list = baseDao.selectList(wrapper);
+        List<BusinessSystemEntity> list = this.list(wrapper);
         List<BusinessSystemDTO> dtoList = ConvertUtils.sourceToTarget(list, BusinessSystemDTO.class);
         ExcelUtils.exportExcelToTarget(response, null, "业务系统表", dtoList, BusinessSystemExcel.class);
     }
@@ -205,7 +187,7 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
-        super.delete(request.getIds());
+        this.removeByIds(Arrays.asList(request.getIds()));
     }
 
     @Override
@@ -219,13 +201,13 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
         entity.setUpdateDate(new Date());
         LambdaUpdateWrapper<BusinessSystemEntity> wrapper = new LambdaUpdateWrapper<>();
         wrapper.in(BusinessSystemEntity::getId, Arrays.asList(ids));
-        baseDao.update(entity, wrapper);
+        this.update(entity, wrapper);
     }
 
     @Override
     public boolean existsByInstanceOrName(String instance, String name, Long excludeId) {
         return OpsQueryUtils.existsByInstanceOrName(
-                baseDao,
+                this.getBaseMapper(),
                 BusinessSystemEntity::getId,
                 BusinessSystemEntity::getInstance,
                 BusinessSystemEntity::getName,
@@ -265,18 +247,6 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
         entity.setSubMenuName(item.getSubMenuName());
         entity.setStatus(item.getStatus());
         return entity;
-    }
-
-    private Page<BusinessSystemEntity> buildPage(BusinessSystemPageRequest request) {
-        if (request == null) {
-            return new Page<>(1, 10);
-        }
-        return OpsQueryUtils.buildPage(
-                request.getPage(),
-                request.getLimit(),
-                request.getOrderField(),
-                request.getOrder()
-        );
     }
 
     private void validateUnique(BusinessSystemDTO dto) {

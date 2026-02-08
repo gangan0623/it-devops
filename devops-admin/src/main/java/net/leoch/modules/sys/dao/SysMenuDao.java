@@ -2,7 +2,7 @@
 
 package net.leoch.modules.sys.dao;
 
-import net.leoch.common.dao.BaseDao;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import net.leoch.modules.sys.entity.SysMenuEntity;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -15,7 +15,7 @@ import java.util.List;
  * @author Taohongqiang
  */
 @Mapper
-public interface SysMenuDao extends BaseDao<SysMenuEntity> {
+public interface SysMenuDao extends BaseMapper<SysMenuEntity> {
 
 	SysMenuEntity getById(@Param("id") Long id);
 

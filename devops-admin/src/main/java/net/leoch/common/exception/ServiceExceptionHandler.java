@@ -38,7 +38,8 @@ public class ServiceExceptionHandler {
      */
     @ExceptionHandler(ServiceException.class)
     public Result<Object> handleRenException(ServiceException ex) {
-        Result result = new Result();
+        log.warn("[异常处理] 业务异常, code: {}, msg: {}", ex.getCode(), ex.getMsg());
+        Result<Object> result = new Result<>();
         result.error(ex.getCode(), ex.getMsg());
 
         return result;
@@ -46,7 +47,8 @@ public class ServiceExceptionHandler {
 
     @ExceptionHandler(DuplicateKeyException.class)
     public Result<Object> handleDuplicateKeyException(DuplicateKeyException ex) {
-        Result result = new Result();
+        log.warn("[异常处理] 数据库唯一键冲突", ex);
+        Result<Object> result = new Result<>();
         result.error(ErrorCode.DB_RECORD_EXISTS);
 
         return result;
@@ -54,7 +56,8 @@ public class ServiceExceptionHandler {
 
     @ExceptionHandler(SaTokenException.class)
     public Result<Object> handleSaTokenException(SaTokenException ex) {
-        Result result = new Result();
+        log.warn("[异常处理] 认证异常: {}", ex.getMessage());
+        Result<Object> result = new Result<>();
         result.error(ErrorCode.UNAUTHORIZED, ex.getMessage());
         return result;
     }
@@ -65,7 +68,7 @@ public class ServiceExceptionHandler {
 
         saveLog(ex);
 
-        return new Result().error();
+        return new Result<>().error();
     }
 
     /**

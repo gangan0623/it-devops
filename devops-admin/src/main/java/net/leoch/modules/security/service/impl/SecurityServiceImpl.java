@@ -3,23 +3,45 @@
 package net.leoch.modules.security.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.exception.ErrorCode;
+import net.leoch.common.exception.ServiceException;
+import net.leoch.common.utils.IpUtils;
+import net.leoch.common.utils.Result;
+import net.leoch.common.validator.ValidatorUtils;
+import net.leoch.modules.log.entity.SysLogLoginEntity;
+import net.leoch.modules.log.enums.LoginOperationEnum;
+import net.leoch.modules.log.enums.LoginStatusEnum;
+import net.leoch.modules.log.service.SysLogLoginService;
 import net.leoch.modules.security.dao.SysUserTokenDao;
+import net.leoch.modules.security.dto.LoginDTO;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
+import net.leoch.modules.security.password.PasswordUtils;
+import net.leoch.modules.security.service.CaptchaService;
 import net.leoch.modules.security.service.SecurityService;
+import net.leoch.modules.security.service.SysUserTokenService;
+import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.dao.SysMenuDao;
 import net.leoch.modules.sys.dao.SysRoleDataScopeDao;
 import net.leoch.modules.sys.dao.SysUserDao;
+import net.leoch.modules.sys.dto.SysUserDTO;
 import net.leoch.modules.sys.entity.SysUserEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
+import net.leoch.modules.sys.enums.UserStatusEnum;
+import net.leoch.modules.sys.service.SysUserService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class SecurityServiceImpl implements SecurityService {
@@ -27,6 +49,10 @@ public class SecurityServiceImpl implements SecurityService {
     private final SysUserDao sysUserDao;
     private final SysUserTokenDao sysUserTokenDao;
     private final SysRoleDataScopeDao sysRoleDataScopeDao;
+    private final SysUserService sysUserService;
+    private final SysUserTokenService sysUserTokenService;
+    private final CaptchaService captchaService;
+    private final SysLogLoginService sysLogLoginService;
 
     @Override
     public Set<String> getUserPermissions(UserDetail user) {
@@ -66,5 +92,69 @@ public class SecurityServiceImpl implements SecurityService {
     @Override
     public List<Long> getDataScopeList(Long userId) {
         return sysRoleDataScopeDao.getDataScopeList(userId);
+    }
+
+    @Override
+    public Result<Object> login(HttpServletRequest request, LoginDTO login) {
+        ValidatorUtils.validateEntity(login);
+
+        boolean flag = captchaService.validate(login.getUuid(), login.getCaptcha());
+        if (!flag) {
+            return new Result<>().error(ErrorCode.CAPTCHA_ERROR);
+        }
+
+        SysUserDTO user = sysUserService.getByUsername(login.getUsername());
+
+        SysLogLoginEntity loginLog = new SysLogLoginEntity();
+        loginLog.setOperation(LoginOperationEnum.LOGIN.value());
+        loginLog.setCreateDate(new Date());
+        loginLog.setIp(IpUtils.getIpAddr(request));
+        loginLog.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
+
+        if (user == null) {
+            loginLog.setStatus(LoginStatusEnum.FAIL.value());
+            loginLog.setCreatorName(login.getUsername());
+            sysLogLoginService.save(loginLog);
+            throw new ServiceException(ErrorCode.ACCOUNT_PASSWORD_ERROR);
+        }
+
+        if (!PasswordUtils.matches(login.getPassword(), user.getPassword())) {
+            loginLog.setStatus(LoginStatusEnum.FAIL.value());
+            loginLog.setCreator(user.getId());
+            loginLog.setCreatorName(user.getUsername());
+            sysLogLoginService.save(loginLog);
+            throw new ServiceException(ErrorCode.ACCOUNT_PASSWORD_ERROR);
+        }
+
+        if (user.getStatus() == UserStatusEnum.DISABLE.value()) {
+            loginLog.setStatus(LoginStatusEnum.LOCK.value());
+            loginLog.setCreator(user.getId());
+            loginLog.setCreatorName(user.getUsername());
+            sysLogLoginService.save(loginLog);
+            throw new ServiceException(ErrorCode.ACCOUNT_DISABLE);
+        }
+
+        loginLog.setStatus(LoginStatusEnum.SUCCESS.value());
+        loginLog.setCreator(user.getId());
+        loginLog.setCreatorName(user.getUsername());
+        sysLogLoginService.save(loginLog);
+
+        return sysUserTokenService.createToken(user.getId());
+    }
+
+    @Override
+    public void recordLogout(HttpServletRequest request) {
+        UserDetail user = SecurityUser.getUser();
+        sysUserTokenService.logout(user.getId());
+
+        SysLogLoginEntity loginLog = new SysLogLoginEntity();
+        loginLog.setOperation(LoginOperationEnum.LOGOUT.value());
+        loginLog.setIp(IpUtils.getIpAddr(request));
+        loginLog.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
+        loginLog.setStatus(LoginStatusEnum.SUCCESS.value());
+        loginLog.setCreator(user.getId());
+        loginLog.setCreatorName(user.getUsername());
+        loginLog.setCreateDate(new Date());
+        sysLogLoginService.save(loginLog);
     }
 }

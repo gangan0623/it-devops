@@ -13,6 +13,7 @@ import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.alert.dto.AlertMediaDTO;
+import net.leoch.modules.alert.dto.AlertMediaPageRequest;
 import net.leoch.modules.alert.dto.AlertMediaTestDTO;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
 import net.leoch.modules.alert.service.AlertMailService;
@@ -51,10 +52,8 @@ public class AlertMediaController {
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("alert:media:page")
-    public Result<PageData<AlertMediaDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params){
-        PageData<AlertMediaDTO> page = alertMediaService.page(params);
-
-        return new Result<PageData<AlertMediaDTO>>().ok(page);
+    public Result<PageData<AlertMediaDTO>> page(AlertMediaPageRequest request){
+        return new Result<PageData<AlertMediaDTO>>().ok(alertMediaService.page(request));
     }
 
     @GetMapping("{id}")

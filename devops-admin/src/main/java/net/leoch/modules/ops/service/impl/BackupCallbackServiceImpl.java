@@ -4,11 +4,13 @@ import net.leoch.common.utils.Result;
 import net.leoch.modules.ops.dto.BackupCallbackRequest;
 import net.leoch.modules.ops.job.DeviceBackupJobService;
 import net.leoch.modules.ops.service.BackupCallbackService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 /**
  * 备份回调服务
  */
+@Slf4j
 @Service
 public class BackupCallbackServiceImpl implements BackupCallbackService {
 

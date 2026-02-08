@@ -1,22 +1,19 @@
-
-
 package net.leoch.modules.sys.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.common.service.BaseService;
 import net.leoch.modules.sys.dto.SysDictDataDTO;
+import net.leoch.modules.sys.dto.SysDictDataPageRequest;
 import net.leoch.modules.sys.entity.SysDictDataEntity;
-
-import java.util.Map;
 
 /**
  * 数据字典
  *
  * @author Taohongqiang
  */
-public interface SysDictDataService extends BaseService<SysDictDataEntity> {
+public interface SysDictDataService extends IService<SysDictDataEntity> {
 
-    PageData<SysDictDataDTO> page(Map<String, Object> params);
+    PageData<SysDictDataDTO> page(SysDictDataPageRequest request);
 
     SysDictDataDTO get(Long id);
 

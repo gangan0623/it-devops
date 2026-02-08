@@ -2,7 +2,7 @@
 
 package net.leoch.modules.sys.dao;
 
-import net.leoch.common.dao.BaseDao;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import net.leoch.modules.sys.entity.SysDeptEntity;
 import org.apache.ibatis.annotations.Mapper;
 
@@ -15,7 +15,7 @@ import java.util.Map;
  * @author Taohongqiang
  */
 @Mapper
-public interface SysDeptDao extends BaseDao<SysDeptEntity> {
+public interface SysDeptDao extends BaseMapper<SysDeptEntity> {
 
     List<SysDeptEntity> getList(Map<String, Object> params);
 

@@ -1,30 +1,23 @@
-
-
 package net.leoch.modules.log.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
-import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ExcelUtils;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.log.dto.SysLogErrorDTO;
+import net.leoch.modules.log.dto.SysLogErrorPageRequest;
 import net.leoch.modules.log.excel.SysLogErrorExcel;
 import net.leoch.modules.log.service.SysLogErrorService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -42,15 +35,9 @@ public class SysLogErrorController {
 
     @GetMapping("page")
     @Operation(summary = "分页")
-    @Parameters({
-            @Parameter(name = Constant.PAGE, description = "当前页码，从1开始", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.LIMIT, description = "每页显示记录数", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref = "String")
-    })
     @SaCheckPermission("sys:log:error")
-    public Result<PageData<SysLogErrorDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
-        PageData<SysLogErrorDTO> page = sysLogErrorService.page(params);
+    public Result<PageData<SysLogErrorDTO>> page(SysLogErrorPageRequest request) {
+        PageData<SysLogErrorDTO> page = sysLogErrorService.page(request);
 
         return new Result<PageData<SysLogErrorDTO>>().ok(page);
     }
@@ -59,8 +46,8 @@ public class SysLogErrorController {
     @Operation(summary = "导出")
     @LogOperation("导出")
     @SaCheckPermission("sys:log:error")
-    public void export(@Parameter(hidden = true) @RequestParam Map<String, Object> params, HttpServletResponse response) throws Exception {
-        List<SysLogErrorDTO> list = sysLogErrorService.list(params);
+    public void export(SysLogErrorPageRequest request, HttpServletResponse response) throws Exception {
+        List<SysLogErrorDTO> list = sysLogErrorService.list(request);
 
         ExcelUtils.exportExcelToTarget(response, null, "异常日志", list, SysLogErrorExcel.class);
     }

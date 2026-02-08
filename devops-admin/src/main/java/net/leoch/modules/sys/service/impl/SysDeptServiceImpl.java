@@ -1,13 +1,12 @@
-
-
 package net.leoch.modules.sys.service.impl;
 
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qiniu.util.StringUtils;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
-import net.leoch.common.service.impl.BaseServiceImpl;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.TreeUtils;
 import net.leoch.modules.security.user.SecurityUser;
@@ -27,9 +26,10 @@ import java.util.List;
 import java.util.Map;
 
 
+@Slf4j
 @Service
 @AllArgsConstructor
-public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptDao, SysDeptEntity> implements SysDeptService {
+public class SysDeptServiceImpl extends ServiceImpl<SysDeptDao, SysDeptEntity> implements SysDeptService {
     private final SysUserDao sysUserDao;
 
     @Override
@@ -41,7 +41,7 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptDao, SysDeptEntit
         }
 
         //查询部门列表
-        List<SysDeptEntity> entityList = baseDao.getList(params);
+        List<SysDeptEntity> entityList = this.getBaseMapper().getList(params);
 
         List<SysDeptDTO> dtoList = ConvertUtils.sourceToTarget(entityList, SysDeptDTO.class);
 
@@ -55,7 +55,7 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptDao, SysDeptEntit
             return null;
         }
 
-        SysDeptEntity entity = baseDao.getById(id);
+        SysDeptEntity entity = this.getBaseMapper().getById(id);
 
         return ConvertUtils.sourceToTarget(entity, SysDeptDTO.class);
     }
@@ -66,7 +66,7 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptDao, SysDeptEntit
         SysDeptEntity entity = ConvertUtils.sourceToTarget(dto, SysDeptEntity.class);
 
         entity.setPids(getPidList(entity.getPid()));
-        insert(entity);
+        this.save(entity);
     }
 
     @Override
@@ -86,7 +86,7 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptDao, SysDeptEntit
         }
 
         entity.setPids(getPidList(entity.getPid()));
-        updateById(entity);
+        this.updateById(entity);
     }
 
     @Override
@@ -105,12 +105,12 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptDao, SysDeptEntit
         }
 
         //删除
-        baseDao.deleteById(id);
+        this.removeById(id);
     }
 
     @Override
     public List<Long> getSubDeptIdList(Long id) {
-        List<Long> deptIdList = baseDao.getSubDeptIdList("%" + id + "%");
+        List<Long> deptIdList = this.getBaseMapper().getSubDeptIdList("%" + id + "%");
         deptIdList.add(id);
 
         return deptIdList;
@@ -128,7 +128,7 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptDao, SysDeptEntit
         }
 
         //所有部门的id、pid列表
-        List<SysDeptEntity> deptList = baseDao.getIdAndPidList();
+        List<SysDeptEntity> deptList = this.getBaseMapper().getIdAndPidList();
 
         //list转map
         Map<Long, SysDeptEntity> map = new HashMap<>(deptList.size());

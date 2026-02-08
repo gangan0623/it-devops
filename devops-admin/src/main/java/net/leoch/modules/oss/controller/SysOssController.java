@@ -1,11 +1,8 @@
-
-
 package net.leoch.modules.oss.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.hutool.core.io.file.FileNameUtil;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
@@ -23,6 +20,7 @@ import net.leoch.modules.oss.cloud.OSSFactory;
 import net.leoch.modules.oss.entity.SysOssEntity;
 import net.leoch.modules.oss.service.SysOssConfigService;
 import net.leoch.modules.oss.service.SysOssService;
+import net.leoch.modules.sys.dto.SysOssPageRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -47,8 +45,8 @@ public class SysOssController {
     @GetMapping("page")
     @Operation(summary = "分页")
     @SaCheckPermission("sys:oss:all")
-    public Result<PageData<SysOssEntity>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
-        PageData<SysOssEntity> page = sysOssService.page(params);
+    public Result<PageData<SysOssEntity>> page(SysOssPageRequest request) {
+        PageData<SysOssEntity> page = sysOssService.page(request);
 
         return new Result<PageData<SysOssEntity>>().ok(page);
     }
@@ -104,7 +102,7 @@ public class SysOssController {
         SysOssEntity ossEntity = new SysOssEntity();
         ossEntity.setUrl(url);
         ossEntity.setCreateDate(new Date());
-        sysOssService.insert(ossEntity);
+        sysOssService.save(ossEntity);
 
         Map<String, Object> data = new HashMap<>(1);
         data.put("src", url);
@@ -117,7 +115,7 @@ public class SysOssController {
     @LogOperation("删除")
     @SaCheckPermission("sys:oss:all")
     public Result<Object> delete(@RequestBody Long[] ids) {
-        sysOssService.deleteBatchIds(Arrays.asList(ids));
+        sysOssService.removeByIds(Arrays.asList(ids));
 
         return new Result<>();
     }

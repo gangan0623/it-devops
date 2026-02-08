@@ -4,6 +4,7 @@ package net.leoch.common.aspect;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.utils.HttpContextUtils;
 import net.leoch.common.utils.IpUtils;
@@ -28,6 +29,7 @@ import java.lang.reflect.Method;
  *
  * @author Taohongqiang
  */
+@Slf4j
 @Aspect
 @Component
 @AllArgsConstructor
@@ -95,7 +97,7 @@ public class LogOperationAspect {
             String params = JsonUtils.toJsonString(args[0]);
             log.setRequestParams(params);
         } catch (Exception e) {
-
+            LogOperationAspect.log.warn("[操作日志] 序列化请求参数失败", e);
         }
 
         //保存到DB

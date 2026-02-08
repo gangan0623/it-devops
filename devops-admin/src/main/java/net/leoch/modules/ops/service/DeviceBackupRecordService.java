@@ -1,8 +1,8 @@
 package net.leoch.modules.ops.service;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.page.PageData;
-import net.leoch.common.service.CrudService;
 import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.DeviceBackupRecordEntity;
 
@@ -14,7 +14,7 @@ import java.util.List;
  * @author Taohongqiang
  * @since 1.0.0 2026-01-29
  */
-public interface DeviceBackupRecordService extends CrudService<DeviceBackupRecordEntity, DeviceBackupRecordDTO> {
+public interface DeviceBackupRecordService extends IService<DeviceBackupRecordEntity> {
     PageData<DeviceBackupRecordDTO> page(DeviceBackupRecordPageRequest request);
 
     DeviceBackupRecordDTO get(DeviceBackupRecordIdRequest request);
