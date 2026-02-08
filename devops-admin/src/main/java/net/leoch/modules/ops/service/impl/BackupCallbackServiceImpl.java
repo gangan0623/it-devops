@@ -3,7 +3,7 @@ package net.leoch.modules.ops.service.impl;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.ops.dto.BackupCallbackRequest;
 import net.leoch.modules.ops.job.DeviceBackupJobService;
-import net.leoch.modules.ops.service.BackupCallbackService;
+import net.leoch.modules.ops.service.IBackupCallbackService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service
-public class BackupCallbackServiceImpl implements BackupCallbackService {
+public class BackupCallbackServiceImpl implements IBackupCallbackService {
 
     private final DeviceBackupJobService deviceBackupJobService;
 

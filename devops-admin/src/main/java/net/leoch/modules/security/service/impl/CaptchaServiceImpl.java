@@ -9,7 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.redis.RedisKeys;
 import net.leoch.common.redis.RedisUtils;
-import net.leoch.modules.security.service.CaptchaService;
+import net.leoch.modules.security.service.ICaptchaService;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -21,7 +21,7 @@ import java.io.IOException;
  */
 @Slf4j
 @Service
-public class CaptchaServiceImpl implements CaptchaService {
+public class CaptchaServiceImpl implements ICaptchaService {
     @Resource
     private RedisUtils redisUtils;
 

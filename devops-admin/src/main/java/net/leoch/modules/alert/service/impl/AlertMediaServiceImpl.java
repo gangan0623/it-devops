@@ -11,7 +11,7 @@ import net.leoch.modules.alert.dto.AlertMediaDTO;
 import net.leoch.modules.alert.dto.AlertMediaPageRequest;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
-import net.leoch.modules.alert.service.AlertMediaService;
+import net.leoch.modules.alert.service.IAlertMediaService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +26,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class AlertMediaServiceImpl extends ServiceImpl<AlertMediaMapper, AlertMediaEntity> implements AlertMediaService {
+public class AlertMediaServiceImpl extends ServiceImpl<AlertMediaMapper, AlertMediaEntity> implements IAlertMediaService {
 
     @Override
     public PageData<AlertMediaDTO> page(AlertMediaPageRequest request) {

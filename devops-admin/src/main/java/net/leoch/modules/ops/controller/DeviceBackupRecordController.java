@@ -12,7 +12,7 @@ import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.ops.dto.*;
-import net.leoch.modules.ops.service.DeviceBackupRecordService;
+import net.leoch.modules.ops.service.IDeviceBackupRecordService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -25,9 +25,9 @@ import java.util.List;
 @Tag(name="设备备份信息表")
 public class DeviceBackupRecordController {
 
-    private final DeviceBackupRecordService deviceBackupRecordService;
+    private final IDeviceBackupRecordService deviceBackupRecordService;
 
-    public DeviceBackupRecordController(DeviceBackupRecordService deviceBackupRecordService) {
+    public DeviceBackupRecordController(IDeviceBackupRecordService deviceBackupRecordService) {
         this.deviceBackupRecordService = deviceBackupRecordService;
     }
 

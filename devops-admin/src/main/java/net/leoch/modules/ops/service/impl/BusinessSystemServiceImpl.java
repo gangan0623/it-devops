@@ -26,7 +26,7 @@ import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.excel.BusinessSystemExcel;
 import net.leoch.modules.ops.excel.template.BusinessSystemImportExcel;
-import net.leoch.modules.ops.service.BusinessSystemService;
+import net.leoch.modules.ops.service.IBusinessSystemService;
 import net.leoch.modules.ops.util.OpsQueryUtils;
 import net.leoch.modules.security.user.SecurityUser;
 import lombok.extern.slf4j.Slf4j;
@@ -44,7 +44,7 @@ import java.util.*;
  */
 @Slf4j
 @Service
-public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper, BusinessSystemEntity> implements BusinessSystemService {
+public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper, BusinessSystemEntity> implements IBusinessSystemService {
 
     @Resource
     private RedisUtils redisUtils;

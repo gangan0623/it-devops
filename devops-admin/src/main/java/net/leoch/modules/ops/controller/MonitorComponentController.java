@@ -12,7 +12,7 @@ import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.ops.dto.*;
-import net.leoch.modules.ops.service.MonitorComponentService;
+import net.leoch.modules.ops.service.IMonitorComponentService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -26,7 +26,7 @@ import java.util.List;
 public class MonitorComponentController {
 
     @Resource
-    private MonitorComponentService monitorComponentService;
+    private IMonitorComponentService monitorComponentService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.sys.mapper.SysRoleDataScopeMapper;
 import net.leoch.modules.sys.entity.SysRoleDataScopeEntity;
-import net.leoch.modules.sys.service.SysRoleDataScopeService;
+import net.leoch.modules.sys.service.ISysRoleDataScopeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,7 +21,7 @@ import java.util.List;
 @Slf4j
 @Service
 public class SysRoleDataScopeServiceImpl extends ServiceImpl<SysRoleDataScopeMapper, SysRoleDataScopeEntity>
-        implements SysRoleDataScopeService {
+        implements ISysRoleDataScopeService {
 
     @Override
     public List<Long> getDeptIdList(Long roleId) {

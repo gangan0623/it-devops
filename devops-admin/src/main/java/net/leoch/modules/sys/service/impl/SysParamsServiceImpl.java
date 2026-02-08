@@ -16,7 +16,7 @@ import net.leoch.modules.sys.dto.SysParamsDTO;
 import net.leoch.modules.sys.dto.SysParamsPageRequest;
 import net.leoch.modules.sys.entity.SysParamsEntity;
 import net.leoch.modules.sys.redis.SysParamsRedis;
-import net.leoch.modules.sys.service.SysParamsService;
+import net.leoch.modules.sys.service.ISysParamsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,7 +32,7 @@ import java.util.List;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParamsEntity> implements SysParamsService {
+public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParamsEntity> implements ISysParamsService {
     private final SysParamsRedis sysParamsRedis;
 
     @Override

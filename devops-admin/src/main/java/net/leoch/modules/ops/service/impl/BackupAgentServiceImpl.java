@@ -28,7 +28,7 @@ import net.leoch.modules.ops.entity.BackupAgentEntity;
 import net.leoch.modules.ops.entity.DeviceBackupEntity;
 import net.leoch.modules.ops.excel.BackupAgentExcel;
 import net.leoch.modules.ops.excel.template.BackupAgentImportExcel;
-import net.leoch.modules.ops.service.BackupAgentService;
+import net.leoch.modules.ops.service.IBackupAgentService;
 import net.leoch.modules.security.user.SecurityUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -48,7 +48,7 @@ import java.util.*;
  */
 @Slf4j
 @Service
-public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, BackupAgentEntity> implements BackupAgentService {
+public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, BackupAgentEntity> implements IBackupAgentService {
 
     private final DeviceBackupMapper deviceBackupMapper;
     private final RedisUtils redisUtils;

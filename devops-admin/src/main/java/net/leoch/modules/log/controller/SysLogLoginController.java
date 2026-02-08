@@ -12,7 +12,7 @@ import net.leoch.common.utils.Result;
 import net.leoch.modules.log.dto.SysLogLoginDTO;
 import net.leoch.modules.log.dto.SysLogLoginPageRequest;
 import net.leoch.modules.log.excel.SysLogLoginExcel;
-import net.leoch.modules.log.service.SysLogLoginService;
+import net.leoch.modules.log.service.ISysLogLoginService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,7 +31,7 @@ import java.util.List;
 @Tag(name = "登录日志")
 @AllArgsConstructor
 public class SysLogLoginController {
-    private final SysLogLoginService sysLogLoginService;
+    private final ISysLogLoginService sysLogLoginService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

@@ -13,7 +13,7 @@ import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.ops.dto.*;
-import net.leoch.modules.ops.service.BackupAgentService;
+import net.leoch.modules.ops.service.IBackupAgentService;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name="备份节点表")
 public class BackupAgentController {
     @Resource
-    private BackupAgentService backupAgentService;
+    private IBackupAgentService backupAgentService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

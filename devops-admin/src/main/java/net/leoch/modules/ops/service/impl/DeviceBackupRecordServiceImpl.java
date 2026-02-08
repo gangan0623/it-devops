@@ -13,8 +13,8 @@ import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.ops.mapper.DeviceBackupRecordMapper;
 import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.DeviceBackupRecordEntity;
-import net.leoch.modules.ops.service.DeviceBackupHistoryService;
-import net.leoch.modules.ops.service.DeviceBackupRecordService;
+import net.leoch.modules.ops.service.IDeviceBackupHistoryService;
+import net.leoch.modules.ops.service.IDeviceBackupRecordService;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -33,13 +33,13 @@ import java.util.*;
  */
 @Slf4j
 @Service
-public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecordMapper, DeviceBackupRecordEntity> implements DeviceBackupRecordService {
+public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecordMapper, DeviceBackupRecordEntity> implements IDeviceBackupRecordService {
 
     private static final Set<String> ALLOWED_DOWNLOAD_HOSTS = new HashSet<>();
 
-    private final DeviceBackupHistoryService deviceBackupHistoryService;
+    private final IDeviceBackupHistoryService deviceBackupHistoryService;
 
-    public DeviceBackupRecordServiceImpl(DeviceBackupHistoryService deviceBackupHistoryService) {
+    public DeviceBackupRecordServiceImpl(IDeviceBackupHistoryService deviceBackupHistoryService) {
         this.deviceBackupHistoryService = deviceBackupHistoryService;
     }
 

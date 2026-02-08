@@ -11,14 +11,14 @@ import net.leoch.modules.log.mapper.SysLogLoginMapper;
 import net.leoch.modules.log.dto.SysLogLoginDTO;
 import net.leoch.modules.log.dto.SysLogLoginPageRequest;
 import net.leoch.modules.log.entity.SysLogLoginEntity;
-import net.leoch.modules.log.service.SysLogLoginService;
+import net.leoch.modules.log.service.ISysLogLoginService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Slf4j
 @Service
-public class SysLogLoginServiceImpl extends ServiceImpl<SysLogLoginMapper, SysLogLoginEntity> implements SysLogLoginService {
+public class SysLogLoginServiceImpl extends ServiceImpl<SysLogLoginMapper, SysLogLoginEntity> implements ISysLogLoginService {
 
     @Override
     public PageData<SysLogLoginDTO> page(SysLogLoginPageRequest request) {

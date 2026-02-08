@@ -7,13 +7,13 @@ import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.page.PageData;
 import net.leoch.modules.oss.mapper.SysOssMapper;
 import net.leoch.modules.oss.entity.SysOssEntity;
-import net.leoch.modules.oss.service.SysOssService;
+import net.leoch.modules.oss.service.ISysOssService;
 import net.leoch.modules.sys.dto.SysOssPageRequest;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class SysOssServiceImpl extends ServiceImpl<SysOssMapper, SysOssEntity> implements SysOssService {
+public class SysOssServiceImpl extends ServiceImpl<SysOssMapper, SysOssEntity> implements ISysOssService {
 
     @Override
     public PageData<SysOssEntity> page(SysOssPageRequest request) {

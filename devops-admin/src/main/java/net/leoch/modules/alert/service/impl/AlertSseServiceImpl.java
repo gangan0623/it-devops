@@ -6,7 +6,7 @@ import net.leoch.modules.alert.mapper.AlertRecordMapper;
 import net.leoch.modules.alert.dto.AlertRealtimeDTO;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.modules.alert.service.AlertSseService;
+import net.leoch.modules.alert.service.IAlertSseService;
 import net.leoch.modules.ops.mapper.BusinessSystemMapper;
 import net.leoch.modules.ops.mapper.LinuxHostMapper;
 import net.leoch.modules.ops.mapper.WindowHostMapper;
@@ -28,7 +28,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 @Slf4j
 @Service
-public class AlertSseServiceImpl implements AlertSseService {
+public class AlertSseServiceImpl implements IAlertSseService {
 
     private final AlertRecordMapper alertRecordMapper;
     private final LinuxHostMapper linuxHostMapper;

@@ -18,8 +18,8 @@ import net.leoch.common.validator.group.QiniuGroup;
 import net.leoch.modules.oss.cloud.CloudStorageConfig;
 import net.leoch.modules.oss.cloud.OSSFactory;
 import net.leoch.modules.oss.entity.SysOssEntity;
-import net.leoch.modules.oss.service.SysOssConfigService;
-import net.leoch.modules.oss.service.SysOssService;
+import net.leoch.modules.oss.service.ISysOssConfigService;
+import net.leoch.modules.oss.service.ISysOssService;
 import net.leoch.modules.sys.dto.SysOssPageRequest;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,8 +39,8 @@ import java.util.Map;
 @Tag(name = "文件上传")
 @AllArgsConstructor
 public class SysOssController {
-    private final SysOssService sysOssService;
-    private final SysOssConfigService sysOssConfigService;
+    private final ISysOssService sysOssService;
+    private final ISysOssConfigService sysOssConfigService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

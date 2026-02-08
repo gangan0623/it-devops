@@ -12,7 +12,7 @@ import net.leoch.common.utils.Result;
 import net.leoch.modules.log.dto.SysLogErrorDTO;
 import net.leoch.modules.log.dto.SysLogErrorPageRequest;
 import net.leoch.modules.log.excel.SysLogErrorExcel;
-import net.leoch.modules.log.service.SysLogErrorService;
+import net.leoch.modules.log.service.ISysLogErrorService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -31,7 +31,7 @@ import java.util.List;
 @Tag(name = "异常日志")
 @AllArgsConstructor
 public class SysLogErrorController {
-    private final SysLogErrorService sysLogErrorService;
+    private final ISysLogErrorService sysLogErrorService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

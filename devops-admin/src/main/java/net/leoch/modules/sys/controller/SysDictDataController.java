@@ -13,7 +13,7 @@ import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.dto.SysDictDataDTO;
 import net.leoch.modules.sys.dto.SysDictDataPageRequest;
-import net.leoch.modules.sys.service.SysDictDataService;
+import net.leoch.modules.sys.service.ISysDictDataService;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "字典数据")
 @AllArgsConstructor
 public class SysDictDataController {
-    private final SysDictDataService sysDictDataService;
+    private final ISysDictDataService sysDictDataService;
 
     @GetMapping("page")
     @Operation(summary = "字典数据")

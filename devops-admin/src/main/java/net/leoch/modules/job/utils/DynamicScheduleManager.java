@@ -7,7 +7,7 @@ import net.leoch.common.exception.ExceptionUtils;
 import net.leoch.common.utils.SpringContextUtils;
 import net.leoch.modules.job.entity.ScheduleJobEntity;
 import net.leoch.modules.job.entity.ScheduleJobLogEntity;
-import net.leoch.modules.job.service.ScheduleJobLogService;
+import net.leoch.modules.job.service.IScheduleJobLogService;
 import net.leoch.modules.job.task.ITask;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
@@ -28,7 +28,7 @@ import java.util.concurrent.ScheduledFuture;
 public class DynamicScheduleManager {
 
     private final ThreadPoolTaskScheduler taskScheduler;
-    private final ScheduleJobLogService scheduleJobLogService;
+    private final IScheduleJobLogService scheduleJobLogService;
 
     private static final int ERROR_MAX_LENGTH = 1900;
 

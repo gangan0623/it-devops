@@ -14,9 +14,9 @@ import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.dto.SysRoleDTO;
 import net.leoch.modules.sys.dto.SysRolePageRequest;
-import net.leoch.modules.sys.service.SysRoleDataScopeService;
-import net.leoch.modules.sys.service.SysRoleMenuService;
-import net.leoch.modules.sys.service.SysRoleService;
+import net.leoch.modules.sys.service.ISysRoleDataScopeService;
+import net.leoch.modules.sys.service.ISysRoleMenuService;
+import net.leoch.modules.sys.service.ISysRoleService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -31,9 +31,9 @@ import java.util.List;
 @Tag(name = "角色管理")
 @AllArgsConstructor
 public class SysRoleController {
-    private final SysRoleService sysRoleService;
-    private final SysRoleMenuService sysRoleMenuService;
-    private final SysRoleDataScopeService sysRoleDataScopeService;
+    private final ISysRoleService sysRoleService;
+    private final ISysRoleMenuService sysRoleMenuService;
+    private final ISysRoleDataScopeService sysRoleDataScopeService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

@@ -4,7 +4,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import net.leoch.modules.ops.dto.PrometheusSdRequest;
 import net.leoch.modules.ops.dto.PrometheusSdResponse;
-import net.leoch.modules.ops.service.PrometheusSdService;
+import net.leoch.modules.ops.service.IPrometheusSdService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,9 +20,9 @@ import java.util.List;
 @Tag(name = "Prometheus SD")
 public class PrometheusSdController {
 
-    private final PrometheusSdService prometheusSdService;
+    private final IPrometheusSdService prometheusSdService;
 
-    public PrometheusSdController(PrometheusSdService prometheusSdService) {
+    public PrometheusSdController(IPrometheusSdService prometheusSdService) {
         this.prometheusSdService = prometheusSdService;
     }
 

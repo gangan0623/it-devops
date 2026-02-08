@@ -16,8 +16,8 @@ import net.leoch.modules.alert.dto.AlertMediaDTO;
 import net.leoch.modules.alert.dto.AlertMediaPageRequest;
 import net.leoch.modules.alert.dto.AlertMediaTestDTO;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
-import net.leoch.modules.alert.service.AlertMailService;
-import net.leoch.modules.alert.service.AlertMediaService;
+import net.leoch.modules.alert.service.IAlertMailService;
+import net.leoch.modules.alert.service.IAlertMediaService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,10 +35,10 @@ import java.util.stream.Collectors;
 @Tag(name = "告警媒介")
 public class AlertMediaController {
 
-    private final AlertMediaService alertMediaService;
-    private final AlertMailService alertMailService;
+    private final IAlertMediaService alertMediaService;
+    private final IAlertMailService alertMailService;
 
-    public AlertMediaController(AlertMediaService alertMediaService, AlertMailService alertMailService) {
+    public AlertMediaController(IAlertMediaService alertMediaService, IAlertMailService alertMailService) {
         this.alertMediaService = alertMediaService;
         this.alertMailService = alertMailService;
     }

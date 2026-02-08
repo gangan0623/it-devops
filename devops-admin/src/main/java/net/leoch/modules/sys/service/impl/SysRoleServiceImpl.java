@@ -15,11 +15,11 @@ import net.leoch.modules.sys.dto.SysRoleDTO;
 import net.leoch.modules.sys.dto.SysRolePageRequest;
 import net.leoch.modules.sys.entity.SysRoleEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
-import net.leoch.modules.sys.service.SysDeptService;
-import net.leoch.modules.sys.service.SysRoleDataScopeService;
-import net.leoch.modules.sys.service.SysRoleMenuService;
-import net.leoch.modules.sys.service.SysRoleService;
-import net.leoch.modules.sys.service.SysRoleUserService;
+import net.leoch.modules.sys.service.ISysDeptService;
+import net.leoch.modules.sys.service.ISysRoleDataScopeService;
+import net.leoch.modules.sys.service.ISysRoleMenuService;
+import net.leoch.modules.sys.service.ISysRoleService;
+import net.leoch.modules.sys.service.ISysRoleUserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,11 +34,11 @@ import java.util.List;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity> implements SysRoleService {
-    private final SysRoleMenuService sysRoleMenuService;
-    private final SysRoleDataScopeService sysRoleDataScopeService;
-    private final SysRoleUserService sysRoleUserService;
-    private final SysDeptService sysDeptService;
+public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity> implements ISysRoleService {
+    private final ISysRoleMenuService sysRoleMenuService;
+    private final ISysRoleDataScopeService sysRoleDataScopeService;
+    private final ISysRoleUserService sysRoleUserService;
+    private final ISysDeptService sysDeptService;
 
     @Override
     public PageData<SysRoleDTO> page(SysRolePageRequest request) {

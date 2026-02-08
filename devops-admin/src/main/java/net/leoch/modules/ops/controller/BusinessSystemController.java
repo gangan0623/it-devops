@@ -12,7 +12,7 @@ import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.ops.dto.*;
-import net.leoch.modules.ops.service.BusinessSystemService;
+import net.leoch.modules.ops.service.IBusinessSystemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name="业务系统表")
 public class BusinessSystemController {
     @Autowired
-    private BusinessSystemService businessSystemService;
+    private IBusinessSystemService businessSystemService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

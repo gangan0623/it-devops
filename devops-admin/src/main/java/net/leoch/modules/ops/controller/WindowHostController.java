@@ -13,7 +13,7 @@ import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.ops.dto.*;
-import net.leoch.modules.ops.service.WindowHostService;
+import net.leoch.modules.ops.service.IWindowHostService;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.*;
 public class WindowHostController {
     
     @Resource
-    private WindowHostService windowHostService;
+    private IWindowHostService windowHostService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

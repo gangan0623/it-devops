@@ -5,17 +5,17 @@ package net.leoch.modules.oss.cloud;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.utils.SpringContextUtils;
-import net.leoch.modules.oss.service.SysOssConfigService;
+import net.leoch.modules.oss.service.ISysOssConfigService;
 
 /**
  * 文件上传Factory
  * @author Taohongqiang
  */
 public final class OSSFactory {
-    private static SysOssConfigService sysOssConfigService;
+    private static ISysOssConfigService sysOssConfigService;
 
     static {
-        OSSFactory.sysOssConfigService = SpringContextUtils.getBean(SysOssConfigService.class);
+        OSSFactory.sysOssConfigService = SpringContextUtils.getBean(ISysOssConfigService.class);
     }
 
     public static AbstractCloudStorageService build(){

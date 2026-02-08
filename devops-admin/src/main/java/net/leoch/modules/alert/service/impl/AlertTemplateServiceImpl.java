@@ -11,7 +11,7 @@ import net.leoch.modules.alert.dto.AlertTemplateDTO;
 import net.leoch.modules.alert.dto.AlertTemplatePageRequest;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.entity.AlertTemplateEntity;
-import net.leoch.modules.alert.service.AlertTemplateService;
+import net.leoch.modules.alert.service.IAlertTemplateService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +26,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, AlertTemplateEntity> implements AlertTemplateService {
+public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, AlertTemplateEntity> implements IAlertTemplateService {
 
     @Override
     public PageData<AlertTemplateDTO> page(AlertTemplatePageRequest request) {

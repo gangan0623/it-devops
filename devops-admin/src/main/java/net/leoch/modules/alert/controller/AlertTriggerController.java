@@ -14,7 +14,7 @@ import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.alert.dto.AlertTriggerDTO;
 import net.leoch.modules.alert.dto.AlertTriggerPageRequest;
-import net.leoch.modules.alert.service.AlertTriggerService;
+import net.leoch.modules.alert.service.IAlertTriggerService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -33,9 +33,9 @@ import java.util.stream.Collectors;
 @Tag(name = "告警触发器")
 public class AlertTriggerController {
 
-    private final AlertTriggerService alertTriggerService;
+    private final IAlertTriggerService alertTriggerService;
 
-    public AlertTriggerController(AlertTriggerService alertTriggerService) {
+    public AlertTriggerController(IAlertTriggerService alertTriggerService) {
         this.alertTriggerService = alertTriggerService;
     }
 

@@ -11,7 +11,7 @@ import net.leoch.common.utils.IpUtils;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.log.entity.SysLogOperationEntity;
 import net.leoch.modules.log.enums.OperationStatusEnum;
-import net.leoch.modules.log.service.SysLogOperationService;
+import net.leoch.modules.log.service.ISysLogOperationService;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -34,7 +34,7 @@ import java.lang.reflect.Method;
 @Component
 @AllArgsConstructor
 public class LogOperationAspect {
-    private final SysLogOperationService sysLogOperationService;
+    private final ISysLogOperationService sysLogOperationService;
 
     @Pointcut("@annotation(net.leoch.common.annotation.LogOperation)")
     public void logPointCut() {

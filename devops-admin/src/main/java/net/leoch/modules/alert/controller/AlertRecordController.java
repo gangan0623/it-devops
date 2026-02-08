@@ -16,8 +16,8 @@ import net.leoch.modules.alert.dto.AlertRecordActionRequest;
 import net.leoch.modules.alert.dto.AlertProblemDTO;
 import net.leoch.modules.alert.dto.AlertRecordDTO;
 import net.leoch.modules.alert.dto.AlertRecordPageRequest;
-import net.leoch.modules.alert.service.AlertRecordService;
-import net.leoch.modules.alert.service.AlertSseService;
+import net.leoch.modules.alert.service.IAlertRecordService;
+import net.leoch.modules.alert.service.IAlertSseService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -35,10 +35,10 @@ import java.util.List;
 @Tag(name = "告警记录")
 public class AlertRecordController {
 
-    private final AlertRecordService alertRecordService;
-    private final AlertSseService alertSseService;
+    private final IAlertRecordService alertRecordService;
+    private final IAlertSseService alertSseService;
 
-    public AlertRecordController(AlertRecordService alertRecordService, AlertSseService alertSseService) {
+    public AlertRecordController(IAlertRecordService alertRecordService, IAlertSseService alertSseService) {
         this.alertRecordService = alertRecordService;
         this.alertSseService = alertSseService;
     }

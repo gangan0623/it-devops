@@ -13,7 +13,7 @@ import net.leoch.modules.job.mapper.ScheduleJobMapper;
 import net.leoch.modules.job.dto.ScheduleJobDTO;
 import net.leoch.modules.job.dto.ScheduleJobPageRequest;
 import net.leoch.modules.job.entity.ScheduleJobEntity;
-import net.leoch.modules.job.service.ScheduleJobService;
+import net.leoch.modules.job.service.IScheduleJobService;
 import net.leoch.modules.job.utils.DynamicScheduleManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,7 +25,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, ScheduleJobEntity> implements ScheduleJobService {
+public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, ScheduleJobEntity> implements IScheduleJobService {
 
     private final DynamicScheduleManager scheduleManager;
 

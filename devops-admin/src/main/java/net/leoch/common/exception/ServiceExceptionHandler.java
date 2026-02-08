@@ -12,7 +12,7 @@ import net.leoch.common.utils.IpUtils;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.log.entity.SysLogErrorEntity;
-import net.leoch.modules.log.service.SysLogErrorService;
+import net.leoch.modules.log.service.ISysLogErrorService;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -31,7 +31,7 @@ import java.util.Map;
 @RestControllerAdvice
 @AllArgsConstructor
 public class ServiceExceptionHandler {
-    private final SysLogErrorService sysLogErrorService;
+    private final ISysLogErrorService sysLogErrorService;
 
     /**
      * 处理自定义异常

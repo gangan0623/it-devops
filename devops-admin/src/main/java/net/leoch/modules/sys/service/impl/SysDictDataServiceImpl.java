@@ -11,7 +11,7 @@ import net.leoch.modules.sys.mapper.SysDictDataMapper;
 import net.leoch.modules.sys.dto.SysDictDataDTO;
 import net.leoch.modules.sys.dto.SysDictDataPageRequest;
 import net.leoch.modules.sys.entity.SysDictDataEntity;
-import net.leoch.modules.sys.service.SysDictDataService;
+import net.leoch.modules.sys.service.ISysDictDataService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +24,7 @@ import java.util.Arrays;
  */
 @Slf4j
 @Service
-public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDictDataEntity> implements SysDictDataService {
+public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDictDataEntity> implements ISysDictDataService {
 
     @Override
     public PageData<SysDictDataDTO> page(SysDictDataPageRequest request) {

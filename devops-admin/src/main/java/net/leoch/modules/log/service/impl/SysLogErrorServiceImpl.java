@@ -10,14 +10,14 @@ import net.leoch.modules.log.mapper.SysLogErrorMapper;
 import net.leoch.modules.log.dto.SysLogErrorDTO;
 import net.leoch.modules.log.dto.SysLogErrorPageRequest;
 import net.leoch.modules.log.entity.SysLogErrorEntity;
-import net.leoch.modules.log.service.SysLogErrorService;
+import net.leoch.modules.log.service.ISysLogErrorService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
 @Slf4j
 @Service
-public class SysLogErrorServiceImpl extends ServiceImpl<SysLogErrorMapper, SysLogErrorEntity> implements SysLogErrorService {
+public class SysLogErrorServiceImpl extends ServiceImpl<SysLogErrorMapper, SysLogErrorEntity> implements ISysLogErrorService {
 
     @Override
     public PageData<SysLogErrorDTO> page(SysLogErrorPageRequest request) {

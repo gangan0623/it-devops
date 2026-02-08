@@ -19,7 +19,7 @@ import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.ops.mapper.MonitorComponentMapper;
 import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
-import net.leoch.modules.ops.service.MonitorComponentService;
+import net.leoch.modules.ops.service.IMonitorComponentService;
 import net.leoch.modules.security.user.SecurityUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 @Service
-public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMapper, MonitorComponentEntity> implements MonitorComponentService {
+public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMapper, MonitorComponentEntity> implements IMonitorComponentService {
 
     private static final String TYPE_PROMETHEUS = "prometheus";
     private static final String TYPE_VMALERT = "vmalert";

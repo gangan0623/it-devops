@@ -14,12 +14,12 @@ import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
 import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.modules.security.service.SecurityService;
+import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.dto.SysMenuDTO;
 import net.leoch.modules.sys.enums.MenuTypeEnum;
-import net.leoch.modules.sys.service.SysMenuService;
+import net.leoch.modules.sys.service.ISysMenuService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -35,8 +35,8 @@ import java.util.Set;
 @Tag(name = "菜单管理")
 @AllArgsConstructor
 public class SysMenuController {
-    private final SysMenuService sysMenuService;
-    private final SecurityService securityService;
+    private final ISysMenuService sysMenuService;
+    private final ISecurityService securityService;
 
     @GetMapping("nav")
     @Operation(summary = "导航")

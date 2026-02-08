@@ -12,7 +12,7 @@ import net.leoch.modules.ops.entity.DeviceBackupRecordEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
-import net.leoch.modules.ops.service.DashboardService;
+import net.leoch.modules.ops.service.IDashboardService;
 import net.leoch.modules.ops.service.ZabbixClient;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -24,7 +24,7 @@ import java.util.*;
  */
 @Slf4j
 @Service
-public class DashboardServiceImpl implements DashboardService {
+public class DashboardServiceImpl implements IDashboardService {
 
     private final WindowHostMapper windowHostMapper;
     private final LinuxHostMapper linuxHostMapper;

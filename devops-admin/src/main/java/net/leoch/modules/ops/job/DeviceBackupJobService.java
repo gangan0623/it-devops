@@ -9,8 +9,8 @@ import net.leoch.modules.ops.mapper.DeviceBackupMapper;
 import net.leoch.modules.ops.dto.BackupCallbackItem;
 import net.leoch.modules.ops.entity.BackupAgentEntity;
 import net.leoch.modules.ops.entity.DeviceBackupEntity;
-import net.leoch.modules.ops.service.DeviceBackupHistoryService;
-import net.leoch.modules.ops.service.DeviceBackupRecordService;
+import net.leoch.modules.ops.service.IDeviceBackupHistoryService;
+import net.leoch.modules.ops.service.IDeviceBackupRecordService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -30,10 +30,10 @@ import java.util.stream.Collectors;
 public class DeviceBackupJobService {
     private final DeviceBackupMapper deviceBackupMapper;
     private final BackupAgentMapper backupAgentMapper;
-    private final DeviceBackupRecordService deviceBackupRecordService;
-    private final DeviceBackupHistoryService deviceBackupHistoryService;
+    private final IDeviceBackupRecordService deviceBackupRecordService;
+    private final IDeviceBackupHistoryService deviceBackupHistoryService;
 
-    public DeviceBackupJobService(DeviceBackupMapper deviceBackupMapper, BackupAgentMapper backupAgentMapper, DeviceBackupRecordService deviceBackupRecordService, DeviceBackupHistoryService deviceBackupHistoryService) {
+    public DeviceBackupJobService(DeviceBackupMapper deviceBackupMapper, BackupAgentMapper backupAgentMapper, IDeviceBackupRecordService deviceBackupRecordService, IDeviceBackupHistoryService deviceBackupHistoryService) {
         this.deviceBackupMapper = deviceBackupMapper;
         this.backupAgentMapper = backupAgentMapper;
         this.deviceBackupRecordService = deviceBackupRecordService;

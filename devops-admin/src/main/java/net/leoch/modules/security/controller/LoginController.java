@@ -14,8 +14,8 @@ import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.security.dto.LoginDTO;
-import net.leoch.modules.security.service.CaptchaService;
-import net.leoch.modules.security.service.SecurityService;
+import net.leoch.modules.security.service.ICaptchaService;
+import net.leoch.modules.security.service.ISecurityService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -32,8 +32,8 @@ import java.io.IOException;
 @Tag(name = "登录管理")
 @AllArgsConstructor
 public class LoginController {
-    private final SecurityService securityService;
-    private final CaptchaService captchaService;
+    private final ISecurityService securityService;
+    private final ICaptchaService captchaService;
 
     @GetMapping("captcha")
     @Operation(summary = "验证码")

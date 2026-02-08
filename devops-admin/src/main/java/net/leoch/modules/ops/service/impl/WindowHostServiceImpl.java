@@ -25,7 +25,7 @@ import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.WindowHostEntity;
 import net.leoch.modules.ops.excel.WindowHostExcel;
 import net.leoch.modules.ops.excel.template.WindowHostImportExcel;
-import net.leoch.modules.ops.service.WindowHostService;
+import net.leoch.modules.ops.service.IWindowHostService;
 import net.leoch.modules.ops.util.MetricsUtils;
 import net.leoch.modules.ops.util.OpsQueryUtils;
 import net.leoch.modules.security.user.SecurityUser;
@@ -44,7 +44,7 @@ import java.util.*;
  */
 @Slf4j
 @Service
-public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowHostEntity> implements WindowHostService {
+public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowHostEntity> implements IWindowHostService {
 
     @Resource
     private RedisUtils redisUtils;

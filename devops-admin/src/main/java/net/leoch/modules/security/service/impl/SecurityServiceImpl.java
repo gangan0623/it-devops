@@ -14,14 +14,14 @@ import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.modules.log.entity.SysLogLoginEntity;
 import net.leoch.modules.log.enums.LoginOperationEnum;
 import net.leoch.modules.log.enums.LoginStatusEnum;
-import net.leoch.modules.log.service.SysLogLoginService;
+import net.leoch.modules.log.service.ISysLogLoginService;
 import net.leoch.modules.security.mapper.SysUserTokenMapper;
 import net.leoch.modules.security.dto.LoginDTO;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
 import net.leoch.modules.security.password.PasswordUtils;
-import net.leoch.modules.security.service.CaptchaService;
-import net.leoch.modules.security.service.SecurityService;
-import net.leoch.modules.security.service.SysUserTokenService;
+import net.leoch.modules.security.service.ICaptchaService;
+import net.leoch.modules.security.service.ISecurityService;
+import net.leoch.modules.security.service.ISysUserTokenService;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.mapper.SysMenuMapper;
@@ -31,7 +31,7 @@ import net.leoch.modules.sys.dto.SysUserDTO;
 import net.leoch.modules.sys.entity.SysUserEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
 import net.leoch.modules.sys.enums.UserStatusEnum;
-import net.leoch.modules.sys.service.SysUserService;
+import net.leoch.modules.sys.service.ISysUserService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
@@ -44,15 +44,15 @@ import java.util.Set;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class SecurityServiceImpl implements SecurityService {
+public class SecurityServiceImpl implements ISecurityService {
     private final SysMenuMapper sysMenuMapper;
     private final SysUserMapper sysUserMapper;
     private final SysUserTokenMapper sysUserTokenMapper;
     private final SysRoleDataScopeMapper sysRoleDataScopeMapper;
-    private final SysUserService sysUserService;
-    private final SysUserTokenService sysUserTokenService;
-    private final CaptchaService captchaService;
-    private final SysLogLoginService sysLogLoginService;
+    private final ISysUserService sysUserService;
+    private final ISysUserTokenService sysUserTokenService;
+    private final ICaptchaService captchaService;
+    private final ISysLogLoginService sysLogLoginService;
 
     @Override
     public Set<String> getUserPermissions(UserDetail user) {

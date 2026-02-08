@@ -15,9 +15,9 @@ import net.leoch.modules.sys.dto.SysUserDTO;
 import net.leoch.modules.sys.dto.SysUserPageRequest;
 import net.leoch.modules.sys.entity.SysUserEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
-import net.leoch.modules.sys.service.SysDeptService;
-import net.leoch.modules.sys.service.SysRoleUserService;
-import net.leoch.modules.sys.service.SysUserService;
+import net.leoch.modules.sys.service.ISysDeptService;
+import net.leoch.modules.sys.service.ISysRoleUserService;
+import net.leoch.modules.sys.service.ISysUserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -35,9 +35,9 @@ import java.util.Map;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity> implements SysUserService {
-    private final SysRoleUserService sysRoleUserService;
-    private final SysDeptService sysDeptService;
+public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity> implements ISysUserService {
+    private final ISysRoleUserService sysRoleUserService;
+    private final ISysDeptService sysDeptService;
 
     @Override
     public PageData<SysUserDTO> page(SysUserPageRequest request) {

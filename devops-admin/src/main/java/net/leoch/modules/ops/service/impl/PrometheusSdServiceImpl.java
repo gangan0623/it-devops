@@ -9,7 +9,7 @@ import net.leoch.modules.ops.dto.PrometheusSdResponse;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
-import net.leoch.modules.ops.service.PrometheusSdService;
+import net.leoch.modules.ops.service.IPrometheusSdService;
 import net.leoch.modules.sys.mapper.SysDictDataMapper;
 import net.leoch.modules.sys.entity.DictData;
 import org.springframework.stereotype.Service;
@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * Prometheus SD 服务
  */
 @Service
-public class PrometheusSdServiceImpl implements PrometheusSdService {
+public class PrometheusSdServiceImpl implements IPrometheusSdService {
 
     private final LinuxHostMapper linuxHostMapper;
     private final WindowHostMapper windowHostMapper;

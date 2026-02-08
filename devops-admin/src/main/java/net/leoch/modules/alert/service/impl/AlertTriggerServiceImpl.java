@@ -12,7 +12,7 @@ import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.alert.mapper.AlertMediaMapper;
-import net.leoch.modules.alert.service.AlertNotifyLogService;
+import net.leoch.modules.alert.service.IAlertNotifyLogService;
 import net.leoch.modules.alert.mapper.AlertRecordMapper;
 import net.leoch.modules.alert.mapper.AlertTemplateMapper;
 import net.leoch.modules.alert.mapper.AlertTriggerMapper;
@@ -23,8 +23,8 @@ import net.leoch.modules.alert.entity.AlertNotifyLogEntity;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
 import net.leoch.modules.alert.entity.AlertTemplateEntity;
 import net.leoch.modules.alert.entity.AlertTriggerEntity;
-import net.leoch.modules.alert.service.AlertMailService;
-import net.leoch.modules.alert.service.AlertTriggerService;
+import net.leoch.modules.alert.service.IAlertMailService;
+import net.leoch.modules.alert.service.IAlertTriggerService;
 import net.leoch.modules.alert.utils.AlertJsonUtils;
 import net.leoch.modules.alert.utils.AlertPayloadUtils;
 import net.leoch.modules.alert.utils.AlertTemplateRenderer;
@@ -49,20 +49,20 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, AlertTriggerEntity> implements AlertTriggerService {
+public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, AlertTriggerEntity> implements IAlertTriggerService {
 
     private final AlertTemplateMapper alertTemplateMapper;
     private final AlertMediaMapper alertMediaMapper;
     private final SysUserMapper sysUserMapper;
-    private final AlertMailService alertMailService;
-    private final AlertNotifyLogService alertNotifyLogService;
+    private final IAlertMailService alertMailService;
+    private final IAlertNotifyLogService alertNotifyLogService;
     private final AlertRecordMapper alertRecordMapper;
 
     public AlertTriggerServiceImpl(AlertTemplateMapper alertTemplateMapper,
                                    AlertMediaMapper alertMediaMapper,
                                    SysUserMapper sysUserMapper,
-                                   AlertMailService alertMailService,
-                                   AlertNotifyLogService alertNotifyLogService,
+                                   IAlertMailService alertMailService,
+                                   IAlertNotifyLogService alertNotifyLogService,
                                    AlertRecordMapper alertRecordMapper) {
         this.alertTemplateMapper = alertTemplateMapper;
         this.alertMediaMapper = alertMediaMapper;

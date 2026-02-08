@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.ops.dto.BackupCallbackItem;
 import net.leoch.modules.ops.dto.BackupCallbackRequest;
-import net.leoch.modules.ops.service.BackupCallbackService;
+import net.leoch.modules.ops.service.IBackupCallbackService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -18,9 +18,9 @@ import java.util.List;
 @Tag(name = "备份回调")
 public class BackupCallbackController {
 
-    private final BackupCallbackService backupCallbackService;
+    private final IBackupCallbackService backupCallbackService;
 
-    public BackupCallbackController(BackupCallbackService backupCallbackService) {
+    public BackupCallbackController(IBackupCallbackService backupCallbackService) {
         this.backupCallbackService = backupCallbackService;
     }
 

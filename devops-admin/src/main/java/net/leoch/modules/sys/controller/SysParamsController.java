@@ -17,7 +17,7 @@ import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.dto.SysParamsDTO;
 import net.leoch.modules.sys.dto.SysParamsPageRequest;
 import net.leoch.modules.sys.excel.SysParamsExcel;
-import net.leoch.modules.sys.service.SysParamsService;
+import net.leoch.modules.sys.service.ISysParamsService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,7 +34,7 @@ import java.util.List;
 @Tag(name = "参数管理")
 @AllArgsConstructor
 public class SysParamsController {
-    private final SysParamsService sysParamsService;
+    private final ISysParamsService sysParamsService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

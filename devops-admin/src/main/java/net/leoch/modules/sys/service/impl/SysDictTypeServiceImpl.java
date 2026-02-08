@@ -15,7 +15,7 @@ import net.leoch.modules.sys.dto.SysDictTypePageRequest;
 import net.leoch.modules.sys.entity.DictData;
 import net.leoch.modules.sys.entity.DictType;
 import net.leoch.modules.sys.entity.SysDictTypeEntity;
-import net.leoch.modules.sys.service.SysDictTypeService;
+import net.leoch.modules.sys.service.ISysDictTypeService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,7 +30,7 @@ import java.util.List;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDictTypeEntity> implements SysDictTypeService {
+public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDictTypeEntity> implements ISysDictTypeService {
     private final SysDictDataMapper sysDictDataMapper;
 
     @Override

@@ -13,7 +13,7 @@ import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.ops.dto.*;
-import net.leoch.modules.ops.service.LinuxHostService;
+import net.leoch.modules.ops.service.ILinuxHostService;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "Linux主机表")
 public class LinuxHostController {
     @Resource
-    private LinuxHostService linuxHostService;
+    private ILinuxHostService linuxHostService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

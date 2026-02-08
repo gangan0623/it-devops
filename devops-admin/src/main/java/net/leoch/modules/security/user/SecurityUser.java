@@ -7,7 +7,7 @@ import cn.dev33.satoken.stp.StpUtil;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.SpringContextUtils;
-import net.leoch.modules.security.service.SecurityService;
+import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.sys.entity.SysUserEntity;
 
 /**
@@ -37,7 +37,7 @@ public class SecurityUser {
                 return user;
             }
 
-            SecurityService securityService = SpringContextUtils.getBean(SecurityService.class);
+            ISecurityService securityService = SpringContextUtils.getBean(ISecurityService.class);
             SysUserEntity userEntity = securityService.getUser(StpUtil.getLoginIdAsLong());
             if (userEntity == null) {
                 return new UserDetail();

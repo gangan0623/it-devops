@@ -23,8 +23,8 @@ import net.leoch.modules.sys.dto.PasswordDTO;
 import net.leoch.modules.sys.dto.SysUserDTO;
 import net.leoch.modules.sys.dto.SysUserPageRequest;
 import net.leoch.modules.sys.excel.SysUserExcel;
-import net.leoch.modules.sys.service.SysRoleUserService;
-import net.leoch.modules.sys.service.SysUserService;
+import net.leoch.modules.sys.service.ISysRoleUserService;
+import net.leoch.modules.sys.service.ISysUserService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,8 +39,8 @@ import java.util.List;
 @Tag(name = "用户管理")
 @AllArgsConstructor
 public class SysUserController {
-    private final SysUserService sysUserService;
-    private final SysRoleUserService sysRoleUserService;
+    private final ISysUserService sysUserService;
+    private final ISysRoleUserService sysRoleUserService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

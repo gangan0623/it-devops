@@ -18,12 +18,12 @@ import net.leoch.modules.alert.dto.AlertRecordPageRequest;
 import net.leoch.modules.alert.entity.AlertNotifyLogEntity;
 import net.leoch.modules.alert.entity.AlertRecordActionEntity;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
-import net.leoch.modules.alert.service.AlertManagerService;
-import net.leoch.modules.alert.service.AlertNotifyLogService;
-import net.leoch.modules.alert.service.AlertRecordActionService;
-import net.leoch.modules.alert.service.AlertRecordService;
-import net.leoch.modules.alert.service.AlertSseService;
-import net.leoch.modules.alert.service.AlertTriggerService;
+import net.leoch.modules.alert.service.IAlertManagerService;
+import net.leoch.modules.alert.service.IAlertNotifyLogService;
+import net.leoch.modules.alert.service.IAlertRecordActionService;
+import net.leoch.modules.alert.service.IAlertRecordService;
+import net.leoch.modules.alert.service.IAlertSseService;
+import net.leoch.modules.alert.service.IAlertTriggerService;
 import net.leoch.modules.ops.mapper.BusinessSystemMapper;
 import net.leoch.modules.ops.mapper.LinuxHostMapper;
 import net.leoch.modules.ops.mapper.WindowHostMapper;
@@ -47,23 +47,23 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, AlertRecordEntity> implements AlertRecordService {
+public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, AlertRecordEntity> implements IAlertRecordService {
 
-    private final AlertSseService alertSseService;
-    private final AlertRecordActionService alertRecordActionService;
-    private final AlertManagerService alertManagerService;
-    private final AlertTriggerService alertTriggerService;
-    private final AlertNotifyLogService alertNotifyLogService;
+    private final IAlertSseService alertSseService;
+    private final IAlertRecordActionService alertRecordActionService;
+    private final IAlertManagerService alertManagerService;
+    private final IAlertTriggerService alertTriggerService;
+    private final IAlertNotifyLogService alertNotifyLogService;
     private final SysUserMapper sysUserMapper;
     private final LinuxHostMapper linuxHostMapper;
     private final WindowHostMapper windowHostMapper;
     private final BusinessSystemMapper businessSystemMapper;
 
-    public AlertRecordServiceImpl(AlertSseService alertSseService,
-                                  AlertRecordActionService alertRecordActionService,
-                                  AlertManagerService alertManagerService,
-                                  AlertTriggerService alertTriggerService,
-                                  AlertNotifyLogService alertNotifyLogService,
+    public AlertRecordServiceImpl(IAlertSseService alertSseService,
+                                  IAlertRecordActionService alertRecordActionService,
+                                  IAlertManagerService alertManagerService,
+                                  IAlertTriggerService alertTriggerService,
+                                  IAlertNotifyLogService alertNotifyLogService,
                                   SysUserMapper sysUserMapper,
                                   LinuxHostMapper linuxHostMapper,
                                   WindowHostMapper windowHostMapper,

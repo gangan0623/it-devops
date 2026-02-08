@@ -25,7 +25,7 @@ import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.excel.LinuxHostExcel;
 import net.leoch.modules.ops.excel.template.LinuxHostImportExcel;
-import net.leoch.modules.ops.service.LinuxHostService;
+import net.leoch.modules.ops.service.ILinuxHostService;
 import net.leoch.modules.ops.util.MetricsUtils;
 import net.leoch.modules.ops.util.OpsQueryUtils;
 import net.leoch.modules.security.user.SecurityUser;
@@ -44,7 +44,7 @@ import java.util.*;
  */
 @Slf4j
 @Service
-public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHostEntity> implements LinuxHostService {
+public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHostEntity> implements ILinuxHostService {
 
     @Resource
     private RedisUtils redisUtils;

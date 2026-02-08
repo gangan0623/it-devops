@@ -13,8 +13,8 @@ import net.leoch.modules.sys.mapper.SysMenuMapper;
 import net.leoch.modules.sys.dto.SysMenuDTO;
 import net.leoch.modules.sys.entity.SysMenuEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
-import net.leoch.modules.sys.service.SysMenuService;
-import net.leoch.modules.sys.service.SysRoleMenuService;
+import net.leoch.modules.sys.service.ISysMenuService;
+import net.leoch.modules.sys.service.ISysRoleMenuService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,8 +23,8 @@ import java.util.List;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity> implements SysMenuService {
-    private final SysRoleMenuService sysRoleMenuService;
+public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity> implements ISysMenuService {
+    private final ISysRoleMenuService sysRoleMenuService;
 
     @Override
     public SysMenuDTO get(Long id) {

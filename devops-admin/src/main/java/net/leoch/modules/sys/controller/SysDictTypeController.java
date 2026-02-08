@@ -14,7 +14,7 @@ import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.dto.SysDictTypeDTO;
 import net.leoch.modules.sys.dto.SysDictTypePageRequest;
 import net.leoch.modules.sys.entity.DictType;
-import net.leoch.modules.sys.service.SysDictTypeService;
+import net.leoch.modules.sys.service.ISysDictTypeService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -29,7 +29,7 @@ import java.util.List;
 @Tag(name = "字典类型")
 @AllArgsConstructor
 public class SysDictTypeController {
-    private final SysDictTypeService sysDictTypeService;
+    private final ISysDictTypeService sysDictTypeService;
 
     @GetMapping("page")
     @Operation(summary = "字典类型")

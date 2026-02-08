@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import net.leoch.common.utils.Result;
-import net.leoch.modules.alert.service.AlertWebhookService;
+import net.leoch.modules.alert.service.IAlertWebhookService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,9 +18,9 @@ import org.springframework.web.bind.annotation.RestController;
 @Tag(name = "告警Webhook")
 public class AlertWebhookController {
 
-    private final AlertWebhookService alertWebhookService;
+    private final IAlertWebhookService alertWebhookService;
 
-    public AlertWebhookController(AlertWebhookService alertWebhookService) {
+    public AlertWebhookController(IAlertWebhookService alertWebhookService) {
         this.alertWebhookService = alertWebhookService;
     }
 

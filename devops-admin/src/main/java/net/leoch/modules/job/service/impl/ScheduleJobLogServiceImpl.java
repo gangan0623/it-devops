@@ -11,12 +11,12 @@ import net.leoch.modules.job.mapper.ScheduleJobLogMapper;
 import net.leoch.modules.job.dto.ScheduleJobLogDTO;
 import net.leoch.modules.job.dto.ScheduleJobLogPageRequest;
 import net.leoch.modules.job.entity.ScheduleJobLogEntity;
-import net.leoch.modules.job.service.ScheduleJobLogService;
+import net.leoch.modules.job.service.IScheduleJobLogService;
 import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class ScheduleJobLogServiceImpl extends ServiceImpl<ScheduleJobLogMapper, ScheduleJobLogEntity> implements ScheduleJobLogService {
+public class ScheduleJobLogServiceImpl extends ServiceImpl<ScheduleJobLogMapper, ScheduleJobLogEntity> implements IScheduleJobLogService {
 
     @Override
     public PageData<ScheduleJobLogDTO> page(ScheduleJobLogPageRequest request) {

@@ -10,11 +10,11 @@ import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.security.mapper.SysUserTokenMapper;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
-import net.leoch.modules.security.service.SecurityService;
-import net.leoch.modules.security.service.SysUserTokenService;
+import net.leoch.modules.security.service.ISecurityService;
+import net.leoch.modules.security.service.ISysUserTokenService;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.dto.SysUserDTO;
-import net.leoch.modules.sys.service.SysUserService;
+import net.leoch.modules.sys.service.ISysUserService;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -25,9 +25,9 @@ import java.util.UUID;
 @Slf4j
 @AllArgsConstructor
 @Service
-public class SysUserTokenServiceImpl extends ServiceImpl<SysUserTokenMapper, SysUserTokenEntity> implements SysUserTokenService {
-	private final SysUserService sysUserService;
-	private final SecurityService securityService;
+public class SysUserTokenServiceImpl extends ServiceImpl<SysUserTokenMapper, SysUserTokenEntity> implements ISysUserTokenService {
+	private final ISysUserService sysUserService;
+	private final ISecurityService securityService;
 	/**
 	 * 12小时后过期
 	 */

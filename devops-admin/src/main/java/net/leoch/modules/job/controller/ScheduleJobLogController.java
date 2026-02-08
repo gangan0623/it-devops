@@ -8,7 +8,7 @@ import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.job.dto.ScheduleJobLogDTO;
 import net.leoch.modules.job.dto.ScheduleJobLogPageRequest;
-import net.leoch.modules.job.service.ScheduleJobLogService;
+import net.leoch.modules.job.service.IScheduleJobLogService;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "定时任务日志")
 @AllArgsConstructor
 public class ScheduleJobLogController {
-    private final ScheduleJobLogService scheduleJobLogService;
+    private final IScheduleJobLogService scheduleJobLogService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

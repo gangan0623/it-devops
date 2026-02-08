@@ -17,8 +17,8 @@ import net.leoch.modules.alert.dto.AlertTemplateDTO;
 import net.leoch.modules.alert.dto.AlertTemplatePageRequest;
 import net.leoch.modules.alert.dto.AlertTemplatePreviewDTO;
 import net.leoch.modules.alert.dto.AlertTemplateSendTestDTO;
-import net.leoch.modules.alert.service.AlertTemplateService;
-import net.leoch.modules.alert.service.AlertTriggerService;
+import net.leoch.modules.alert.service.IAlertTemplateService;
+import net.leoch.modules.alert.service.IAlertTriggerService;
 import net.leoch.modules.alert.utils.AlertJsonUtils;
 import net.leoch.modules.alert.utils.AlertPayloadUtils;
 import net.leoch.modules.alert.utils.AlertTemplateRenderer;
@@ -40,10 +40,10 @@ import java.util.Map;
 @Tag(name = "告警模板")
 public class AlertTemplateController {
 
-    private final AlertTemplateService alertTemplateService;
-    private final AlertTriggerService alertTriggerService;
+    private final IAlertTemplateService alertTemplateService;
+    private final IAlertTriggerService alertTriggerService;
 
-    public AlertTemplateController(AlertTemplateService alertTemplateService, AlertTriggerService alertTriggerService) {
+    public AlertTemplateController(IAlertTemplateService alertTemplateService, IAlertTriggerService alertTriggerService) {
         this.alertTemplateService = alertTemplateService;
         this.alertTriggerService = alertTriggerService;
     }

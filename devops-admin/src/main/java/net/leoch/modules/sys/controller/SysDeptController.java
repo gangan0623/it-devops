@@ -14,7 +14,7 @@ import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.dto.SysDeptDTO;
-import net.leoch.modules.sys.service.SysDeptService;
+import net.leoch.modules.sys.service.ISysDeptService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -30,7 +30,7 @@ import java.util.List;
 @Tag(name = "部门管理")
 @AllArgsConstructor
 public class SysDeptController {
-    private final SysDeptService sysDeptService;
+    private final ISysDeptService sysDeptService;
 
     @GetMapping("list")
     @Operation(summary = "列表")

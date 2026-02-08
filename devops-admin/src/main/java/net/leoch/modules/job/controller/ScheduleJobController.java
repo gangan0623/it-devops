@@ -13,7 +13,7 @@ import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.job.dto.ScheduleJobDTO;
 import net.leoch.modules.job.dto.ScheduleJobPageRequest;
-import net.leoch.modules.job.service.ScheduleJobService;
+import net.leoch.modules.job.service.IScheduleJobService;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @Tag(name = "定时任务")
 @AllArgsConstructor
 public class ScheduleJobController {
-    private final ScheduleJobService scheduleJobService;
+    private final IScheduleJobService scheduleJobService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

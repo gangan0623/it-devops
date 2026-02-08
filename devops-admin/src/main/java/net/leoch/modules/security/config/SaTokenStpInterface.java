@@ -2,7 +2,7 @@ package net.leoch.modules.security.config;
 
 import cn.dev33.satoken.stp.StpInterface;
 import lombok.AllArgsConstructor;
-import net.leoch.modules.security.service.SecurityService;
+import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.entity.SysUserEntity;
 import org.springframework.stereotype.Component;
@@ -15,7 +15,7 @@ import java.util.Set;
 @Component
 @AllArgsConstructor
 public class SaTokenStpInterface implements StpInterface {
-    private final SecurityService securityService;
+    private final ISecurityService securityService;
 
     @Override
     public List<String> getPermissionList(Object loginId, String loginType) {

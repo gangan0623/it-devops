@@ -29,7 +29,7 @@ import net.leoch.modules.ops.entity.BackupAgentEntity;
 import net.leoch.modules.ops.entity.DeviceBackupEntity;
 import net.leoch.modules.ops.excel.DeviceBackupExcel;
 import net.leoch.modules.ops.excel.template.DeviceBackupImportExcel;
-import net.leoch.modules.ops.service.DeviceBackupService;
+import net.leoch.modules.ops.service.IDeviceBackupService;
 import net.leoch.modules.security.user.SecurityUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, DeviceBackupEntity> implements DeviceBackupService {
+public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, DeviceBackupEntity> implements IDeviceBackupService {
 
     private final BackupAgentMapper backupAgentMapper;
     private final RedisUtils redisUtils;
