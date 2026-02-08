@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "MonitorComponentDeleteReq")
-public class MonitorComponentDeleteReq implements Serializable {
+public class MonitorComponentDeleteReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "ID数组")

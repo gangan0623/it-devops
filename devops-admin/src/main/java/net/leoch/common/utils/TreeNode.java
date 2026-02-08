@@ -15,7 +15,8 @@ import java.util.List;
  * @since 1.0.0
  */
  @Data
-public class TreeNode<T> implements Serializable {
+public class TreeNode<T> implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
     /**
      * 主键

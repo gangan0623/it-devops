@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "DashboardHostCountsRsp")
-public class DashboardHostCountsRsp implements Serializable {
+public class DashboardHostCountsRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "Windows主机数量")

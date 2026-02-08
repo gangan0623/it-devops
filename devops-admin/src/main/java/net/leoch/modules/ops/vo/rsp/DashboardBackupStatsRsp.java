@@ -11,7 +11,8 @@ import java.util.Date;
  */
 @Data
 @Schema(name = "DashboardBackupStatsRsp")
-public class DashboardBackupStatsRsp implements Serializable {
+public class DashboardBackupStatsRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "备份轮次")

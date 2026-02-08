@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "BusinessSystemCheckReq")
-public class BusinessSystemCheckReq implements Serializable {
+public class BusinessSystemCheckReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "地址")

@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "BackupAgentOnlineReq")
-public class BackupAgentOnlineReq implements Serializable {
+public class BackupAgentOnlineReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "地址")

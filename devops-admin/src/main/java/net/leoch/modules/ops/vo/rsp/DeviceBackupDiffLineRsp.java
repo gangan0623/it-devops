@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "DeviceBackupDiffLineRsp")
-public class DeviceBackupDiffLineRsp implements Serializable {
+public class DeviceBackupDiffLineRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "类型(add/del/same)")

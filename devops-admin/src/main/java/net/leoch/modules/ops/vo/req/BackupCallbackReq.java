@@ -12,7 +12,8 @@ import java.util.List;
  */
 @Data
 @Schema(name = "BackupCallbackReq")
-public class BackupCallbackReq implements Serializable {
+public class BackupCallbackReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "Agent Token")

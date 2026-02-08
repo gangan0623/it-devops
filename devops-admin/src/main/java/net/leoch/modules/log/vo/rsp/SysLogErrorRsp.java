@@ -16,7 +16,8 @@ import java.util.Date;
  */
 @Data
 @Schema(title = "异常日志")
-public class SysLogErrorRsp implements Serializable {
+public class SysLogErrorRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
 	@Schema(title = "id")

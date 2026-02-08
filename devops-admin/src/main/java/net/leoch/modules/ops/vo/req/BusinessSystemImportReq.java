@@ -11,7 +11,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "BusinessSystemImportReq")
-public class BusinessSystemImportReq implements Serializable {
+public class BusinessSystemImportReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "导入文件")

@@ -15,7 +15,8 @@ import java.util.List;
  */
 @Data
 @Schema(title = "分页数据")
-public class PageData<T> implements Serializable {
+public class PageData<T> implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(title = "总记录数")

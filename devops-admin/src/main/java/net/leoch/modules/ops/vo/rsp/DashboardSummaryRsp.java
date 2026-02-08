@@ -11,7 +11,8 @@ import java.util.List;
  */
 @Data
 @Schema(name = "DashboardSummaryRsp")
-public class DashboardSummaryRsp implements Serializable {
+public class DashboardSummaryRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "主机数量统计")

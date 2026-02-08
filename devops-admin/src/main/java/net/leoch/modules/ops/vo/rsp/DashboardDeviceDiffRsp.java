@@ -11,7 +11,8 @@ import java.util.List;
  */
 @Data
 @Schema(name = "DashboardDeviceDiffRsp")
-public class DashboardDeviceDiffRsp implements Serializable {
+public class DashboardDeviceDiffRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "Zabbix存在但备份不存在")

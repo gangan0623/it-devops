@@ -16,7 +16,8 @@ import java.util.Date;
  */
 @Data
 @Schema(title = "登录日志")
-public class SysLogLoginRsp implements Serializable {
+public class SysLogLoginRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
 	@Schema(title = "id")

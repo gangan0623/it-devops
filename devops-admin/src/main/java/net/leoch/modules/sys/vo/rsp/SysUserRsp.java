@@ -26,7 +26,8 @@ import java.util.List;
  */
 @Data
 @Schema(title = "用户管理")
-public class SysUserRsp implements Serializable {
+public class SysUserRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
 	@Schema(title = "id")
@@ -34,7 +35,7 @@ public class SysUserRsp implements Serializable {
 	@NotNull(message="{id.require}", groups = UpdateGroup.class)
 	private Long id;
 
-	@Schema(title = "用户名", required = true)
+	@Schema(title = "用户名")
 	@NotBlank(message="{sysuser.username.require}", groups = DefaultGroup.class)
 	private String username;
 
@@ -50,7 +51,7 @@ public class SysUserRsp implements Serializable {
 	@Schema(title = "头像")
 	private String headUrl;
 
-	@Schema(title = "性别   0：男   1：女    2：保密", required = true)
+	@Schema(title = "性别   0：男   1：女    2：保密")
 	@Range(min=0, max=2, message = "{sysuser.gender.range}", groups = DefaultGroup.class)
 	private Integer gender;
 
@@ -61,11 +62,11 @@ public class SysUserRsp implements Serializable {
 	@Schema(title = "手机号")
 	private String mobile;
 
-	@Schema(title = "部门ID", required = true)
+	@Schema(title = "部门ID")
 	@NotNull(message="{sysuser.deptId.require}", groups = DefaultGroup.class)
 	private Long deptId;
 
-	@Schema(title = "状态  0：停用    1：正常", required = true)
+	@Schema(title = "状态  0：停用    1：正常")
 	@Range(min=0, max=1, message = "{sysuser.status.range}", groups = DefaultGroup.class)
 	private Integer status;
 

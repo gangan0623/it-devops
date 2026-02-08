@@ -11,7 +11,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "LinuxHostImportReq")
-public class LinuxHostImportReq implements Serializable {
+public class LinuxHostImportReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "导入文件")

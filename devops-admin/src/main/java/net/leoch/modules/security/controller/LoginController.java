@@ -37,7 +37,7 @@ public class LoginController {
 
     @GetMapping("captcha")
     @Operation(summary = "验证码")
-    @Parameter(in = ParameterIn.QUERY, ref = "string", name = "uuid", required = true)
+    @Parameter(in = ParameterIn.QUERY, ref = "string", name = "uuid")
     public void captcha(HttpServletResponse response, String uuid) throws IOException {
         //uuid不能为空
         AssertUtils.isBlank(uuid, ErrorCode.IDENTIFIER_NOT_NULL);

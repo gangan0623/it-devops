@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "MonitorComponentListReq")
-public class MonitorComponentListReq implements Serializable {
+public class MonitorComponentListReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
 }

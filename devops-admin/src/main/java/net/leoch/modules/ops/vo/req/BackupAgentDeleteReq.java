@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "BackupAgentDeleteReq")
-public class BackupAgentDeleteReq implements Serializable {
+public class BackupAgentDeleteReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "ID数组")

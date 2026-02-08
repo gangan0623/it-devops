@@ -11,7 +11,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "WindowHostImportReq")
-public class WindowHostImportReq implements Serializable {
+public class WindowHostImportReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "导入文件")

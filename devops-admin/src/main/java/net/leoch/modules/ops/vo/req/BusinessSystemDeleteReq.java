@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "BusinessSystemDeleteReq")
-public class BusinessSystemDeleteReq implements Serializable {
+public class BusinessSystemDeleteReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "ID数组")

@@ -14,7 +14,8 @@ import java.util.List;
  * @author Taohongqiang
  */
 @Data
-public class UserDetail implements Serializable {
+public class UserDetail implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private Long id;

@@ -16,7 +16,8 @@ import java.util.Date;
  */
 @Data
 @Schema(name = "Linux主机表")
-public class LinuxHostRsp implements Serializable {
+public class LinuxHostRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
 	@SchemaProperty(name = "主键ID")

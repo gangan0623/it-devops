@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "DashboardMonitorComponentItemRsp")
-public class DashboardMonitorComponentItemRsp implements Serializable {
+public class DashboardMonitorComponentItemRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "名称")

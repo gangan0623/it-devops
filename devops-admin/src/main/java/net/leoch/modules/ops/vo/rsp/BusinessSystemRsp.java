@@ -16,7 +16,8 @@ import java.util.Date;
  */
 @Data
 @Schema(name = "业务系统表")
-public class BusinessSystemRsp implements Serializable {
+public class BusinessSystemRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
 	@SchemaProperty(name = "主键ID")

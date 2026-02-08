@@ -22,7 +22,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(title = "云存储配置信息")
-public class CloudStorageConfig implements Serializable {
+public class CloudStorageConfig implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(title = "类型 1：七牛  2：阿里云  3：腾讯云 ")

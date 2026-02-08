@@ -11,7 +11,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "BackupAgentImportReq")
-public class BackupAgentImportReq implements Serializable {
+public class BackupAgentImportReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "导入文件")

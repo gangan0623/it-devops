@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "WindowHostOnlineReq")
-public class WindowHostOnlineReq implements Serializable {
+public class WindowHostOnlineReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "地址")

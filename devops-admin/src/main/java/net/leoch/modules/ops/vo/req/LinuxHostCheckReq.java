@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "LinuxHostCheckReq")
-public class LinuxHostCheckReq implements Serializable {
+public class LinuxHostCheckReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "地址")

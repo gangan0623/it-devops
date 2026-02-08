@@ -11,7 +11,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "模板预览")
-public class AlertTemplatePreviewReq implements Serializable {
+public class AlertTemplatePreviewReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @SchemaProperty(name = "模板ID")

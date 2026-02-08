@@ -16,7 +16,8 @@ import java.util.Date;
  */
 @Data
 @Schema(title = "定时任务日志")
-public class ScheduleJobLogRsp implements Serializable {
+public class ScheduleJobLogRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(title = "id")

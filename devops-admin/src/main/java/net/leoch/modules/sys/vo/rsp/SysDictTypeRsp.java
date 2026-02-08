@@ -23,7 +23,8 @@ import java.util.Date;
  */
 @Data
 @Schema(title = "字典类型")
-public class SysDictTypeRsp implements Serializable {
+public class SysDictTypeRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
 	@Schema(title = "id")

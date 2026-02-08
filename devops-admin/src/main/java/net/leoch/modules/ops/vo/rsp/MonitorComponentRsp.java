@@ -11,7 +11,8 @@ import java.util.Date;
  */
 @Data
 @io.swagger.v3.oas.annotations.media.Schema(name = "监控组件")
-public class MonitorComponentRsp implements Serializable {
+public class MonitorComponentRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @SchemaProperty(name = "主键ID")

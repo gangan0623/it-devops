@@ -16,7 +16,8 @@ import java.util.List;
  */
 @Data
 @Schema(name = "告警触发器")
-public class AlertTriggerRsp implements Serializable {
+public class AlertTriggerRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @SchemaProperty(name = "ID")

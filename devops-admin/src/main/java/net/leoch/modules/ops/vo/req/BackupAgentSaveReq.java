@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * 备份节点保存请求
  */
 @Schema(name = "BackupAgentSaveReq")
-public class BackupAgentSaveReq extends BackupAgentRsp {
+public class BackupAgentSaveReq extends BackupAgentRsp  {
+    @Serial
     private static final long serialVersionUID = 1L;
 }

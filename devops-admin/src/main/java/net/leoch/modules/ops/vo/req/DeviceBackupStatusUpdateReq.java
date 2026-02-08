@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "DeviceBackupStatusUpdateReq")
-public class DeviceBackupStatusUpdateReq implements Serializable {
+public class DeviceBackupStatusUpdateReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "ID数组")

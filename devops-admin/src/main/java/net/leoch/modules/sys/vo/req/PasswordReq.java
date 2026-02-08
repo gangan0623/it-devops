@@ -16,7 +16,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(title = "修改密码")
-public class PasswordReq implements Serializable {
+public class PasswordReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(title = "原密码")

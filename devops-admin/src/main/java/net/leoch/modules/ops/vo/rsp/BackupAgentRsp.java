@@ -17,7 +17,8 @@ import java.util.Date;
  */
 @Data
 @Schema(name = "备份节点表")
-public class BackupAgentRsp implements Serializable {
+public class BackupAgentRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
 	@SchemaProperty(name = "主键ID")

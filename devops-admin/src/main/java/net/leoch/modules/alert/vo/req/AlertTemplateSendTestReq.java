@@ -11,7 +11,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "模板发送测试")
-public class AlertTemplateSendTestReq implements Serializable {
+public class AlertTemplateSendTestReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @SchemaProperty(name = "模板ID")

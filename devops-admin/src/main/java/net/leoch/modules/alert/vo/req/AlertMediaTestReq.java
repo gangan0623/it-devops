@@ -11,7 +11,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "告警媒介测试")
-public class AlertMediaTestReq implements Serializable {
+public class AlertMediaTestReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @SchemaProperty(name = "媒介ID")

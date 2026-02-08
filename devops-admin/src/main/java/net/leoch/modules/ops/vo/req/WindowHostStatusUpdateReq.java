@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "WindowHostStatusUpdateReq")
-public class WindowHostStatusUpdateReq implements Serializable {
+public class WindowHostStatusUpdateReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "ID数组")

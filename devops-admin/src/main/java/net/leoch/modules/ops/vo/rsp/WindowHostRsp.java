@@ -16,7 +16,8 @@ import java.util.Date;
  */
 @Data
 @Schema(name = "Windows主机表")
-public class WindowHostRsp implements Serializable {
+public class WindowHostRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
 	@SchemaProperty(name = "主键ID")

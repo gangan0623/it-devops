@@ -16,7 +16,8 @@ import java.math.BigDecimal;
  */
 @Data
 @Schema(title = "系统数据")
-public class SystemRsp implements Serializable {
+public class SystemRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private Long sysTime;

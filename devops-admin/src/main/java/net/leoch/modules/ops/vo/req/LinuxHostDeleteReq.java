@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "LinuxHostDeleteReq")
-public class LinuxHostDeleteReq implements Serializable {
+public class LinuxHostDeleteReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "ID数组")

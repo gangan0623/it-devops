@@ -5,7 +5,8 @@ import java.io.Serializable;
 /**
  * 备份回调结果项
  */
-public class BackupCallbackItemRsp implements Serializable {
+public class BackupCallbackItemRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private String instance;

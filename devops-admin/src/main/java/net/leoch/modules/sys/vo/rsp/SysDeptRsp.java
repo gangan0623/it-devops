@@ -27,7 +27,8 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Schema(title = "部门管理")
-public class SysDeptRsp extends TreeNode implements Serializable {
+public class SysDeptRsp extends TreeNode implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
 	@Schema(title = "id")

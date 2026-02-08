@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "DashboardDeviceDiffItemRsp")
-public class DashboardDeviceDiffItemRsp implements Serializable {
+public class DashboardDeviceDiffItemRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "IP")

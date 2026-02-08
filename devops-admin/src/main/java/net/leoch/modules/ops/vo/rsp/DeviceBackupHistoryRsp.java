@@ -12,7 +12,8 @@ import java.util.Date;
  */
 @Data
 @Schema(name = "设备备份历史表")
-public class DeviceBackupHistoryRsp implements Serializable {
+public class DeviceBackupHistoryRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @SchemaProperty(name = "主键ID")

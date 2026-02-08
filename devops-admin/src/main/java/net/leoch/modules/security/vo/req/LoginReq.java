@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -16,9 +17,10 @@ import java.io.Serializable;
 @Data
 @Schema(title = "登录表单")
 public class LoginReq implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
 
-    @Schema(title = "用户名", required = true)
+    @Schema(title = "用户名")
     @NotBlank(message="{sysuser.username.require}")
     private String username;
 

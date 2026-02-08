@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "DeviceBackupRecordDownloadReq")
-public class DeviceBackupRecordDownloadReq implements Serializable {
+public class DeviceBackupRecordDownloadReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "备份URL")

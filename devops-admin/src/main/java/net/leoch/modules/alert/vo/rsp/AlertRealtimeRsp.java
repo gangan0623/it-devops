@@ -11,7 +11,8 @@ import java.util.Date;
  */
 @Data
 @Schema(name = "AlertRealtimeRsp")
-public class AlertRealtimeRsp implements Serializable {
+public class AlertRealtimeRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "告警名称")

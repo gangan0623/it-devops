@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "DeviceBackupRecordDiffCurrentReq")
-public class DeviceBackupRecordDiffCurrentReq implements Serializable {
+public class DeviceBackupRecordDiffCurrentReq implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "设备IP")

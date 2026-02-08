@@ -7,6 +7,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * Windows主机保存请求
  */
 @Schema(name = "WindowHostSaveReq")
-public class WindowHostSaveReq extends WindowHostRsp {
+public class WindowHostSaveReq extends WindowHostRsp  {
+    @Serial
     private static final long serialVersionUID = 1L;
 }

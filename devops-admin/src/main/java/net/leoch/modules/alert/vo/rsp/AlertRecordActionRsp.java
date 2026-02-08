@@ -12,7 +12,8 @@ import java.util.Date;
  */
 @Data
 @Schema(name = "告警记录操作历史")
-public class AlertRecordActionRsp implements Serializable {
+public class AlertRecordActionRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @SchemaProperty(name = "ID")

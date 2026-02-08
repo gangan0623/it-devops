@@ -28,7 +28,8 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Schema(title = "菜单管理")
-public class SysMenuRsp extends TreeNode<SysMenuRsp> implements Serializable {
+public class SysMenuRsp extends TreeNode<SysMenuRsp> implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
 	@Schema(title = "id")

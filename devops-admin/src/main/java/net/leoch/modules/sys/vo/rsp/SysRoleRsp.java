@@ -24,7 +24,8 @@ import java.util.List;
  */
 @Data
 @Schema(title = "角色管理")
-public class SysRoleRsp implements Serializable {
+public class SysRoleRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
 	@Schema(title = "id")

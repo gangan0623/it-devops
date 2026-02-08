@@ -11,7 +11,8 @@ import java.io.Serializable;
  * @since 1.0.0 2026-01-28
  */
 @Data
-public class StatusUpdateRsp implements Serializable {
+public class StatusUpdateRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     private Long[] ids;

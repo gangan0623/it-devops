@@ -17,6 +17,14 @@ import java.util.List;
 @Slf4j
 public class ConvertUtils {
 
+    /**
+     * 对象转换
+     *
+     * @param source 源对象
+     * @param target 目标类型
+     * @param <T> 泛型类型
+     * @return 转换后的对象
+     */
     public static <T> T sourceToTarget(Object source, Class<T> target){
         if(source == null){
             return null;
@@ -32,6 +40,14 @@ public class ConvertUtils {
         return targetObject;
     }
 
+    /**
+     * 集合对象转换
+     *
+     * @param sourceList 源集合
+     * @param target 目标类型
+     * @param <T> 泛型类型
+     * @return 转换后的集合
+     */
     public static <T> List<T> sourceToTarget(Collection<?> sourceList, Class<T> target){
         if(sourceList == null){
             return null;

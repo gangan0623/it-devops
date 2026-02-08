@@ -7,6 +7,7 @@ import net.leoch.modules.ops.vo.rsp.LinuxHostRsp;
  * Linux主机保存请求
  */
 @Schema(name = "LinuxHostSaveReq")
-public class LinuxHostSaveReq extends LinuxHostRsp {
+public class LinuxHostSaveReq extends LinuxHostRsp  {
+    @Serial
     private static final long serialVersionUID = 1L;
 }

@@ -10,7 +10,8 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "OpsHostStatusSummaryRsp")
-public class OpsHostStatusSummaryRsp implements Serializable {
+public class OpsHostStatusSummaryRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "总数")

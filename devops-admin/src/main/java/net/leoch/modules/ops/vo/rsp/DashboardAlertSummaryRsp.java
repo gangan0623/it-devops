@@ -11,7 +11,8 @@ import java.util.Date;
  */
 @Data
 @Schema(name = "DashboardAlertSummaryRsp")
-public class DashboardAlertSummaryRsp implements Serializable {
+public class DashboardAlertSummaryRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "告警名称")

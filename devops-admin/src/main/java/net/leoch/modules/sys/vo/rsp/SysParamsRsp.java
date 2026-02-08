@@ -23,7 +23,8 @@ import java.util.Date;
  */
 @Data
 @Schema(title = "参数管理")
-public class SysParamsRsp implements Serializable {
+public class SysParamsRsp implements Serializable  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @Schema(title = "id")
