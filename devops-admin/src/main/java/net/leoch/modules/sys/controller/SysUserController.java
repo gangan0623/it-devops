@@ -6,7 +6,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
-import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.ExcelUtils;
@@ -16,14 +15,11 @@ import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.security.password.PasswordUtils;
 import net.leoch.modules.security.user.SecurityUser;
-import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.vo.req.PasswordReq;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.vo.req.SysUserPageReq;
 import net.leoch.modules.sys.excel.SysUserExcel;
-import net.leoch.modules.sys.service.ISysRoleUserService;
 import net.leoch.modules.sys.service.ISysUserService;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,7 +36,6 @@ import java.util.List;
 @AllArgsConstructor
 public class SysUserController {
     private final ISysUserService sysUserService;
-    private final ISysRoleUserService sysRoleUserService;
 
     @GetMapping("page")
     @Operation(summary = "分页")
@@ -55,13 +50,7 @@ public class SysUserController {
     @Operation(summary = "信息")
     @SaCheckPermission("sys:user:info")
     public Result<SysUserRsp> get(@PathVariable("id") Long id) {
-        SysUserRsp data = sysUserService.get(id);
-
-        //用户角色列表
-        List<Long> roleIdList = sysRoleUserService.getRoleIdList(id);
-        data.setRoleIdList(roleIdList);
-
-        return new Result<SysUserRsp>().ok(data);
+        return new Result<SysUserRsp>().ok(sysUserService.getWithRoles(id));
     }
 
     @GetMapping("info")
@@ -77,16 +66,7 @@ public class SysUserController {
     public Result<Object> password(@RequestBody PasswordReq dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto);
-
-        UserDetail user = SecurityUser.getUser();
-
-        //原密码不正确
-        if (!PasswordUtils.matches(dto.getPassword(), user.getPassword())) {
-            return new Result().error(ErrorCode.PASSWORD_ERROR);
-        }
-
-        sysUserService.updatePassword(user.getId(), dto.getNewPassword());
-
+        sysUserService.changePassword(dto);
         return new Result<>();
     }
 

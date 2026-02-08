@@ -5,12 +5,15 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.exception.ErrorCode;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.security.password.PasswordUtils;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.mapper.SysUserMapper;
+import net.leoch.modules.sys.vo.req.PasswordReq;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.vo.req.SysUserPageReq;
 import net.leoch.modules.sys.entity.SysUserEntity;
@@ -97,6 +100,17 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
     }
 
     @Override
+    public SysUserRsp getWithRoles(Long id) {
+        SysUserRsp user = this.get(id);
+        if (user != null) {
+            //用户角色列表
+            List<Long> roleIdList = sysRoleUserService.getRoleIdList(id);
+            user.setRoleIdList(roleIdList);
+        }
+        return user;
+    }
+
+    @Override
     public SysUserRsp getByUsername(String username) {
         SysUserEntity entity = this.getBaseMapper().getByUsername(username);
         return ConvertUtils.sourceToTarget(entity, SysUserRsp.class);
@@ -155,6 +169,23 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
         newPassword = PasswordUtils.encode(newPassword);
 
         this.getBaseMapper().updatePassword(id, newPassword);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void changePassword(PasswordReq dto) {
+        log.info("[用户密码] 修改密码请求");
+
+        UserDetail user = SecurityUser.getUser();
+
+        //原密码不正确
+        if (!PasswordUtils.matches(dto.getPassword(), user.getPassword())) {
+            log.warn("[用户密码] 原密码错误, userId={}", user.getId());
+            throw new ServiceException(ErrorCode.PASSWORD_ERROR);
+        }
+
+        this.updatePassword(user.getId(), dto.getNewPassword());
+        log.info("[用户密码] 修改密码成功, userId={}", user.getId());
     }
 
     @Override

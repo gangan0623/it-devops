@@ -22,6 +22,13 @@ public interface ISysUserService extends IService<SysUserEntity> {
 
 	SysUserRsp get(Long id);
 
+	/**
+	 * 获取用户详情（含角色列表）
+	 * @param id 用户ID
+	 * @return 用户详情
+	 */
+	SysUserRsp getWithRoles(Long id);
+
 	SysUserRsp getByUsername(String username);
 
 	void save(SysUserRsp dto);
@@ -36,6 +43,12 @@ public interface ISysUserService extends IService<SysUserEntity> {
 	 * @param newPassword  新密码
 	 */
 	void updatePassword(Long id, String newPassword);
+
+	/**
+	 * 修改当前用户密码
+	 * @param dto 密码修改请求
+	 */
+	void changePassword(net.leoch.modules.sys.vo.req.PasswordReq dto);
 
 	/**
 	 * 根据部门ID，查询用户数

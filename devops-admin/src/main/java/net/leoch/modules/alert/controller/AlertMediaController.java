@@ -99,30 +99,8 @@ public class AlertMediaController {
     @PostMapping("test")
     @Operation(summary = "媒介测试")
     @SaCheckPermission("alert:media:test")
-    public Result<Object> test(@RequestBody AlertMediaTestReq dto) {
-        if (StrUtil.isBlank(dto.getTo())) {
-            return new Result().error("收件人不能为空");
-        }
-        AlertMediaRsp mediaDTO = alertMediaService.get(dto.getMediaId());
-        if (mediaDTO == null) {
-            return new Result().error("媒介不存在");
-        }
-        AlertMediaEntity media = new AlertMediaEntity();
-        media.setHost(mediaDTO.getHost());
-        media.setPort(mediaDTO.getPort());
-        media.setUsername(mediaDTO.getUsername());
-        media.setPassword(mediaDTO.getPassword());
-        media.setProtocol(mediaDTO.getProtocol());
-        media.setSmtpAuth(mediaDTO.getSmtpAuth());
-        media.setStarttlsEnable(mediaDTO.getStarttlsEnable());
-        media.setTlsEnable(mediaDTO.getTlsEnable());
-        media.setFromAddr(mediaDTO.getFromAddr());
-
-        List<String> receivers = StrUtil.split(dto.getTo(), ',').stream()
-            .map(String::trim)
-            .filter(StrUtil::isNotBlank)
-            .collect(Collectors.toList());
-        alertMailService.send(media, receivers, dto.getSubject(), dto.getContent(), dto.getHtml());
+    public Result<Object> test(@RequestBody AlertMediaTestReq request) {
+        alertMediaService.testMedia(request);
         return new Result<>();
     }
 }
