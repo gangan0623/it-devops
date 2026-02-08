@@ -45,10 +45,10 @@ import java.util.Set;
 @Service
 @AllArgsConstructor
 public class SecurityServiceImpl implements SecurityService {
-    private final SysMenuDao sysMenuDao;
-    private final SysUserDao sysUserDao;
-    private final SysUserTokenDao sysUserTokenDao;
-    private final SysRoleDataScopeDao sysRoleDataScopeDao;
+    private final SysMenuMapper sysMenuMapper;
+    private final SysUserMapper sysUserMapper;
+    private final SysUserTokenMapper sysUserTokenMapper;
+    private final SysRoleDataScopeMapper sysRoleDataScopeMapper;
     private final SysUserService sysUserService;
     private final SysUserTokenService sysUserTokenService;
     private final CaptchaService captchaService;
@@ -59,9 +59,9 @@ public class SecurityServiceImpl implements SecurityService {
         //系统管理员，拥有最高权限
         List<String> permissionsList;
         if (user.getSuperAdmin() == SuperAdminEnum.YES.value()) {
-            permissionsList = sysMenuDao.getPermissionsList();
+            permissionsList = sysMenuMapper.getPermissionsList();
         } else {
-            permissionsList = sysMenuDao.getUserPermissionsList(user.getId());
+            permissionsList = sysMenuMapper.getUserPermissionsList(user.getId());
         }
 
         //用户权限列表
@@ -81,17 +81,17 @@ public class SecurityServiceImpl implements SecurityService {
 
     @Override
     public SysUserTokenEntity getByToken(String token) {
-        return sysUserTokenDao.getByToken(token);
+        return sysUserTokenMapper.getByToken(token);
     }
 
     @Override
     public SysUserEntity getUser(Long userId) {
-        return sysUserDao.selectById(userId);
+        return sysUserMapper.selectById(userId);
     }
 
     @Override
     public List<Long> getDataScopeList(Long userId) {
-        return sysRoleDataScopeDao.getDataScopeList(userId);
+        return sysRoleDataScopeMapper.getDataScopeList(userId);
     }
 
     @Override

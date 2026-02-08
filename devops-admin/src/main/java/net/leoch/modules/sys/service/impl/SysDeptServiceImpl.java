@@ -30,7 +30,7 @@ import java.util.Map;
 @Service
 @AllArgsConstructor
 public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity> implements SysDeptService {
-    private final SysUserDao sysUserDao;
+    private final SysUserMapper sysUserMapper;
 
     @Override
     public List<SysDeptDTO> list(Map<String, Object> params) {
@@ -99,7 +99,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity
         }
 
         //判断部门下面是否有用户
-        int count = sysUserDao.getCountByDeptId(id);
+        int count = sysUserMapper.getCountByDeptId(id);
         if (count > 0) {
             throw new ServiceException(ErrorCode.DEPT_USER_DELETE_ERROR);
         }

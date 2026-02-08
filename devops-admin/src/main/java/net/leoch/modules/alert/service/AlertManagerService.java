@@ -31,10 +31,10 @@ public class AlertManagerService {
     @Value("${alert.manager.url:http://192.168.17.121:9093}")
     private String defaultAlertmanagerUrl;
 
-    private final MonitorComponentDao monitorComponentDao;
+    private final MonitorComponentMapper monitorComponentMapper;
 
-    public AlertManagerService(MonitorComponentDao monitorComponentDao) {
-        this.monitorComponentDao = monitorComponentDao;
+    public AlertManagerService(MonitorComponentMapper monitorComponentMapper) {
+        this.monitorComponentMapper = monitorComponentMapper;
     }
 
     public String createSilence(AlertRecordEntity record, int days, String message) {
@@ -109,7 +109,7 @@ public class AlertManagerService {
     }
 
     private String resolveAlertmanagerBaseUrl() {
-        List<MonitorComponentEntity> list = monitorComponentDao.selectList(null);
+        List<MonitorComponentEntity> list = monitorComponentMapper.selectList(null);
         if (list != null) {
             for (MonitorComponentEntity component : list) {
                 if (!TYPE_ALERTMANAGER.equalsIgnoreCase(component.getType())) {

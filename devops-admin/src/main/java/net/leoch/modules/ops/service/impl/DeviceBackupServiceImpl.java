@@ -48,11 +48,11 @@ import java.util.stream.Collectors;
 @Service
 public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, DeviceBackupEntity> implements DeviceBackupService {
 
-    private final BackupAgentDao backupAgentDao;
+    private final BackupAgentMapper backupAgentMapper;
     private final RedisUtils redisUtils;
 
-    public DeviceBackupServiceImpl(BackupAgentDao backupAgentDao, RedisUtils redisUtils) {
-        this.backupAgentDao = backupAgentDao;
+    public DeviceBackupServiceImpl(BackupAgentMapper backupAgentMapper, RedisUtils redisUtils) {
+        this.backupAgentMapper = backupAgentMapper;
         this.redisUtils = redisUtils;
     }
 
@@ -303,7 +303,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
         LambdaQueryWrapper<BackupAgentEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.select(BackupAgentEntity::getId, BackupAgentEntity::getName);
         wrapper.in(BackupAgentEntity::getId, agentIds);
-        List<BackupAgentEntity> agents = backupAgentDao.selectList(wrapper);
+        List<BackupAgentEntity> agents = backupAgentMapper.selectList(wrapper);
         Map<Long, String> agentNameMap = new HashMap<>();
         for (BackupAgentEntity agent : agents) {
             agentNameMap.put(agent.getId(), agent.getName());

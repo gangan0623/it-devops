@@ -25,10 +25,10 @@ import java.util.stream.Collectors;
 @Service
 public class AlertRecordActionServiceImpl extends ServiceImpl<AlertRecordActionMapper, AlertRecordActionEntity> implements AlertRecordActionService {
 
-    private final SysUserDao sysUserDao;
+    private final SysUserMapper sysUserMapper;
 
-    public AlertRecordActionServiceImpl(SysUserDao sysUserDao) {
-        this.sysUserDao = sysUserDao;
+    public AlertRecordActionServiceImpl(SysUserMapper sysUserMapper) {
+        this.sysUserMapper = sysUserMapper;
     }
 
     @Override
@@ -49,7 +49,7 @@ public class AlertRecordActionServiceImpl extends ServiceImpl<AlertRecordActionM
             .collect(Collectors.toList());
         Map<Long, String> userMap = new HashMap<>();
         if (!userIds.isEmpty()) {
-            List<SysUserEntity> users = sysUserDao.selectList(
+            List<SysUserEntity> users = sysUserMapper.selectList(
                 new LambdaQueryWrapper<SysUserEntity>()
                     .select(SysUserEntity::getId, SysUserEntity::getUsername)
                     .in(SysUserEntity::getId, userIds)

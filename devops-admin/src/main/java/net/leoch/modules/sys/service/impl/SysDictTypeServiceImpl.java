@@ -31,7 +31,7 @@ import java.util.List;
 @Service
 @AllArgsConstructor
 public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDictTypeEntity> implements SysDictTypeService {
-    private final SysDictDataDao sysDictDataDao;
+    private final SysDictDataMapper sysDictDataMapper;
 
     @Override
     public PageData<SysDictTypeDTO> page(SysDictTypePageRequest request) {
@@ -89,7 +89,7 @@ public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDi
     @Override
     public List<DictType> getAllList() {
         List<DictType> typeList = this.getBaseMapper().getDictTypeList();
-        List<DictData> dataList = sysDictDataDao.getDictDataList();
+        List<DictData> dataList = sysDictDataMapper.getDictDataList();
         for (DictType type : typeList) {
             for (DictData data : dataList) {
                 if (type.getId().equals(data.getDictTypeId())) {

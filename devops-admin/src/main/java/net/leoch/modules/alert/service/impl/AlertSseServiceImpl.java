@@ -30,20 +30,20 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Service
 public class AlertSseServiceImpl implements AlertSseService {
 
-    private final AlertRecordDao alertRecordDao;
-    private final LinuxHostDao linuxHostDao;
-    private final WindowHostDao windowHostDao;
-    private final BusinessSystemDao businessSystemDao;
+    private final AlertRecordMapper alertRecordMapper;
+    private final LinuxHostMapper linuxHostMapper;
+    private final WindowHostMapper windowHostMapper;
+    private final BusinessSystemMapper businessSystemMapper;
     private final CopyOnWriteArrayList<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
-    public AlertSseServiceImpl(AlertRecordDao alertRecordDao,
-                               LinuxHostDao linuxHostDao,
-                               WindowHostDao windowHostDao,
-                               BusinessSystemDao businessSystemDao) {
-        this.alertRecordDao = alertRecordDao;
-        this.linuxHostDao = linuxHostDao;
-        this.windowHostDao = windowHostDao;
-        this.businessSystemDao = businessSystemDao;
+    public AlertSseServiceImpl(AlertRecordMapper alertRecordMapper,
+                               LinuxHostMapper linuxHostMapper,
+                               WindowHostMapper windowHostMapper,
+                               BusinessSystemMapper businessSystemMapper) {
+        this.alertRecordMapper = alertRecordMapper;
+        this.linuxHostMapper = linuxHostMapper;
+        this.windowHostMapper = windowHostMapper;
+        this.businessSystemMapper = businessSystemMapper;
     }
 
     @Override
@@ -63,7 +63,7 @@ public class AlertSseServiceImpl implements AlertSseService {
 
     @Override
     public List<AlertRealtimeDTO> recentAlerts() {
-        List<AlertRecordEntity> list = alertRecordDao.selectList(
+        List<AlertRecordEntity> list = alertRecordMapper.selectList(
             new LambdaQueryWrapper<AlertRecordEntity>()
                 .select(AlertRecordEntity::getAlertName, AlertRecordEntity::getInstance, AlertRecordEntity::getSeverity,
                     AlertRecordEntity::getStatus, AlertRecordEntity::getStartsAt)
@@ -105,15 +105,15 @@ public class AlertSseServiceImpl implements AlertSseService {
 
     private Map<String, String> loadHostMap() {
         Map<String, String> map = new HashMap<>();
-        List<LinuxHostEntity> linuxList = linuxHostDao.selectList(new LambdaQueryWrapper<LinuxHostEntity>().select(LinuxHostEntity::getInstance, LinuxHostEntity::getName));
+        List<LinuxHostEntity> linuxList = linuxHostMapper.selectList(new LambdaQueryWrapper<LinuxHostEntity>().select(LinuxHostEntity::getInstance, LinuxHostEntity::getName));
         for (LinuxHostEntity item : linuxList) {
             putHost(map, item.getInstance(), item.getName());
         }
-        List<WindowHostEntity> winList = windowHostDao.selectList(new LambdaQueryWrapper<WindowHostEntity>().select(WindowHostEntity::getInstance, WindowHostEntity::getName));
+        List<WindowHostEntity> winList = windowHostMapper.selectList(new LambdaQueryWrapper<WindowHostEntity>().select(WindowHostEntity::getInstance, WindowHostEntity::getName));
         for (WindowHostEntity item : winList) {
             putHost(map, item.getInstance(), item.getName());
         }
-        List<BusinessSystemEntity> businessList = businessSystemDao.selectList(new LambdaQueryWrapper<BusinessSystemEntity>().select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName));
+        List<BusinessSystemEntity> businessList = businessSystemMapper.selectList(new LambdaQueryWrapper<BusinessSystemEntity>().select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName));
         for (BusinessSystemEntity item : businessList) {
             putHost(map, item.getInstance(), item.getName());
         }

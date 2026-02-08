@@ -54,29 +54,29 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
     private final AlertManagerService alertManagerService;
     private final AlertTriggerService alertTriggerService;
     private final AlertNotifyLogService alertNotifyLogService;
-    private final SysUserDao sysUserDao;
-    private final LinuxHostDao linuxHostDao;
-    private final WindowHostDao windowHostDao;
-    private final BusinessSystemDao businessSystemDao;
+    private final SysUserMapper sysUserMapper;
+    private final LinuxHostMapper linuxHostMapper;
+    private final WindowHostMapper windowHostMapper;
+    private final BusinessSystemMapper businessSystemMapper;
 
     public AlertRecordServiceImpl(AlertSseService alertSseService,
                                   AlertRecordActionService alertRecordActionService,
                                   AlertManagerService alertManagerService,
                                   AlertTriggerService alertTriggerService,
                                   AlertNotifyLogService alertNotifyLogService,
-                                  SysUserDao sysUserDao,
-                                  LinuxHostDao linuxHostDao,
-                                  WindowHostDao windowHostDao,
-                                  BusinessSystemDao businessSystemDao) {
+                                  SysUserMapper sysUserMapper,
+                                  LinuxHostMapper linuxHostMapper,
+                                  WindowHostMapper windowHostMapper,
+                                  BusinessSystemMapper businessSystemMapper) {
         this.alertSseService = alertSseService;
         this.alertRecordActionService = alertRecordActionService;
         this.alertManagerService = alertManagerService;
         this.alertTriggerService = alertTriggerService;
         this.alertNotifyLogService = alertNotifyLogService;
-        this.sysUserDao = sysUserDao;
-        this.linuxHostDao = linuxHostDao;
-        this.windowHostDao = windowHostDao;
-        this.businessSystemDao = businessSystemDao;
+        this.sysUserMapper = sysUserMapper;
+        this.linuxHostMapper = linuxHostMapper;
+        this.windowHostMapper = windowHostMapper;
+        this.businessSystemMapper = businessSystemMapper;
     }
 
     @Override
@@ -437,15 +437,15 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
 
     private Map<String, HostInfo> loadHostInfoMap() {
         Map<String, HostInfo> map = new HashMap<>();
-        List<LinuxHostEntity> linuxList = linuxHostDao.selectList(null);
+        List<LinuxHostEntity> linuxList = linuxHostMapper.selectList(null);
         for (LinuxHostEntity item : linuxList) {
             putHost(map, item.getInstance(), item.getName(), "linux");
         }
-        List<WindowHostEntity> winList = windowHostDao.selectList(null);
+        List<WindowHostEntity> winList = windowHostMapper.selectList(null);
         for (WindowHostEntity item : winList) {
             putHost(map, item.getInstance(), item.getName(), "windows");
         }
-        List<BusinessSystemEntity> businessList = businessSystemDao.selectList(null);
+        List<BusinessSystemEntity> businessList = businessSystemMapper.selectList(null);
         for (BusinessSystemEntity item : businessList) {
             putHost(map, item.getInstance(), item.getName(), "business");
         }
@@ -539,7 +539,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         if (userIds == null || userIds.isEmpty()) {
             return userMap;
         }
-        List<SysUserEntity> users = sysUserDao.selectList(
+        List<SysUserEntity> users = sysUserMapper.selectList(
             new LambdaQueryWrapper<SysUserEntity>()
                 .select(SysUserEntity::getId, SysUserEntity::getUsername)
                 .in(SysUserEntity::getId, userIds)
@@ -704,15 +704,15 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         }
         String type = deviceType.trim().toLowerCase();
         if ("linux".equals(type)) {
-            List<LinuxHostEntity> list = linuxHostDao.selectList(new LambdaQueryWrapper<LinuxHostEntity>().select(LinuxHostEntity::getInstance));
+            List<LinuxHostEntity> list = linuxHostMapper.selectList(new LambdaQueryWrapper<LinuxHostEntity>().select(LinuxHostEntity::getInstance));
             return list.stream().map(LinuxHostEntity::getInstance).filter(StrUtil::isNotBlank).distinct().collect(Collectors.toList());
         }
         if ("windows".equals(type)) {
-            List<WindowHostEntity> list = windowHostDao.selectList(new LambdaQueryWrapper<WindowHostEntity>().select(WindowHostEntity::getInstance));
+            List<WindowHostEntity> list = windowHostMapper.selectList(new LambdaQueryWrapper<WindowHostEntity>().select(WindowHostEntity::getInstance));
             return list.stream().map(WindowHostEntity::getInstance).filter(StrUtil::isNotBlank).distinct().collect(Collectors.toList());
         }
         if ("business".equals(type)) {
-            List<BusinessSystemEntity> list = businessSystemDao.selectList(new LambdaQueryWrapper<BusinessSystemEntity>().select(BusinessSystemEntity::getInstance));
+            List<BusinessSystemEntity> list = businessSystemMapper.selectList(new LambdaQueryWrapper<BusinessSystemEntity>().select(BusinessSystemEntity::getInstance));
             return list.stream().map(BusinessSystemEntity::getInstance).filter(StrUtil::isNotBlank).distinct().collect(Collectors.toList());
         }
         return new ArrayList<>();
@@ -725,7 +725,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         String value = keyword.trim();
         List<String> instances = new ArrayList<>();
         if (StrUtil.isBlank(deviceType) || "linux".equalsIgnoreCase(deviceType)) {
-            List<LinuxHostEntity> list = linuxHostDao.selectList(
+            List<LinuxHostEntity> list = linuxHostMapper.selectList(
                 new LambdaQueryWrapper<LinuxHostEntity>()
                     .select(LinuxHostEntity::getInstance)
                     .like(LinuxHostEntity::getName, value)
@@ -733,7 +733,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             list.forEach(item -> instances.add(item.getInstance()));
         }
         if (StrUtil.isBlank(deviceType) || "windows".equalsIgnoreCase(deviceType)) {
-            List<WindowHostEntity> list = windowHostDao.selectList(
+            List<WindowHostEntity> list = windowHostMapper.selectList(
                 new LambdaQueryWrapper<WindowHostEntity>()
                     .select(WindowHostEntity::getInstance)
                     .like(WindowHostEntity::getName, value)
@@ -741,7 +741,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             list.forEach(item -> instances.add(item.getInstance()));
         }
         if (StrUtil.isBlank(deviceType) || "business".equalsIgnoreCase(deviceType)) {
-            List<BusinessSystemEntity> list = businessSystemDao.selectList(
+            List<BusinessSystemEntity> list = businessSystemMapper.selectList(
                 new LambdaQueryWrapper<BusinessSystemEntity>()
                     .select(BusinessSystemEntity::getInstance)
                     .like(BusinessSystemEntity::getName, value)

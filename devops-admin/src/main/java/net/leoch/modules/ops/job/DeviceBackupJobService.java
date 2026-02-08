@@ -28,20 +28,20 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service("deviceBackupJobService")
 public class DeviceBackupJobService {
-    private final DeviceBackupDao deviceBackupDao;
-    private final BackupAgentDao backupAgentDao;
+    private final DeviceBackupMapper deviceBackupMapper;
+    private final BackupAgentMapper backupAgentMapper;
     private final DeviceBackupRecordService deviceBackupRecordService;
     private final DeviceBackupHistoryService deviceBackupHistoryService;
 
-    public DeviceBackupJobService(DeviceBackupDao deviceBackupDao, BackupAgentDao backupAgentDao, DeviceBackupRecordService deviceBackupRecordService, DeviceBackupHistoryService deviceBackupHistoryService) {
-        this.deviceBackupDao = deviceBackupDao;
-        this.backupAgentDao = backupAgentDao;
+    public DeviceBackupJobService(DeviceBackupMapper deviceBackupMapper, BackupAgentMapper backupAgentMapper, DeviceBackupRecordService deviceBackupRecordService, DeviceBackupHistoryService deviceBackupHistoryService) {
+        this.deviceBackupMapper = deviceBackupMapper;
+        this.backupAgentMapper = backupAgentMapper;
         this.deviceBackupRecordService = deviceBackupRecordService;
         this.deviceBackupHistoryService = deviceBackupHistoryService;
     }
 
     public void backup(String params) {
-        List<BackupAgentEntity> agents = backupAgentDao.selectList(
+        List<BackupAgentEntity> agents = backupAgentMapper.selectList(
             new LambdaQueryWrapper<BackupAgentEntity>().eq(BackupAgentEntity::getStatus, 1)
         );
         if (CollUtil.isEmpty(agents)) {
@@ -51,7 +51,7 @@ public class DeviceBackupJobService {
             if (agent == null || agent.getId() == null) {
                 continue;
             }
-            List<DeviceBackupEntity> devices = deviceBackupDao.selectList(
+            List<DeviceBackupEntity> devices = deviceBackupMapper.selectList(
                 new LambdaQueryWrapper<DeviceBackupEntity>()
                     .eq(DeviceBackupEntity::getAgentId, agent.getId())
                     .eq(DeviceBackupEntity::getStatus, 1)
@@ -69,13 +69,13 @@ public class DeviceBackupJobService {
             return false;
         }
         log.info("[设备备份] 备份回调收到：token={}***，数量={}", token != null && token.length() > 4 ? token.substring(0, 4) : "****", items == null ? 0 : items.size());
-        BackupAgentEntity agent = backupAgentDao.selectOne(
+        BackupAgentEntity agent = backupAgentMapper.selectOne(
             new LambdaQueryWrapper<BackupAgentEntity>().eq(BackupAgentEntity::getToken, token).last("limit 1")
         );
         if (agent == null || agent.getId() == null) {
             return false;
         }
-        List<DeviceBackupEntity> devices = deviceBackupDao.selectList(
+        List<DeviceBackupEntity> devices = deviceBackupMapper.selectList(
             new LambdaQueryWrapper<DeviceBackupEntity>().eq(DeviceBackupEntity::getAgentId, agent.getId()).eq(DeviceBackupEntity::getStatus, 1)
         );
         Map<String, DeviceBackupEntity> deviceMap = devices == null ? Collections.emptyMap()

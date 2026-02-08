@@ -26,30 +26,30 @@ import java.util.*;
 @Service
 public class DashboardServiceImpl implements DashboardService {
 
-    private final WindowHostDao windowHostDao;
-    private final LinuxHostDao linuxHostDao;
-    private final BusinessSystemDao businessSystemDao;
-    private final DeviceBackupDao deviceBackupDao;
-    private final DeviceBackupRecordDao deviceBackupRecordDao;
-    private final MonitorComponentDao monitorComponentDao;
-    private final AlertRecordDao alertRecordDao;
+    private final WindowHostMapper windowHostMapper;
+    private final LinuxHostMapper linuxHostMapper;
+    private final BusinessSystemMapper businessSystemMapper;
+    private final DeviceBackupMapper deviceBackupMapper;
+    private final DeviceBackupRecordMapper deviceBackupRecordDao;
+    private final MonitorComponentMapper monitorComponentMapper;
+    private final AlertRecordMapper alertRecordMapper;
     private final ZabbixClient zabbixClient;
 
-    public DashboardServiceImpl(WindowHostDao windowHostDao,
-                                LinuxHostDao linuxHostDao,
-                                BusinessSystemDao businessSystemDao,
-                                DeviceBackupDao deviceBackupDao,
-                                DeviceBackupRecordDao deviceBackupRecordDao,
-                                MonitorComponentDao monitorComponentDao,
-                                AlertRecordDao alertRecordDao,
+    public DashboardServiceImpl(WindowHostMapper windowHostMapper,
+                                LinuxHostMapper linuxHostMapper,
+                                BusinessSystemMapper businessSystemMapper,
+                                DeviceBackupMapper deviceBackupMapper,
+                                DeviceBackupRecordMapper deviceBackupRecordDao,
+                                MonitorComponentMapper monitorComponentMapper,
+                                AlertRecordMapper alertRecordMapper,
                                 ZabbixClient zabbixClient) {
-        this.windowHostDao = windowHostDao;
-        this.linuxHostDao = linuxHostDao;
-        this.businessSystemDao = businessSystemDao;
-        this.deviceBackupDao = deviceBackupDao;
+        this.windowHostMapper = windowHostMapper;
+        this.linuxHostMapper = linuxHostMapper;
+        this.businessSystemMapper = businessSystemMapper;
+        this.deviceBackupMapper = deviceBackupMapper;
         this.deviceBackupRecordDao = deviceBackupRecordDao;
-        this.monitorComponentDao = monitorComponentDao;
-        this.alertRecordDao = alertRecordDao;
+        this.monitorComponentMapper = monitorComponentMapper;
+        this.alertRecordMapper = alertRecordMapper;
         this.zabbixClient = zabbixClient;
     }
 
@@ -58,9 +58,9 @@ public class DashboardServiceImpl implements DashboardService {
         DashboardSummaryResponse data = new DashboardSummaryResponse();
 
         DashboardHostCounts hostCounts = new DashboardHostCounts();
-        hostCounts.setWindows(windowHostDao.selectCount(new LambdaQueryWrapper<>()));
-        hostCounts.setLinux(linuxHostDao.selectCount(new LambdaQueryWrapper<>()));
-        hostCounts.setBusiness(businessSystemDao.selectCount(new LambdaQueryWrapper<>()));
+        hostCounts.setWindows(windowHostMapper.selectCount(new LambdaQueryWrapper<>()));
+        hostCounts.setLinux(linuxHostMapper.selectCount(new LambdaQueryWrapper<>()));
+        hostCounts.setBusiness(businessSystemMapper.selectCount(new LambdaQueryWrapper<>()));
         data.setHostCounts(hostCounts);
 
         DashboardBackupStats backupStats = new DashboardBackupStats();
@@ -92,7 +92,7 @@ public class DashboardServiceImpl implements DashboardService {
         data.setBackupStats(backupStats);
 
         List<Map<String, String>> zabbixHosts = zabbixClient.getHostsByTemplates();
-        List<DeviceBackupEntity> backupDevices = deviceBackupDao.selectList(
+        List<DeviceBackupEntity> backupDevices = deviceBackupMapper.selectList(
                 new LambdaQueryWrapper<DeviceBackupEntity>()
                         .select(DeviceBackupEntity::getInstance, DeviceBackupEntity::getName)
         );
@@ -138,7 +138,7 @@ public class DashboardServiceImpl implements DashboardService {
         diff.setBackupOnly(backupOnly);
         data.setDeviceDiff(diff);
 
-        List<AlertRecordEntity> alerts = alertRecordDao.selectList(
+        List<AlertRecordEntity> alerts = alertRecordMapper.selectList(
                 new LambdaQueryWrapper<AlertRecordEntity>()
                         .select(AlertRecordEntity::getAlertName, AlertRecordEntity::getInstance, AlertRecordEntity::getStartsAt,
                                 AlertRecordEntity::getSeverity, AlertRecordEntity::getStatus)
@@ -159,7 +159,7 @@ public class DashboardServiceImpl implements DashboardService {
         }
         data.setRecentAlerts(recentAlerts);
 
-        List<MonitorComponentEntity> components = monitorComponentDao.selectList(
+        List<MonitorComponentEntity> components = monitorComponentMapper.selectList(
                 new LambdaQueryWrapper<MonitorComponentEntity>()
                         .select(MonitorComponentEntity::getName, MonitorComponentEntity::getOnlineStatus, MonitorComponentEntity::getUpdateAvailable)
                         .orderByDesc(MonitorComponentEntity::getUpdateDate)
@@ -179,15 +179,15 @@ public class DashboardServiceImpl implements DashboardService {
 
     private Map<String, String> loadHostMap() {
         Map<String, String> map = new HashMap<>();
-        List<LinuxHostEntity> linuxList = linuxHostDao.selectList(new LambdaQueryWrapper<LinuxHostEntity>().select(LinuxHostEntity::getInstance, LinuxHostEntity::getName));
+        List<LinuxHostEntity> linuxList = linuxHostMapper.selectList(new LambdaQueryWrapper<LinuxHostEntity>().select(LinuxHostEntity::getInstance, LinuxHostEntity::getName));
         for (LinuxHostEntity item : linuxList) {
             putHost(map, item.getInstance(), item.getName());
         }
-        List<WindowHostEntity> winList = windowHostDao.selectList(new LambdaQueryWrapper<WindowHostEntity>().select(WindowHostEntity::getInstance, WindowHostEntity::getName));
+        List<WindowHostEntity> winList = windowHostMapper.selectList(new LambdaQueryWrapper<WindowHostEntity>().select(WindowHostEntity::getInstance, WindowHostEntity::getName));
         for (WindowHostEntity item : winList) {
             putHost(map, item.getInstance(), item.getName());
         }
-        List<BusinessSystemEntity> businessList = businessSystemDao.selectList(new LambdaQueryWrapper<BusinessSystemEntity>().select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName));
+        List<BusinessSystemEntity> businessList = businessSystemMapper.selectList(new LambdaQueryWrapper<BusinessSystemEntity>().select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName));
         for (BusinessSystemEntity item : businessList) {
             putHost(map, item.getInstance(), item.getName());
         }

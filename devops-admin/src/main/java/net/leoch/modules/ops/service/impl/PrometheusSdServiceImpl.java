@@ -24,16 +24,16 @@ import java.util.stream.Collectors;
 @Service
 public class PrometheusSdServiceImpl implements PrometheusSdService {
 
-    private final LinuxHostDao linuxHostDao;
-    private final WindowHostDao windowHostDao;
-    private final BusinessSystemDao businessSystemDao;
-    private final SysDictDataDao sysDictDataDao;
+    private final LinuxHostMapper linuxHostMapper;
+    private final WindowHostMapper windowHostMapper;
+    private final BusinessSystemMapper businessSystemMapper;
+    private final SysDictDataMapper sysDictDataMapper;
 
-    public PrometheusSdServiceImpl(LinuxHostDao linuxHostDao, WindowHostDao windowHostDao, BusinessSystemDao businessSystemDao, SysDictDataDao sysDictDataDao) {
-        this.linuxHostDao = linuxHostDao;
-        this.windowHostDao = windowHostDao;
-        this.businessSystemDao = businessSystemDao;
-        this.sysDictDataDao = sysDictDataDao;
+    public PrometheusSdServiceImpl(LinuxHostMapper linuxHostMapper, WindowHostMapper windowHostMapper, BusinessSystemMapper businessSystemMapper, SysDictDataMapper sysDictDataMapper) {
+        this.linuxHostMapper = linuxHostMapper;
+        this.windowHostMapper = windowHostMapper;
+        this.businessSystemMapper = businessSystemMapper;
+        this.sysDictDataMapper = sysDictDataMapper;
     }
 
     @Override
@@ -43,7 +43,7 @@ public class PrometheusSdServiceImpl implements PrometheusSdService {
             return new ArrayList<>();
         }
         DictMaps dictMaps = loadDictMaps();
-        List<LinuxHostEntity> list = linuxHostDao.selectList(new LambdaQueryWrapper<LinuxHostEntity>()
+        List<LinuxHostEntity> list = linuxHostMapper.selectList(new LambdaQueryWrapper<LinuxHostEntity>()
                 .select(LinuxHostEntity::getInstance, LinuxHostEntity::getName, LinuxHostEntity::getSiteLocation, LinuxHostEntity::getAreaName, LinuxHostEntity::getMenuName, LinuxHostEntity::getSubMenuName, LinuxHostEntity::getType)
                 .eq(LinuxHostEntity::getStatus, 1)
                 .eq(LinuxHostEntity::getAreaName, areaName)
@@ -69,7 +69,7 @@ public class PrometheusSdServiceImpl implements PrometheusSdService {
             return new ArrayList<>();
         }
         DictMaps dictMaps = loadDictMaps();
-        List<WindowHostEntity> list = windowHostDao.selectList(new LambdaQueryWrapper<WindowHostEntity>()
+        List<WindowHostEntity> list = windowHostMapper.selectList(new LambdaQueryWrapper<WindowHostEntity>()
                 .select(WindowHostEntity::getInstance, WindowHostEntity::getName, WindowHostEntity::getSiteLocation, WindowHostEntity::getAreaName, WindowHostEntity::getMenuName, WindowHostEntity::getSubMenuName, WindowHostEntity::getType)
                 .eq(WindowHostEntity::getStatus, 1)
                 .eq(WindowHostEntity::getAreaName, areaName)
@@ -95,7 +95,7 @@ public class PrometheusSdServiceImpl implements PrometheusSdService {
             return new ArrayList<>();
         }
         DictMaps dictMaps = loadDictMaps();
-        List<BusinessSystemEntity> list = businessSystemDao.selectList(new LambdaQueryWrapper<BusinessSystemEntity>()
+        List<BusinessSystemEntity> list = businessSystemMapper.selectList(new LambdaQueryWrapper<BusinessSystemEntity>()
                 .select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName, BusinessSystemEntity::getSiteLocation, BusinessSystemEntity::getAreaName, BusinessSystemEntity::getMenuName, BusinessSystemEntity::getSubMenuName)
                 .eq(BusinessSystemEntity::getStatus, 1)
                 .eq(BusinessSystemEntity::getAreaName, areaName)
@@ -135,7 +135,7 @@ public class PrometheusSdServiceImpl implements PrometheusSdService {
     }
 
     private Map<String, String> getDictMapByType(String dictType) {
-        List<DictData> dictDataList = sysDictDataDao.getDictDataListByType(dictType);
+        List<DictData> dictDataList = sysDictDataMapper.getDictDataListByType(dictType);
         if (dictDataList == null || dictDataList.isEmpty()) {
             return Collections.emptyMap();
         }

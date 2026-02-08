@@ -36,24 +36,24 @@ public class OnlineStatusRefreshTask implements ITask {
     private static final Logger logger = LoggerFactory.getLogger(OnlineStatusRefreshTask.class);
     private static final long CACHE_EXPIRE_SECONDS = 600;
 
-    private final LinuxHostDao linuxHostDao;
-    private final WindowHostDao windowHostDao;
-    private final BusinessSystemDao businessSystemDao;
-    private final BackupAgentDao backupAgentDao;
-    private final DeviceBackupDao deviceBackupDao;
+    private final LinuxHostMapper linuxHostMapper;
+    private final WindowHostMapper windowHostMapper;
+    private final BusinessSystemMapper businessSystemMapper;
+    private final BackupAgentMapper backupAgentMapper;
+    private final DeviceBackupMapper deviceBackupMapper;
     private final RedisUtils redisUtils;
 
-    public OnlineStatusRefreshTask(LinuxHostDao linuxHostDao,
-                                   WindowHostDao windowHostDao,
-                                   BusinessSystemDao businessSystemDao,
-                                   BackupAgentDao backupAgentDao,
-                                   DeviceBackupDao deviceBackupDao,
+    public OnlineStatusRefreshTask(LinuxHostMapper linuxHostMapper,
+                                   WindowHostMapper windowHostMapper,
+                                   BusinessSystemMapper businessSystemMapper,
+                                   BackupAgentMapper backupAgentMapper,
+                                   DeviceBackupMapper deviceBackupMapper,
                                    RedisUtils redisUtils) {
-        this.linuxHostDao = linuxHostDao;
-        this.windowHostDao = windowHostDao;
-        this.businessSystemDao = businessSystemDao;
-        this.backupAgentDao = backupAgentDao;
-        this.deviceBackupDao = deviceBackupDao;
+        this.linuxHostMapper = linuxHostMapper;
+        this.windowHostMapper = windowHostMapper;
+        this.businessSystemMapper = businessSystemMapper;
+        this.backupAgentMapper = backupAgentMapper;
+        this.deviceBackupMapper = deviceBackupMapper;
         this.redisUtils = redisUtils;
     }
 
@@ -69,7 +69,7 @@ public class OnlineStatusRefreshTask implements ITask {
     }
 
     private void refreshLinux() {
-        List<LinuxHostEntity> list = linuxHostDao.selectList(new LambdaQueryWrapper<LinuxHostEntity>()
+        List<LinuxHostEntity> list = linuxHostMapper.selectList(new LambdaQueryWrapper<LinuxHostEntity>()
                 .select(LinuxHostEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, LinuxHostEntity::getInstance,
                 instance -> MetricsUtils.metricsOk(instance, 3000));
@@ -77,7 +77,7 @@ public class OnlineStatusRefreshTask implements ITask {
     }
 
     private void refreshWindows() {
-        List<WindowHostEntity> list = windowHostDao.selectList(new LambdaQueryWrapper<WindowHostEntity>()
+        List<WindowHostEntity> list = windowHostMapper.selectList(new LambdaQueryWrapper<WindowHostEntity>()
                 .select(WindowHostEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, WindowHostEntity::getInstance,
                 instance -> MetricsUtils.metricsOk(instance, 3000));
@@ -85,7 +85,7 @@ public class OnlineStatusRefreshTask implements ITask {
     }
 
     private void refreshBusinessSystems() {
-        List<BusinessSystemEntity> list = businessSystemDao.selectList(new LambdaQueryWrapper<BusinessSystemEntity>()
+        List<BusinessSystemEntity> list = businessSystemMapper.selectList(new LambdaQueryWrapper<BusinessSystemEntity>()
                 .select(BusinessSystemEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, BusinessSystemEntity::getInstance,
                 instance -> PingUtils.isReachable(instance, 2000));
@@ -93,14 +93,14 @@ public class OnlineStatusRefreshTask implements ITask {
     }
 
     private void refreshBackupAgents() {
-        List<BackupAgentEntity> list = backupAgentDao.selectList(new LambdaQueryWrapper<BackupAgentEntity>()
+        List<BackupAgentEntity> list = backupAgentMapper.selectList(new LambdaQueryWrapper<BackupAgentEntity>()
                 .select(BackupAgentEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, BackupAgentEntity::getInstance, this::checkBackupAgentHealth);
         refreshCache(RedisKeys.getBackupAgentOnlineKey(), statusMap);
     }
 
     private void refreshDeviceBackups() {
-        List<DeviceBackupEntity> list = deviceBackupDao.selectList(new LambdaQueryWrapper<DeviceBackupEntity>()
+        List<DeviceBackupEntity> list = deviceBackupMapper.selectList(new LambdaQueryWrapper<DeviceBackupEntity>()
                 .select(DeviceBackupEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, DeviceBackupEntity::getInstance,
                 instance -> PingUtils.isReachable(instance, 2000));

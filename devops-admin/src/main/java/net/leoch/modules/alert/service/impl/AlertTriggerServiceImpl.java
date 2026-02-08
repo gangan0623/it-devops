@@ -51,25 +51,25 @@ import java.util.stream.Collectors;
 @Service
 public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, AlertTriggerEntity> implements AlertTriggerService {
 
-    private final AlertTemplateDao alertTemplateDao;
-    private final AlertMediaDao alertMediaDao;
-    private final SysUserDao sysUserDao;
+    private final AlertTemplateMapper alertTemplateMapper;
+    private final AlertMediaMapper alertMediaMapper;
+    private final SysUserMapper sysUserMapper;
     private final AlertMailService alertMailService;
     private final AlertNotifyLogService alertNotifyLogService;
-    private final AlertRecordDao alertRecordDao;
+    private final AlertRecordMapper alertRecordMapper;
 
-    public AlertTriggerServiceImpl(AlertTemplateDao alertTemplateDao,
-                                   AlertMediaDao alertMediaDao,
-                                   SysUserDao sysUserDao,
+    public AlertTriggerServiceImpl(AlertTemplateMapper alertTemplateMapper,
+                                   AlertMediaMapper alertMediaMapper,
+                                   SysUserMapper sysUserMapper,
                                    AlertMailService alertMailService,
                                    AlertNotifyLogService alertNotifyLogService,
-                                   AlertRecordDao alertRecordDao) {
-        this.alertTemplateDao = alertTemplateDao;
-        this.alertMediaDao = alertMediaDao;
-        this.sysUserDao = sysUserDao;
+                                   AlertRecordMapper alertRecordMapper) {
+        this.alertTemplateMapper = alertTemplateMapper;
+        this.alertMediaMapper = alertMediaMapper;
+        this.sysUserMapper = sysUserMapper;
         this.alertMailService = alertMailService;
         this.alertNotifyLogService = alertNotifyLogService;
-        this.alertRecordDao = alertRecordDao;
+        this.alertRecordMapper = alertRecordMapper;
     }
 
     @Override
@@ -115,9 +115,9 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
     @Override
     public Map<String, Object> resources() {
         Map<String, Object> result = new HashMap<>();
-        List<AlertTemplateEntity> templates = alertTemplateDao.selectList(null);
-        List<AlertMediaEntity> medias = alertMediaDao.selectList(null);
-        List<SysUserEntity> users = sysUserDao.selectList(
+        List<AlertTemplateEntity> templates = alertTemplateMapper.selectList(null);
+        List<AlertMediaEntity> medias = alertMediaMapper.selectList(null);
+        List<SysUserEntity> users = sysUserMapper.selectList(
             new QueryWrapper<SysUserEntity>()
                 .select("id", "username", "email")
                 .isNotNull("email")
@@ -196,11 +196,11 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
         if (trigger.getStatus() != null && trigger.getStatus() == 0) {
             return;
         }
-        AlertTemplateEntity template = templateId == null ? null : alertTemplateDao.selectById(templateId);
+        AlertTemplateEntity template = templateId == null ? null : alertTemplateMapper.selectById(templateId);
         if (template == null) {
             return;
         }
-        AlertMediaEntity media = trigger.getMediaId() == null ? null : alertMediaDao.selectById(trigger.getMediaId());
+        AlertMediaEntity media = trigger.getMediaId() == null ? null : alertMediaMapper.selectById(trigger.getMediaId());
         if (media == null) {
             return;
         }
@@ -211,8 +211,8 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
     }
 
     private void sendAlert(AlertTriggerEntity trigger, Map<String, Object> payload, Map<String, Object> alert, String severity, Long recordId) {
-        AlertTemplateEntity template = trigger.getTemplateId() == null ? null : alertTemplateDao.selectById(trigger.getTemplateId());
-        AlertMediaEntity media = trigger.getMediaId() == null ? null : alertMediaDao.selectById(trigger.getMediaId());
+        AlertTemplateEntity template = trigger.getTemplateId() == null ? null : alertTemplateMapper.selectById(trigger.getTemplateId());
+        AlertMediaEntity media = trigger.getMediaId() == null ? null : alertMediaMapper.selectById(trigger.getMediaId());
         if (template == null || media == null) {
             return;
         }
@@ -369,7 +369,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
         String instance = getLabelValue(labels, toMap(payload.get("commonLabels")), "instance", getLabelValue(labels, toMap(payload.get("commonLabels")), "service"));
         String startsAt = alert == null ? null : String.valueOf(alert.get("startsAt"));
         Date startsAtDate = parseDate(startsAt);
-        AlertRecordEntity record = alertRecordDao.selectOne(
+        AlertRecordEntity record = alertRecordMapper.selectOne(
             new QueryWrapper<AlertRecordEntity>()
                 .eq(StrUtil.isNotBlank(alertName), "alert_name", alertName)
                 .eq(StrUtil.isNotBlank(instance), "instance", instance)
@@ -380,7 +380,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
         if (record != null) {
             return record.getId();
         }
-        AlertRecordEntity fallback = alertRecordDao.selectOne(
+        AlertRecordEntity fallback = alertRecordMapper.selectOne(
             new QueryWrapper<AlertRecordEntity>()
                 .eq(StrUtil.isNotBlank(alertName), "alert_name", alertName)
                 .eq(StrUtil.isNotBlank(instance), "instance", instance)
@@ -432,7 +432,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
         if (ids.isEmpty()) {
             return new ArrayList<>();
         }
-        List<SysUserEntity> users = sysUserDao.selectList(
+        List<SysUserEntity> users = sysUserMapper.selectList(
             new QueryWrapper<SysUserEntity>()
                 .select("id", "email", "username")
                 .in("id", ids)

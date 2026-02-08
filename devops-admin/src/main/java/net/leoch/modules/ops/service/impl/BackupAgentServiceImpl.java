@@ -50,11 +50,11 @@ import java.util.*;
 @Service
 public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, BackupAgentEntity> implements BackupAgentService {
 
-    private final DeviceBackupDao deviceBackupDao;
+    private final DeviceBackupMapper deviceBackupMapper;
     private final RedisUtils redisUtils;
 
-    public BackupAgentServiceImpl(DeviceBackupDao deviceBackupDao, RedisUtils redisUtils) {
-        this.deviceBackupDao = deviceBackupDao;
+    public BackupAgentServiceImpl(DeviceBackupMapper deviceBackupMapper, RedisUtils redisUtils) {
+        this.deviceBackupMapper = deviceBackupMapper;
         this.redisUtils = redisUtils;
     }
 
@@ -213,7 +213,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
         Long[] ids = request.getIds();
         LambdaQueryWrapper<DeviceBackupEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.in(DeviceBackupEntity::getAgentId, Arrays.asList(ids));
-        int used = Math.toIntExact(deviceBackupDao.selectCount(wrapper));
+        int used = Math.toIntExact(deviceBackupMapper.selectCount(wrapper));
         if (used > 0) {
             throw new ServiceException("存在绑定的备份设备，无法删除");
         }

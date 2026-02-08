@@ -19,12 +19,12 @@ import java.util.List;
 @Slf4j
 public class JobCommandLineRunner implements CommandLineRunner {
 
-    private final ScheduleJobDao scheduleJobDao;
+    private final ScheduleJobMapper scheduleJobMapper;
     private final DynamicScheduleManager scheduleManager;
 
     @Override
     public void run(String... args) {
-        List<ScheduleJobEntity> scheduleJobList = scheduleJobDao.selectList(null);
+        List<ScheduleJobEntity> scheduleJobList = scheduleJobMapper.selectList(null);
         for (ScheduleJobEntity scheduleJob : scheduleJobList) {
             if (scheduleJob.getStatus() == Constant.ScheduleStatus.NORMAL.getValue()) {
                 scheduleManager.addJob(scheduleJob);
