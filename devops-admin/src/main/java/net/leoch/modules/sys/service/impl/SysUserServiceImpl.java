@@ -11,8 +11,8 @@ import net.leoch.modules.security.password.PasswordUtils;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.mapper.SysUserMapper;
-import net.leoch.modules.sys.dto.SysUserDTO;
-import net.leoch.modules.sys.dto.SysUserPageRequest;
+import net.leoch.modules.sys.vo.rsp.SysUserRsp;
+import net.leoch.modules.sys.vo.req.SysUserPageReq;
 import net.leoch.modules.sys.entity.SysUserEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
 import net.leoch.modules.sys.service.ISysDeptService;
@@ -40,7 +40,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
     private final ISysDeptService sysDeptService;
 
     @Override
-    public PageData<SysUserDTO> page(SysUserPageRequest request) {
+    public PageData<SysUserRsp> page(SysUserPageReq request) {
         Map<String, Object> params = new HashMap<>();
 
         //转换成like
@@ -64,11 +64,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
         //查询
         List<SysUserEntity> list = this.getBaseMapper().getList(params);
 
-        return new PageData<>(ConvertUtils.sourceToTarget(list, SysUserDTO.class), page.getTotal());
+        return new PageData<>(ConvertUtils.sourceToTarget(list, SysUserRsp.class), page.getTotal());
     }
 
     @Override
-    public List<SysUserDTO> list(SysUserPageRequest request) {
+    public List<SysUserRsp> list(SysUserPageReq request) {
         Map<String, Object> params = new HashMap<>();
 
         if (StrUtil.isNotBlank(request.getUsername())) {
@@ -86,25 +86,25 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
 
         List<SysUserEntity> entityList = this.getBaseMapper().getList(params);
 
-        return ConvertUtils.sourceToTarget(entityList, SysUserDTO.class);
+        return ConvertUtils.sourceToTarget(entityList, SysUserRsp.class);
     }
 
     @Override
-    public SysUserDTO get(Long id) {
+    public SysUserRsp get(Long id) {
         SysUserEntity entity = this.getBaseMapper().getById(id);
 
-        return ConvertUtils.sourceToTarget(entity, SysUserDTO.class);
+        return ConvertUtils.sourceToTarget(entity, SysUserRsp.class);
     }
 
     @Override
-    public SysUserDTO getByUsername(String username) {
+    public SysUserRsp getByUsername(String username) {
         SysUserEntity entity = this.getBaseMapper().getByUsername(username);
-        return ConvertUtils.sourceToTarget(entity, SysUserDTO.class);
+        return ConvertUtils.sourceToTarget(entity, SysUserRsp.class);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysUserDTO dto) {
+    public void save(SysUserRsp dto) {
         SysUserEntity entity = ConvertUtils.sourceToTarget(dto, SysUserEntity.class);
 
         //密码加密
@@ -121,7 +121,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysUserDTO dto) {
+    public void update(SysUserRsp dto) {
         SysUserEntity entity = ConvertUtils.sourceToTarget(dto, SysUserEntity.class);
 
         //密码加密

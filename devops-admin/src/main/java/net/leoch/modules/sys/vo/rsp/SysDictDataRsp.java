@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.sys.dto;
+package net.leoch.modules.sys.vo.rsp;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -17,13 +17,13 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 字典类型
+ * 字典数据
  *
  * @author Taohongqiang
  */
 @Data
-@Schema(title = "字典类型")
-public class SysDictTypeDTO implements Serializable {
+@Schema(title = "字典数据")
+public class SysDictDataRsp implements Serializable {
     private static final long serialVersionUID = 1L;
 
 	@Schema(title = "id")
@@ -31,13 +31,16 @@ public class SysDictTypeDTO implements Serializable {
 	@NotNull(message="{id.require}", groups = UpdateGroup.class)
 	private Long id;
 
-	@Schema(title = "字典类型")
-	@NotBlank(message="{sysdict.type.require}", groups = DefaultGroup.class)
-	private String dictType;
+	@Schema(title = "字典类型ID")
+	@NotNull(message="{sysdict.type.require}", groups = DefaultGroup.class)
+	private Long dictTypeId;
 
-	@Schema(title = "字典名称")
-	@NotBlank(message="{sysdict.name.require}", groups = DefaultGroup.class)
-	private String dictName;
+	@Schema(title = "字典标签")
+	@NotBlank(message="{sysdict.label.require}", groups = DefaultGroup.class)
+	private String dictLabel;
+
+	@Schema(title = "字典值")
+	private String dictValue;
 
 	@Schema(title = "备注")
 	private String remark;

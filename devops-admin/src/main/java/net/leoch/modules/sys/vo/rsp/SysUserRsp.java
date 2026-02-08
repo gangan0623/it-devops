@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.sys.dto;
+package net.leoch.modules.sys.vo.rsp;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,7 +26,7 @@ import java.util.List;
  */
 @Data
 @Schema(title = "用户管理")
-public class SysUserDTO implements Serializable {
+public class SysUserRsp implements Serializable {
     private static final long serialVersionUID = 1L;
 
 	@Schema(title = "id")

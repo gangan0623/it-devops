@@ -19,9 +19,9 @@ import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.security.password.PasswordUtils;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
-import net.leoch.modules.sys.dto.PasswordDTO;
-import net.leoch.modules.sys.dto.SysUserDTO;
-import net.leoch.modules.sys.dto.SysUserPageRequest;
+import net.leoch.modules.sys.vo.req.PasswordReq;
+import net.leoch.modules.sys.vo.rsp.SysUserRsp;
+import net.leoch.modules.sys.vo.req.SysUserPageReq;
 import net.leoch.modules.sys.excel.SysUserExcel;
 import net.leoch.modules.sys.service.ISysRoleUserService;
 import net.leoch.modules.sys.service.ISysUserService;
@@ -45,36 +45,36 @@ public class SysUserController {
     @GetMapping("page")
     @Operation(summary = "分页")
     @SaCheckPermission("sys:user:page")
-    public Result<PageData<SysUserDTO>> page(SysUserPageRequest request) {
-        PageData<SysUserDTO> page = sysUserService.page(request);
+    public Result<PageData<SysUserRsp>> page(SysUserPageReq request) {
+        PageData<SysUserRsp> page = sysUserService.page(request);
 
-        return new Result<PageData<SysUserDTO>>().ok(page);
+        return new Result<PageData<SysUserRsp>>().ok(page);
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("sys:user:info")
-    public Result<SysUserDTO> get(@PathVariable("id") Long id) {
-        SysUserDTO data = sysUserService.get(id);
+    public Result<SysUserRsp> get(@PathVariable("id") Long id) {
+        SysUserRsp data = sysUserService.get(id);
 
         //用户角色列表
         List<Long> roleIdList = sysRoleUserService.getRoleIdList(id);
         data.setRoleIdList(roleIdList);
 
-        return new Result<SysUserDTO>().ok(data);
+        return new Result<SysUserRsp>().ok(data);
     }
 
     @GetMapping("info")
     @Operation(summary = "登录用户信息")
-    public Result<SysUserDTO> info() {
-        SysUserDTO data = ConvertUtils.sourceToTarget(SecurityUser.getUser(), SysUserDTO.class);
-        return new Result<SysUserDTO>().ok(data);
+    public Result<SysUserRsp> info() {
+        SysUserRsp data = ConvertUtils.sourceToTarget(SecurityUser.getUser(), SysUserRsp.class);
+        return new Result<SysUserRsp>().ok(data);
     }
 
     @PutMapping("password")
     @Operation(summary = "修改密码")
     @LogOperation("修改密码")
-    public Result<Object> password(@RequestBody PasswordDTO dto) {
+    public Result<Object> password(@RequestBody PasswordReq dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto);
 
@@ -94,7 +94,7 @@ public class SysUserController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:user:save")
-    public Result<Object> save(@RequestBody SysUserDTO dto) {
+    public Result<Object> save(@RequestBody SysUserRsp dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
 
@@ -107,7 +107,7 @@ public class SysUserController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:user:update")
-    public Result<Object> update(@RequestBody SysUserDTO dto) {
+    public Result<Object> update(@RequestBody SysUserRsp dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
 
@@ -133,8 +133,8 @@ public class SysUserController {
     @Operation(summary = "导出")
     @LogOperation("导出")
     @SaCheckPermission("sys:user:export")
-    public void export(SysUserPageRequest request, HttpServletResponse response) throws Exception {
-        List<SysUserDTO> list = sysUserService.list(request);
+    public void export(SysUserPageReq request, HttpServletResponse response) throws Exception {
+        List<SysUserRsp> list = sysUserService.list(request);
 
         ExcelUtils.exportExcelToTarget(response, null, "用户管理", list, SysUserExcel.class);
     }

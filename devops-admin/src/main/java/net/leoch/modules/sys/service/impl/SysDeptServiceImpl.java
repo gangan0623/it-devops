@@ -13,7 +13,7 @@ import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.mapper.SysDeptMapper;
 import net.leoch.modules.sys.mapper.SysUserMapper;
-import net.leoch.modules.sys.dto.SysDeptDTO;
+import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
 import net.leoch.modules.sys.entity.SysDeptEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
 import net.leoch.modules.sys.service.ISysDeptService;
@@ -33,7 +33,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity
     private final SysUserMapper sysUserMapper;
 
     @Override
-    public List<SysDeptDTO> list(Map<String, Object> params) {
+    public List<SysDeptRsp> list(Map<String, Object> params) {
         //普通管理员，只能查询所属部门及子部门的数据
         UserDetail user = SecurityUser.getUser();
         if (user.getSuperAdmin() == SuperAdminEnum.NO.value()) {
@@ -43,13 +43,13 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity
         //查询部门列表
         List<SysDeptEntity> entityList = this.getBaseMapper().getList(params);
 
-        List<SysDeptDTO> dtoList = ConvertUtils.sourceToTarget(entityList, SysDeptDTO.class);
+        List<SysDeptRsp> dtoList = ConvertUtils.sourceToTarget(entityList, SysDeptRsp.class);
 
         return TreeUtils.build(dtoList);
     }
 
     @Override
-    public SysDeptDTO get(Long id) {
+    public SysDeptRsp get(Long id) {
         //超级管理员，部门ID为null
         if (id == null) {
             return null;
@@ -57,12 +57,12 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity
 
         SysDeptEntity entity = this.getBaseMapper().getById(id);
 
-        return ConvertUtils.sourceToTarget(entity, SysDeptDTO.class);
+        return ConvertUtils.sourceToTarget(entity, SysDeptRsp.class);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysDeptDTO dto) {
+    public void save(SysDeptRsp dto) {
         SysDeptEntity entity = ConvertUtils.sourceToTarget(dto, SysDeptEntity.class);
 
         entity.setPids(getPidList(entity.getPid()));
@@ -71,7 +71,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysDeptDTO dto) {
+    public void update(SysDeptRsp dto) {
         SysDeptEntity entity = ConvertUtils.sourceToTarget(dto, SysDeptEntity.class);
 
         //上级部门不能为自身

@@ -2,8 +2,8 @@ package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.sys.dto.SysDictTypeDTO;
-import net.leoch.modules.sys.dto.SysDictTypePageRequest;
+import net.leoch.modules.sys.vo.rsp.SysDictTypeRsp;
+import net.leoch.modules.sys.vo.req.SysDictTypePageReq;
 import net.leoch.modules.sys.entity.DictType;
 import net.leoch.modules.sys.entity.SysDictTypeEntity;
 
@@ -16,13 +16,13 @@ import java.util.List;
  */
 public interface ISysDictTypeService extends IService<SysDictTypeEntity> {
 
-    PageData<SysDictTypeDTO> page(SysDictTypePageRequest request);
+    PageData<SysDictTypeRsp> page(SysDictTypePageReq request);
 
-    SysDictTypeDTO get(Long id);
+    SysDictTypeRsp get(Long id);
 
-    void save(SysDictTypeDTO dto);
+    void save(SysDictTypeRsp dto);
 
-    void update(SysDictTypeDTO dto);
+    void update(SysDictTypeRsp dto);
 
     void delete(Long[] ids);
 

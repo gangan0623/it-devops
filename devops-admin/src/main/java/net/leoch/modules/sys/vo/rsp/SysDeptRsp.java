@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.sys.dto;
+package net.leoch.modules.sys.vo.rsp;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -14,21 +14,20 @@ import net.leoch.common.utils.TreeNode;
 import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
-import org.hibernate.validator.constraints.Range;
 
 import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 菜单管理
+ * 部门管理
  *
  * @author Taohongqiang
  * @since 1.0.0
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Schema(title = "菜单管理")
-public class SysMenuDTO extends TreeNode<SysMenuDTO> implements Serializable {
+@Schema(title = "部门管理")
+public class SysDeptRsp extends TreeNode implements Serializable {
     private static final long serialVersionUID = 1L;
 
 	@Schema(title = "id")
@@ -37,25 +36,12 @@ public class SysMenuDTO extends TreeNode<SysMenuDTO> implements Serializable {
 	private Long id;
 
 	@Schema(title = "上级ID")
-	@NotNull(message="{sysmenu.pid.require}", groups = DefaultGroup.class)
+	@NotNull(message="{sysdept.pid.require}", groups = DefaultGroup.class)
 	private Long pid;
 
-	@Schema(title = "菜单名称")
-	@NotBlank(message="sysmenu.name.require", groups = DefaultGroup.class)
+	@Schema(title = "部门名称")
+	@NotBlank(message="{sysdept.name.require}", groups = DefaultGroup.class)
 	private String name;
-
-	@Schema(title = "菜单URL")
-	private String url;
-
-	@Schema(title = "类型  0：菜单   1：按钮")
-	@Range(min=0, max=1, message = "{sysmenu.type.range}", groups = DefaultGroup.class)
-	private Integer menuType;
-
-	@Schema(title = "菜单图标")
-	private String icon;
-
-	@Schema(title = "授权(多个用逗号分隔，如：sys:user:list,sys:user:save)")
-	private String permissions;
 
 	@Schema(title = "排序")
 	@Min(value = 0, message = "{sort.number}", groups = DefaultGroup.class)
@@ -65,7 +51,7 @@ public class SysMenuDTO extends TreeNode<SysMenuDTO> implements Serializable {
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	private Date createDate;
 
-	@Schema(title = "上级菜单名称")
+	@Schema(title = "上级部门名称")
 	private String parentName;
 
 	@Override
@@ -87,5 +73,4 @@ public class SysMenuDTO extends TreeNode<SysMenuDTO> implements Serializable {
 	public void setPid(Long pid) {
 		this.pid = pid;
 	}
-
 }

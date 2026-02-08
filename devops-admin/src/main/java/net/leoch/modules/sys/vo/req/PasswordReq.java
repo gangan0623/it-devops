@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.sys.dto;
+package net.leoch.modules.sys.vo.req;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -16,7 +16,7 @@ import java.io.Serializable;
  */
 @Data
 @Schema(title = "修改密码")
-public class PasswordDTO implements Serializable {
+public class PasswordReq implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(title = "原密码")

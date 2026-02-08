@@ -10,8 +10,8 @@ import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.sys.mapper.SysDictDataMapper;
 import net.leoch.modules.sys.mapper.SysDictTypeMapper;
-import net.leoch.modules.sys.dto.SysDictTypeDTO;
-import net.leoch.modules.sys.dto.SysDictTypePageRequest;
+import net.leoch.modules.sys.vo.rsp.SysDictTypeRsp;
+import net.leoch.modules.sys.vo.req.SysDictTypePageReq;
 import net.leoch.modules.sys.entity.DictData;
 import net.leoch.modules.sys.entity.DictType;
 import net.leoch.modules.sys.entity.SysDictTypeEntity;
@@ -34,7 +34,7 @@ public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDi
     private final SysDictDataMapper sysDictDataMapper;
 
     @Override
-    public PageData<SysDictTypeDTO> page(SysDictTypePageRequest request) {
+    public PageData<SysDictTypeRsp> page(SysDictTypePageReq request) {
         IPage<SysDictTypeEntity> page = this.page(
                 request.<SysDictTypeEntity>buildPage().addOrder(
                     com.baomidou.mybatisplus.core.metadata.OrderItem.asc("sort")
@@ -42,10 +42,10 @@ public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDi
                 getWrapper(request)
         );
 
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysDictTypeDTO.class), page.getTotal());
+        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysDictTypeRsp.class), page.getTotal());
     }
 
-    private QueryWrapper<SysDictTypeEntity> getWrapper(SysDictTypePageRequest request) {
+    private QueryWrapper<SysDictTypeEntity> getWrapper(SysDictTypePageReq request) {
         String dictType = request.getDictType();
         String dictName = request.getDictName();
 
@@ -57,15 +57,15 @@ public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDi
     }
 
     @Override
-    public SysDictTypeDTO get(Long id) {
+    public SysDictTypeRsp get(Long id) {
         SysDictTypeEntity entity = this.getById(id);
 
-        return ConvertUtils.sourceToTarget(entity, SysDictTypeDTO.class);
+        return ConvertUtils.sourceToTarget(entity, SysDictTypeRsp.class);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysDictTypeDTO dto) {
+    public void save(SysDictTypeRsp dto) {
         SysDictTypeEntity entity = ConvertUtils.sourceToTarget(dto, SysDictTypeEntity.class);
 
         this.save(entity);
@@ -73,7 +73,7 @@ public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDi
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysDictTypeDTO dto) {
+    public void update(SysDictTypeRsp dto) {
         SysDictTypeEntity entity = ConvertUtils.sourceToTarget(dto, SysDictTypeEntity.class);
 
         this.updateById(entity);

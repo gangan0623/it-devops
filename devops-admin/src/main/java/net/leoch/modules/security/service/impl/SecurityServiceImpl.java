@@ -27,7 +27,7 @@ import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.mapper.SysMenuMapper;
 import net.leoch.modules.sys.mapper.SysRoleDataScopeMapper;
 import net.leoch.modules.sys.mapper.SysUserMapper;
-import net.leoch.modules.sys.dto.SysUserDTO;
+import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.entity.SysUserEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
 import net.leoch.modules.sys.enums.UserStatusEnum;
@@ -103,7 +103,7 @@ public class SecurityServiceImpl implements ISecurityService {
             return new Result<>().error(ErrorCode.CAPTCHA_ERROR);
         }
 
-        SysUserDTO user = sysUserService.getByUsername(login.getUsername());
+        SysUserRsp user = sysUserService.getByUsername(login.getUsername());
 
         SysLogLoginEntity loginLog = new SysLogLoginEntity();
         loginLog.setOperation(LoginOperationEnum.LOGIN.value());

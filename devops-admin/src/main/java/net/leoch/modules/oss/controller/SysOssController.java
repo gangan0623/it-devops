@@ -20,7 +20,7 @@ import net.leoch.modules.oss.cloud.OSSFactory;
 import net.leoch.modules.oss.entity.SysOssEntity;
 import net.leoch.modules.oss.service.ISysOssConfigService;
 import net.leoch.modules.oss.service.ISysOssService;
-import net.leoch.modules.sys.dto.SysOssPageRequest;
+import net.leoch.modules.sys.vo.req.SysOssPageReq;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -45,7 +45,7 @@ public class SysOssController {
     @GetMapping("page")
     @Operation(summary = "分页")
     @SaCheckPermission("sys:oss:all")
-    public Result<PageData<SysOssEntity>> page(SysOssPageRequest request) {
+    public Result<PageData<SysOssEntity>> page(SysOssPageReq request) {
         PageData<SysOssEntity> page = sysOssService.page(request);
 
         return new Result<PageData<SysOssEntity>>().ok(page);

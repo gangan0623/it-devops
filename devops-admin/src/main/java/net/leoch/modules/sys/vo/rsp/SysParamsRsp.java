@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.sys.dto;
+package net.leoch.modules.sys.vo.rsp;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -23,7 +23,7 @@ import java.util.Date;
  */
 @Data
 @Schema(title = "参数管理")
-public class SysParamsDTO implements Serializable {
+public class SysParamsRsp implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(title = "id")

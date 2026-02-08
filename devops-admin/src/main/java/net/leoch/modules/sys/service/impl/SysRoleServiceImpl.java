@@ -11,8 +11,8 @@ import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.mapper.SysRoleMapper;
-import net.leoch.modules.sys.dto.SysRoleDTO;
-import net.leoch.modules.sys.dto.SysRolePageRequest;
+import net.leoch.modules.sys.vo.rsp.SysRoleRsp;
+import net.leoch.modules.sys.vo.req.SysRolePageReq;
 import net.leoch.modules.sys.entity.SysRoleEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
 import net.leoch.modules.sys.service.ISysDeptService;
@@ -41,23 +41,23 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
     private final ISysDeptService sysDeptService;
 
     @Override
-    public PageData<SysRoleDTO> page(SysRolePageRequest request) {
+    public PageData<SysRoleRsp> page(SysRolePageReq request) {
         IPage<SysRoleEntity> page = this.page(
                 request.buildPage(),
                 getWrapper(request)
         );
 
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysRoleDTO.class), page.getTotal());
+        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysRoleRsp.class), page.getTotal());
     }
 
     @Override
-    public List<SysRoleDTO> list(SysRolePageRequest request) {
+    public List<SysRoleRsp> list(SysRolePageReq request) {
         List<SysRoleEntity> entityList = this.list(getWrapper(request));
 
-        return ConvertUtils.sourceToTarget(entityList, SysRoleDTO.class);
+        return ConvertUtils.sourceToTarget(entityList, SysRoleRsp.class);
     }
 
-    private QueryWrapper<SysRoleEntity> getWrapper(SysRolePageRequest request) {
+    private QueryWrapper<SysRoleEntity> getWrapper(SysRolePageReq request) {
         String name = request.getName();
 
         QueryWrapper<SysRoleEntity> wrapper = new QueryWrapper<>();
@@ -74,15 +74,15 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
     }
 
     @Override
-    public SysRoleDTO get(Long id) {
+    public SysRoleRsp get(Long id) {
         SysRoleEntity entity = this.getById(id);
 
-        return ConvertUtils.sourceToTarget(entity, SysRoleDTO.class);
+        return ConvertUtils.sourceToTarget(entity, SysRoleRsp.class);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysRoleDTO dto) {
+    public void save(SysRoleRsp dto) {
         SysRoleEntity entity = ConvertUtils.sourceToTarget(dto, SysRoleEntity.class);
 
         //保存角色
@@ -97,7 +97,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysRoleDTO dto) {
+    public void update(SysRoleRsp dto) {
         SysRoleEntity entity = ConvertUtils.sourceToTarget(dto, SysRoleEntity.class);
 
         //更新角色

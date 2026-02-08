@@ -11,8 +11,8 @@ import net.leoch.common.validator.AssertUtils;
 import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.sys.dto.SysDictTypeDTO;
-import net.leoch.modules.sys.dto.SysDictTypePageRequest;
+import net.leoch.modules.sys.vo.rsp.SysDictTypeRsp;
+import net.leoch.modules.sys.vo.req.SysDictTypePageReq;
 import net.leoch.modules.sys.entity.DictType;
 import net.leoch.modules.sys.service.ISysDictTypeService;
 import org.springframework.web.bind.annotation.*;
@@ -34,27 +34,27 @@ public class SysDictTypeController {
     @GetMapping("page")
     @Operation(summary = "字典类型")
     @SaCheckPermission("sys:dict:page")
-    public Result<PageData<SysDictTypeDTO>> page(SysDictTypePageRequest request) {
+    public Result<PageData<SysDictTypeRsp>> page(SysDictTypePageReq request) {
         //字典类型
-        PageData<SysDictTypeDTO> page = sysDictTypeService.page(request);
+        PageData<SysDictTypeRsp> page = sysDictTypeService.page(request);
 
-        return new Result<PageData<SysDictTypeDTO>>().ok(page);
+        return new Result<PageData<SysDictTypeRsp>>().ok(page);
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("sys:dict:info")
-    public Result<SysDictTypeDTO> get(@PathVariable("id") Long id) {
-        SysDictTypeDTO data = sysDictTypeService.get(id);
+    public Result<SysDictTypeRsp> get(@PathVariable("id") Long id) {
+        SysDictTypeRsp data = sysDictTypeService.get(id);
 
-        return new Result<SysDictTypeDTO>().ok(data);
+        return new Result<SysDictTypeRsp>().ok(data);
     }
 
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:dict:save")
-    public Result<Object> save(@RequestBody SysDictTypeDTO dto) {
+    public Result<Object> save(@RequestBody SysDictTypeRsp dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, DefaultGroup.class);
 
@@ -67,7 +67,7 @@ public class SysDictTypeController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:dict:update")
-    public Result<Object> update(@RequestBody SysDictTypeDTO dto) {
+    public Result<Object> update(@RequestBody SysDictTypeRsp dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
 

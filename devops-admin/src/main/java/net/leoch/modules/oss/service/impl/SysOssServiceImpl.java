@@ -8,7 +8,7 @@ import net.leoch.common.page.PageData;
 import net.leoch.modules.oss.mapper.SysOssMapper;
 import net.leoch.modules.oss.entity.SysOssEntity;
 import net.leoch.modules.oss.service.ISysOssService;
-import net.leoch.modules.sys.dto.SysOssPageRequest;
+import net.leoch.modules.sys.vo.req.SysOssPageReq;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 public class SysOssServiceImpl extends ServiceImpl<SysOssMapper, SysOssEntity> implements ISysOssService {
 
     @Override
-    public PageData<SysOssEntity> page(SysOssPageRequest request) {
+    public PageData<SysOssEntity> page(SysOssPageReq request) {
         IPage<SysOssEntity> page = this.page(request.buildPage(),
             new LambdaQueryWrapper<SysOssEntity>()
                 .orderByDesc(SysOssEntity::getCreateDate)

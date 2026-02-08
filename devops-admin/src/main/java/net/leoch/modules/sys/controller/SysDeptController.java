@@ -13,7 +13,7 @@ import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.sys.dto.SysDeptDTO;
+import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
 import net.leoch.modules.sys.service.ISysDeptService;
 import org.springframework.web.bind.annotation.*;
 
@@ -35,24 +35,24 @@ public class SysDeptController {
     @GetMapping("list")
     @Operation(summary = "列表")
     @SaCheckPermission("sys:dept:list")
-    public Result<List<SysDeptDTO>> list() {
-        List<SysDeptDTO> list = sysDeptService.list(new HashMap<>(1));
-        return new Result<List<SysDeptDTO>>().ok(list);
+    public Result<List<SysDeptRsp>> list() {
+        List<SysDeptRsp> list = sysDeptService.list(new HashMap<>(1));
+        return new Result<List<SysDeptRsp>>().ok(list);
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("sys:dept:info")
-    public Result<SysDeptDTO> get(@PathVariable("id") Long id) {
-        SysDeptDTO data = sysDeptService.get(id);
-        return new Result<SysDeptDTO>().ok(data);
+    public Result<SysDeptRsp> get(@PathVariable("id") Long id) {
+        SysDeptRsp data = sysDeptService.get(id);
+        return new Result<SysDeptRsp>().ok(data);
     }
 
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:dept:save")
-    public Result<Object> save(@RequestBody SysDeptDTO dto) {
+    public Result<Object> save(@RequestBody SysDeptRsp dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
 
@@ -65,7 +65,7 @@ public class SysDeptController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:dept:update")
-    public Result<Object> update(@RequestBody SysDeptDTO dto) {
+    public Result<Object> update(@RequestBody SysDeptRsp dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
 

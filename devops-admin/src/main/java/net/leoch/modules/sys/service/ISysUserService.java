@@ -2,8 +2,8 @@ package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.sys.dto.SysUserDTO;
-import net.leoch.modules.sys.dto.SysUserPageRequest;
+import net.leoch.modules.sys.vo.rsp.SysUserRsp;
+import net.leoch.modules.sys.vo.req.SysUserPageReq;
 import net.leoch.modules.sys.entity.SysUserEntity;
 
 import java.util.List;
@@ -16,17 +16,17 @@ import java.util.List;
  */
 public interface ISysUserService extends IService<SysUserEntity> {
 
-	PageData<SysUserDTO> page(SysUserPageRequest request);
+	PageData<SysUserRsp> page(SysUserPageReq request);
 
-	List<SysUserDTO> list(SysUserPageRequest request);
+	List<SysUserRsp> list(SysUserPageReq request);
 
-	SysUserDTO get(Long id);
+	SysUserRsp get(Long id);
 
-	SysUserDTO getByUsername(String username);
+	SysUserRsp getByUsername(String username);
 
-	void save(SysUserDTO dto);
+	void save(SysUserRsp dto);
 
-	void update(SysUserDTO dto);
+	void update(SysUserRsp dto);
 
 	void delete(Long[] ids);
 

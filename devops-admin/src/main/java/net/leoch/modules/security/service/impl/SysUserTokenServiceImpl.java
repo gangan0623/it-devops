@@ -13,7 +13,7 @@ import net.leoch.modules.security.entity.SysUserTokenEntity;
 import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.security.service.ISysUserTokenService;
 import net.leoch.modules.security.user.UserDetail;
-import net.leoch.modules.sys.dto.SysUserDTO;
+import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.service.ISysUserService;
 import org.springframework.stereotype.Service;
 
@@ -35,7 +35,7 @@ public class SysUserTokenServiceImpl extends ServiceImpl<SysUserTokenMapper, Sys
 
 	@Override
 	public Result<Object> createToken(Long userId) {
-		SysUserDTO user = sysUserService.get(userId);
+		SysUserRsp user = sysUserService.get(userId);
 		if (user == null) {
 			return new Result().error(ErrorCode.ACCOUNT_PASSWORD_ERROR);
 		}

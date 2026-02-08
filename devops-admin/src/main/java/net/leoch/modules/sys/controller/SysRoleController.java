@@ -12,8 +12,8 @@ import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.sys.dto.SysRoleDTO;
-import net.leoch.modules.sys.dto.SysRolePageRequest;
+import net.leoch.modules.sys.vo.rsp.SysRoleRsp;
+import net.leoch.modules.sys.vo.req.SysRolePageReq;
 import net.leoch.modules.sys.service.ISysRoleDataScopeService;
 import net.leoch.modules.sys.service.ISysRoleMenuService;
 import net.leoch.modules.sys.service.ISysRoleService;
@@ -38,26 +38,26 @@ public class SysRoleController {
     @GetMapping("page")
     @Operation(summary = "分页")
     @SaCheckPermission("sys:role:page")
-    public Result<PageData<SysRoleDTO>> page(SysRolePageRequest request) {
-        PageData<SysRoleDTO> page = sysRoleService.page(request);
+    public Result<PageData<SysRoleRsp>> page(SysRolePageReq request) {
+        PageData<SysRoleRsp> page = sysRoleService.page(request);
 
-        return new Result<PageData<SysRoleDTO>>().ok(page);
+        return new Result<PageData<SysRoleRsp>>().ok(page);
     }
 
     @GetMapping("list")
     @Operation(summary = "列表")
     @SaCheckPermission("sys:role:list")
-    public Result<List<SysRoleDTO>> list() {
-        List<SysRoleDTO> data = sysRoleService.list(new SysRolePageRequest());
+    public Result<List<SysRoleRsp>> list() {
+        List<SysRoleRsp> data = sysRoleService.list(new SysRolePageReq());
 
-        return new Result<List<SysRoleDTO>>().ok(data);
+        return new Result<List<SysRoleRsp>>().ok(data);
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("sys:role:info")
-    public Result<SysRoleDTO> get(@PathVariable("id") Long id) {
-        SysRoleDTO data = sysRoleService.get(id);
+    public Result<SysRoleRsp> get(@PathVariable("id") Long id) {
+        SysRoleRsp data = sysRoleService.get(id);
 
         //查询角色对应的菜单
         List<Long> menuIdList = sysRoleMenuService.getMenuIdList(id);
@@ -67,14 +67,14 @@ public class SysRoleController {
         List<Long> deptIdList = sysRoleDataScopeService.getDeptIdList(id);
         data.setDeptIdList(deptIdList);
 
-        return new Result<SysRoleDTO>().ok(data);
+        return new Result<SysRoleRsp>().ok(data);
     }
 
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:role:save")
-    public Result<Object> save(@RequestBody SysRoleDTO dto) {
+    public Result<Object> save(@RequestBody SysRoleRsp dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
 
@@ -87,7 +87,7 @@ public class SysRoleController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:role:update")
-    public Result<Object> update(@RequestBody SysRoleDTO dto) {
+    public Result<Object> update(@RequestBody SysRoleRsp dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
 

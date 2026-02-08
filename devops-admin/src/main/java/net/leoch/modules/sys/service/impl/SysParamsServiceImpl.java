@@ -12,8 +12,8 @@ import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.sys.mapper.SysParamsMapper;
-import net.leoch.modules.sys.dto.SysParamsDTO;
-import net.leoch.modules.sys.dto.SysParamsPageRequest;
+import net.leoch.modules.sys.vo.rsp.SysParamsRsp;
+import net.leoch.modules.sys.vo.req.SysParamsPageReq;
 import net.leoch.modules.sys.entity.SysParamsEntity;
 import net.leoch.modules.sys.redis.SysParamsRedis;
 import net.leoch.modules.sys.service.ISysParamsService;
@@ -36,7 +36,7 @@ public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParams
     private final SysParamsRedis sysParamsRedis;
 
     @Override
-    public PageData<SysParamsDTO> page(SysParamsPageRequest request) {
+    public PageData<SysParamsRsp> page(SysParamsPageReq request) {
         IPage<SysParamsEntity> page = this.page(
                 request.<SysParamsEntity>buildPage().addOrder(
                     com.baomidou.mybatisplus.core.metadata.OrderItem.desc("create_date")
@@ -44,17 +44,17 @@ public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParams
                 getWrapper(request)
         );
 
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysParamsDTO.class), page.getTotal());
+        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysParamsRsp.class), page.getTotal());
     }
 
     @Override
-    public List<SysParamsDTO> list(SysParamsPageRequest request) {
+    public List<SysParamsRsp> list(SysParamsPageReq request) {
         List<SysParamsEntity> entityList = this.list(getWrapper(request));
 
-        return ConvertUtils.sourceToTarget(entityList, SysParamsDTO.class);
+        return ConvertUtils.sourceToTarget(entityList, SysParamsRsp.class);
     }
 
-    private QueryWrapper<SysParamsEntity> getWrapper(SysParamsPageRequest request) {
+    private QueryWrapper<SysParamsEntity> getWrapper(SysParamsPageReq request) {
         String paramCode = request.getParamCode();
 
         QueryWrapper<SysParamsEntity> wrapper = new QueryWrapper<>();
@@ -65,15 +65,15 @@ public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParams
     }
 
     @Override
-    public SysParamsDTO get(Long id) {
+    public SysParamsRsp get(Long id) {
         SysParamsEntity entity = this.getById(id);
 
-        return ConvertUtils.sourceToTarget(entity, SysParamsDTO.class);
+        return ConvertUtils.sourceToTarget(entity, SysParamsRsp.class);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysParamsDTO dto) {
+    public void save(SysParamsRsp dto) {
         SysParamsEntity entity = ConvertUtils.sourceToTarget(dto, SysParamsEntity.class);
         this.save(entity);
 
@@ -82,7 +82,7 @@ public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParams
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysParamsDTO dto) {
+    public void update(SysParamsRsp dto) {
         SysParamsEntity entity = ConvertUtils.sourceToTarget(dto, SysParamsEntity.class);
         this.updateById(entity);
 

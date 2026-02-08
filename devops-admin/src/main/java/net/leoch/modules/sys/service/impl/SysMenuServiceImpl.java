@@ -10,7 +10,7 @@ import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.TreeUtils;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.mapper.SysMenuMapper;
-import net.leoch.modules.sys.dto.SysMenuDTO;
+import net.leoch.modules.sys.vo.rsp.SysMenuRsp;
 import net.leoch.modules.sys.entity.SysMenuEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
 import net.leoch.modules.sys.service.ISysMenuService;
@@ -27,17 +27,17 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
     private final ISysRoleMenuService sysRoleMenuService;
 
     @Override
-    public SysMenuDTO get(Long id) {
+    public SysMenuRsp get(Long id) {
         SysMenuEntity entity = this.getBaseMapper().getById(id);
 
-        SysMenuDTO dto = ConvertUtils.sourceToTarget(entity, SysMenuDTO.class);
+        SysMenuRsp dto = ConvertUtils.sourceToTarget(entity, SysMenuRsp.class);
 
         return dto;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysMenuDTO dto) {
+    public void save(SysMenuRsp dto) {
         SysMenuEntity entity = ConvertUtils.sourceToTarget(dto, SysMenuEntity.class);
 
         //保存菜单
@@ -46,7 +46,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysMenuDTO dto) {
+    public void update(SysMenuRsp dto) {
         SysMenuEntity entity = ConvertUtils.sourceToTarget(dto, SysMenuEntity.class);
 
         //上级菜单不能为自身
@@ -69,16 +69,16 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
     }
 
     @Override
-    public List<SysMenuDTO> getAllMenuList(Integer menuType) {
+    public List<SysMenuRsp> getAllMenuList(Integer menuType) {
         List<SysMenuEntity> menuList = this.getBaseMapper().getMenuList(menuType);
 
-        List<SysMenuDTO> dtoList = ConvertUtils.sourceToTarget(menuList, SysMenuDTO.class);
+        List<SysMenuRsp> dtoList = ConvertUtils.sourceToTarget(menuList, SysMenuRsp.class);
 
         return TreeUtils.build(dtoList, Constant.MENU_ROOT);
     }
 
     @Override
-    public List<SysMenuDTO> getUserMenuList(UserDetail user, Integer menuType) {
+    public List<SysMenuRsp> getUserMenuList(UserDetail user, Integer menuType) {
         List<SysMenuEntity> menuList;
 
         //系统管理员，拥有最高权限
@@ -88,16 +88,16 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
             menuList = this.getBaseMapper().getUserMenuList(user.getId(), menuType);
         }
 
-        List<SysMenuDTO> dtoList = ConvertUtils.sourceToTarget(menuList, SysMenuDTO.class);
+        List<SysMenuRsp> dtoList = ConvertUtils.sourceToTarget(menuList, SysMenuRsp.class);
 
         return TreeUtils.build(dtoList);
     }
 
     @Override
-    public List<SysMenuDTO> getListPid(Long pid) {
+    public List<SysMenuRsp> getListPid(Long pid) {
         List<SysMenuEntity> menuList = this.getBaseMapper().getListPid(pid);
 
-        return ConvertUtils.sourceToTarget(menuList, SysMenuDTO.class);
+        return ConvertUtils.sourceToTarget(menuList, SysMenuRsp.class);
     }
 
 }

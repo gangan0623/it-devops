@@ -1,4 +1,4 @@
-package net.leoch.modules.sys.dto;
+package net.leoch.modules.sys.vo.req;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -10,8 +10,8 @@ import net.leoch.common.page.BasePage;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Schema(name = "SysUserPageRequest")
-public class SysUserPageRequest extends BasePage {
+@Schema(name = "SysUserPageReq")
+public class SysUserPageReq extends BasePage {
 
     @Schema(description = "用户名")
     private String username;

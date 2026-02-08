@@ -1,7 +1,7 @@
 package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import net.leoch.modules.sys.dto.SysDeptDTO;
+import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
 import net.leoch.modules.sys.entity.SysDeptEntity;
 
 import java.util.List;
@@ -14,13 +14,13 @@ import java.util.Map;
  */
 public interface ISysDeptService extends IService<SysDeptEntity> {
 
-	List<SysDeptDTO> list(Map<String, Object> params);
+	List<SysDeptRsp> list(Map<String, Object> params);
 
-	SysDeptDTO get(Long id);
+	SysDeptRsp get(Long id);
 
-	void save(SysDeptDTO dto);
+	void save(SysDeptRsp dto);
 
-	void update(SysDeptDTO dto);
+	void update(SysDeptRsp dto);
 
 	void delete(Long id);
 

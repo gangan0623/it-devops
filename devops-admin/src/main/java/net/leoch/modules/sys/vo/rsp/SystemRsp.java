@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.sys.dto;
+package net.leoch.modules.sys.vo.rsp;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -16,7 +16,7 @@ import java.math.BigDecimal;
  */
 @Data
 @Schema(title = "系统数据")
-public class SystemDTO implements Serializable {
+public class SystemRsp implements Serializable {
     private static final long serialVersionUID = 1L;
 
     private Long sysTime;

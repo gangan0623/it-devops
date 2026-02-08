@@ -1,10 +1,9 @@
 
 
-package net.leoch.modules.sys.dto;
+package net.leoch.modules.sys.vo.rsp;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
@@ -15,15 +14,17 @@ import net.leoch.common.validator.group.UpdateGroup;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
- * 字典数据
+ * 角色管理
  *
  * @author Taohongqiang
+ * @since 1.0.0
  */
 @Data
-@Schema(title = "字典数据")
-public class SysDictDataDTO implements Serializable {
+@Schema(title = "角色管理")
+public class SysRoleRsp implements Serializable {
     private static final long serialVersionUID = 1L;
 
 	@Schema(title = "id")
@@ -31,29 +32,21 @@ public class SysDictDataDTO implements Serializable {
 	@NotNull(message="{id.require}", groups = UpdateGroup.class)
 	private Long id;
 
-	@Schema(title = "字典类型ID")
-	@NotNull(message="{sysdict.type.require}", groups = DefaultGroup.class)
-	private Long dictTypeId;
-
-	@Schema(title = "字典标签")
-	@NotBlank(message="{sysdict.label.require}", groups = DefaultGroup.class)
-	private String dictLabel;
-
-	@Schema(title = "字典值")
-	private String dictValue;
+	@Schema(title = "角色名称")
+	@NotBlank(message="{sysrole.name.require}", groups = DefaultGroup.class)
+	private String name;
 
 	@Schema(title = "备注")
 	private String remark;
-
-	@Schema(title = "排序")
-	@Min(value = 0, message = "{sort.number}", groups = DefaultGroup.class)
-	private Integer sort;
 
 	@Schema(title = "创建时间")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	private Date createDate;
 
-	@Schema(title = "更新时间")
-	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
-	private Date updateDate;
+	@Schema(title = "菜单ID列表")
+	private List<Long> menuIdList;
+
+	@Schema(title = "部门ID列表")
+	private List<Long> deptIdList;
+
 }

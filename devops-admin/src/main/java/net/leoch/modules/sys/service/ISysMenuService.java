@@ -2,7 +2,7 @@ package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.modules.security.user.UserDetail;
-import net.leoch.modules.sys.dto.SysMenuDTO;
+import net.leoch.modules.sys.vo.rsp.SysMenuRsp;
 import net.leoch.modules.sys.entity.SysMenuEntity;
 
 import java.util.List;
@@ -15,11 +15,11 @@ import java.util.List;
  */
 public interface ISysMenuService extends IService<SysMenuEntity> {
 
-	SysMenuDTO get(Long id);
+	SysMenuRsp get(Long id);
 
-	void save(SysMenuDTO dto);
+	void save(SysMenuRsp dto);
 
-	void update(SysMenuDTO dto);
+	void update(SysMenuRsp dto);
 
 	void delete(Long id);
 
@@ -28,7 +28,7 @@ public interface ISysMenuService extends IService<SysMenuEntity> {
 	 *
 	 * @param menuType 菜单类型
 	 */
-	List<SysMenuDTO> getAllMenuList(Integer menuType);
+	List<SysMenuRsp> getAllMenuList(Integer menuType);
 
 	/**
 	 * 用户菜单列表
@@ -36,11 +36,11 @@ public interface ISysMenuService extends IService<SysMenuEntity> {
 	 * @param user  用户
 	 * @param menuType 菜单类型
 	 */
-	List<SysMenuDTO> getUserMenuList(UserDetail user, Integer menuType);
+	List<SysMenuRsp> getUserMenuList(UserDetail user, Integer menuType);
 
 	/**
 	 * 根据父菜单，查询子菜单
 	 * @param pid  父菜单ID
 	 */
-	List<SysMenuDTO> getListPid(Long pid);
+	List<SysMenuRsp> getListPid(Long pid);
 }
