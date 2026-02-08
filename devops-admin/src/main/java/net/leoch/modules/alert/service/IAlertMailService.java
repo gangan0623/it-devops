@@ -4,6 +4,8 @@ import cn.hutool.core.util.StrUtil;
 import jakarta.mail.internet.MimeMessage;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
@@ -17,7 +19,7 @@ import java.util.Properties;
 @Service
 public class IAlertMailService {
 
-    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(IAlertMailService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(IAlertMailService.class);
 
     public void send(AlertMediaEntity media, List<String> receivers, String subject, String content, String html) {
         if (media == null || receivers == null || receivers.isEmpty()) {

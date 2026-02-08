@@ -33,6 +33,7 @@ import net.leoch.modules.sys.entity.SysUserEntity;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -449,7 +450,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
             return null;
         }
         try {
-            return Date.from(java.time.Instant.parse(value));
+            return Date.from(Instant.parse(value));
         } catch (Exception ignore) {
             return null;
         }
