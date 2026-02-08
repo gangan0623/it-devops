@@ -17,7 +17,8 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("sys_oss_config")
-public class SysOssConfigEntity extends BaseEntity {
+public class SysOssConfigEntity extends BaseEntity  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**
