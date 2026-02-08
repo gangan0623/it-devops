@@ -23,7 +23,8 @@ import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.ops.mapper.BackupAgentMapper;
 import net.leoch.modules.ops.mapper.DeviceBackupMapper;
-import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.entity.BackupAgentEntity;
 import net.leoch.modules.ops.entity.DeviceBackupEntity;
 import net.leoch.modules.ops.excel.BackupAgentExcel;
@@ -59,7 +60,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     }
 
     @Override
-    public PageData<BackupAgentDTO> page(BackupAgentPageRequest request) {
+    public PageData<BackupAgentRsp> page(BackupAgentPageReq request) {
         Page<BackupAgentEntity> page = buildPage(request);
         IPage<BackupAgentEntity> result = this.page(page,
                 new LambdaQueryWrapper<BackupAgentEntity>()
@@ -68,19 +69,19 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
                         .eq(StrUtil.isNotBlank(request.getAreaName()), BackupAgentEntity::getAreaName, request.getAreaName())
                         .eq(StrUtil.isNotBlank(request.getStatus()), BackupAgentEntity::getStatus, request.getStatus())
         );
-        List<BackupAgentDTO> list = ConvertUtils.sourceToTarget(result.getRecords(), BackupAgentDTO.class);
+        List<BackupAgentRsp> list = ConvertUtils.sourceToTarget(result.getRecords(), BackupAgentRsp.class);
         fillOnlineStatus(list);
         maskTokens(list);
         return new PageData<>(list, result.getTotal());
     }
 
     @Override
-    public BackupAgentDTO get(BackupAgentIdRequest request) {
+    public BackupAgentRsp get(BackupAgentIdReq request) {
         if (request == null || request.getId() == null) {
             return null;
         }
         BackupAgentEntity entity = this.getById(request.getId());
-        BackupAgentDTO dto = ConvertUtils.sourceToTarget(entity, BackupAgentDTO.class);
+        BackupAgentRsp dto = ConvertUtils.sourceToTarget(entity, BackupAgentRsp.class);
         if (dto != null) {
             fillOnlineStatus(Collections.singletonList(dto));
         }
@@ -89,7 +90,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     }
 
     @Override
-    public void save(BackupAgentSaveRequest request) {
+    public void save(BackupAgentSaveReq request) {
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
         validateUnique(request);
         BackupAgentEntity entity = ConvertUtils.sourceToTarget(request, BackupAgentEntity.class);
@@ -97,7 +98,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     }
 
     @Override
-    public void update(BackupAgentUpdateRequest request) {
+    public void update(BackupAgentUpdateReq request) {
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
         validateUnique(request);
         if (request != null && request.getId() != null && StrUtil.isBlank(request.getToken())) {
@@ -111,7 +112,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     }
 
     @Override
-    public void updateStatus(BackupAgentStatusUpdateRequest request) {
+    public void updateStatus(BackupAgentStatusUpdateReq request) {
         if (request == null) {
             return;
         }
@@ -119,7 +120,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     }
 
     @Override
-    public boolean online(BackupAgentOnlineRequest request) {
+    public boolean online(BackupAgentOnlineReq request) {
         if (request == null || StrUtil.isBlank(request.getInstance())) {
             return false;
         }
@@ -127,7 +128,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     }
 
     @Override
-    public boolean check(BackupAgentCheckRequest request) {
+    public boolean check(BackupAgentCheckReq request) {
         if (request == null) {
             return false;
         }
@@ -135,12 +136,12 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     }
 
     @Override
-    public OpsHostStatusSummaryDTO summary(BackupAgentPageRequest request) {
+    public OpsHostStatusSummaryRsp summary(BackupAgentPageReq request) {
         LambdaQueryWrapper<BackupAgentEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.select(BackupAgentEntity::getInstance, BackupAgentEntity::getStatus);
         List<BackupAgentEntity> list = this.list(wrapper);
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBackupAgentOnlineKey());
-        OpsHostStatusSummaryDTO summary = new OpsHostStatusSummaryDTO();
+        OpsHostStatusSummaryRsp summary = new OpsHostStatusSummaryRsp();
         summary.setTotalCount((long) list.size());
         for (BackupAgentEntity item : list) {
             if (item == null) {
@@ -166,7 +167,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void importExcel(BackupAgentImportRequest request) throws Exception {
+    public void importExcel(BackupAgentImportReq request) throws Exception {
         if (request == null || request.getFile() == null || request.getFile().isEmpty()) {
             throw new ServiceException("上传文件不能为空");
         }
@@ -193,20 +194,20 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     }
 
     @Override
-    public void export(BackupAgentPageRequest request, HttpServletResponse response) throws Exception {
+    public void export(BackupAgentPageReq request, HttpServletResponse response) throws Exception {
         LambdaQueryWrapper<BackupAgentEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StrUtil.isNotBlank(request.getInstance()), BackupAgentEntity::getInstance, request.getInstance());
         wrapper.like(StrUtil.isNotBlank(request.getName()), BackupAgentEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), BackupAgentEntity::getAreaName, request.getAreaName());
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), BackupAgentEntity::getStatus, request.getStatus());
         List<BackupAgentEntity> list = this.list(wrapper);
-        List<BackupAgentDTO> dtoList = ConvertUtils.sourceToTarget(list, BackupAgentDTO.class);
+        List<BackupAgentRsp> dtoList = ConvertUtils.sourceToTarget(list, BackupAgentRsp.class);
         maskTokens(dtoList);
         ExcelUtils.exportExcelToTarget(response, null, "备份节点表", dtoList, BackupAgentExcel.class);
     }
 
     @Override
-    public void delete(BackupAgentDeleteRequest request) {
+    public void delete(BackupAgentDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
@@ -254,7 +255,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
         this.update(entity, wrapper);
     }
 
-    private Page<BackupAgentEntity> buildPage(BackupAgentPageRequest request) {
+    private Page<BackupAgentEntity> buildPage(BackupAgentPageReq request) {
         long curPage = 1;
         long limit = 10;
         if (request != null) {
@@ -279,33 +280,33 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
         return page;
     }
 
-    private void validateUnique(BackupAgentDTO dto) {
+    private void validateUnique(BackupAgentRsp dto) {
         if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
             throw new ServiceException("地址或名称已存在");
         }
     }
 
-    private void maskTokens(List<BackupAgentDTO> list) {
+    private void maskTokens(List<BackupAgentRsp> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
-        for (BackupAgentDTO dto : list) {
+        for (BackupAgentRsp dto : list) {
             maskToken(dto);
         }
     }
 
-    private void fillOnlineStatus(List<BackupAgentDTO> list) {
+    private void fillOnlineStatus(List<BackupAgentRsp> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBackupAgentOnlineKey());
-        for (BackupAgentDTO dto : list) {
+        for (BackupAgentRsp dto : list) {
             String instance = dto.getInstance();
             dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
         }
     }
 
-    private void maskToken(BackupAgentDTO dto) {
+    private void maskToken(BackupAgentRsp dto) {
         if (dto != null) {
             dto.setToken(null);
         }

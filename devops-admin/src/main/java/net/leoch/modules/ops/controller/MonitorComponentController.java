@@ -11,7 +11,8 @@ import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
-import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.service.IMonitorComponentService;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,29 +38,29 @@ public class MonitorComponentController {
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("ops:monitorcomponent:page")
-    public Result<PageData<MonitorComponentDTO>> page(@Parameter(hidden = true) MonitorComponentPageRequest request) {
-        return new Result<PageData<MonitorComponentDTO>>().ok(monitorComponentService.page(request));
+    public Result<PageData<MonitorComponentRsp>> page(@Parameter(hidden = true) MonitorComponentPageReq request) {
+        return new Result<PageData<MonitorComponentRsp>>().ok(monitorComponentService.page(request));
     }
 
     @GetMapping("list")
     @Operation(summary = "列表")
     @SaCheckPermission("ops:monitorcomponent:page")
-    public Result<List<MonitorComponentDTO>> list(MonitorComponentListRequest request) {
-        return new Result<List<MonitorComponentDTO>>().ok(monitorComponentService.list(request));
+    public Result<List<MonitorComponentRsp>> list(MonitorComponentListReq request) {
+        return new Result<List<MonitorComponentRsp>>().ok(monitorComponentService.list(request));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("ops:monitorcomponent:info")
-    public Result<MonitorComponentDTO> get(@PathVariable("id") Long id) {
-        return new Result<MonitorComponentDTO>().ok(monitorComponentService.get(MonitorComponentIdRequest.of(id)));
+    public Result<MonitorComponentRsp> get(@PathVariable("id") Long id) {
+        return new Result<MonitorComponentRsp>().ok(monitorComponentService.get(MonitorComponentIdReq.of(id)));
     }
 
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("ops:monitorcomponent:save")
-    public Result<Object> save(@RequestBody MonitorComponentSaveRequest request) {
+    public Result<Object> save(@RequestBody MonitorComponentSaveReq request) {
         monitorComponentService.save(request);
         return new Result<>();
     }
@@ -68,7 +69,7 @@ public class MonitorComponentController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("ops:monitorcomponent:update")
-    public Result<Object> update(@RequestBody MonitorComponentUpdateRequest request) {
+    public Result<Object> update(@RequestBody MonitorComponentUpdateReq request) {
         monitorComponentService.update(request);
         return new Result<>();
     }
@@ -78,7 +79,7 @@ public class MonitorComponentController {
     @LogOperation("删除")
     @SaCheckPermission("ops:monitorcomponent:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
-        MonitorComponentDeleteRequest request = new MonitorComponentDeleteRequest();
+        MonitorComponentDeleteReq request = new MonitorComponentDeleteReq();
         request.setIds(ids);
         monitorComponentService.delete(request);
         return new Result<>();
@@ -87,22 +88,22 @@ public class MonitorComponentController {
     @GetMapping("check")
     @Operation(summary = "唯一校验")
     @SaCheckPermission("ops:monitorcomponent:page")
-    public Result<Boolean> check(MonitorComponentCheckRequest request) {
+    public Result<Boolean> check(MonitorComponentCheckReq request) {
         return new Result<Boolean>().ok(monitorComponentService.check(request));
     }
 
     @GetMapping("probe")
     @Operation(summary = "探测")
     @SaCheckPermission("ops:monitorcomponent:probe")
-    public Result<Boolean> probe(MonitorComponentProbeRequest request) {
+    public Result<Boolean> probe(MonitorComponentProbeReq request) {
         return new Result<Boolean>().ok(monitorComponentService.probe(request));
     }
 
     @GetMapping("version")
     @Operation(summary = "版本检测")
     @SaCheckPermission("ops:monitorcomponent:version")
-    public Result<MonitorComponentDTO> version(MonitorComponentVersionRequest request) {
-        return new Result<MonitorComponentDTO>().ok(monitorComponentService.versionCheck(request));
+    public Result<MonitorComponentRsp> version(MonitorComponentVersionReq request) {
+        return new Result<MonitorComponentRsp>().ok(monitorComponentService.versionCheck(request));
     }
 
 }

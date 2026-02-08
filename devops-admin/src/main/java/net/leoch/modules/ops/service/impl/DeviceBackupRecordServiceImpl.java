@@ -11,7 +11,8 @@ import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.ops.mapper.DeviceBackupRecordMapper;
-import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.entity.DeviceBackupRecordEntity;
 import net.leoch.modules.ops.service.IDeviceBackupHistoryService;
 import net.leoch.modules.ops.service.IDeviceBackupRecordService;
@@ -44,28 +45,28 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
     }
 
     @Override
-    public PageData<DeviceBackupRecordDTO> page(DeviceBackupRecordPageRequest request) {
+    public PageData<DeviceBackupRecordRsp> page(DeviceBackupRecordPageReq request) {
         LambdaQueryWrapper<DeviceBackupRecordEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StrUtil.isNotBlank(request.getName()), DeviceBackupRecordEntity::getName, request.getName());
         wrapper.like(StrUtil.isNotBlank(request.getIp()), DeviceBackupRecordEntity::getIp, request.getIp());
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), DeviceBackupRecordEntity::getLastBackupStatus, request.getStatus());
         Page<DeviceBackupRecordEntity> page = request.buildPage();
         IPage<DeviceBackupRecordEntity> result = this.page(page, wrapper);
-        List<DeviceBackupRecordDTO> list = ConvertUtils.sourceToTarget(result.getRecords(), DeviceBackupRecordDTO.class);
+        List<DeviceBackupRecordRsp> list = ConvertUtils.sourceToTarget(result.getRecords(), DeviceBackupRecordRsp.class);
         return new PageData<>(list, result.getTotal());
     }
 
     @Override
-    public DeviceBackupRecordDTO get(DeviceBackupRecordIdRequest request) {
+    public DeviceBackupRecordRsp get(DeviceBackupRecordIdReq request) {
         if (request == null || request.getId() == null) {
             return null;
         }
         DeviceBackupRecordEntity entity = this.getById(request.getId());
-        return ConvertUtils.sourceToTarget(entity, DeviceBackupRecordDTO.class);
+        return ConvertUtils.sourceToTarget(entity, DeviceBackupRecordRsp.class);
     }
 
     @Override
-    public void delete(DeviceBackupRecordDeleteRequest request) {
+    public void delete(DeviceBackupRecordDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
@@ -73,7 +74,7 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
     }
 
     @Override
-    public List<DeviceBackupHistoryDTO> history(DeviceBackupRecordHistoryRequest request) {
+    public List<DeviceBackupHistoryRsp> history(DeviceBackupRecordHistoryReq request) {
         if (request == null) {
             return new ArrayList<>();
         }
@@ -81,7 +82,7 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
     }
 
     @Override
-    public List<DeviceBackupDiffLineDTO> diff(DeviceBackupRecordDiffRequest request) {
+    public List<DeviceBackupDiffLineRsp> diff(DeviceBackupRecordDiffReq request) {
         if (request == null) {
             return new ArrayList<>();
         }
@@ -90,15 +91,15 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
     }
 
     @Override
-    public List<DeviceBackupDiffLineDTO> diffCurrent(DeviceBackupRecordDiffCurrentRequest request) {
+    public List<DeviceBackupDiffLineRsp> diffCurrent(DeviceBackupRecordDiffCurrentReq request) {
         if (request == null) {
             return new ArrayList<>();
         }
-        DeviceBackupRecordDTO current = getByIp(request.getIp());
+        DeviceBackupRecordRsp current = getByIp(request.getIp());
         if (current == null || current.getUrl() == null) {
             throw new ServiceException("当前记录不存在或URL为空");
         }
-        DeviceBackupHistoryDTO history = deviceBackupHistoryService.get(request.getHistoryId());
+        DeviceBackupHistoryRsp history = deviceBackupHistoryService.get(request.getHistoryId());
         if (history == null || history.getUrl() == null) {
             throw new ServiceException("历史记录不存在或URL为空");
         }
@@ -107,7 +108,7 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
     }
 
     @Override
-    public String preview(DeviceBackupRecordPreviewRequest request) {
+    public String preview(DeviceBackupRecordPreviewReq request) {
         if (request == null) {
             return "";
         }
@@ -115,7 +116,7 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
     }
 
     @Override
-    public void download(DeviceBackupRecordDownloadRequest request, HttpServletResponse response) {
+    public void download(DeviceBackupRecordDownloadReq request, HttpServletResponse response) {
         if (request == null || request.getUrl() == null || request.getUrl().isBlank()) {
             response.setStatus(400);
             return;
@@ -208,23 +209,23 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
     }
 
     @Override
-    public DeviceBackupRecordDTO getByIp(String ip) {
+    public DeviceBackupRecordRsp getByIp(String ip) {
         if (StrUtil.isBlank(ip)) {
             return null;
         }
         LambdaQueryWrapper<DeviceBackupRecordEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(DeviceBackupRecordEntity::getIp, ip).last("limit 1");
         DeviceBackupRecordEntity existing = this.getOne(wrapper);
-        return ConvertUtils.sourceToTarget(existing, DeviceBackupRecordDTO.class);
+        return ConvertUtils.sourceToTarget(existing, DeviceBackupRecordRsp.class);
     }
 
-    private List<DeviceBackupDiffLineDTO> toDiffLines(List<Map<String, Object>> data) {
-        List<DeviceBackupDiffLineDTO> list = new ArrayList<>();
+    private List<DeviceBackupDiffLineRsp> toDiffLines(List<Map<String, Object>> data) {
+        List<DeviceBackupDiffLineRsp> list = new ArrayList<>();
         if (data == null || data.isEmpty()) {
             return list;
         }
         for (Map<String, Object> item : data) {
-            DeviceBackupDiffLineDTO line = new DeviceBackupDiffLineDTO();
+            DeviceBackupDiffLineRsp line = new DeviceBackupDiffLineRsp();
             Object type = item.get("type");
             line.setType(type == null ? "" : String.valueOf(type));
             line.setLeftLineNo(toInt(item.get("leftLineNo")));

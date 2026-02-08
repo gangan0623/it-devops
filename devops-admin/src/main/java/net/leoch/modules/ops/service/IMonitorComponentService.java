@@ -2,7 +2,8 @@ package net.leoch.modules.ops.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
 
 import java.util.List;
@@ -11,23 +12,23 @@ import java.util.List;
  * 监控组件
  */
 public interface IMonitorComponentService extends IService<MonitorComponentEntity> {
-    PageData<MonitorComponentDTO> page(MonitorComponentPageRequest request);
+    PageData<MonitorComponentRsp> page(MonitorComponentPageReq request);
 
-    MonitorComponentDTO get(MonitorComponentIdRequest request);
+    MonitorComponentRsp get(MonitorComponentIdReq request);
 
-    void save(MonitorComponentSaveRequest request);
+    void save(MonitorComponentSaveReq request);
 
-    void update(MonitorComponentUpdateRequest request);
+    void update(MonitorComponentUpdateReq request);
 
-    void delete(MonitorComponentDeleteRequest request);
+    void delete(MonitorComponentDeleteReq request);
 
-    boolean check(MonitorComponentCheckRequest request);
+    boolean check(MonitorComponentCheckReq request);
 
-    boolean probe(MonitorComponentProbeRequest request);
+    boolean probe(MonitorComponentProbeReq request);
 
-    MonitorComponentDTO versionCheck(MonitorComponentVersionRequest request);
+    MonitorComponentRsp versionCheck(MonitorComponentVersionReq request);
 
-    List<MonitorComponentDTO> list(MonitorComponentListRequest request);
+    List<MonitorComponentRsp> list(MonitorComponentListReq request);
 
     boolean existsByIpPortOrName(String ip, Integer port, String name, Long excludeId);
 }

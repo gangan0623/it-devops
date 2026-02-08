@@ -21,7 +21,8 @@ import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.ops.mapper.LinuxHostMapper;
-import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.excel.LinuxHostExcel;
 import net.leoch.modules.ops.excel.template.LinuxHostImportExcel;
@@ -50,30 +51,30 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     private RedisUtils redisUtils;
 
     @Override
-    public PageData<LinuxHostDTO> page(LinuxHostPageRequest request) {
+    public PageData<LinuxHostRsp> page(LinuxHostPageReq request) {
         LambdaQueryWrapper<LinuxHostEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
             List<LinuxHostEntity> list = this.list(wrapper);
-            List<LinuxHostDTO> dtoList = ConvertUtils.sourceToTarget(list, LinuxHostDTO.class);
+            List<LinuxHostRsp> dtoList = ConvertUtils.sourceToTarget(list, LinuxHostRsp.class);
             fillOnlineStatus(dtoList);
-            OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), LinuxHostDTO::getOnlineStatus);
+            OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), LinuxHostRsp::getOnlineStatus);
             return OnlineStatusSupport.buildPageData(dtoList, request.getPage(), request.getLimit());
         }
         Page<LinuxHostEntity> page = request.buildPage();
         IPage<LinuxHostEntity> result = this.page(page, wrapper);
-        List<LinuxHostDTO> dtoList = ConvertUtils.sourceToTarget(result.getRecords(), LinuxHostDTO.class);
+        List<LinuxHostRsp> dtoList = ConvertUtils.sourceToTarget(result.getRecords(), LinuxHostRsp.class);
         fillOnlineStatus(dtoList);
         return new PageData<>(dtoList, result.getTotal());
     }
 
     @Override
-    public LinuxHostDTO get(LinuxHostIdRequest request) {
+    public LinuxHostRsp get(LinuxHostIdReq request) {
         if (request == null || request.getId() == null) {
             return null;
         }
         LinuxHostEntity entity = this.getById(request.getId());
-        LinuxHostDTO dto = ConvertUtils.sourceToTarget(entity, LinuxHostDTO.class);
+        LinuxHostRsp dto = ConvertUtils.sourceToTarget(entity, LinuxHostRsp.class);
         if (dto != null) {
             fillOnlineStatus(Collections.singletonList(dto));
         }
@@ -81,7 +82,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     }
 
     @Override
-    public void save(LinuxHostDTO dto) {
+    public void save(LinuxHostRsp dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         validateUnique(dto);
         LinuxHostEntity entity = ConvertUtils.sourceToTarget(dto, LinuxHostEntity.class);
@@ -90,7 +91,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     }
 
     @Override
-    public void update(LinuxHostDTO dto) {
+    public void update(LinuxHostRsp dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         validateUnique(dto);
         LinuxHostEntity entity = ConvertUtils.sourceToTarget(dto, LinuxHostEntity.class);
@@ -98,7 +99,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     }
 
     @Override
-    public void updateStatus(LinuxHostStatusUpdateRequest request) {
+    public void updateStatus(LinuxHostStatusUpdateReq request) {
         if (request == null) {
             return;
         }
@@ -106,7 +107,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     }
 
     @Override
-    public boolean online(LinuxHostOnlineRequest request) {
+    public boolean online(LinuxHostOnlineReq request) {
         if (request == null || StrUtil.isBlank(request.getInstance())) {
             return false;
         }
@@ -114,12 +115,12 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     }
 
     @Override
-    public OpsHostStatusSummaryDTO summary(LinuxHostPageRequest request) {
+    public OpsHostStatusSummaryRsp summary(LinuxHostPageReq request) {
         LambdaQueryWrapper<LinuxHostEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.select(LinuxHostEntity::getInstance, LinuxHostEntity::getStatus);
         List<LinuxHostEntity> list = this.list(wrapper);
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getLinuxHostOnlineKey());
-        OpsHostStatusSummaryDTO summary = new OpsHostStatusSummaryDTO();
+        OpsHostStatusSummaryRsp summary = new OpsHostStatusSummaryRsp();
         summary.setTotalCount((long) list.size());
         for (LinuxHostEntity item : list) {
             if (item == null) {
@@ -144,7 +145,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     }
 
     @Override
-    public boolean check(LinuxHostCheckRequest request) {
+    public boolean check(LinuxHostCheckReq request) {
         if (request == null) {
             return false;
         }
@@ -153,7 +154,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void importExcel(LinuxHostImportRequest request) throws Exception {
+    public void importExcel(LinuxHostImportReq request) throws Exception {
         if (request == null || request.getFile() == null || request.getFile().isEmpty()) {
             throw new ServiceException("上传文件不能为空");
         }
@@ -169,18 +170,18 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     }
 
 
-    private void fillOnlineStatus(List<LinuxHostDTO> list) {
+    private void fillOnlineStatus(List<LinuxHostRsp> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getLinuxHostOnlineKey());
-        for (LinuxHostDTO dto : list) {
+        for (LinuxHostRsp dto : list) {
             String instance = dto.getInstance();
             dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
         }
     }
 
-    private void applyCommonFilters(LambdaQueryWrapper<LinuxHostEntity> wrapper, LinuxHostPageRequest request) {
+    private void applyCommonFilters(LambdaQueryWrapper<LinuxHostEntity> wrapper, LinuxHostPageReq request) {
         wrapper.like(StrUtil.isNotBlank(request.getInstance()), LinuxHostEntity::getInstance, request.getInstance());
         wrapper.like(StrUtil.isNotBlank(request.getName()), LinuxHostEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getSiteLocation()), LinuxHostEntity::getSiteLocation, request.getSiteLocation());
@@ -209,16 +210,16 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     }
 
     @Override
-    public void export(LinuxHostPageRequest request, HttpServletResponse response) throws Exception {
+    public void export(LinuxHostPageReq request, HttpServletResponse response) throws Exception {
         LambdaQueryWrapper<LinuxHostEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         List<LinuxHostEntity> list = this.list(wrapper);
-        List<LinuxHostDTO> dtoList = ConvertUtils.sourceToTarget(list, LinuxHostDTO.class);
+        List<LinuxHostRsp> dtoList = ConvertUtils.sourceToTarget(list, LinuxHostRsp.class);
         ExcelUtils.exportExcelToTarget(response, null, "Linux主机表", dtoList, LinuxHostExcel.class);
     }
 
     @Override
-    public void delete(LinuxHostDeleteRequest request) {
+    public void delete(LinuxHostDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
@@ -252,7 +253,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
         this.update(entity, wrapper);
     }
 
-    private void validateUnique(LinuxHostDTO dto) {
+    private void validateUnique(LinuxHostRsp dto) {
         if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
             throw new ServiceException("地址或名称已存在");
         }

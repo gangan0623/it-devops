@@ -17,7 +17,8 @@ import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.ops.mapper.MonitorComponentMapper;
-import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
 import net.leoch.modules.ops.service.IMonitorComponentService;
 import net.leoch.modules.security.user.SecurityUser;
@@ -50,26 +51,26 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
     private static final String TYPE_BLACKBOX = "blackbox";
 
     @Override
-    public PageData<MonitorComponentDTO> page(MonitorComponentPageRequest request) {
+    public PageData<MonitorComponentRsp> page(MonitorComponentPageReq request) {
         LambdaQueryWrapper<MonitorComponentEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StrUtil.isNotBlank(request.getName()), MonitorComponentEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getType()), MonitorComponentEntity::getType, normalizeType(request.getType()));
         wrapper.like(StrUtil.isNotBlank(request.getIp()), MonitorComponentEntity::getIp, request.getIp());
         Page<MonitorComponentEntity> page = buildPage(request);
         IPage<MonitorComponentEntity> result = this.page(page, wrapper);
-        return new PageData<>(ConvertUtils.sourceToTarget(result.getRecords(), MonitorComponentDTO.class), result.getTotal());
+        return new PageData<>(ConvertUtils.sourceToTarget(result.getRecords(), MonitorComponentRsp.class), result.getTotal());
     }
 
     @Override
-    public MonitorComponentDTO get(MonitorComponentIdRequest request) {
+    public MonitorComponentRsp get(MonitorComponentIdReq request) {
         if (request == null || request.getId() == null) {
             return null;
         }
-        return ConvertUtils.sourceToTarget(this.getById(request.getId()), MonitorComponentDTO.class);
+        return ConvertUtils.sourceToTarget(this.getById(request.getId()), MonitorComponentRsp.class);
     }
 
     @Override
-    public void save(MonitorComponentSaveRequest request) {
+    public void save(MonitorComponentSaveReq request) {
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
         validateUnique(request);
         if (request != null && request.getType() != null) {
@@ -80,7 +81,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
     }
 
     @Override
-    public void update(MonitorComponentUpdateRequest request) {
+    public void update(MonitorComponentUpdateReq request) {
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
         validateUnique(request);
         if (request != null && request.getType() != null) {
@@ -91,7 +92,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
     }
 
     @Override
-    public void delete(MonitorComponentDeleteRequest request) {
+    public void delete(MonitorComponentDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
@@ -99,7 +100,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
     }
 
     @Override
-    public boolean check(MonitorComponentCheckRequest request) {
+    public boolean check(MonitorComponentCheckReq request) {
         if (request == null) {
             return false;
         }
@@ -107,7 +108,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
     }
 
     @Override
-    public boolean probe(MonitorComponentProbeRequest request) {
+    public boolean probe(MonitorComponentProbeReq request) {
         if (request == null || request.getId() == null) {
             return false;
         }
@@ -121,7 +122,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
     }
 
     @Override
-    public MonitorComponentDTO versionCheck(MonitorComponentVersionRequest request) {
+    public MonitorComponentRsp versionCheck(MonitorComponentVersionReq request) {
         if (request == null || request.getId() == null) {
             return null;
         }
@@ -146,15 +147,15 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         update.setUpdateDate(new Date());
         this.update(update, wrapper);
         MonitorComponentEntity refreshed = this.getById(entity.getId());
-        return ConvertUtils.sourceToTarget(refreshed, MonitorComponentDTO.class);
+        return ConvertUtils.sourceToTarget(refreshed, MonitorComponentRsp.class);
     }
 
     @Override
-    public List<MonitorComponentDTO> list(MonitorComponentListRequest request) {
+    public List<MonitorComponentRsp> list(MonitorComponentListReq request) {
         LambdaQueryWrapper<MonitorComponentEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByDesc(MonitorComponentEntity::getUpdateDate);
         List<MonitorComponentEntity> list = this.list(wrapper);
-        return ConvertUtils.sourceToTarget(list, MonitorComponentDTO.class);
+        return ConvertUtils.sourceToTarget(list, MonitorComponentRsp.class);
     }
 
     @Override
@@ -179,7 +180,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         return this.count(wrapper) > 0;
     }
 
-    private Page<MonitorComponentEntity> buildPage(MonitorComponentPageRequest request) {
+    private Page<MonitorComponentEntity> buildPage(MonitorComponentPageReq request) {
         long curPage = 1;
         long limit = 10;
         if (request != null) {
@@ -204,7 +205,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         return page;
     }
 
-    private void validateUnique(MonitorComponentDTO dto) {
+    private void validateUnique(MonitorComponentRsp dto) {
         if (dto != null && existsByIpPortOrName(dto.getIp(), dto.getPort(), dto.getName(), dto.getId())) {
             throw new ServiceException("IP端口或名称已存在");
         }

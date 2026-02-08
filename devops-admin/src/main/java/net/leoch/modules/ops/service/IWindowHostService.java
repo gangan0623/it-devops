@@ -3,7 +3,8 @@ package net.leoch.modules.ops.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.entity.WindowHostEntity;
 
 /**
@@ -14,31 +15,31 @@ import net.leoch.modules.ops.entity.WindowHostEntity;
  */
 public interface IWindowHostService extends IService<WindowHostEntity> {
 
-    PageData<WindowHostDTO> page(WindowHostPageRequest request);
+    PageData<WindowHostRsp> page(WindowHostPageReq request);
 
-    WindowHostDTO get(WindowHostIdRequest request);
+    WindowHostRsp get(WindowHostIdReq request);
 
-    void save(WindowHostDTO dto);
+    void save(WindowHostRsp dto);
 
-    void update(WindowHostDTO dto);
+    void update(WindowHostRsp dto);
 
-    void updateStatus(WindowHostStatusUpdateRequest request);
+    void updateStatus(WindowHostStatusUpdateReq request);
 
-    boolean online(WindowHostOnlineRequest request);
+    boolean online(WindowHostOnlineReq request);
 
-    boolean check(WindowHostCheckRequest request);
+    boolean check(WindowHostCheckReq request);
 
-    void importExcel(WindowHostImportRequest request) throws Exception;
+    void importExcel(WindowHostImportReq request) throws Exception;
 
     void template(HttpServletResponse response) throws Exception;
 
-    void export(WindowHostPageRequest request, HttpServletResponse response) throws Exception;
+    void export(WindowHostPageReq request, HttpServletResponse response) throws Exception;
 
-    void delete(WindowHostDeleteRequest request);
+    void delete(WindowHostDeleteReq request);
 
     void updateStatus(Long[] ids, Integer status);
 
     boolean existsByInstanceOrName(String instance, String name, Long excludeId);
 
-    OpsHostStatusSummaryDTO summary(WindowHostPageRequest request);
+    OpsHostStatusSummaryRsp summary(WindowHostPageReq request);
 }

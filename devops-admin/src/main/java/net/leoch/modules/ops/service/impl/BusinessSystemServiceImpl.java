@@ -22,7 +22,8 @@ import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.ops.mapper.BusinessSystemMapper;
-import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.excel.BusinessSystemExcel;
 import net.leoch.modules.ops.excel.template.BusinessSystemImportExcel;
@@ -50,30 +51,30 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     private RedisUtils redisUtils;
 
     @Override
-    public PageData<BusinessSystemDTO> page(BusinessSystemPageRequest request) {
+    public PageData<BusinessSystemRsp> page(BusinessSystemPageReq request) {
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
             List<BusinessSystemEntity> list = this.list(wrapper);
-            List<BusinessSystemDTO> dtoList = ConvertUtils.sourceToTarget(list, BusinessSystemDTO.class);
+            List<BusinessSystemRsp> dtoList = ConvertUtils.sourceToTarget(list, BusinessSystemRsp.class);
             fillOnlineStatus(dtoList);
-            OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), BusinessSystemDTO::getOnlineStatus);
+            OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), BusinessSystemRsp::getOnlineStatus);
             return OnlineStatusSupport.buildPageData(dtoList, request.getPage(), request.getLimit());
         }
         Page<BusinessSystemEntity> page = request.buildPage();
         IPage<BusinessSystemEntity> result = this.page(page, wrapper);
-        List<BusinessSystemDTO> dtoList = ConvertUtils.sourceToTarget(result.getRecords(), BusinessSystemDTO.class);
+        List<BusinessSystemRsp> dtoList = ConvertUtils.sourceToTarget(result.getRecords(), BusinessSystemRsp.class);
         fillOnlineStatus(dtoList);
         return new PageData<>(dtoList, result.getTotal());
     }
 
     @Override
-    public BusinessSystemDTO get(BusinessSystemIdRequest request) {
+    public BusinessSystemRsp get(BusinessSystemIdReq request) {
         if (request == null || request.getId() == null) {
             return null;
         }
         BusinessSystemEntity entity = this.getById(request.getId());
-        BusinessSystemDTO dto = ConvertUtils.sourceToTarget(entity, BusinessSystemDTO.class);
+        BusinessSystemRsp dto = ConvertUtils.sourceToTarget(entity, BusinessSystemRsp.class);
         if (dto != null) {
             fillOnlineStatus(Collections.singletonList(dto));
         }
@@ -81,7 +82,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     }
 
     @Override
-    public void save(BusinessSystemDTO dto) {
+    public void save(BusinessSystemRsp dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         validateUnique(dto);
         BusinessSystemEntity entity = ConvertUtils.sourceToTarget(dto, BusinessSystemEntity.class);
@@ -90,7 +91,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     }
 
     @Override
-    public void update(BusinessSystemDTO dto) {
+    public void update(BusinessSystemRsp dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         validateUnique(dto);
         BusinessSystemEntity entity = ConvertUtils.sourceToTarget(dto, BusinessSystemEntity.class);
@@ -98,7 +99,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     }
 
     @Override
-    public void updateStatus(BusinessSystemStatusUpdateRequest request) {
+    public void updateStatus(BusinessSystemStatusUpdateReq request) {
         if (request == null) {
             return;
         }
@@ -106,7 +107,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     }
 
     @Override
-    public boolean online(BusinessSystemOnlineRequest request) {
+    public boolean online(BusinessSystemOnlineReq request) {
         if (request == null || StrUtil.isBlank(request.getInstance())) {
             return false;
         }
@@ -114,12 +115,12 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     }
 
     @Override
-    public OpsHostStatusSummaryDTO summary(BusinessSystemPageRequest request) {
+    public OpsHostStatusSummaryRsp summary(BusinessSystemPageReq request) {
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getStatus);
         List<BusinessSystemEntity> list = this.list(wrapper);
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBusinessSystemOnlineKey());
-        OpsHostStatusSummaryDTO summary = new OpsHostStatusSummaryDTO();
+        OpsHostStatusSummaryRsp summary = new OpsHostStatusSummaryRsp();
         summary.setTotalCount((long) list.size());
         for (BusinessSystemEntity item : list) {
             if (item == null) {
@@ -144,7 +145,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     }
 
     @Override
-    public boolean check(BusinessSystemCheckRequest request) {
+    public boolean check(BusinessSystemCheckReq request) {
         if (request == null) {
             return false;
         }
@@ -153,7 +154,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void importExcel(BusinessSystemImportRequest request) throws Exception {
+    public void importExcel(BusinessSystemImportReq request) throws Exception {
         if (request == null || request.getFile() == null || request.getFile().isEmpty()) {
             throw new ServiceException("上传文件不能为空");
         }
@@ -174,16 +175,16 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     }
 
     @Override
-    public void export(BusinessSystemPageRequest request, HttpServletResponse response) throws Exception {
+    public void export(BusinessSystemPageReq request, HttpServletResponse response) throws Exception {
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         List<BusinessSystemEntity> list = this.list(wrapper);
-        List<BusinessSystemDTO> dtoList = ConvertUtils.sourceToTarget(list, BusinessSystemDTO.class);
+        List<BusinessSystemRsp> dtoList = ConvertUtils.sourceToTarget(list, BusinessSystemRsp.class);
         ExcelUtils.exportExcelToTarget(response, null, "业务系统表", dtoList, BusinessSystemExcel.class);
     }
 
     @Override
-    public void delete(BusinessSystemDeleteRequest request) {
+    public void delete(BusinessSystemDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
@@ -217,18 +218,18 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
         );
     }
 
-    private void fillOnlineStatus(List<BusinessSystemDTO> list) {
+    private void fillOnlineStatus(List<BusinessSystemRsp> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBusinessSystemOnlineKey());
-        for (BusinessSystemDTO dto : list) {
+        for (BusinessSystemRsp dto : list) {
             String instance = dto.getInstance();
             dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
         }
     }
 
-    private void applyCommonFilters(LambdaQueryWrapper<BusinessSystemEntity> wrapper, BusinessSystemPageRequest request) {
+    private void applyCommonFilters(LambdaQueryWrapper<BusinessSystemEntity> wrapper, BusinessSystemPageReq request) {
         wrapper.like(StrUtil.isNotBlank(request.getInstance()), BusinessSystemEntity::getInstance, request.getInstance());
         wrapper.like(StrUtil.isNotBlank(request.getName()), BusinessSystemEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getSiteLocation()), BusinessSystemEntity::getSiteLocation, request.getSiteLocation());
@@ -249,7 +250,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
         return entity;
     }
 
-    private void validateUnique(BusinessSystemDTO dto) {
+    private void validateUnique(BusinessSystemRsp dto) {
         if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
             throw new ServiceException("地址或名称已存在");
         }

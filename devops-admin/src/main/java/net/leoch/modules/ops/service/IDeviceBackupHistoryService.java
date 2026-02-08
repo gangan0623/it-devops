@@ -1,7 +1,7 @@
 package net.leoch.modules.ops.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import net.leoch.modules.ops.dto.DeviceBackupHistoryDTO;
+import net.leoch.modules.ops.vo.rsp.DeviceBackupHistoryRsp;
 import net.leoch.modules.ops.entity.DeviceBackupHistoryEntity;
 
 import java.util.List;
@@ -14,7 +14,7 @@ public interface IDeviceBackupHistoryService extends IService<DeviceBackupHistor
 
     void saveHistory(String name, String ip, String url, Integer status);
 
-    List<DeviceBackupHistoryDTO> listByIp(String ip, Integer limit);
+    List<DeviceBackupHistoryRsp> listByIp(String ip, Integer limit);
 
     List<Map<String, Object>> diffById(Long leftId, Long rightId);
 
@@ -22,5 +22,5 @@ public interface IDeviceBackupHistoryService extends IService<DeviceBackupHistor
 
     String previewByUrl(String url);
 
-    DeviceBackupHistoryDTO get(Long id);
+    DeviceBackupHistoryRsp get(Long id);
 }

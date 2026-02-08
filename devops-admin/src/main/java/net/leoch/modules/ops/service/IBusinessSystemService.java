@@ -3,7 +3,8 @@ package net.leoch.modules.ops.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 
 /**
@@ -14,31 +15,31 @@ import net.leoch.modules.ops.entity.BusinessSystemEntity;
  */
 public interface IBusinessSystemService extends IService<BusinessSystemEntity> {
 
-    PageData<BusinessSystemDTO> page(BusinessSystemPageRequest request);
+    PageData<BusinessSystemRsp> page(BusinessSystemPageReq request);
 
-    BusinessSystemDTO get(BusinessSystemIdRequest request);
+    BusinessSystemRsp get(BusinessSystemIdReq request);
 
-    void save(BusinessSystemDTO dto);
+    void save(BusinessSystemRsp dto);
 
-    void update(BusinessSystemDTO dto);
+    void update(BusinessSystemRsp dto);
 
-    void updateStatus(BusinessSystemStatusUpdateRequest request);
+    void updateStatus(BusinessSystemStatusUpdateReq request);
 
-    boolean online(BusinessSystemOnlineRequest request);
+    boolean online(BusinessSystemOnlineReq request);
 
-    boolean check(BusinessSystemCheckRequest request);
+    boolean check(BusinessSystemCheckReq request);
 
-    void importExcel(BusinessSystemImportRequest request) throws Exception;
+    void importExcel(BusinessSystemImportReq request) throws Exception;
 
     void template(HttpServletResponse response) throws Exception;
 
-    void export(BusinessSystemPageRequest request, HttpServletResponse response) throws Exception;
+    void export(BusinessSystemPageReq request, HttpServletResponse response) throws Exception;
 
-    void delete(BusinessSystemDeleteRequest request);
+    void delete(BusinessSystemDeleteReq request);
 
     void updateStatus(Long[] ids, Integer status);
 
     boolean existsByInstanceOrName(String instance, String name, Long excludeId);
 
-    OpsHostStatusSummaryDTO summary(BusinessSystemPageRequest request);
+    OpsHostStatusSummaryRsp summary(BusinessSystemPageReq request);
 }

@@ -3,7 +3,8 @@ package net.leoch.modules.ops.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.entity.DeviceBackupRecordEntity;
 
 import java.util.List;
@@ -15,23 +16,23 @@ import java.util.List;
  * @since 1.0.0 2026-01-29
  */
 public interface IDeviceBackupRecordService extends IService<DeviceBackupRecordEntity> {
-    PageData<DeviceBackupRecordDTO> page(DeviceBackupRecordPageRequest request);
+    PageData<DeviceBackupRecordRsp> page(DeviceBackupRecordPageReq request);
 
-    DeviceBackupRecordDTO get(DeviceBackupRecordIdRequest request);
+    DeviceBackupRecordRsp get(DeviceBackupRecordIdReq request);
 
-    void delete(DeviceBackupRecordDeleteRequest request);
+    void delete(DeviceBackupRecordDeleteReq request);
 
-    List<DeviceBackupHistoryDTO> history(DeviceBackupRecordHistoryRequest request);
+    List<DeviceBackupHistoryRsp> history(DeviceBackupRecordHistoryReq request);
 
-    List<DeviceBackupDiffLineDTO> diff(DeviceBackupRecordDiffRequest request);
+    List<DeviceBackupDiffLineRsp> diff(DeviceBackupRecordDiffReq request);
 
-    List<DeviceBackupDiffLineDTO> diffCurrent(DeviceBackupRecordDiffCurrentRequest request);
+    List<DeviceBackupDiffLineRsp> diffCurrent(DeviceBackupRecordDiffCurrentReq request);
 
-    String preview(DeviceBackupRecordPreviewRequest request);
+    String preview(DeviceBackupRecordPreviewReq request);
 
-    void download(DeviceBackupRecordDownloadRequest request, HttpServletResponse response);
+    void download(DeviceBackupRecordDownloadReq request, HttpServletResponse response);
 
     void upsertRecord(String name, String ip, String url, boolean success);
 
-    DeviceBackupRecordDTO getByIp(String ip);
+    DeviceBackupRecordRsp getByIp(String ip);
 }

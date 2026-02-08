@@ -3,7 +3,8 @@ package net.leoch.modules.ops.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.entity.BackupAgentEntity;
 
 /**
@@ -14,31 +15,31 @@ import net.leoch.modules.ops.entity.BackupAgentEntity;
  */
 public interface IBackupAgentService extends IService<BackupAgentEntity> {
 
-    PageData<BackupAgentDTO> page(BackupAgentPageRequest request);
+    PageData<BackupAgentRsp> page(BackupAgentPageReq request);
 
-    BackupAgentDTO get(BackupAgentIdRequest request);
+    BackupAgentRsp get(BackupAgentIdReq request);
 
-    void save(BackupAgentSaveRequest request);
+    void save(BackupAgentSaveReq request);
 
-    void update(BackupAgentUpdateRequest request);
+    void update(BackupAgentUpdateReq request);
 
-    void updateStatus(BackupAgentStatusUpdateRequest request);
+    void updateStatus(BackupAgentStatusUpdateReq request);
 
-    boolean online(BackupAgentOnlineRequest request);
+    boolean online(BackupAgentOnlineReq request);
 
-    boolean check(BackupAgentCheckRequest request);
+    boolean check(BackupAgentCheckReq request);
 
-    void importExcel(BackupAgentImportRequest request) throws Exception;
+    void importExcel(BackupAgentImportReq request) throws Exception;
 
     void template(HttpServletResponse response) throws Exception;
 
-    void export(BackupAgentPageRequest request, HttpServletResponse response) throws Exception;
+    void export(BackupAgentPageReq request, HttpServletResponse response) throws Exception;
 
-    void delete(BackupAgentDeleteRequest request);
+    void delete(BackupAgentDeleteReq request);
 
     void updateStatus(Long[] ids, Integer status);
 
     boolean existsByInstanceOrName(String instance, String name, Long excludeId);
 
-    OpsHostStatusSummaryDTO summary(BackupAgentPageRequest request);
+    OpsHostStatusSummaryRsp summary(BackupAgentPageReq request);
 }

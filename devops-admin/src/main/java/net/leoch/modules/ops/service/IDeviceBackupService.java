@@ -3,7 +3,8 @@ package net.leoch.modules.ops.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.entity.DeviceBackupEntity;
 
 /**
@@ -14,31 +15,31 @@ import net.leoch.modules.ops.entity.DeviceBackupEntity;
  */
 public interface IDeviceBackupService extends IService<DeviceBackupEntity> {
 
-    PageData<DeviceBackupDTO> page(DeviceBackupPageRequest request);
+    PageData<DeviceBackupRsp> page(DeviceBackupPageReq request);
 
-    DeviceBackupDTO get(DeviceBackupIdRequest request);
+    DeviceBackupRsp get(DeviceBackupIdReq request);
 
-    void save(DeviceBackupSaveRequest request);
+    void save(DeviceBackupSaveReq request);
 
-    void update(DeviceBackupUpdateRequest request);
+    void update(DeviceBackupUpdateReq request);
 
-    void updateStatus(DeviceBackupStatusUpdateRequest request);
+    void updateStatus(DeviceBackupStatusUpdateReq request);
 
-    boolean online(DeviceBackupOnlineRequest request);
+    boolean online(DeviceBackupOnlineReq request);
 
-    boolean check(DeviceBackupCheckRequest request);
+    boolean check(DeviceBackupCheckReq request);
 
-    void importExcel(DeviceBackupImportRequest request) throws Exception;
+    void importExcel(DeviceBackupImportReq request) throws Exception;
 
     void template(HttpServletResponse response) throws Exception;
 
-    void export(DeviceBackupPageRequest request, HttpServletResponse response) throws Exception;
+    void export(DeviceBackupPageReq request, HttpServletResponse response) throws Exception;
 
-    void delete(DeviceBackupDeleteRequest request);
+    void delete(DeviceBackupDeleteReq request);
 
     void updateStatus(Long[] ids, Integer status);
 
     boolean existsByInstanceOrName(String instance, String name, Long excludeId);
 
-    OpsHostStatusSummaryDTO summary(DeviceBackupPageRequest request);
+    OpsHostStatusSummaryRsp summary(DeviceBackupPageReq request);
 }

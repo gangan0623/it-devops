@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.ops.mapper.DeviceBackupHistoryMapper;
-import net.leoch.modules.ops.dto.DeviceBackupHistoryDTO;
+import net.leoch.modules.ops.vo.rsp.DeviceBackupHistoryRsp;
 import net.leoch.modules.ops.entity.DeviceBackupHistoryEntity;
 import net.leoch.modules.ops.service.IDeviceBackupHistoryService;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +40,7 @@ public class DeviceBackupHistoryServiceImpl extends ServiceImpl<DeviceBackupHist
     }
 
     @Override
-    public List<DeviceBackupHistoryDTO> listByIp(String ip, Integer limit) {
+    public List<DeviceBackupHistoryRsp> listByIp(String ip, Integer limit) {
         LambdaQueryWrapper<DeviceBackupHistoryEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(StrUtil.isNotBlank(ip), DeviceBackupHistoryEntity::getIp, ip);
         wrapper.orderByDesc(DeviceBackupHistoryEntity::getBackupTime);
@@ -48,16 +48,16 @@ public class DeviceBackupHistoryServiceImpl extends ServiceImpl<DeviceBackupHist
             wrapper.last("limit " + Math.min(limit, 200));
         }
         List<DeviceBackupHistoryEntity> list = this.list(wrapper);
-        return ConvertUtils.sourceToTarget(list, DeviceBackupHistoryDTO.class);
+        return ConvertUtils.sourceToTarget(list, DeviceBackupHistoryRsp.class);
     }
 
     @Override
-    public DeviceBackupHistoryDTO get(Long id) {
+    public DeviceBackupHistoryRsp get(Long id) {
         if (id == null) {
             return null;
         }
         DeviceBackupHistoryEntity entity = this.getById(id);
-        return ConvertUtils.sourceToTarget(entity, DeviceBackupHistoryDTO.class);
+        return ConvertUtils.sourceToTarget(entity, DeviceBackupHistoryRsp.class);
     }
 
     @Override

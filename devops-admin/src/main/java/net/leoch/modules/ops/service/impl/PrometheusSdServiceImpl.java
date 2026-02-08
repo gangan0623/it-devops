@@ -4,8 +4,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import net.leoch.modules.ops.mapper.BusinessSystemMapper;
 import net.leoch.modules.ops.mapper.LinuxHostMapper;
 import net.leoch.modules.ops.mapper.WindowHostMapper;
-import net.leoch.modules.ops.dto.PrometheusSdRequest;
-import net.leoch.modules.ops.dto.PrometheusSdResponse;
+import net.leoch.modules.ops.vo.req.PrometheusSdReq;
+import net.leoch.modules.ops.vo.rsp.PrometheusSdRsp;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
@@ -37,7 +37,7 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
     }
 
     @Override
-    public List<PrometheusSdResponse> linux(PrometheusSdRequest request) {
+    public List<PrometheusSdRsp> linux(PrometheusSdReq request) {
         String areaName = getAreaName(request);
         if (areaName == null) {
             return new ArrayList<>();
@@ -63,7 +63,7 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
     }
 
     @Override
-    public List<PrometheusSdResponse> windows(PrometheusSdRequest request) {
+    public List<PrometheusSdRsp> windows(PrometheusSdReq request) {
         String areaName = getAreaName(request);
         if (areaName == null) {
             return new ArrayList<>();
@@ -89,7 +89,7 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
     }
 
     @Override
-    public List<PrometheusSdResponse> httpProbe(PrometheusSdRequest request) {
+    public List<PrometheusSdRsp> httpProbe(PrometheusSdReq request) {
         String areaName = getAreaName(request);
         if (areaName == null) {
             return new ArrayList<>();
@@ -114,7 +114,7 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
         );
     }
 
-    private String getAreaName(PrometheusSdRequest request) {
+    private String getAreaName(PrometheusSdReq request) {
         if (request == null || request.getArea() == null) {
             return null;
         }
@@ -177,7 +177,7 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
         return convertDictValue(dictMaps.areaNameMap, areaName);
     }
 
-    private <T> List<PrometheusSdResponse> buildTargets(
+    private <T> List<PrometheusSdRsp> buildTargets(
             List<T> list,
             String type,
             DictMaps dictMaps,
@@ -205,7 +205,7 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
                 .collect(Collectors.toList()));
     }
 
-    private PrometheusSdResponse buildTarget(String instance, String name, String siteLocation, String areaName, String targetType, String menuName, String subMenuName, String machineType) {
+    private PrometheusSdRsp buildTarget(String instance, String name, String siteLocation, String areaName, String targetType, String menuName, String subMenuName, String machineType) {
         Map<String, Object> labels = new HashMap<>();
         labels.put("base_site_location", siteLocation);
         if (areaName != null && !areaName.isEmpty()) {
@@ -223,7 +223,7 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
         labels.put("instance", resolveLabelInstance(instance, targetType));
         labels.put("target_type", targetType);
         labels.put("type", (machineType == null || machineType.isEmpty()) ? targetType : machineType);
-        PrometheusSdResponse response = new PrometheusSdResponse();
+        PrometheusSdRsp response = new PrometheusSdRsp();
         response.setTargets(Collections.singletonList(resolveTarget(instance, targetType)));
         response.setLabels(labels);
         return response;
@@ -254,7 +254,7 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
         return trimmed;
     }
 
-    private List<PrometheusSdResponse> toTargets(List<PrometheusSdResponse> groups) {
+    private List<PrometheusSdRsp> toTargets(List<PrometheusSdRsp> groups) {
         return groups == null ? new ArrayList<>() : groups;
     }
 

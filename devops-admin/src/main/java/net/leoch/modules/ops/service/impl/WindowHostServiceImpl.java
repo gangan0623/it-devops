@@ -21,7 +21,8 @@ import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.ops.mapper.WindowHostMapper;
-import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.entity.WindowHostEntity;
 import net.leoch.modules.ops.excel.WindowHostExcel;
 import net.leoch.modules.ops.excel.template.WindowHostImportExcel;
@@ -50,30 +51,30 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     private RedisUtils redisUtils;
 
     @Override
-    public PageData<WindowHostDTO> page(WindowHostPageRequest request) {
+    public PageData<WindowHostRsp> page(WindowHostPageReq request) {
         LambdaQueryWrapper<WindowHostEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
             List<WindowHostEntity> list = this.list(wrapper);
-            List<WindowHostDTO> dtoList = ConvertUtils.sourceToTarget(list, WindowHostDTO.class);
+            List<WindowHostRsp> dtoList = ConvertUtils.sourceToTarget(list, WindowHostRsp.class);
             fillOnlineStatus(dtoList);
-            OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), WindowHostDTO::getOnlineStatus);
+            OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), WindowHostRsp::getOnlineStatus);
             return OnlineStatusSupport.buildPageData(dtoList, request.getPage(), request.getLimit());
         }
         Page<WindowHostEntity> page = request.buildPage();
         IPage<WindowHostEntity> result = this.page(page, wrapper);
-        List<WindowHostDTO> dtoList = ConvertUtils.sourceToTarget(result.getRecords(), WindowHostDTO.class);
+        List<WindowHostRsp> dtoList = ConvertUtils.sourceToTarget(result.getRecords(), WindowHostRsp.class);
         fillOnlineStatus(dtoList);
         return new PageData<>(dtoList, result.getTotal());
     }
 
     @Override
-    public WindowHostDTO get(WindowHostIdRequest request) {
+    public WindowHostRsp get(WindowHostIdReq request) {
         if (request == null || request.getId() == null) {
             return null;
         }
         WindowHostEntity entity = this.getById(request.getId());
-        WindowHostDTO dto = ConvertUtils.sourceToTarget(entity, WindowHostDTO.class);
+        WindowHostRsp dto = ConvertUtils.sourceToTarget(entity, WindowHostRsp.class);
         if (dto != null) {
             fillOnlineStatus(Collections.singletonList(dto));
         }
@@ -81,7 +82,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     }
 
     @Override
-    public void save(WindowHostDTO dto) {
+    public void save(WindowHostRsp dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         validateUnique(dto);
         WindowHostEntity entity = ConvertUtils.sourceToTarget(dto, WindowHostEntity.class);
@@ -90,7 +91,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     }
 
     @Override
-    public void update(WindowHostDTO dto) {
+    public void update(WindowHostRsp dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         validateUnique(dto);
         WindowHostEntity entity = ConvertUtils.sourceToTarget(dto, WindowHostEntity.class);
@@ -98,7 +99,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     }
 
     @Override
-    public void updateStatus(WindowHostStatusUpdateRequest request) {
+    public void updateStatus(WindowHostStatusUpdateReq request) {
         if (request == null) {
             return;
         }
@@ -106,7 +107,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     }
 
     @Override
-    public boolean online(WindowHostOnlineRequest request) {
+    public boolean online(WindowHostOnlineReq request) {
         if (request == null || StrUtil.isBlank(request.getInstance())) {
             return false;
         }
@@ -114,12 +115,12 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     }
 
     @Override
-    public OpsHostStatusSummaryDTO summary(WindowHostPageRequest request) {
+    public OpsHostStatusSummaryRsp summary(WindowHostPageReq request) {
         LambdaQueryWrapper<WindowHostEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.select(WindowHostEntity::getInstance, WindowHostEntity::getStatus);
         List<WindowHostEntity> list = this.list(wrapper);
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getWindowHostOnlineKey());
-        OpsHostStatusSummaryDTO summary = new OpsHostStatusSummaryDTO();
+        OpsHostStatusSummaryRsp summary = new OpsHostStatusSummaryRsp();
         summary.setTotalCount((long) list.size());
         for (WindowHostEntity item : list) {
             if (item == null) {
@@ -144,7 +145,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     }
 
     @Override
-    public boolean check(WindowHostCheckRequest request) {
+    public boolean check(WindowHostCheckReq request) {
         if (request == null) {
             return false;
         }
@@ -153,7 +154,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void importExcel(WindowHostImportRequest request) throws Exception {
+    public void importExcel(WindowHostImportReq request) throws Exception {
         if (request == null || request.getFile() == null || request.getFile().isEmpty()) {
             throw new ServiceException("上传文件不能为空");
         }
@@ -169,18 +170,18 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     }
 
 
-    private void fillOnlineStatus(List<WindowHostDTO> list) {
+    private void fillOnlineStatus(List<WindowHostRsp> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getWindowHostOnlineKey());
-        for (WindowHostDTO dto : list) {
+        for (WindowHostRsp dto : list) {
             String instance = dto.getInstance();
             dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
         }
     }
 
-    private void applyCommonFilters(LambdaQueryWrapper<WindowHostEntity> wrapper, WindowHostPageRequest request) {
+    private void applyCommonFilters(LambdaQueryWrapper<WindowHostEntity> wrapper, WindowHostPageReq request) {
         wrapper.like(StrUtil.isNotBlank(request.getInstance()), WindowHostEntity::getInstance, request.getInstance());
         wrapper.like(StrUtil.isNotBlank(request.getName()), WindowHostEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getSiteLocation()), WindowHostEntity::getSiteLocation, request.getSiteLocation());
@@ -209,16 +210,16 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     }
 
     @Override
-    public void export(WindowHostPageRequest request, HttpServletResponse response) throws Exception {
+    public void export(WindowHostPageReq request, HttpServletResponse response) throws Exception {
         LambdaQueryWrapper<WindowHostEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         List<WindowHostEntity> list = this.list(wrapper);
-        List<WindowHostDTO> dtoList = ConvertUtils.sourceToTarget(list, WindowHostDTO.class);
+        List<WindowHostRsp> dtoList = ConvertUtils.sourceToTarget(list, WindowHostRsp.class);
         ExcelUtils.exportExcelToTarget(response, null, "Windows主机表", dtoList, WindowHostExcel.class);
     }
 
     @Override
-    public void delete(WindowHostDeleteRequest request) {
+    public void delete(WindowHostDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
@@ -252,7 +253,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
         this.update(entity, wrapper);
     }
 
-    private void validateUnique(WindowHostDTO dto) {
+    private void validateUnique(WindowHostRsp dto) {
         if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
             throw new ServiceException("地址或名称已存在");
         }

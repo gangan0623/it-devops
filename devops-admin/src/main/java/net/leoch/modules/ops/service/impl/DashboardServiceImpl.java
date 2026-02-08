@@ -5,7 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import net.leoch.modules.alert.mapper.AlertRecordMapper;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
 import net.leoch.modules.ops.mapper.*;
-import net.leoch.modules.ops.dto.*;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.entity.DeviceBackupEntity;
 import net.leoch.modules.ops.entity.DeviceBackupRecordEntity;
@@ -54,16 +55,16 @@ public class DashboardServiceImpl implements IDashboardService {
     }
 
     @Override
-    public DashboardSummaryResponse summary() {
-        DashboardSummaryResponse data = new DashboardSummaryResponse();
+    public DashboardSummaryRsp summary() {
+        DashboardSummaryRsp data = new DashboardSummaryRsp();
 
-        DashboardHostCounts hostCounts = new DashboardHostCounts();
+        DashboardHostCountsRsp hostCounts = new DashboardHostCountsRsp();
         hostCounts.setWindows(windowHostMapper.selectCount(new LambdaQueryWrapper<>()));
         hostCounts.setLinux(linuxHostMapper.selectCount(new LambdaQueryWrapper<>()));
         hostCounts.setBusiness(businessSystemMapper.selectCount(new LambdaQueryWrapper<>()));
         data.setHostCounts(hostCounts);
 
-        DashboardBackupStats backupStats = new DashboardBackupStats();
+        DashboardBackupStatsRsp backupStats = new DashboardBackupStatsRsp();
         long total = deviceBackupRecordDao.selectCount(new LambdaQueryWrapper<>());
         long success = deviceBackupRecordDao.selectCount(
                 new LambdaQueryWrapper<DeviceBackupRecordEntity>().eq(DeviceBackupRecordEntity::getLastBackupStatus, 1)
@@ -109,18 +110,18 @@ public class DashboardServiceImpl implements IDashboardService {
                 backupIps.add(device.getInstance());
             }
         }
-        List<DashboardDeviceDiffItem> zabbixOnly = new ArrayList<>();
+        List<DashboardDeviceDiffItemRsp> zabbixOnly = new ArrayList<>();
         for (Map<String, String> host : zabbixHosts) {
             String ip = host.get("ip");
             if (StrUtil.isBlank(ip) || backupIps.contains(ip)) {
                 continue;
             }
-            DashboardDeviceDiffItem item = new DashboardDeviceDiffItem();
+            DashboardDeviceDiffItemRsp item = new DashboardDeviceDiffItemRsp();
             item.setIp(ip);
             item.setName(host.get("name"));
             zabbixOnly.add(item);
         }
-        List<DashboardDeviceDiffItem> backupOnly = new ArrayList<>();
+        List<DashboardDeviceDiffItemRsp> backupOnly = new ArrayList<>();
         for (DeviceBackupEntity device : backupDevices) {
             if (device == null || StrUtil.isBlank(device.getInstance())) {
                 continue;
@@ -128,12 +129,12 @@ public class DashboardServiceImpl implements IDashboardService {
             if (zabbixIps.contains(device.getInstance())) {
                 continue;
             }
-            DashboardDeviceDiffItem item = new DashboardDeviceDiffItem();
+            DashboardDeviceDiffItemRsp item = new DashboardDeviceDiffItemRsp();
             item.setIp(device.getInstance());
             item.setName(device.getName());
             backupOnly.add(item);
         }
-        DashboardDeviceDiff diff = new DashboardDeviceDiff();
+        DashboardDeviceDiffRsp diff = new DashboardDeviceDiffRsp();
         diff.setZabbixOnly(zabbixOnly);
         diff.setBackupOnly(backupOnly);
         data.setDeviceDiff(diff);
@@ -146,9 +147,9 @@ public class DashboardServiceImpl implements IDashboardService {
                         .last("limit 10")
         );
         Map<String, String> hostMap = loadHostMap();
-        List<DashboardAlertSummary> recentAlerts = new ArrayList<>();
+        List<DashboardAlertSummaryRsp> recentAlerts = new ArrayList<>();
         for (AlertRecordEntity alert : alerts) {
-            DashboardAlertSummary item = new DashboardAlertSummary();
+            DashboardAlertSummaryRsp item = new DashboardAlertSummaryRsp();
             item.setAlertName(alert.getAlertName());
             item.setInstance(alert.getInstance());
             item.setHostName(hostMap.get(normalizeInstance(alert.getInstance())));
@@ -164,9 +165,9 @@ public class DashboardServiceImpl implements IDashboardService {
                         .select(MonitorComponentEntity::getName, MonitorComponentEntity::getOnlineStatus, MonitorComponentEntity::getUpdateAvailable)
                         .orderByDesc(MonitorComponentEntity::getUpdateDate)
         );
-        List<DashboardMonitorComponentItem> monitorItems = new ArrayList<>();
+        List<DashboardMonitorComponentItemRsp> monitorItems = new ArrayList<>();
         for (MonitorComponentEntity component : components) {
-            DashboardMonitorComponentItem item = new DashboardMonitorComponentItem();
+            DashboardMonitorComponentItemRsp item = new DashboardMonitorComponentItemRsp();
             item.setName(component.getName());
             item.setOnlineStatus(component.getOnlineStatus());
             item.setUpdateAvailable(component.getUpdateAvailable());
