@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.leoch.modules.security.mapper.SysUserTokenMapper">
+
+    <!-- 根据 token 查询用户 Token 信息 -->
+    <select id="getByToken" resultType="net.leoch.modules.security.entity.SysUserTokenEntity">
+        SELECT id, user_id, token, expire_date, update_date, create_date
+        FROM sys_user_token
+        WHERE token = #{token}
+    </select>
+
+    <!-- 根据用户 ID 查询 Token 信息 -->
+    <select id="getByUserId" resultType="net.leoch.modules.security.entity.SysUserTokenEntity">
+        SELECT id, user_id, token, expire_date, update_date, create_date
+        FROM sys_user_token
+        WHERE user_id = #{userId}
+    </select>
+
+    <!-- 更新用户 Token -->
+    <update id="updateToken">
+        UPDATE sys_user_token
+        SET token = #{token},
+            update_date = NOW()
+        WHERE user_id = #{userId}
+    </update>
+
+</mapper>
