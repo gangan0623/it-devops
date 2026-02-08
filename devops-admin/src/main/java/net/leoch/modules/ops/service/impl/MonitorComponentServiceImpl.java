@@ -16,7 +16,7 @@ import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.ops.dao.MonitorComponentDao;
+import net.leoch.modules.ops.mapper.MonitorComponentMapper;
 import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
 import net.leoch.modules.ops.service.MonitorComponentService;
@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 @Service
-public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentDao, MonitorComponentEntity> implements MonitorComponentService {
+public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMapper, MonitorComponentEntity> implements MonitorComponentService {
 
     private static final String TYPE_PROMETHEUS = "prometheus";
     private static final String TYPE_VMALERT = "vmalert";

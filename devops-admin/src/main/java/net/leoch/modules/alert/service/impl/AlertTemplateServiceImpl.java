@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.alert.dao.AlertTemplateDao;
+import net.leoch.modules.alert.mapper.AlertTemplateMapper;
 import net.leoch.modules.alert.dto.AlertTemplateDTO;
 import net.leoch.modules.alert.dto.AlertTemplatePageRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateDao, AlertTemplateEntity> implements AlertTemplateService {
+public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, AlertTemplateEntity> implements AlertTemplateService {
 
     @Override
     public PageData<AlertTemplateDTO> page(AlertTemplatePageRequest request) {

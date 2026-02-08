@@ -10,7 +10,7 @@ import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.JsonUtils;
-import net.leoch.modules.alert.dao.AlertRecordDao;
+import net.leoch.modules.alert.mapper.AlertRecordMapper;
 import net.leoch.modules.alert.dto.AlertRecordActionDTO;
 import net.leoch.modules.alert.dto.AlertProblemDTO;
 import net.leoch.modules.alert.dto.AlertRecordDTO;
@@ -24,13 +24,13 @@ import net.leoch.modules.alert.service.AlertRecordActionService;
 import net.leoch.modules.alert.service.AlertRecordService;
 import net.leoch.modules.alert.service.AlertSseService;
 import net.leoch.modules.alert.service.AlertTriggerService;
-import net.leoch.modules.ops.dao.BusinessSystemDao;
-import net.leoch.modules.ops.dao.LinuxHostDao;
-import net.leoch.modules.ops.dao.WindowHostDao;
+import net.leoch.modules.ops.mapper.BusinessSystemMapper;
+import net.leoch.modules.ops.mapper.LinuxHostMapper;
+import net.leoch.modules.ops.mapper.WindowHostMapper;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
-import net.leoch.modules.sys.dao.SysUserDao;
+import net.leoch.modules.sys.mapper.SysUserMapper;
 import net.leoch.modules.sys.entity.SysUserEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +47,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordDao, AlertRecordEntity> implements AlertRecordService {
+public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, AlertRecordEntity> implements AlertRecordService {
 
     private final AlertSseService alertSseService;
     private final AlertRecordActionService alertRecordActionService;

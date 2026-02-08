@@ -21,7 +21,7 @@ import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.ops.dao.BusinessSystemDao;
+import net.leoch.modules.ops.mapper.BusinessSystemMapper;
 import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.excel.BusinessSystemExcel;
@@ -44,7 +44,7 @@ import java.util.*;
  */
 @Slf4j
 @Service
-public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemDao, BusinessSystemEntity> implements BusinessSystemService {
+public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper, BusinessSystemEntity> implements BusinessSystemService {
 
     @Resource
     private RedisUtils redisUtils;

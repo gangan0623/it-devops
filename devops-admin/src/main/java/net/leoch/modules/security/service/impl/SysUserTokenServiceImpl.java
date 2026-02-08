@@ -8,7 +8,7 @@ import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.Result;
-import net.leoch.modules.security.dao.SysUserTokenDao;
+import net.leoch.modules.security.mapper.SysUserTokenMapper;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
 import net.leoch.modules.security.service.SecurityService;
 import net.leoch.modules.security.service.SysUserTokenService;
@@ -25,7 +25,7 @@ import java.util.UUID;
 @Slf4j
 @AllArgsConstructor
 @Service
-public class SysUserTokenServiceImpl extends ServiceImpl<SysUserTokenDao, SysUserTokenEntity> implements SysUserTokenService {
+public class SysUserTokenServiceImpl extends ServiceImpl<SysUserTokenMapper, SysUserTokenEntity> implements SysUserTokenService {
 	private final SysUserService sysUserService;
 	private final SecurityService securityService;
 	/**

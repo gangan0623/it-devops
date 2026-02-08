@@ -10,7 +10,7 @@ import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
-import net.leoch.modules.sys.dao.SysRoleDao;
+import net.leoch.modules.sys.mapper.SysRoleMapper;
 import net.leoch.modules.sys.dto.SysRoleDTO;
 import net.leoch.modules.sys.dto.SysRolePageRequest;
 import net.leoch.modules.sys.entity.SysRoleEntity;
@@ -34,7 +34,7 @@ import java.util.List;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class SysRoleServiceImpl extends ServiceImpl<SysRoleDao, SysRoleEntity> implements SysRoleService {
+public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity> implements SysRoleService {
     private final SysRoleMenuService sysRoleMenuService;
     private final SysRoleDataScopeService sysRoleDataScopeService;
     private final SysRoleUserService sysRoleUserService;

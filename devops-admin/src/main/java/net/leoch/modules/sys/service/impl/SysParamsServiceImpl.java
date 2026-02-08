@@ -11,7 +11,7 @@ import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.JsonUtils;
-import net.leoch.modules.sys.dao.SysParamsDao;
+import net.leoch.modules.sys.mapper.SysParamsMapper;
 import net.leoch.modules.sys.dto.SysParamsDTO;
 import net.leoch.modules.sys.dto.SysParamsPageRequest;
 import net.leoch.modules.sys.entity.SysParamsEntity;
@@ -32,7 +32,7 @@ import java.util.List;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class SysParamsServiceImpl extends ServiceImpl<SysParamsDao, SysParamsEntity> implements SysParamsService {
+public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParamsEntity> implements SysParamsService {
     private final SysParamsRedis sysParamsRedis;
 
     @Override

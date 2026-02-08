@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.modules.alert.dao.AlertNotifyLogDao;
+import net.leoch.modules.alert.mapper.AlertNotifyLogMapper;
 import net.leoch.modules.alert.entity.AlertNotifyLogEntity;
 import net.leoch.modules.alert.service.AlertNotifyLogService;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-public class AlertNotifyLogServiceImpl extends ServiceImpl<AlertNotifyLogDao, AlertNotifyLogEntity> implements AlertNotifyLogService {
+public class AlertNotifyLogServiceImpl extends ServiceImpl<AlertNotifyLogMapper, AlertNotifyLogEntity> implements AlertNotifyLogService {
 
     @Override
     public Map<Long, AlertNotifyLogEntity> loadLatestByRecordIds(List<Long> recordIds) {

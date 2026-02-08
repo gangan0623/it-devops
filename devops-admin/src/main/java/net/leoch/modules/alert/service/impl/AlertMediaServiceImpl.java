@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.alert.dao.AlertMediaDao;
+import net.leoch.modules.alert.mapper.AlertMediaMapper;
 import net.leoch.modules.alert.dto.AlertMediaDTO;
 import net.leoch.modules.alert.dto.AlertMediaPageRequest;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class AlertMediaServiceImpl extends ServiceImpl<AlertMediaDao, AlertMediaEntity> implements AlertMediaService {
+public class AlertMediaServiceImpl extends ServiceImpl<AlertMediaMapper, AlertMediaEntity> implements AlertMediaService {
 
     @Override
     public PageData<AlertMediaDTO> page(AlertMediaPageRequest request) {

@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
-import net.leoch.modules.ops.dao.MonitorComponentDao;
+import net.leoch.modules.ops.mapper.MonitorComponentMapper;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
 import net.leoch.modules.security.user.SecurityUser;
 import org.springframework.beans.factory.annotation.Value;

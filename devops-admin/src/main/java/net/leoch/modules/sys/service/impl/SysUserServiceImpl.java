@@ -10,7 +10,7 @@ import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.security.password.PasswordUtils;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
-import net.leoch.modules.sys.dao.SysUserDao;
+import net.leoch.modules.sys.mapper.SysUserMapper;
 import net.leoch.modules.sys.dto.SysUserDTO;
 import net.leoch.modules.sys.dto.SysUserPageRequest;
 import net.leoch.modules.sys.entity.SysUserEntity;
@@ -35,7 +35,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class SysUserServiceImpl extends ServiceImpl<SysUserDao, SysUserEntity> implements SysUserService {
+public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity> implements SysUserService {
     private final SysRoleUserService sysRoleUserService;
     private final SysDeptService sysDeptService;
 

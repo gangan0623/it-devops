@@ -9,7 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.job.dao.ScheduleJobDao;
+import net.leoch.modules.job.mapper.ScheduleJobMapper;
 import net.leoch.modules.job.dto.ScheduleJobDTO;
 import net.leoch.modules.job.dto.ScheduleJobPageRequest;
 import net.leoch.modules.job.entity.ScheduleJobEntity;
@@ -25,7 +25,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobDao, ScheduleJobEntity> implements ScheduleJobService {
+public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, ScheduleJobEntity> implements ScheduleJobService {
 
     private final DynamicScheduleManager scheduleManager;
 

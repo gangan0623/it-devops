@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.ops.dao.DeviceBackupRecordDao;
+import net.leoch.modules.ops.mapper.DeviceBackupRecordMapper;
 import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.DeviceBackupRecordEntity;
 import net.leoch.modules.ops.service.DeviceBackupHistoryService;
@@ -33,7 +33,7 @@ import java.util.*;
  */
 @Slf4j
 @Service
-public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecordDao, DeviceBackupRecordEntity> implements DeviceBackupRecordService {
+public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecordMapper, DeviceBackupRecordEntity> implements DeviceBackupRecordService {
 
     private static final Set<String> ALLOWED_DOWNLOAD_HOSTS = new HashSet<>();
 

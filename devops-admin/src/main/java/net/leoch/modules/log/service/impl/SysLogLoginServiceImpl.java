@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.log.dao.SysLogLoginDao;
+import net.leoch.modules.log.mapper.SysLogLoginMapper;
 import net.leoch.modules.log.dto.SysLogLoginDTO;
 import net.leoch.modules.log.dto.SysLogLoginPageRequest;
 import net.leoch.modules.log.entity.SysLogLoginEntity;
@@ -18,7 +18,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class SysLogLoginServiceImpl extends ServiceImpl<SysLogLoginDao, SysLogLoginEntity> implements SysLogLoginService {
+public class SysLogLoginServiceImpl extends ServiceImpl<SysLogLoginMapper, SysLogLoginEntity> implements SysLogLoginService {
 
     @Override
     public PageData<SysLogLoginDTO> page(SysLogLoginPageRequest request) {

@@ -20,7 +20,7 @@ import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.ops.dao.LinuxHostDao;
+import net.leoch.modules.ops.mapper.LinuxHostMapper;
 import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.excel.LinuxHostExcel;
@@ -44,7 +44,7 @@ import java.util.*;
  */
 @Slf4j
 @Service
-public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostDao, LinuxHostEntity> implements LinuxHostService {
+public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHostEntity> implements LinuxHostService {
 
     @Resource
     private RedisUtils redisUtils;

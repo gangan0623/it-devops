@@ -9,7 +9,7 @@ import net.leoch.common.exception.ServiceException;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.TreeUtils;
 import net.leoch.modules.security.user.UserDetail;
-import net.leoch.modules.sys.dao.SysMenuDao;
+import net.leoch.modules.sys.mapper.SysMenuMapper;
 import net.leoch.modules.sys.dto.SysMenuDTO;
 import net.leoch.modules.sys.entity.SysMenuEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
@@ -23,7 +23,7 @@ import java.util.List;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class SysMenuServiceImpl extends ServiceImpl<SysMenuDao, SysMenuEntity> implements SysMenuService {
+public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity> implements SysMenuService {
     private final SysRoleMenuService sysRoleMenuService;
 
     @Override

@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.sys.dao.SysDictDataDao;
+import net.leoch.modules.sys.mapper.SysDictDataMapper;
 import net.leoch.modules.sys.dto.SysDictDataDTO;
 import net.leoch.modules.sys.dto.SysDictDataPageRequest;
 import net.leoch.modules.sys.entity.SysDictDataEntity;
@@ -24,7 +24,7 @@ import java.util.Arrays;
  */
 @Slf4j
 @Service
-public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataDao, SysDictDataEntity> implements SysDictDataService {
+public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDictDataEntity> implements SysDictDataService {
 
     @Override
     public PageData<SysDictDataDTO> page(SysDictDataPageRequest request) {

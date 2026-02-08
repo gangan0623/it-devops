@@ -11,11 +11,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.JsonUtils;
-import net.leoch.modules.alert.dao.AlertMediaDao;
+import net.leoch.modules.alert.mapper.AlertMediaMapper;
 import net.leoch.modules.alert.service.AlertNotifyLogService;
-import net.leoch.modules.alert.dao.AlertRecordDao;
-import net.leoch.modules.alert.dao.AlertTemplateDao;
-import net.leoch.modules.alert.dao.AlertTriggerDao;
+import net.leoch.modules.alert.mapper.AlertRecordMapper;
+import net.leoch.modules.alert.mapper.AlertTemplateMapper;
+import net.leoch.modules.alert.mapper.AlertTriggerMapper;
 import net.leoch.modules.alert.dto.AlertTriggerDTO;
 import net.leoch.modules.alert.dto.AlertTriggerPageRequest;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
@@ -28,7 +28,7 @@ import net.leoch.modules.alert.service.AlertTriggerService;
 import net.leoch.modules.alert.utils.AlertJsonUtils;
 import net.leoch.modules.alert.utils.AlertPayloadUtils;
 import net.leoch.modules.alert.utils.AlertTemplateRenderer;
-import net.leoch.modules.sys.dao.SysUserDao;
+import net.leoch.modules.sys.mapper.SysUserMapper;
 import net.leoch.modules.sys.entity.SysUserEntity;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -49,7 +49,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerDao, AlertTriggerEntity> implements AlertTriggerService {
+public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, AlertTriggerEntity> implements AlertTriggerService {
 
     private final AlertTemplateDao alertTemplateDao;
     private final AlertMediaDao alertMediaDao;

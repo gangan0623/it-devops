@@ -8,8 +8,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.sys.dao.SysDictDataDao;
-import net.leoch.modules.sys.dao.SysDictTypeDao;
+import net.leoch.modules.sys.mapper.SysDictDataMapper;
+import net.leoch.modules.sys.mapper.SysDictTypeMapper;
 import net.leoch.modules.sys.dto.SysDictTypeDTO;
 import net.leoch.modules.sys.dto.SysDictTypePageRequest;
 import net.leoch.modules.sys.entity.DictData;
@@ -30,7 +30,7 @@ import java.util.List;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeDao, SysDictTypeEntity> implements SysDictTypeService {
+public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDictTypeEntity> implements SysDictTypeService {
     private final SysDictDataDao sysDictDataDao;
 
     @Override

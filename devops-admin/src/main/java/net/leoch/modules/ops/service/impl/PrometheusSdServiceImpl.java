@@ -1,16 +1,16 @@
 package net.leoch.modules.ops.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import net.leoch.modules.ops.dao.BusinessSystemDao;
-import net.leoch.modules.ops.dao.LinuxHostDao;
-import net.leoch.modules.ops.dao.WindowHostDao;
+import net.leoch.modules.ops.mapper.BusinessSystemMapper;
+import net.leoch.modules.ops.mapper.LinuxHostMapper;
+import net.leoch.modules.ops.mapper.WindowHostMapper;
 import net.leoch.modules.ops.dto.PrometheusSdRequest;
 import net.leoch.modules.ops.dto.PrometheusSdResponse;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
 import net.leoch.modules.ops.service.PrometheusSdService;
-import net.leoch.modules.sys.dao.SysDictDataDao;
+import net.leoch.modules.sys.mapper.SysDictDataMapper;
 import net.leoch.modules.sys.entity.DictData;
 import org.springframework.stereotype.Service;
 

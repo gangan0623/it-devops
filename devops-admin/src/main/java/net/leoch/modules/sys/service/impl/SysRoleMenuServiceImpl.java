@@ -3,7 +3,7 @@ package net.leoch.modules.sys.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.modules.sys.dao.SysRoleMenuDao;
+import net.leoch.modules.sys.mapper.SysRoleMenuMapper;
 import net.leoch.modules.sys.entity.SysRoleMenuEntity;
 import net.leoch.modules.sys.service.SysRoleMenuService;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class SysRoleMenuServiceImpl extends ServiceImpl<SysRoleMenuDao, SysRoleMenuEntity> implements SysRoleMenuService {
+public class SysRoleMenuServiceImpl extends ServiceImpl<SysRoleMenuMapper, SysRoleMenuEntity> implements SysRoleMenuService {
 
 	@Override
 	@Transactional(rollbackFor = Exception.class)

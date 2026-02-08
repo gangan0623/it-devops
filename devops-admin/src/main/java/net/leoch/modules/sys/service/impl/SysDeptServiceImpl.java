@@ -11,8 +11,8 @@ import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.TreeUtils;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
-import net.leoch.modules.sys.dao.SysDeptDao;
-import net.leoch.modules.sys.dao.SysUserDao;
+import net.leoch.modules.sys.mapper.SysDeptMapper;
+import net.leoch.modules.sys.mapper.SysUserMapper;
 import net.leoch.modules.sys.dto.SysDeptDTO;
 import net.leoch.modules.sys.entity.SysDeptEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
@@ -29,7 +29,7 @@ import java.util.Map;
 @Slf4j
 @Service
 @AllArgsConstructor
-public class SysDeptServiceImpl extends ServiceImpl<SysDeptDao, SysDeptEntity> implements SysDeptService {
+public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity> implements SysDeptService {
     private final SysUserDao sysUserDao;
 
     @Override

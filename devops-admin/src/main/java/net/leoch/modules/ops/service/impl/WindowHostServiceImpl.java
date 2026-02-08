@@ -20,7 +20,7 @@ import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.ops.dao.WindowHostDao;
+import net.leoch.modules.ops.mapper.WindowHostMapper;
 import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.WindowHostEntity;
 import net.leoch.modules.ops.excel.WindowHostExcel;
@@ -44,7 +44,7 @@ import java.util.*;
  */
 @Slf4j
 @Service
-public class WindowHostServiceImpl extends ServiceImpl<WindowHostDao, WindowHostEntity> implements WindowHostService {
+public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowHostEntity> implements WindowHostService {
 
     @Resource
     private RedisUtils redisUtils;

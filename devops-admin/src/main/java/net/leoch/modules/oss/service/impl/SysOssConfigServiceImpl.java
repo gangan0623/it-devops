@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.oss.cloud.CloudStorageConfig;
-import net.leoch.modules.oss.dao.SysOssConfigDao;
+import net.leoch.modules.oss.mapper.SysOssConfigMapper;
 import net.leoch.modules.oss.entity.SysOssConfigEntity;
 import net.leoch.modules.oss.service.SysOssConfigService;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @AllArgsConstructor
-public class SysOssConfigServiceImpl extends ServiceImpl<SysOssConfigDao, SysOssConfigEntity> implements SysOssConfigService {
+public class SysOssConfigServiceImpl extends ServiceImpl<SysOssConfigMapper, SysOssConfigEntity> implements SysOssConfigService {
     private static final Long CONFIG_ID = 1L;
 
     @Override

@@ -2,14 +2,14 @@ package net.leoch.modules.alert.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import net.leoch.modules.alert.dao.AlertRecordDao;
+import net.leoch.modules.alert.mapper.AlertRecordMapper;
 import net.leoch.modules.alert.dto.AlertRealtimeDTO;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.service.AlertSseService;
-import net.leoch.modules.ops.dao.BusinessSystemDao;
-import net.leoch.modules.ops.dao.LinuxHostDao;
-import net.leoch.modules.ops.dao.WindowHostDao;
+import net.leoch.modules.ops.mapper.BusinessSystemMapper;
+import net.leoch.modules.ops.mapper.LinuxHostMapper;
+import net.leoch.modules.ops.mapper.WindowHostMapper;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;

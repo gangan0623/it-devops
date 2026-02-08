@@ -22,8 +22,8 @@ import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.ops.dao.BackupAgentDao;
-import net.leoch.modules.ops.dao.DeviceBackupDao;
+import net.leoch.modules.ops.mapper.BackupAgentMapper;
+import net.leoch.modules.ops.mapper.DeviceBackupMapper;
 import net.leoch.modules.ops.dto.*;
 import net.leoch.modules.ops.entity.BackupAgentEntity;
 import net.leoch.modules.ops.entity.DeviceBackupEntity;
@@ -46,7 +46,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupDao, DeviceBackupEntity> implements DeviceBackupService {
+public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, DeviceBackupEntity> implements DeviceBackupService {
 
     private final BackupAgentDao backupAgentDao;
     private final RedisUtils redisUtils;

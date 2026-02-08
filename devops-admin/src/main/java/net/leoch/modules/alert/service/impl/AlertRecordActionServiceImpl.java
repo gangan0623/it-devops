@@ -5,11 +5,11 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.alert.dao.AlertRecordActionDao;
+import net.leoch.modules.alert.mapper.AlertRecordActionMapper;
 import net.leoch.modules.alert.dto.AlertRecordActionDTO;
 import net.leoch.modules.alert.entity.AlertRecordActionEntity;
 import net.leoch.modules.alert.service.AlertRecordActionService;
-import net.leoch.modules.sys.dao.SysUserDao;
+import net.leoch.modules.sys.mapper.SysUserMapper;
 import net.leoch.modules.sys.entity.SysUserEntity;
 import org.springframework.stereotype.Service;
 
@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
-public class AlertRecordActionServiceImpl extends ServiceImpl<AlertRecordActionDao, AlertRecordActionEntity> implements AlertRecordActionService {
+public class AlertRecordActionServiceImpl extends ServiceImpl<AlertRecordActionMapper, AlertRecordActionEntity> implements AlertRecordActionService {
 
     private final SysUserDao sysUserDao;
 

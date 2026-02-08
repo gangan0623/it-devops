@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.log.dao.SysLogErrorDao;
+import net.leoch.modules.log.mapper.SysLogErrorMapper;
 import net.leoch.modules.log.dto.SysLogErrorDTO;
 import net.leoch.modules.log.dto.SysLogErrorPageRequest;
 import net.leoch.modules.log.entity.SysLogErrorEntity;
@@ -17,7 +17,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-public class SysLogErrorServiceImpl extends ServiceImpl<SysLogErrorDao, SysLogErrorEntity> implements SysLogErrorService {
+public class SysLogErrorServiceImpl extends ServiceImpl<SysLogErrorMapper, SysLogErrorEntity> implements SysLogErrorService {
 
     @Override
     public PageData<SysLogErrorDTO> page(SysLogErrorPageRequest request) {

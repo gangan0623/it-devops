@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.leoch.modules.ops.mapper.BackupAgentMapper">
+
+    <resultMap type="net.leoch.modules.ops.entity.BackupAgentEntity" id="backupAgentMap">
+        <result property="id" column="id"/>
+        <result property="instance" column="instance"/>
+        <result property="name" column="name"/>
+        <result property="areaName" column="area_name_type"/>
+        <result property="token" column="token"/>
+        <result property="status" column="status"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updater" column="updater"/>
+        <result property="updateDate" column="update_date"/>
+    </resultMap>
+
+
+</mapper>

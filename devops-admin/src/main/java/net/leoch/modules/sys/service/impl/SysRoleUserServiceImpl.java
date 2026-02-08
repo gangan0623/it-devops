@@ -3,7 +3,7 @@ package net.leoch.modules.sys.service.impl;
 import cn.hutool.core.collection.CollUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.modules.sys.dao.SysRoleUserDao;
+import net.leoch.modules.sys.mapper.SysRoleUserMapper;
 import net.leoch.modules.sys.entity.SysRoleUserEntity;
 import net.leoch.modules.sys.service.SysRoleUserService;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ import java.util.List;
  */
 @Slf4j
 @Service
-public class SysRoleUserServiceImpl extends ServiceImpl<SysRoleUserDao, SysRoleUserEntity> implements SysRoleUserService {
+public class SysRoleUserServiceImpl extends ServiceImpl<SysRoleUserMapper, SysRoleUserEntity> implements SysRoleUserService {
 
     @Override
     @Transactional(rollbackFor = Exception.class)

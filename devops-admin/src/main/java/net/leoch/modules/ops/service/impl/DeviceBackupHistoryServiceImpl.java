@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.ops.dao.DeviceBackupHistoryDao;
+import net.leoch.modules.ops.mapper.DeviceBackupHistoryMapper;
 import net.leoch.modules.ops.dto.DeviceBackupHistoryDTO;
 import net.leoch.modules.ops.entity.DeviceBackupHistoryEntity;
 import net.leoch.modules.ops.service.DeviceBackupHistoryService;
@@ -23,7 +23,7 @@ import java.util.*;
  */
 @Slf4j
 @Service
-public class DeviceBackupHistoryServiceImpl extends ServiceImpl<DeviceBackupHistoryDao, DeviceBackupHistoryEntity> implements DeviceBackupHistoryService {
+public class DeviceBackupHistoryServiceImpl extends ServiceImpl<DeviceBackupHistoryMapper, DeviceBackupHistoryEntity> implements DeviceBackupHistoryService {
 
     @Override
     public void saveHistory(String name, String ip, String url, Integer status) {

@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.job.dao.ScheduleJobLogDao;
+import net.leoch.modules.job.mapper.ScheduleJobLogMapper;
 import net.leoch.modules.job.dto.ScheduleJobLogDTO;
 import net.leoch.modules.job.dto.ScheduleJobLogPageRequest;
 import net.leoch.modules.job.entity.ScheduleJobLogEntity;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-public class ScheduleJobLogServiceImpl extends ServiceImpl<ScheduleJobLogDao, ScheduleJobLogEntity> implements ScheduleJobLogService {
+public class ScheduleJobLogServiceImpl extends ServiceImpl<ScheduleJobLogMapper, ScheduleJobLogEntity> implements ScheduleJobLogService {
 
     @Override
     public PageData<ScheduleJobLogDTO> page(ScheduleJobLogPageRequest request) {
