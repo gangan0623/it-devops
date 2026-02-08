@@ -4,7 +4,7 @@ package net.leoch.modules.security.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import net.leoch.common.utils.Result;
-import net.leoch.modules.security.dto.LoginDTO;
+import net.leoch.modules.security.vo.req.LoginReq;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.entity.SysUserEntity;
@@ -44,7 +44,7 @@ public interface ISecurityService {
      * @param login   登录信息
      * @return        登录结果
      */
-    Result<Object> login(HttpServletRequest request, LoginDTO login);
+    Result<Object> login(HttpServletRequest request, LoginReq login);
 
     /**
      * 记录退出日志并注销

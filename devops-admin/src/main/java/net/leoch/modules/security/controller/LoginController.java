@@ -13,7 +13,7 @@ import lombok.AllArgsConstructor;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
-import net.leoch.modules.security.dto.LoginDTO;
+import net.leoch.modules.security.vo.req.LoginReq;
 import net.leoch.modules.security.service.ICaptchaService;
 import net.leoch.modules.security.service.ISecurityService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -48,7 +48,7 @@ public class LoginController {
 
     @PostMapping("login")
     @Operation(summary = "登录")
-    public Result<Object> login(HttpServletRequest request, @RequestBody LoginDTO login) {
+    public Result<Object> login(HttpServletRequest request, @RequestBody LoginReq login) {
         return securityService.login(request, login);
     }
 

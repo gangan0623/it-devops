@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.security.dto;
+package net.leoch.modules.security.vo.req;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
@@ -15,7 +15,7 @@ import java.io.Serializable;
  */
 @Data
 @Schema(title = "登录表单")
-public class LoginDTO implements Serializable {
+public class LoginReq implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(title = "用户名", required = true)

@@ -16,7 +16,7 @@ import net.leoch.modules.log.enums.LoginOperationEnum;
 import net.leoch.modules.log.enums.LoginStatusEnum;
 import net.leoch.modules.log.service.ISysLogLoginService;
 import net.leoch.modules.security.mapper.SysUserTokenMapper;
-import net.leoch.modules.security.dto.LoginDTO;
+import net.leoch.modules.security.vo.req.LoginReq;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
 import net.leoch.modules.security.password.PasswordUtils;
 import net.leoch.modules.security.service.ICaptchaService;
@@ -95,7 +95,7 @@ public class SecurityServiceImpl implements ISecurityService {
     }
 
     @Override
-    public Result<Object> login(HttpServletRequest request, LoginDTO login) {
+    public Result<Object> login(HttpServletRequest request, LoginReq login) {
         ValidatorUtils.validateEntity(login);
 
         boolean flag = captchaService.validate(login.getUuid(), login.getCaptcha());
