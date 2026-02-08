@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.job.mapper.ScheduleJobLogMapper;
-import net.leoch.modules.job.dto.ScheduleJobLogDTO;
-import net.leoch.modules.job.dto.ScheduleJobLogPageRequest;
+import net.leoch.modules.job.vo.rsp.ScheduleJobLogRsp;
+import net.leoch.modules.job.vo.req.ScheduleJobLogPageReq;
 import net.leoch.modules.job.entity.ScheduleJobLogEntity;
 import net.leoch.modules.job.service.IScheduleJobLogService;
 import org.springframework.stereotype.Service;
@@ -19,18 +19,18 @@ import org.springframework.stereotype.Service;
 public class ScheduleJobLogServiceImpl extends ServiceImpl<ScheduleJobLogMapper, ScheduleJobLogEntity> implements IScheduleJobLogService {
 
     @Override
-    public PageData<ScheduleJobLogDTO> page(ScheduleJobLogPageRequest request) {
+    public PageData<ScheduleJobLogRsp> page(ScheduleJobLogPageReq request) {
         IPage<ScheduleJobLogEntity> page = this.page(request.buildPage(),
             new LambdaQueryWrapper<ScheduleJobLogEntity>()
                 .eq(StrUtil.isNotBlank(request.getJobId()), ScheduleJobLogEntity::getJobId, request.getJobId())
                 .orderByDesc(ScheduleJobLogEntity::getCreateDate)
         );
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), ScheduleJobLogDTO.class), page.getTotal());
+        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), ScheduleJobLogRsp.class), page.getTotal());
     }
 
     @Override
-    public ScheduleJobLogDTO get(Long id) {
+    public ScheduleJobLogRsp get(Long id) {
         ScheduleJobLogEntity entity = this.getById(id);
-        return ConvertUtils.sourceToTarget(entity, ScheduleJobLogDTO.class);
+        return ConvertUtils.sourceToTarget(entity, ScheduleJobLogRsp.class);
     }
 }

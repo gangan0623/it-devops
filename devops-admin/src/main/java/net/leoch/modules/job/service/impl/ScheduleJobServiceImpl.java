@@ -10,8 +10,8 @@ import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.job.mapper.ScheduleJobMapper;
-import net.leoch.modules.job.dto.ScheduleJobDTO;
-import net.leoch.modules.job.dto.ScheduleJobPageRequest;
+import net.leoch.modules.job.vo.rsp.ScheduleJobRsp;
+import net.leoch.modules.job.vo.req.ScheduleJobPageReq;
 import net.leoch.modules.job.entity.ScheduleJobEntity;
 import net.leoch.modules.job.service.IScheduleJobService;
 import net.leoch.modules.job.utils.DynamicScheduleManager;
@@ -30,24 +30,24 @@ public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, Sched
     private final DynamicScheduleManager scheduleManager;
 
     @Override
-    public PageData<ScheduleJobDTO> page(ScheduleJobPageRequest request) {
+    public PageData<ScheduleJobRsp> page(ScheduleJobPageReq request) {
         IPage<ScheduleJobEntity> page = this.page(request.buildPage(),
             new LambdaQueryWrapper<ScheduleJobEntity>()
                 .like(StrUtil.isNotBlank(request.getBeanName()), ScheduleJobEntity::getBeanName, request.getBeanName())
                 .orderByDesc(ScheduleJobEntity::getCreateDate)
         );
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), ScheduleJobDTO.class), page.getTotal());
+        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), ScheduleJobRsp.class), page.getTotal());
     }
 
     @Override
-    public ScheduleJobDTO get(Long id) {
+    public ScheduleJobRsp get(Long id) {
         ScheduleJobEntity entity = this.getById(id);
-        return ConvertUtils.sourceToTarget(entity, ScheduleJobDTO.class);
+        return ConvertUtils.sourceToTarget(entity, ScheduleJobRsp.class);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(ScheduleJobDTO dto) {
+    public void save(ScheduleJobRsp dto) {
         ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
         entity.setStatus(Constant.ScheduleStatus.NORMAL.getValue());
         this.save(entity);
@@ -56,7 +56,7 @@ public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, Sched
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(ScheduleJobDTO dto) {
+    public void update(ScheduleJobRsp dto) {
         ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
         this.updateById(entity);
         scheduleManager.updateJob(entity);

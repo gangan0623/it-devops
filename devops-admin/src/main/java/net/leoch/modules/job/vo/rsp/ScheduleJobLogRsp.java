@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.job.dto;
+package net.leoch.modules.job.vo.rsp;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -16,7 +16,7 @@ import java.util.Date;
  */
 @Data
 @Schema(title = "定时任务日志")
-public class ScheduleJobLogDTO implements Serializable {
+public class ScheduleJobLogRsp implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(title = "id")

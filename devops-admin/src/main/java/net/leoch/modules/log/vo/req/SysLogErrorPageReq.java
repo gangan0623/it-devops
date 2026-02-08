@@ -1,4 +1,4 @@
-package net.leoch.modules.log.dto;
+package net.leoch.modules.log.vo.req;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -10,6 +10,6 @@ import net.leoch.common.page.BasePage;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Schema(name = "SysLogErrorPageRequest")
-public class SysLogErrorPageRequest extends BasePage {
+@Schema(name = "SysLogErrorPageReq")
+public class SysLogErrorPageReq extends BasePage {
 }

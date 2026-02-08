@@ -9,8 +9,8 @@ import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ExcelUtils;
 import net.leoch.common.utils.Result;
-import net.leoch.modules.log.dto.SysLogErrorDTO;
-import net.leoch.modules.log.dto.SysLogErrorPageRequest;
+import net.leoch.modules.log.vo.rsp.SysLogErrorRsp;
+import net.leoch.modules.log.vo.req.SysLogErrorPageReq;
 import net.leoch.modules.log.excel.SysLogErrorExcel;
 import net.leoch.modules.log.service.ISysLogErrorService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,18 +36,18 @@ public class SysLogErrorController {
     @GetMapping("page")
     @Operation(summary = "分页")
     @SaCheckPermission("sys:log:error")
-    public Result<PageData<SysLogErrorDTO>> page(SysLogErrorPageRequest request) {
-        PageData<SysLogErrorDTO> page = sysLogErrorService.page(request);
+    public Result<PageData<SysLogErrorRsp>> page(SysLogErrorPageReq request) {
+        PageData<SysLogErrorRsp> page = sysLogErrorService.page(request);
 
-        return new Result<PageData<SysLogErrorDTO>>().ok(page);
+        return new Result<PageData<SysLogErrorRsp>>().ok(page);
     }
 
     @GetMapping("export")
     @Operation(summary = "导出")
     @LogOperation("导出")
     @SaCheckPermission("sys:log:error")
-    public void export(SysLogErrorPageRequest request, HttpServletResponse response) throws Exception {
-        List<SysLogErrorDTO> list = sysLogErrorService.list(request);
+    public void export(SysLogErrorPageReq request, HttpServletResponse response) throws Exception {
+        List<SysLogErrorRsp> list = sysLogErrorService.list(request);
 
         ExcelUtils.exportExcelToTarget(response, null, "异常日志", list, SysLogErrorExcel.class);
     }

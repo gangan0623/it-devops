@@ -1,4 +1,4 @@
-package net.leoch.modules.job.dto;
+package net.leoch.modules.job.vo.req;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -10,8 +10,8 @@ import net.leoch.common.page.BasePage;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Schema(name = "ScheduleJobLogPageRequest")
-public class ScheduleJobLogPageRequest extends BasePage {
+@Schema(name = "ScheduleJobLogPageReq")
+public class ScheduleJobLogPageReq extends BasePage {
 
     @Schema(description = "任务ID")
     private String jobId;

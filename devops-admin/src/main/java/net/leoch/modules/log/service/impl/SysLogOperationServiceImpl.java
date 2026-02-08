@@ -8,8 +8,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.log.mapper.SysLogOperationMapper;
-import net.leoch.modules.log.dto.SysLogOperationDTO;
-import net.leoch.modules.log.dto.SysLogOperationPageRequest;
+import net.leoch.modules.log.vo.rsp.SysLogOperationRsp;
+import net.leoch.modules.log.vo.req.SysLogOperationPageReq;
 import net.leoch.modules.log.entity.SysLogOperationEntity;
 import net.leoch.modules.log.service.ISysLogOperationService;
 import org.springframework.stereotype.Service;
@@ -21,22 +21,22 @@ import java.util.List;
 public class SysLogOperationServiceImpl extends ServiceImpl<SysLogOperationMapper, SysLogOperationEntity> implements ISysLogOperationService {
 
     @Override
-    public PageData<SysLogOperationDTO> page(SysLogOperationPageRequest request) {
+    public PageData<SysLogOperationRsp> page(SysLogOperationPageReq request) {
         IPage<SysLogOperationEntity> page = this.page(request.buildPage(),
             new LambdaQueryWrapper<SysLogOperationEntity>()
                 .eq(StrUtil.isNotBlank(request.getStatus()), SysLogOperationEntity::getStatus, request.getStatus())
                 .orderByDesc(SysLogOperationEntity::getCreateDate)
         );
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysLogOperationDTO.class), page.getTotal());
+        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysLogOperationRsp.class), page.getTotal());
     }
 
     @Override
-    public List<SysLogOperationDTO> list(SysLogOperationPageRequest request) {
+    public List<SysLogOperationRsp> list(SysLogOperationPageReq request) {
         List<SysLogOperationEntity> entityList = this.list(
             new LambdaQueryWrapper<SysLogOperationEntity>()
                 .eq(request != null && StrUtil.isNotBlank(request.getStatus()), SysLogOperationEntity::getStatus, request != null ? request.getStatus() : null)
                 .orderByDesc(SysLogOperationEntity::getCreateDate)
         );
-        return ConvertUtils.sourceToTarget(entityList, SysLogOperationDTO.class);
+        return ConvertUtils.sourceToTarget(entityList, SysLogOperationRsp.class);
     }
 }

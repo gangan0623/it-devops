@@ -11,8 +11,8 @@ import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.job.dto.ScheduleJobDTO;
-import net.leoch.modules.job.dto.ScheduleJobPageRequest;
+import net.leoch.modules.job.vo.rsp.ScheduleJobRsp;
+import net.leoch.modules.job.vo.req.ScheduleJobPageReq;
 import net.leoch.modules.job.service.IScheduleJobService;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,26 +31,26 @@ public class ScheduleJobController {
     @GetMapping("page")
     @Operation(summary = "分页")
     @SaCheckPermission("sys:schedule:page")
-    public Result<PageData<ScheduleJobDTO>> page(ScheduleJobPageRequest request) {
-        PageData<ScheduleJobDTO> page = scheduleJobService.page(request);
+    public Result<PageData<ScheduleJobRsp>> page(ScheduleJobPageReq request) {
+        PageData<ScheduleJobRsp> page = scheduleJobService.page(request);
 
-        return new Result<PageData<ScheduleJobDTO>>().ok(page);
+        return new Result<PageData<ScheduleJobRsp>>().ok(page);
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("sys:schedule:info")
-    public Result<ScheduleJobDTO> info(@PathVariable("id") Long id) {
-        ScheduleJobDTO schedule = scheduleJobService.get(id);
+    public Result<ScheduleJobRsp> info(@PathVariable("id") Long id) {
+        ScheduleJobRsp schedule = scheduleJobService.get(id);
 
-        return new Result<ScheduleJobDTO>().ok(schedule);
+        return new Result<ScheduleJobRsp>().ok(schedule);
     }
 
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:schedule:save")
-    public Result<Object> save(@RequestBody ScheduleJobDTO dto) {
+    public Result<Object> save(@RequestBody ScheduleJobRsp dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
 
         scheduleJobService.save(dto);
@@ -62,7 +62,7 @@ public class ScheduleJobController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:schedule:update")
-    public Result<Object> update(@RequestBody ScheduleJobDTO dto) {
+    public Result<Object> update(@RequestBody ScheduleJobRsp dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
 
         scheduleJobService.update(dto);

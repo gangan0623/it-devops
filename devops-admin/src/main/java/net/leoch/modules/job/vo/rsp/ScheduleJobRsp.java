@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.job.dto;
+package net.leoch.modules.job.vo.rsp;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -24,7 +24,7 @@ import java.util.Date;
  */
 @Data
 @Schema(title = "定时任务")
-public class ScheduleJobDTO implements Serializable {
+public class ScheduleJobRsp implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(title = "id")

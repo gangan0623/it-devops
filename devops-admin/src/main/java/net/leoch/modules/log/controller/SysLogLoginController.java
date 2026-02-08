@@ -9,8 +9,8 @@ import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ExcelUtils;
 import net.leoch.common.utils.Result;
-import net.leoch.modules.log.dto.SysLogLoginDTO;
-import net.leoch.modules.log.dto.SysLogLoginPageRequest;
+import net.leoch.modules.log.vo.rsp.SysLogLoginRsp;
+import net.leoch.modules.log.vo.req.SysLogLoginPageReq;
 import net.leoch.modules.log.excel.SysLogLoginExcel;
 import net.leoch.modules.log.service.ISysLogLoginService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -36,18 +36,18 @@ public class SysLogLoginController {
     @GetMapping("page")
     @Operation(summary = "分页")
     @SaCheckPermission("sys:log:login")
-    public Result<PageData<SysLogLoginDTO>> page(SysLogLoginPageRequest request) {
-        PageData<SysLogLoginDTO> page = sysLogLoginService.page(request);
+    public Result<PageData<SysLogLoginRsp>> page(SysLogLoginPageReq request) {
+        PageData<SysLogLoginRsp> page = sysLogLoginService.page(request);
 
-        return new Result<PageData<SysLogLoginDTO>>().ok(page);
+        return new Result<PageData<SysLogLoginRsp>>().ok(page);
     }
 
     @GetMapping("export")
     @Operation(summary = "导出")
     @LogOperation("导出")
     @SaCheckPermission("sys:log:login")
-    public void export(SysLogLoginPageRequest request, HttpServletResponse response) throws Exception {
-        List<SysLogLoginDTO> list = sysLogLoginService.list(request);
+    public void export(SysLogLoginPageReq request, HttpServletResponse response) throws Exception {
+        List<SysLogLoginRsp> list = sysLogLoginService.list(request);
 
         ExcelUtils.exportExcelToTarget(response, null, "登录日志", list, SysLogLoginExcel.class);
 

@@ -2,13 +2,13 @@ package net.leoch.modules.log.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.log.dto.SysLogErrorDTO;
-import net.leoch.modules.log.dto.SysLogErrorPageRequest;
+import net.leoch.modules.log.vo.rsp.SysLogErrorRsp;
+import net.leoch.modules.log.vo.req.SysLogErrorPageReq;
 import net.leoch.modules.log.entity.SysLogErrorEntity;
 
 import java.util.List;
 
 public interface ISysLogErrorService extends IService<SysLogErrorEntity> {
-    PageData<SysLogErrorDTO> page(SysLogErrorPageRequest request);
-    List<SysLogErrorDTO> list(SysLogErrorPageRequest request);
+    PageData<SysLogErrorRsp> page(SysLogErrorPageReq request);
+    List<SysLogErrorRsp> list(SysLogErrorPageReq request);
 }

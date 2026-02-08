@@ -6,8 +6,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
-import net.leoch.modules.job.dto.ScheduleJobLogDTO;
-import net.leoch.modules.job.dto.ScheduleJobLogPageRequest;
+import net.leoch.modules.job.vo.rsp.ScheduleJobLogRsp;
+import net.leoch.modules.job.vo.req.ScheduleJobLogPageReq;
 import net.leoch.modules.job.service.IScheduleJobLogService;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,16 +26,16 @@ public class ScheduleJobLogController {
     @GetMapping("page")
     @Operation(summary = "分页")
     @SaCheckPermission("sys:schedule:log")
-    public Result<PageData<ScheduleJobLogDTO>> page(ScheduleJobLogPageRequest request) {
-        return new Result<PageData<ScheduleJobLogDTO>>().ok(scheduleJobLogService.page(request));
+    public Result<PageData<ScheduleJobLogRsp>> page(ScheduleJobLogPageReq request) {
+        return new Result<PageData<ScheduleJobLogRsp>>().ok(scheduleJobLogService.page(request));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("sys:schedule:log")
-    public Result<ScheduleJobLogDTO> info(@PathVariable("id") Long id) {
-        ScheduleJobLogDTO log = scheduleJobLogService.get(id);
+    public Result<ScheduleJobLogRsp> info(@PathVariable("id") Long id) {
+        ScheduleJobLogRsp log = scheduleJobLogService.get(id);
 
-        return new Result<ScheduleJobLogDTO>().ok(log);
+        return new Result<ScheduleJobLogRsp>().ok(log);
     }
 }

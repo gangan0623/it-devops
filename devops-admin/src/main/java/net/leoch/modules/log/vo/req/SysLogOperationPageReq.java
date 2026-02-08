@@ -1,4 +1,4 @@
-package net.leoch.modules.log.dto;
+package net.leoch.modules.log.vo.req;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -10,8 +10,8 @@ import net.leoch.common.page.BasePage;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Schema(name = "SysLogOperationPageRequest")
-public class SysLogOperationPageRequest extends BasePage {
+@Schema(name = "SysLogOperationPageReq")
+public class SysLogOperationPageReq extends BasePage {
 
     @Schema(description = "状态  0：失败    1：成功")
     private String status;
