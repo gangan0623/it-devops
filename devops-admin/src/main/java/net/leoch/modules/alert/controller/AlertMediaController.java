@@ -1,5 +1,10 @@
 package net.leoch.modules.alert.controller;
 
+import static net.leoch.common.constant.Constant.LIMIT;
+import static net.leoch.common.constant.Constant.ORDER;
+import static net.leoch.common.constant.Constant.ORDER_FIELD;
+import static net.leoch.common.constant.Constant.PAGE;
+
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.hutool.core.util.StrUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,7 +13,6 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import net.leoch.common.annotation.LogOperation;
-import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
@@ -46,10 +50,10 @@ public class AlertMediaController {
     @GetMapping("page")
     @Operation(summary = "分页")
     @Parameters({
-        @Parameter(name = Constant.PAGE, description = "当前页码，从1开始", in = ParameterIn.QUERY, required = true, ref="int") ,
-        @Parameter(name = Constant.LIMIT, description = "每页显示记录数", in = ParameterIn.QUERY,required = true, ref="int") ,
-        @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref="String") ,
-        @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
+        @Parameter(name = PAGE, description = "当前页码，从1开始", in = ParameterIn.QUERY, required = true, ref="int") ,
+        @Parameter(name = LIMIT, description = "每页显示记录数", in = ParameterIn.QUERY,required = true, ref="int") ,
+        @Parameter(name = ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref="String") ,
+        @Parameter(name = ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("alert:media:page")
     public Result<PageData<AlertMediaRsp>> page(AlertMediaPageReq request){
