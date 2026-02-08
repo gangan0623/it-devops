@@ -2,8 +2,8 @@ package net.leoch.modules.alert.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.alert.dto.AlertTriggerDTO;
-import net.leoch.modules.alert.dto.AlertTriggerPageRequest;
+import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;
+import net.leoch.modules.alert.vo.req.AlertTriggerPageReq;
 import net.leoch.modules.alert.entity.AlertTriggerEntity;
 
 import java.util.List;
@@ -16,14 +16,14 @@ import java.util.Map;
  * @since 1.0.0 2026-01-28
  */
 public interface IAlertTriggerService extends IService<AlertTriggerEntity> {
-    PageData<AlertTriggerDTO> page(AlertTriggerPageRequest request);
-    List<AlertTriggerDTO> list(AlertTriggerPageRequest request);
-    AlertTriggerDTO get(Long id);
-    void save(AlertTriggerDTO dto);
-    void update(AlertTriggerDTO dto);
+    PageData<AlertTriggerRsp> page(AlertTriggerPageReq request);
+    List<AlertTriggerRsp> list(AlertTriggerPageReq request);
+    AlertTriggerRsp get(Long id);
+    void save(AlertTriggerRsp dto);
+    void update(AlertTriggerRsp dto);
     void delete(Long[] ids);
-    void fillReceiverUserIdList(AlertTriggerDTO dto);
-    void fillReceiverUserIdList(List<AlertTriggerDTO> list);
+    void fillReceiverUserIdList(AlertTriggerRsp dto);
+    void fillReceiverUserIdList(List<AlertTriggerRsp> list);
     void notifyFromWebhook(Map<String, Object> payload, String rawJson, String severity);
     void sendTest(Long templateId, Long triggerId, String rawJson);
     Map<String, Object> resources();

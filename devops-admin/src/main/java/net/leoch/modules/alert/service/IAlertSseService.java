@@ -1,6 +1,6 @@
 package net.leoch.modules.alert.service;
 
-import net.leoch.modules.alert.dto.AlertRealtimeDTO;
+import net.leoch.modules.alert.vo.rsp.AlertRealtimeRsp;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.List;
 public interface IAlertSseService {
     SseEmitter createEmitter();
 
-    List<AlertRealtimeDTO> recentAlerts();
+    List<AlertRealtimeRsp> recentAlerts();
 
     void publishRecentAlerts();
 }

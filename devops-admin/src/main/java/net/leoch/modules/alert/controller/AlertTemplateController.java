@@ -13,10 +13,10 @@ import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
-import net.leoch.modules.alert.dto.AlertTemplateDTO;
-import net.leoch.modules.alert.dto.AlertTemplatePageRequest;
-import net.leoch.modules.alert.dto.AlertTemplatePreviewDTO;
-import net.leoch.modules.alert.dto.AlertTemplateSendTestDTO;
+import net.leoch.modules.alert.vo.rsp.AlertTemplateRsp;
+import net.leoch.modules.alert.vo.req.AlertTemplatePageReq;
+import net.leoch.modules.alert.vo.req.AlertTemplatePreviewReq;
+import net.leoch.modules.alert.vo.req.AlertTemplateSendTestReq;
 import net.leoch.modules.alert.service.IAlertTemplateService;
 import net.leoch.modules.alert.service.IAlertTriggerService;
 import net.leoch.modules.alert.utils.AlertJsonUtils;
@@ -57,26 +57,26 @@ public class AlertTemplateController {
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("alert:template:page")
-    public Result<PageData<AlertTemplateDTO>> page(AlertTemplatePageRequest request){
-        PageData<AlertTemplateDTO> page = alertTemplateService.page(request);
+    public Result<PageData<AlertTemplateRsp>> page(AlertTemplatePageReq request){
+        PageData<AlertTemplateRsp> page = alertTemplateService.page(request);
 
-        return new Result<PageData<AlertTemplateDTO>>().ok(page);
+        return new Result<PageData<AlertTemplateRsp>>().ok(page);
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("alert:template:info")
-    public Result<AlertTemplateDTO> get(@PathVariable("id") Long id){
-        AlertTemplateDTO data = alertTemplateService.get(id);
+    public Result<AlertTemplateRsp> get(@PathVariable("id") Long id){
+        AlertTemplateRsp data = alertTemplateService.get(id);
 
-        return new Result<AlertTemplateDTO>().ok(data);
+        return new Result<AlertTemplateRsp>().ok(data);
     }
 
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("alert:template:save")
-    public Result<Object> save(@RequestBody AlertTemplateDTO dto){
+    public Result<Object> save(@RequestBody AlertTemplateRsp dto){
         alertTemplateService.save(dto);
 
         return new Result<>();
@@ -86,7 +86,7 @@ public class AlertTemplateController {
     @Operation(summary = "保存(表单)")
     @LogOperation("保存")
     @SaCheckPermission("alert:template:save")
-    public Result<Object> saveForm(AlertTemplateDTO dto){
+    public Result<Object> saveForm(AlertTemplateRsp dto){
         alertTemplateService.save(dto);
 
         return new Result<>();
@@ -96,7 +96,7 @@ public class AlertTemplateController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("alert:template:update")
-    public Result<Object> update(@RequestBody AlertTemplateDTO dto){
+    public Result<Object> update(@RequestBody AlertTemplateRsp dto){
         alertTemplateService.update(dto);
 
         return new Result<>();
@@ -106,7 +106,7 @@ public class AlertTemplateController {
     @Operation(summary = "修改(表单)")
     @LogOperation("修改")
     @SaCheckPermission("alert:template:update")
-    public Result<Object> updateForm(AlertTemplateDTO dto){
+    public Result<Object> updateForm(AlertTemplateRsp dto){
         alertTemplateService.update(dto);
 
         return new Result<>();
@@ -126,11 +126,11 @@ public class AlertTemplateController {
     @PostMapping("preview")
     @Operation(summary = "模板预览")
     @SaCheckPermission("alert:template:test")
-    public Result<Map<String, Object>> preview(@RequestBody AlertTemplatePreviewDTO dto) {
+    public Result<Map<String, Object>> preview(@RequestBody AlertTemplatePreviewReq dto) {
         if (dto == null || StrUtil.isBlank(dto.getRawJson())) {
             return new Result<Map<String, Object>>().error("原始JSON不能为空");
         }
-        AlertTemplateDTO template = alertTemplateService.get(dto.getTemplateId());
+        AlertTemplateRsp template = alertTemplateService.get(dto.getTemplateId());
         if (template == null) {
             return new Result<Map<String, Object>>().error("模板不存在");
         }
@@ -148,7 +148,7 @@ public class AlertTemplateController {
     @PostMapping("test-send")
     @Operation(summary = "模板发送测试")
     @SaCheckPermission("alert:template:test")
-    public Result<Object> testSend(@RequestBody AlertTemplateSendTestDTO dto) {
+    public Result<Object> testSend(@RequestBody AlertTemplateSendTestReq dto) {
         alertTriggerService.sendTest(dto.getTemplateId(), dto.getTriggerId(), dto.getRawJson());
         return new Result<>();
     }

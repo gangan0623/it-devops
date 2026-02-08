@@ -7,8 +7,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.alert.mapper.AlertMediaMapper;
-import net.leoch.modules.alert.dto.AlertMediaDTO;
-import net.leoch.modules.alert.dto.AlertMediaPageRequest;
+import net.leoch.modules.alert.vo.rsp.AlertMediaRsp;
+import net.leoch.modules.alert.vo.req.AlertMediaPageReq;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
 import net.leoch.modules.alert.service.IAlertMediaService;
@@ -29,39 +29,39 @@ import java.util.List;
 public class AlertMediaServiceImpl extends ServiceImpl<AlertMediaMapper, AlertMediaEntity> implements IAlertMediaService {
 
     @Override
-    public PageData<AlertMediaDTO> page(AlertMediaPageRequest request) {
+    public PageData<AlertMediaRsp> page(AlertMediaPageReq request) {
         IPage<AlertMediaEntity> page = this.page(request.buildPage(),
             new LambdaQueryWrapper<AlertMediaEntity>()
                 .like(StrUtil.isNotBlank(request.getName()), AlertMediaEntity::getName, request.getName())
                 .eq(StrUtil.isNotBlank(request.getStatus()), AlertMediaEntity::getStatus, request.getStatus())
         );
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), AlertMediaDTO.class), page.getTotal());
+        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), AlertMediaRsp.class), page.getTotal());
     }
 
     @Override
-    public List<AlertMediaDTO> list(AlertMediaPageRequest request) {
+    public List<AlertMediaRsp> list(AlertMediaPageReq request) {
         List<AlertMediaEntity> entityList = this.list(
             new LambdaQueryWrapper<AlertMediaEntity>()
                 .like(request != null && StrUtil.isNotBlank(request.getName()), AlertMediaEntity::getName, request != null ? request.getName() : null)
                 .eq(request != null && StrUtil.isNotBlank(request.getStatus()), AlertMediaEntity::getStatus, request != null ? request.getStatus() : null)
         );
-        return ConvertUtils.sourceToTarget(entityList, AlertMediaDTO.class);
+        return ConvertUtils.sourceToTarget(entityList, AlertMediaRsp.class);
     }
 
     @Override
-    public AlertMediaDTO get(Long id) {
-        return ConvertUtils.sourceToTarget(this.getById(id), AlertMediaDTO.class);
+    public AlertMediaRsp get(Long id) {
+        return ConvertUtils.sourceToTarget(this.getById(id), AlertMediaRsp.class);
     }
 
     @Override
-    public void save(AlertMediaDTO dto) {
+    public void save(AlertMediaRsp dto) {
         AlertMediaEntity entity = ConvertUtils.sourceToTarget(dto, AlertMediaEntity.class);
         this.save(entity);
         BeanUtils.copyProperties(entity, dto);
     }
 
     @Override
-    public void update(AlertMediaDTO dto) {
+    public void update(AlertMediaRsp dto) {
         this.updateById(ConvertUtils.sourceToTarget(dto, AlertMediaEntity.class));
     }
 

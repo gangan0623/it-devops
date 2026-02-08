@@ -16,8 +16,8 @@ import net.leoch.modules.alert.service.IAlertNotifyLogService;
 import net.leoch.modules.alert.mapper.AlertRecordMapper;
 import net.leoch.modules.alert.mapper.AlertTemplateMapper;
 import net.leoch.modules.alert.mapper.AlertTriggerMapper;
-import net.leoch.modules.alert.dto.AlertTriggerDTO;
-import net.leoch.modules.alert.dto.AlertTriggerPageRequest;
+import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;
+import net.leoch.modules.alert.vo.req.AlertTriggerPageReq;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
 import net.leoch.modules.alert.entity.AlertNotifyLogEntity;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
@@ -73,37 +73,37 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
     }
 
     @Override
-    public PageData<AlertTriggerDTO> page(AlertTriggerPageRequest request) {
+    public PageData<AlertTriggerRsp> page(AlertTriggerPageReq request) {
         IPage<AlertTriggerEntity> page = this.page(request.buildPage(),
             new LambdaQueryWrapper<AlertTriggerEntity>()
                 .like(StrUtil.isNotBlank(request.getName()), AlertTriggerEntity::getName, request.getName())
         );
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), AlertTriggerDTO.class), page.getTotal());
+        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), AlertTriggerRsp.class), page.getTotal());
     }
 
     @Override
-    public List<AlertTriggerDTO> list(AlertTriggerPageRequest request) {
+    public List<AlertTriggerRsp> list(AlertTriggerPageReq request) {
         List<AlertTriggerEntity> entityList = this.list(
             new LambdaQueryWrapper<AlertTriggerEntity>()
                 .like(request != null && StrUtil.isNotBlank(request.getName()), AlertTriggerEntity::getName, request != null ? request.getName() : null)
         );
-        return ConvertUtils.sourceToTarget(entityList, AlertTriggerDTO.class);
+        return ConvertUtils.sourceToTarget(entityList, AlertTriggerRsp.class);
     }
 
     @Override
-    public AlertTriggerDTO get(Long id) {
-        return ConvertUtils.sourceToTarget(this.getById(id), AlertTriggerDTO.class);
+    public AlertTriggerRsp get(Long id) {
+        return ConvertUtils.sourceToTarget(this.getById(id), AlertTriggerRsp.class);
     }
 
     @Override
-    public void save(AlertTriggerDTO dto) {
+    public void save(AlertTriggerRsp dto) {
         AlertTriggerEntity entity = ConvertUtils.sourceToTarget(dto, AlertTriggerEntity.class);
         this.save(entity);
         BeanUtils.copyProperties(entity, dto);
     }
 
     @Override
-    public void update(AlertTriggerDTO dto) {
+    public void update(AlertTriggerRsp dto) {
         this.updateById(ConvertUtils.sourceToTarget(dto, AlertTriggerEntity.class));
     }
 
@@ -145,7 +145,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
     }
 
     @Override
-    public void fillReceiverUserIdList(AlertTriggerDTO dto) {
+    public void fillReceiverUserIdList(AlertTriggerRsp dto) {
         if (dto == null) {
             return;
         }
@@ -153,11 +153,11 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
     }
 
     @Override
-    public void fillReceiverUserIdList(List<AlertTriggerDTO> list) {
+    public void fillReceiverUserIdList(List<AlertTriggerRsp> list) {
         if (list == null) {
             return;
         }
-        for (AlertTriggerDTO dto : list) {
+        for (AlertTriggerRsp dto : list) {
             fillReceiverUserIdList(dto);
         }
     }

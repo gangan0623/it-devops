@@ -2,8 +2,8 @@ package net.leoch.modules.alert.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.alert.dto.AlertTemplateDTO;
-import net.leoch.modules.alert.dto.AlertTemplatePageRequest;
+import net.leoch.modules.alert.vo.rsp.AlertTemplateRsp;
+import net.leoch.modules.alert.vo.req.AlertTemplatePageReq;
 import net.leoch.modules.alert.entity.AlertTemplateEntity;
 
 import java.util.List;
@@ -15,10 +15,10 @@ import java.util.List;
  * @since 1.0.0 2026-01-28
  */
 public interface IAlertTemplateService extends IService<AlertTemplateEntity> {
-    PageData<AlertTemplateDTO> page(AlertTemplatePageRequest request);
-    List<AlertTemplateDTO> list(AlertTemplatePageRequest request);
-    AlertTemplateDTO get(Long id);
-    void save(AlertTemplateDTO dto);
-    void update(AlertTemplateDTO dto);
+    PageData<AlertTemplateRsp> page(AlertTemplatePageReq request);
+    List<AlertTemplateRsp> list(AlertTemplatePageReq request);
+    AlertTemplateRsp get(Long id);
+    void save(AlertTemplateRsp dto);
+    void update(AlertTemplateRsp dto);
     void delete(Long[] ids);
 }

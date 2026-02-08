@@ -3,7 +3,7 @@ package net.leoch.modules.alert.service.impl;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import net.leoch.modules.alert.mapper.AlertRecordMapper;
-import net.leoch.modules.alert.dto.AlertRealtimeDTO;
+import net.leoch.modules.alert.vo.rsp.AlertRealtimeRsp;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.service.IAlertSseService;
@@ -62,7 +62,7 @@ public class AlertSseServiceImpl implements IAlertSseService {
     }
 
     @Override
-    public List<AlertRealtimeDTO> recentAlerts() {
+    public List<AlertRealtimeRsp> recentAlerts() {
         List<AlertRecordEntity> list = alertRecordMapper.selectList(
             new LambdaQueryWrapper<AlertRecordEntity>()
                 .select(AlertRecordEntity::getAlertName, AlertRecordEntity::getInstance, AlertRecordEntity::getSeverity,
@@ -73,9 +73,9 @@ public class AlertSseServiceImpl implements IAlertSseService {
                 .last("limit 10")
         );
         Map<String, String> hostMap = loadHostMap();
-        List<AlertRealtimeDTO> result = new ArrayList<>();
+        List<AlertRealtimeRsp> result = new ArrayList<>();
         for (AlertRecordEntity entity : list) {
-            AlertRealtimeDTO dto = new AlertRealtimeDTO();
+            AlertRealtimeRsp dto = new AlertRealtimeRsp();
             dto.setAlertName(entity.getAlertName());
             dto.setInstance(entity.getInstance());
             dto.setHostName(hostMap.get(normalizeInstance(entity.getInstance())));
@@ -92,7 +92,7 @@ public class AlertSseServiceImpl implements IAlertSseService {
         if (emitters.isEmpty()) {
             return;
         }
-        List<AlertRealtimeDTO> data = recentAlerts();
+        List<AlertRealtimeRsp> data = recentAlerts();
         for (SseEmitter emitter : emitters) {
             try {
                 emitter.send(SseEmitter.event().name("recentAlerts").data(data));

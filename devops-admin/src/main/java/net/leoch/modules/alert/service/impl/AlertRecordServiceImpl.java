@@ -11,10 +11,10 @@ import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.alert.mapper.AlertRecordMapper;
-import net.leoch.modules.alert.dto.AlertRecordActionDTO;
-import net.leoch.modules.alert.dto.AlertProblemDTO;
-import net.leoch.modules.alert.dto.AlertRecordDTO;
-import net.leoch.modules.alert.dto.AlertRecordPageRequest;
+import net.leoch.modules.alert.vo.rsp.AlertRecordActionRsp;
+import net.leoch.modules.alert.vo.rsp.AlertProblemRsp;
+import net.leoch.modules.alert.vo.rsp.AlertRecordRsp;
+import net.leoch.modules.alert.vo.req.AlertRecordPageReq;
 import net.leoch.modules.alert.entity.AlertNotifyLogEntity;
 import net.leoch.modules.alert.entity.AlertRecordActionEntity;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
@@ -80,7 +80,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
     }
 
     @Override
-    public PageData<AlertRecordDTO> page(AlertRecordPageRequest request) {
+    public PageData<AlertRecordRsp> page(AlertRecordPageReq request) {
         String alertName = request.getAlertName();
         String instance = request.getInstance();
         String hostName = request.getHostName();
@@ -112,13 +112,13 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         wrapper.orderByDesc(AlertRecordEntity::getStartsAt);
 
         IPage<AlertRecordEntity> page = this.page(request.buildPage(), wrapper);
-        PageData<AlertRecordDTO> pageData = new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), AlertRecordDTO.class), page.getTotal());
+        PageData<AlertRecordRsp> pageData = new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), AlertRecordRsp.class), page.getTotal());
 
         if (pageData.getList() == null || pageData.getList().isEmpty()) {
             return pageData;
         }
         Map<String, HostInfo> hostMap = loadHostInfoMap();
-        for (AlertRecordDTO dto : pageData.getList()) {
+        for (AlertRecordRsp dto : pageData.getList()) {
             if (dto == null) {
                 continue;
             }
@@ -128,8 +128,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
     }
 
     @Override
-    public AlertRecordDTO get(Long id) {
-        return ConvertUtils.sourceToTarget(this.getById(id), AlertRecordDTO.class);
+    public AlertRecordRsp get(Long id) {
+        return ConvertUtils.sourceToTarget(this.getById(id), AlertRecordRsp.class);
     }
 
     @Override
@@ -184,7 +184,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
     }
 
     @Override
-    public List<AlertRecordActionDTO> history(Long recordId) {
+    public List<AlertRecordActionRsp> history(Long recordId) {
         return alertRecordActionService.listByRecordId(recordId);
     }
 
@@ -247,7 +247,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
     }
 
     @Override
-    public PageData<AlertProblemDTO> problemPage(Map<String, Object> params) {
+    public PageData<AlertProblemRsp> problemPage(Map<String, Object> params) {
         String category = toStr(params.get("category"), "realtime");
         String severityRaw = toStr(params.get("severity"));
         List<String> severityList = parseSeverityList(severityRaw);
@@ -314,13 +314,13 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         Set<String> instanceSet = records.stream().map(AlertRecordEntity::getInstance).filter(StrUtil::isNotBlank).collect(Collectors.toSet());
         Map<String, AlertNotifyLogEntity> latestNotifyByAlert = alertNotifyLogService.loadLatestByAlerts(new ArrayList<>(alertNames), new ArrayList<>(instanceSet));
 
-        List<AlertProblemDTO> all = new ArrayList<>();
+        List<AlertProblemRsp> all = new ArrayList<>();
         for (AlertRecordEntity record : records) {
             AlertNotifyLogEntity notifyLog = latestNotifyMap.get(record.getId());
             if (notifyLog == null) {
                 notifyLog = latestNotifyByAlert.get(buildAlertKey(record.getAlertName(), record.getInstance()));
             }
-            AlertProblemDTO dto = toProblemDTO(record, hostMap, ackMap.get(record.getId()), notifyLog, actionMetaMap.get(record.getId()));
+            AlertProblemRsp dto = toProblemDTO(record, hostMap, ackMap.get(record.getId()), notifyLog, actionMetaMap.get(record.getId()));
             if (!matchesCategory(dto, category, statusFilter)) {
                 continue;
             }
@@ -341,7 +341,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         int total = all.size();
         int firingCount = 0;
         int resolvedCount = 0;
-        for (AlertProblemDTO dto : all) {
+        for (AlertProblemRsp dto : all) {
             String s = StrUtil.blankToDefault(dto.getStatus(), "").toLowerCase();
             if ("auto".equals(s) || "manual".equals(s) || "resolved".equals(s)) {
                 resolvedCount++;
@@ -351,8 +351,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         }
         int start = Math.max((page - 1) * limit, 0);
         int end = Math.min(start + limit, total);
-        List<AlertProblemDTO> list = start >= total ? new ArrayList<>() : all.subList(start, end);
-        PageData<AlertProblemDTO> pageData = new PageData<>(list, total);
+        List<AlertProblemRsp> list = start >= total ? new ArrayList<>() : all.subList(start, end);
+        PageData<AlertProblemRsp> pageData = new PageData<>(list, total);
         pageData.setFiringCount(firingCount);
         pageData.setResolvedCount(resolvedCount);
         return pageData;
@@ -557,12 +557,12 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         return alertName.trim() + "|" + instance.trim();
     }
 
-    private AlertProblemDTO toProblemDTO(AlertRecordEntity record,
+    private AlertProblemRsp toProblemDTO(AlertRecordEntity record,
                                          Map<String, HostInfo> hostMap,
                                          Boolean acked,
                                          AlertNotifyLogEntity notifyLog,
                                          ActionMeta actionMeta) {
-        AlertProblemDTO dto = new AlertProblemDTO();
+        AlertProblemRsp dto = new AlertProblemRsp();
         dto.setId(record.getId());
         dto.setStartsAt(record.getStartsAt());
         dto.setEndsAt(record.getEndsAt());
@@ -618,21 +618,21 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         return dto;
     }
 
-    private boolean matchesCategory(AlertProblemDTO dto, String category, String statusFilter) {
+    private boolean matchesCategory(AlertProblemRsp dto, String category, String statusFilter) {
         if ("history".equalsIgnoreCase(category)) {
             return true;
         }
         return true;
     }
 
-    private boolean matchesDeviceType(AlertProblemDTO dto, String deviceType) {
+    private boolean matchesDeviceType(AlertProblemRsp dto, String deviceType) {
         if (StrUtil.isBlank(deviceType)) {
             return true;
         }
         return StrUtil.equalsIgnoreCase(deviceType, dto.getHostType());
     }
 
-    private boolean matchesHostName(AlertProblemDTO dto, String hostName) {
+    private boolean matchesHostName(AlertProblemRsp dto, String hostName) {
         if (StrUtil.isBlank(hostName)) {
             return true;
         }
@@ -641,7 +641,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             || StrUtil.containsIgnoreCase(StrUtil.nullToEmpty(dto.getInstance()), keyword);
     }
 
-    private boolean matchesAck(AlertProblemDTO dto, String ackStatus) {
+    private boolean matchesAck(AlertProblemRsp dto, String ackStatus) {
         if (StrUtil.isBlank(ackStatus)) {
             return true;
         }
@@ -654,7 +654,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         return true;
     }
 
-    private boolean matchesStatus(AlertProblemDTO dto, String status) {
+    private boolean matchesStatus(AlertProblemRsp dto, String status) {
         if (StrUtil.isBlank(status)) {
             return true;
         }

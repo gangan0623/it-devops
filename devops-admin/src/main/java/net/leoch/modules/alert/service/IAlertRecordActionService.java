@@ -1,7 +1,7 @@
 package net.leoch.modules.alert.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import net.leoch.modules.alert.dto.AlertRecordActionDTO;
+import net.leoch.modules.alert.vo.rsp.AlertRecordActionRsp;
 import net.leoch.modules.alert.entity.AlertRecordActionEntity;
 
 import java.util.List;
@@ -17,7 +17,7 @@ public interface IAlertRecordActionService extends IService<AlertRecordActionEnt
     /**
      * 查询操作历史（含操作人名称）
      */
-    List<AlertRecordActionDTO> listByRecordId(Long recordId);
+    List<AlertRecordActionRsp> listByRecordId(Long recordId);
 
     /**
      * 保存操作记录

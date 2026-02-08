@@ -1,4 +1,4 @@
-package net.leoch.modules.alert.dto;
+package net.leoch.modules.alert.vo.req;
 
 import io.swagger.v3.oas.annotations.media.SchemaProperty;
 import lombok.Data;
@@ -7,7 +7,7 @@ import lombok.Data;
  * 告警记录操作请求
  */
 @Data
-public class AlertRecordActionRequest {
+public class AlertRecordActionReq {
 
     @SchemaProperty(name = "级别 info/warning/critical")
     private String severity;

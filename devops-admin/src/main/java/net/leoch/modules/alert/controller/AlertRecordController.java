@@ -11,11 +11,11 @@ import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
-import net.leoch.modules.alert.dto.AlertRecordActionDTO;
-import net.leoch.modules.alert.dto.AlertRecordActionRequest;
-import net.leoch.modules.alert.dto.AlertProblemDTO;
-import net.leoch.modules.alert.dto.AlertRecordDTO;
-import net.leoch.modules.alert.dto.AlertRecordPageRequest;
+import net.leoch.modules.alert.vo.rsp.AlertRecordActionRsp;
+import net.leoch.modules.alert.vo.req.AlertRecordActionReq;
+import net.leoch.modules.alert.vo.rsp.AlertProblemRsp;
+import net.leoch.modules.alert.vo.rsp.AlertRecordRsp;
+import net.leoch.modules.alert.vo.req.AlertRecordPageReq;
 import net.leoch.modules.alert.service.IAlertRecordService;
 import net.leoch.modules.alert.service.IAlertSseService;
 import org.springframework.web.bind.annotation.*;
@@ -52,19 +52,19 @@ public class AlertRecordController {
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("alert:record:page")
-    public Result<PageData<AlertRecordDTO>> page(AlertRecordPageRequest request){
-        PageData<AlertRecordDTO> page = alertRecordService.page(request);
+    public Result<PageData<AlertRecordRsp>> page(AlertRecordPageReq request){
+        PageData<AlertRecordRsp> page = alertRecordService.page(request);
 
-        return new Result<PageData<AlertRecordDTO>>().ok(page);
+        return new Result<PageData<AlertRecordRsp>>().ok(page);
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("alert:record:info")
-    public Result<AlertRecordDTO> get(@PathVariable("id") Long id){
-        AlertRecordDTO data = alertRecordService.get(id);
+    public Result<AlertRecordRsp> get(@PathVariable("id") Long id){
+        AlertRecordRsp data = alertRecordService.get(id);
 
-        return new Result<AlertRecordDTO>().ok(data);
+        return new Result<AlertRecordRsp>().ok(data);
     }
 
     @GetMapping("problem/page")
@@ -74,8 +74,8 @@ public class AlertRecordController {
         @Parameter(name = Constant.LIMIT, description = "每页显示记录数", in = ParameterIn.QUERY,required = true, ref="int")
     })
     @SaCheckPermission("alert:problem:page")
-    public Result<PageData<AlertProblemDTO>> problemPage(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
-        return new Result<PageData<AlertProblemDTO>>().ok(alertRecordService.problemPage(params));
+    public Result<PageData<AlertProblemRsp>> problemPage(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
+        return new Result<PageData<AlertProblemRsp>>().ok(alertRecordService.problemPage(params));
     }
 
     @DeleteMapping
@@ -92,15 +92,15 @@ public class AlertRecordController {
     @GetMapping("{id}/action/history")
     @Operation(summary = "操作历史")
     @SaCheckPermission("alert:record:info")
-    public Result<List<AlertRecordActionDTO>> history(@PathVariable("id") Long id) {
-        return new Result<List<AlertRecordActionDTO>>().ok(alertRecordService.history(id));
+    public Result<List<AlertRecordActionRsp>> history(@PathVariable("id") Long id) {
+        return new Result<List<AlertRecordActionRsp>>().ok(alertRecordService.history(id));
     }
 
     @PostMapping("{id}/action/severity")
     @Operation(summary = "更改严重性")
     @LogOperation("告警更改严重性")
     @SaCheckPermission("alert:record:info")
-    public Result<Object> changeSeverity(@PathVariable("id") Long id, @RequestBody AlertRecordActionRequest request) {
+    public Result<Object> changeSeverity(@PathVariable("id") Long id, @RequestBody AlertRecordActionReq request) {
         alertRecordService.changeSeverity(id, request == null ? null : request.getSeverity(), request == null ? null : request.getMessage());
         return new Result<>();
     }
@@ -109,7 +109,7 @@ public class AlertRecordController {
     @Operation(summary = "抑制")
     @LogOperation("告警抑制")
     @SaCheckPermission("alert:record:info")
-    public Result<Object> suppress(@PathVariable("id") Long id, @RequestBody AlertRecordActionRequest request) {
+    public Result<Object> suppress(@PathVariable("id") Long id, @RequestBody AlertRecordActionReq request) {
         alertRecordService.suppress(id, request == null ? null : request.getDays(), request == null ? null : request.getMessage());
         return new Result<>();
     }
@@ -118,7 +118,7 @@ public class AlertRecordController {
     @Operation(summary = "确定")
     @LogOperation("告警确定")
     @SaCheckPermission("alert:record:info")
-    public Result<Object> acknowledge(@PathVariable("id") Long id, @RequestBody AlertRecordActionRequest request) {
+    public Result<Object> acknowledge(@PathVariable("id") Long id, @RequestBody AlertRecordActionReq request) {
         alertRecordService.acknowledge(id, request == null ? null : request.getMessage());
         return new Result<>();
     }
@@ -127,7 +127,7 @@ public class AlertRecordController {
     @Operation(summary = "关闭")
     @LogOperation("告警关闭")
     @SaCheckPermission("alert:record:info")
-    public Result<Object> close(@PathVariable("id") Long id, @RequestBody AlertRecordActionRequest request) {
+    public Result<Object> close(@PathVariable("id") Long id, @RequestBody AlertRecordActionReq request) {
         alertRecordService.close(id, request == null ? null : request.getMessage());
         return new Result<>();
     }

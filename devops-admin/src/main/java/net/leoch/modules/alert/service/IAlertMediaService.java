@@ -2,8 +2,8 @@ package net.leoch.modules.alert.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.alert.dto.AlertMediaDTO;
-import net.leoch.modules.alert.dto.AlertMediaPageRequest;
+import net.leoch.modules.alert.vo.rsp.AlertMediaRsp;
+import net.leoch.modules.alert.vo.req.AlertMediaPageReq;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
 
 import java.util.List;
@@ -15,10 +15,10 @@ import java.util.List;
  * @since 1.0.0 2026-01-28
  */
 public interface IAlertMediaService extends IService<AlertMediaEntity> {
-    PageData<AlertMediaDTO> page(AlertMediaPageRequest request);
-    List<AlertMediaDTO> list(AlertMediaPageRequest request);
-    AlertMediaDTO get(Long id);
-    void save(AlertMediaDTO dto);
-    void update(AlertMediaDTO dto);
+    PageData<AlertMediaRsp> page(AlertMediaPageReq request);
+    List<AlertMediaRsp> list(AlertMediaPageReq request);
+    AlertMediaRsp get(Long id);
+    void save(AlertMediaRsp dto);
+    void update(AlertMediaRsp dto);
     void delete(Long[] ids);
 }

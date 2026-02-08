@@ -12,9 +12,9 @@ import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
-import net.leoch.modules.alert.dto.AlertMediaDTO;
-import net.leoch.modules.alert.dto.AlertMediaPageRequest;
-import net.leoch.modules.alert.dto.AlertMediaTestDTO;
+import net.leoch.modules.alert.vo.rsp.AlertMediaRsp;
+import net.leoch.modules.alert.vo.req.AlertMediaPageReq;
+import net.leoch.modules.alert.vo.req.AlertMediaTestReq;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
 import net.leoch.modules.alert.service.IAlertMailService;
 import net.leoch.modules.alert.service.IAlertMediaService;
@@ -52,24 +52,24 @@ public class AlertMediaController {
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("alert:media:page")
-    public Result<PageData<AlertMediaDTO>> page(AlertMediaPageRequest request){
-        return new Result<PageData<AlertMediaDTO>>().ok(alertMediaService.page(request));
+    public Result<PageData<AlertMediaRsp>> page(AlertMediaPageReq request){
+        return new Result<PageData<AlertMediaRsp>>().ok(alertMediaService.page(request));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("alert:media:info")
-    public Result<AlertMediaDTO> get(@PathVariable("id") Long id){
-        AlertMediaDTO data = alertMediaService.get(id);
+    public Result<AlertMediaRsp> get(@PathVariable("id") Long id){
+        AlertMediaRsp data = alertMediaService.get(id);
 
-        return new Result<AlertMediaDTO>().ok(data);
+        return new Result<AlertMediaRsp>().ok(data);
     }
 
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("alert:media:save")
-    public Result<Object> save(@RequestBody AlertMediaDTO dto){
+    public Result<Object> save(@RequestBody AlertMediaRsp dto){
         alertMediaService.save(dto);
 
         return new Result<>();
@@ -79,7 +79,7 @@ public class AlertMediaController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("alert:media:update")
-    public Result<Object> update(@RequestBody AlertMediaDTO dto){
+    public Result<Object> update(@RequestBody AlertMediaRsp dto){
         alertMediaService.update(dto);
 
         return new Result<>();
@@ -99,11 +99,11 @@ public class AlertMediaController {
     @PostMapping("test")
     @Operation(summary = "媒介测试")
     @SaCheckPermission("alert:media:test")
-    public Result<Object> test(@RequestBody AlertMediaTestDTO dto) {
+    public Result<Object> test(@RequestBody AlertMediaTestReq dto) {
         if (StrUtil.isBlank(dto.getTo())) {
             return new Result().error("收件人不能为空");
         }
-        AlertMediaDTO mediaDTO = alertMediaService.get(dto.getMediaId());
+        AlertMediaRsp mediaDTO = alertMediaService.get(dto.getMediaId());
         if (mediaDTO == null) {
             return new Result().error("媒介不存在");
         }

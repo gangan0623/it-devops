@@ -1,4 +1,4 @@
-package net.leoch.modules.alert.dto;
+package net.leoch.modules.alert.vo.req;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.SchemaProperty;
@@ -11,7 +11,7 @@ import java.io.Serializable;
  */
 @Data
 @Schema(name = "模板预览")
-public class AlertTemplatePreviewDTO implements Serializable {
+public class AlertTemplatePreviewReq implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @SchemaProperty(name = "模板ID")

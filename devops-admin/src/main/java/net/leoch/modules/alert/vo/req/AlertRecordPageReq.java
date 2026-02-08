@@ -1,4 +1,4 @@
-package net.leoch.modules.alert.dto;
+package net.leoch.modules.alert.vo.req;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -10,8 +10,8 @@ import net.leoch.common.page.BasePage;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@Schema(name = "AlertRecordPageRequest")
-public class AlertRecordPageRequest extends BasePage {
+@Schema(name = "AlertRecordPageReq")
+public class AlertRecordPageReq extends BasePage {
 
     @Schema(description = "告警名称")
     private String alertName;

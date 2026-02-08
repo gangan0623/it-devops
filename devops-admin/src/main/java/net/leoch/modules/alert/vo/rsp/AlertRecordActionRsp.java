@@ -1,4 +1,4 @@
-package net.leoch.modules.alert.dto;
+package net.leoch.modules.alert.vo.rsp;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.SchemaProperty;
@@ -12,7 +12,7 @@ import java.util.Date;
  */
 @Data
 @Schema(name = "告警记录操作历史")
-public class AlertRecordActionDTO implements Serializable {
+public class AlertRecordActionRsp implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @SchemaProperty(name = "ID")

@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.alert.mapper.AlertRecordActionMapper;
-import net.leoch.modules.alert.dto.AlertRecordActionDTO;
+import net.leoch.modules.alert.vo.rsp.AlertRecordActionRsp;
 import net.leoch.modules.alert.entity.AlertRecordActionEntity;
 import net.leoch.modules.alert.service.IAlertRecordActionService;
 import net.leoch.modules.sys.mapper.SysUserMapper;
@@ -32,7 +32,7 @@ public class AlertRecordActionServiceImpl extends ServiceImpl<AlertRecordActionM
     }
 
     @Override
-    public List<AlertRecordActionDTO> listByRecordId(Long recordId) {
+    public List<AlertRecordActionRsp> listByRecordId(Long recordId) {
         if (recordId == null) {
             return new ArrayList<>();
         }
@@ -41,9 +41,9 @@ public class AlertRecordActionServiceImpl extends ServiceImpl<AlertRecordActionM
                 .eq(AlertRecordActionEntity::getRecordId, recordId)
                 .orderByDesc(AlertRecordActionEntity::getCreateDate)
         );
-        List<AlertRecordActionDTO> result = ConvertUtils.sourceToTarget(actions, AlertRecordActionDTO.class);
+        List<AlertRecordActionRsp> result = ConvertUtils.sourceToTarget(actions, AlertRecordActionRsp.class);
         List<Long> userIds = result.stream()
-            .map(AlertRecordActionDTO::getCreator)
+            .map(AlertRecordActionRsp::getCreator)
             .filter(Objects::nonNull)
             .distinct()
             .collect(Collectors.toList());
@@ -58,7 +58,7 @@ public class AlertRecordActionServiceImpl extends ServiceImpl<AlertRecordActionM
                 userMap.put(user.getId(), user.getUsername());
             }
         }
-        for (AlertRecordActionDTO dto : result) {
+        for (AlertRecordActionRsp dto : result) {
             dto.setOperatorName(userMap.get(dto.getCreator()));
         }
         return result;

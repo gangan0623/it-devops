@@ -1,4 +1,4 @@
-package net.leoch.modules.alert.dto;
+package net.leoch.modules.alert.vo.rsp;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -10,8 +10,8 @@ import java.util.Date;
  * 实时告警摘要
  */
 @Data
-@Schema(name = "AlertRealtimeDTO")
-public class AlertRealtimeDTO implements Serializable {
+@Schema(name = "AlertRealtimeRsp")
+public class AlertRealtimeRsp implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @Schema(description = "告警名称")

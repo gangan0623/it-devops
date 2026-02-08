@@ -1,4 +1,4 @@
-package net.leoch.modules.alert.dto;
+package net.leoch.modules.alert.vo.rsp;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.media.SchemaProperty;
@@ -15,7 +15,7 @@ import java.util.Date;
  */
 @Data
 @Schema(name = "告警媒介")
-public class AlertMediaDTO implements Serializable {
+public class AlertMediaRsp implements Serializable {
     private static final long serialVersionUID = 1L;
 
     @SchemaProperty(name = "ID")

@@ -12,8 +12,8 @@ import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
-import net.leoch.modules.alert.dto.AlertTriggerDTO;
-import net.leoch.modules.alert.dto.AlertTriggerPageRequest;
+import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;
+import net.leoch.modules.alert.vo.req.AlertTriggerPageReq;
 import net.leoch.modules.alert.service.IAlertTriggerService;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,28 +48,28 @@ public class AlertTriggerController {
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("alert:trigger:page")
-    public Result<PageData<AlertTriggerDTO>> page(AlertTriggerPageRequest request){
-        PageData<AlertTriggerDTO> page = alertTriggerService.page(request);
+    public Result<PageData<AlertTriggerRsp>> page(AlertTriggerPageReq request){
+        PageData<AlertTriggerRsp> page = alertTriggerService.page(request);
         alertTriggerService.fillReceiverUserIdList(page.getList());
 
-        return new Result<PageData<AlertTriggerDTO>>().ok(page);
+        return new Result<PageData<AlertTriggerRsp>>().ok(page);
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("alert:trigger:info")
-    public Result<AlertTriggerDTO> get(@PathVariable("id") Long id){
-        AlertTriggerDTO data = alertTriggerService.get(id);
+    public Result<AlertTriggerRsp> get(@PathVariable("id") Long id){
+        AlertTriggerRsp data = alertTriggerService.get(id);
         alertTriggerService.fillReceiverUserIdList(data);
 
-        return new Result<AlertTriggerDTO>().ok(data);
+        return new Result<AlertTriggerRsp>().ok(data);
     }
 
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("alert:trigger:save")
-    public Result<Object> save(@RequestBody AlertTriggerDTO dto){
+    public Result<Object> save(@RequestBody AlertTriggerRsp dto){
         normalizeReceiverIds(dto);
         alertTriggerService.save(dto);
 
@@ -80,7 +80,7 @@ public class AlertTriggerController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("alert:trigger:update")
-    public Result<Object> update(@RequestBody AlertTriggerDTO dto){
+    public Result<Object> update(@RequestBody AlertTriggerRsp dto){
         normalizeReceiverIds(dto);
         alertTriggerService.update(dto);
 
@@ -109,7 +109,7 @@ public class AlertTriggerController {
     @Operation(summary = "触发器选项")
     @SaCheckPermission("alert:trigger:page")
     public Result<List<Map<String, Object>>> options() {
-        List<AlertTriggerDTO> list = alertTriggerService.list(new AlertTriggerPageRequest());
+        List<AlertTriggerRsp> list = alertTriggerService.list(new AlertTriggerPageReq());
         List<Map<String, Object>> options = list.stream().map(item -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", item.getId());
@@ -119,7 +119,7 @@ public class AlertTriggerController {
         return new Result<List<Map<String, Object>>>().ok(options);
     }
 
-    private void normalizeReceiverIds(AlertTriggerDTO dto) {
+    private void normalizeReceiverIds(AlertTriggerRsp dto) {
         if (dto == null || dto.getReceiverUserIdList() == null) {
             return;
         }
