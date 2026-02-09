@@ -7,10 +7,6 @@ import lombok.AllArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.AddGroup;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.job.vo.rsp.ScheduleJobRsp;
 import net.leoch.modules.job.vo.req.ScheduleJobPageReq;
 import net.leoch.modules.job.vo.req.ScheduleJobReq;
@@ -48,7 +44,6 @@ public class ScheduleJobController {
     @LogOperation("保存")
     @SaCheckPermission("sys:schedule:save")
     public Result<Object> save(@RequestBody ScheduleJobReq dto) {
-        ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         scheduleJobService.save(dto);
         return new Result<>();
     }
@@ -58,7 +53,6 @@ public class ScheduleJobController {
     @LogOperation("修改")
     @SaCheckPermission("sys:schedule:update")
     public Result<Object> update(@RequestBody ScheduleJobReq dto) {
-        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         scheduleJobService.update(dto);
         return new Result<>();
     }

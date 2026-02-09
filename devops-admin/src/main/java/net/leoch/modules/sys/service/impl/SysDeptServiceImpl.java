@@ -9,6 +9,11 @@ import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.TreeUtils;
+import net.leoch.common.validator.AssertUtils;
+import net.leoch.common.validator.ValidatorUtils;
+import net.leoch.common.validator.group.AddGroup;
+import net.leoch.common.validator.group.DefaultGroup;
+import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.mapper.SysDeptMapper;
@@ -64,6 +69,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void save(SysDeptReq dto) {
+        ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         SysDeptEntity entity = ConvertUtils.sourceToTarget(dto, SysDeptEntity.class);
 
         entity.setPids(getPidList(entity.getPid()));
@@ -73,6 +79,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(SysDeptReq dto) {
+        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         SysDeptEntity entity = ConvertUtils.sourceToTarget(dto, SysDeptEntity.class);
 
         //上级部门不能为自身
@@ -93,6 +100,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
+        AssertUtils.isNull(id, "id");
         //判断是否有子部门
         List<Long> subList = getSubDeptIdList(id);
         if (subList.size() > 1) {

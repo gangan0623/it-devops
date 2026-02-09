@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
+import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.alert.mapper.AlertMediaMapper;
 import net.leoch.modules.alert.vo.rsp.AlertMediaRsp;
 import net.leoch.modules.alert.vo.req.AlertMediaPageReq;
@@ -76,6 +77,7 @@ public class AlertMediaServiceImpl extends ServiceImpl<AlertMediaMapper, AlertMe
 
     @Override
     public void delete(Long[] ids) {
+        AssertUtils.isArrayEmpty(ids, "id");
         this.removeByIds(Arrays.asList(ids));
     }
 

@@ -14,6 +14,10 @@ import net.leoch.modules.job.vo.req.ScheduleJobPageReq;
 import net.leoch.modules.job.vo.req.ScheduleJobReq;
 import net.leoch.modules.job.vo.rsp.ScheduleJobRsp;
 import net.leoch.modules.job.entity.ScheduleJobEntity;
+import net.leoch.common.validator.ValidatorUtils;
+import net.leoch.common.validator.group.AddGroup;
+import net.leoch.common.validator.group.DefaultGroup;
+import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.job.service.IScheduleJobService;
 import net.leoch.modules.job.utils.DynamicScheduleManager;
 import org.springframework.stereotype.Service;
@@ -49,6 +53,7 @@ public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, Sched
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void save(ScheduleJobReq dto) {
+        ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
         entity.setStatus(Constant.ScheduleStatus.NORMAL.getValue());
         this.save(entity);
@@ -58,6 +63,7 @@ public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, Sched
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(ScheduleJobReq dto) {
+        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
         this.updateById(entity);
         scheduleManager.updateJob(entity);

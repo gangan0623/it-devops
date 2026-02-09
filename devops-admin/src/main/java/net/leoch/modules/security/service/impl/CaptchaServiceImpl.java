@@ -7,8 +7,10 @@ import com.wf.captcha.base.Captcha;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.redis.RedisKeys;
 import net.leoch.common.redis.RedisUtils;
+import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.security.service.ICaptchaService;
 import org.springframework.stereotype.Service;
 
@@ -27,6 +29,8 @@ public class CaptchaServiceImpl implements ICaptchaService {
 
     @Override
     public void create(HttpServletResponse response, String uuid) throws IOException {
+        AssertUtils.isBlank(uuid, ErrorCode.IDENTIFIER_NOT_NULL);
+
         response.setContentType("image/gif");
         response.setHeader("Pragma", "No-cache");
         response.setHeader("Cache-Control", "no-cache");

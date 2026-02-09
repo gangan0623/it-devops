@@ -8,6 +8,11 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
+import net.leoch.common.validator.AssertUtils;
+import net.leoch.common.validator.ValidatorUtils;
+import net.leoch.common.validator.group.AddGroup;
+import net.leoch.common.validator.group.DefaultGroup;
+import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.mapper.SysRoleMapper;
@@ -94,6 +99,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void save(SysRoleReq dto) {
+        ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         SysRoleEntity entity = ConvertUtils.sourceToTarget(dto, SysRoleEntity.class);
 
         //保存角色
@@ -109,6 +115,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(SysRoleReq dto) {
+        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         SysRoleEntity entity = ConvertUtils.sourceToTarget(dto, SysRoleEntity.class);
 
         //更新角色
@@ -124,6 +131,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long[] ids) {
+        AssertUtils.isArrayEmpty(ids, "id");
         //删除角色
         this.removeByIds(Arrays.asList(ids));
 

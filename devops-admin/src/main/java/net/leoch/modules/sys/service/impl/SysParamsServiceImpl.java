@@ -11,6 +11,11 @@ import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.JsonUtils;
+import net.leoch.common.validator.AssertUtils;
+import net.leoch.common.validator.ValidatorUtils;
+import net.leoch.common.validator.group.AddGroup;
+import net.leoch.common.validator.group.DefaultGroup;
+import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.mapper.SysParamsMapper;
 import net.leoch.modules.sys.vo.req.SysParamsPageReq;
 import net.leoch.modules.sys.vo.req.SysParamsReq;
@@ -75,6 +80,7 @@ public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParams
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void save(SysParamsReq dto) {
+        ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         SysParamsEntity entity = ConvertUtils.sourceToTarget(dto, SysParamsEntity.class);
         this.save(entity);
 
@@ -84,6 +90,7 @@ public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParams
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(SysParamsReq dto) {
+        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         SysParamsEntity entity = ConvertUtils.sourceToTarget(dto, SysParamsEntity.class);
         this.updateById(entity);
 
@@ -93,6 +100,7 @@ public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParams
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long[] ids) {
+        AssertUtils.isArrayEmpty(ids, "id");
         //删除Redis数据
         List<String> paramCodeList = this.getBaseMapper().getParamCodeList(ids);
         String[] paramCodes = paramCodeList.toArray(new String[paramCodeList.size()]);

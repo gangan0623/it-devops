@@ -9,11 +9,6 @@ import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ExcelUtils;
 import net.leoch.common.utils.Result;
-import net.leoch.common.validator.AssertUtils;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.AddGroup;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.vo.req.PasswordReq;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.vo.req.SysUserPageReq;
@@ -21,8 +16,6 @@ import net.leoch.modules.sys.vo.req.SysUserReq;
 import net.leoch.modules.sys.excel.SysUserExcel;
 import net.leoch.modules.sys.service.ISysUserService;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 /**
  * 用户管理
@@ -69,7 +62,6 @@ public class SysUserController {
     @LogOperation("保存")
     @SaCheckPermission("sys:user:save")
     public Result<Object> save(@RequestBody SysUserReq dto) {
-        ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         sysUserService.save(dto);
         return new Result<>();
     }
@@ -79,7 +71,6 @@ public class SysUserController {
     @LogOperation("修改")
     @SaCheckPermission("sys:user:update")
     public Result<Object> update(@RequestBody SysUserReq dto) {
-        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         sysUserService.update(dto);
         return new Result<>();
     }
@@ -89,7 +80,6 @@ public class SysUserController {
     @LogOperation("删除")
     @SaCheckPermission("sys:user:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
-        AssertUtils.isArrayEmpty(ids, "id");
         sysUserService.delete(ids);
         return new Result<>();
     }

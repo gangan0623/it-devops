@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
-import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.alert.vo.rsp.AlertRecordActionRsp;
 import net.leoch.modules.alert.vo.req.AlertProblemPageReq;
 import net.leoch.modules.alert.vo.req.AlertRecordActionReq;
@@ -80,7 +79,6 @@ public class AlertRecordController {
     @LogOperation("删除")
     @SaCheckPermission("alert:record:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
-        AssertUtils.isArrayEmpty(ids, "id");
         alertRecordService.delete(ids);
         return new Result<>();
     }

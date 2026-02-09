@@ -10,9 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.utils.Result;
-import net.leoch.common.validator.AssertUtils;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.DefaultGroup;
+import net.leoch.modules.sys.enums.MenuTypeEnum;
 import net.leoch.modules.sys.vo.rsp.SysMenuRsp;
 import net.leoch.modules.sys.vo.req.SysMenuReq;
 import net.leoch.modules.sys.service.ISysMenuService;
@@ -65,7 +63,6 @@ public class SysMenuController {
     @LogOperation("保存")
     @SaCheckPermission("sys:menu:save")
     public Result<Object> save(@RequestBody SysMenuReq dto) {
-        ValidatorUtils.validateEntity(dto, DefaultGroup.class);
         sysMenuService.save(dto);
         return new Result<>();
     }
@@ -75,7 +72,6 @@ public class SysMenuController {
     @LogOperation("修改")
     @SaCheckPermission("sys:menu:update")
     public Result<Object> update(@RequestBody SysMenuReq dto) {
-        ValidatorUtils.validateEntity(dto, DefaultGroup.class);
         sysMenuService.update(dto);
         return new Result<>();
     }
@@ -85,7 +81,6 @@ public class SysMenuController {
     @LogOperation("删除")
     @SaCheckPermission("sys:menu:delete")
     public Result<Object> delete(@PathVariable("id") Long id) {
-        AssertUtils.isNull(id, "id");
         sysMenuService.deleteWithChildCheck(id);
         return new Result<>();
     }

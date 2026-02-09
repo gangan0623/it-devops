@@ -8,6 +8,9 @@ import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.TreeUtils;
+import net.leoch.common.validator.AssertUtils;
+import net.leoch.common.validator.ValidatorUtils;
+import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
@@ -43,6 +46,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void save(SysMenuReq dto) {
+        ValidatorUtils.validateEntity(dto, DefaultGroup.class);
         SysMenuEntity entity = ConvertUtils.sourceToTarget(dto, SysMenuEntity.class);
 
         //保存菜单
@@ -52,6 +56,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(SysMenuReq dto) {
+        ValidatorUtils.validateEntity(dto, DefaultGroup.class);
         SysMenuEntity entity = ConvertUtils.sourceToTarget(dto, SysMenuEntity.class);
 
         //上级菜单不能为自身
@@ -120,6 +125,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteWithChildCheck(Long id) {
+        AssertUtils.isNull(id, "id");
         List<SysMenuRsp> children = this.getListPid(id);
         if (!children.isEmpty()) {
             throw new ServiceException(ErrorCode.SUB_MENU_EXIST);

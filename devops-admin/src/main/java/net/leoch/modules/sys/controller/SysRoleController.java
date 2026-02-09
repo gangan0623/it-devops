@@ -7,11 +7,6 @@ import lombok.AllArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
-import net.leoch.common.validator.AssertUtils;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.AddGroup;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.vo.rsp.SysRoleRsp;
 import net.leoch.modules.sys.vo.req.SysRolePageReq;
 import net.leoch.modules.sys.vo.req.SysRoleReq;
@@ -58,7 +53,6 @@ public class SysRoleController {
     @LogOperation("保存")
     @SaCheckPermission("sys:role:save")
     public Result<Object> save(@RequestBody SysRoleReq dto) {
-        ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         sysRoleService.save(dto);
         return new Result<>();
     }
@@ -68,7 +62,6 @@ public class SysRoleController {
     @LogOperation("修改")
     @SaCheckPermission("sys:role:update")
     public Result<Object> update(@RequestBody SysRoleReq dto) {
-        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         sysRoleService.update(dto);
         return new Result<>();
     }
@@ -78,7 +71,6 @@ public class SysRoleController {
     @LogOperation("删除")
     @SaCheckPermission("sys:role:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
-        AssertUtils.isArrayEmpty(ids, "id");
         sysRoleService.delete(ids);
         return new Result<>();
     }

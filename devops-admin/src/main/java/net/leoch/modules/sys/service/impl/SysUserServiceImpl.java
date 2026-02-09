@@ -9,6 +9,11 @@ import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
+import net.leoch.common.validator.AssertUtils;
+import net.leoch.common.validator.ValidatorUtils;
+import net.leoch.common.validator.group.AddGroup;
+import net.leoch.common.validator.group.DefaultGroup;
+import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.security.password.PasswordUtils;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
@@ -120,6 +125,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void save(SysUserReq dto) {
+        ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         SysUserEntity entity = ConvertUtils.sourceToTarget(dto, SysUserEntity.class);
 
         //密码加密
@@ -137,6 +143,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(SysUserReq dto) {
+        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         SysUserEntity entity = ConvertUtils.sourceToTarget(dto, SysUserEntity.class);
 
         //密码加密
@@ -157,6 +164,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long[] ids) {
+        AssertUtils.isArrayEmpty(ids, "id");
         //删除用户
         this.removeByIds(Arrays.asList(ids));
 

@@ -7,6 +7,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
+import net.leoch.common.validator.AssertUtils;
+import net.leoch.common.validator.ValidatorUtils;
+import net.leoch.common.validator.group.DefaultGroup;
+import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.mapper.SysDictDataMapper;
 import net.leoch.modules.sys.vo.req.SysDictDataPageReq;
 import net.leoch.modules.sys.vo.req.SysDictDataReq;
@@ -62,6 +66,7 @@ public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDi
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void save(SysDictDataReq dto) {
+        ValidatorUtils.validateEntity(dto, DefaultGroup.class);
         SysDictDataEntity entity = ConvertUtils.sourceToTarget(dto, SysDictDataEntity.class);
 
         this.save(entity);
@@ -70,6 +75,7 @@ public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDi
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(SysDictDataReq dto) {
+        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         SysDictDataEntity entity = ConvertUtils.sourceToTarget(dto, SysDictDataEntity.class);
 
         this.updateById(entity);
@@ -78,6 +84,7 @@ public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDi
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long[] ids) {
+        AssertUtils.isArrayEmpty(ids, "id");
         //删除
         this.removeByIds(Arrays.asList(ids));
     }

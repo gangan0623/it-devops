@@ -10,9 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
-import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.utils.Result;
-import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.security.vo.req.LoginReq;
 import net.leoch.modules.security.service.ICaptchaService;
 import net.leoch.modules.security.service.ISecurityService;
@@ -39,10 +37,6 @@ public class LoginController {
     @Operation(summary = "验证码")
     @Parameter(in = ParameterIn.QUERY, ref = "string", name = "uuid")
     public void captcha(HttpServletResponse response, String uuid) throws IOException {
-        //uuid不能为空
-        AssertUtils.isBlank(uuid, ErrorCode.IDENTIFIER_NOT_NULL);
-
-        //生成验证码
         captchaService.create(response, uuid);
     }
 

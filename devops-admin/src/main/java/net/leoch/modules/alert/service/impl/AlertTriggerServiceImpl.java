@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
+import net.leoch.common.validator.AssertUtils;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.alert.mapper.AlertMediaMapper;
 import net.leoch.modules.alert.service.IAlertNotifyLogService;
@@ -138,6 +139,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
 
     @Override
     public void delete(Long[] ids) {
+        AssertUtils.isArrayEmpty(ids, "id");
         this.removeByIds(Arrays.asList(ids));
     }
 

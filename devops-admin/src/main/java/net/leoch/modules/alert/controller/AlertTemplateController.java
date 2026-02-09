@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
-import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.alert.vo.rsp.AlertTemplateRsp;
 import net.leoch.modules.alert.vo.req.AlertTemplatePageReq;
 import net.leoch.modules.alert.vo.req.AlertTemplateReq;
@@ -108,7 +107,6 @@ public class AlertTemplateController {
     @LogOperation("删除")
     @SaCheckPermission("alert:template:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
-        AssertUtils.isArrayEmpty(ids, "id");
         alertTemplateService.delete(ids);
         return new Result<>();
     }

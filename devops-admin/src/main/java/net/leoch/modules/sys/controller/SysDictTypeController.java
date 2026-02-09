@@ -7,10 +7,6 @@ import lombok.AllArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
-import net.leoch.common.validator.AssertUtils;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.vo.rsp.SysDictTypeRsp;
 import net.leoch.modules.sys.vo.req.SysDictTypePageReq;
 import net.leoch.modules.sys.vo.req.SysDictTypeReq;
@@ -51,7 +47,6 @@ public class SysDictTypeController {
     @LogOperation("保存")
     @SaCheckPermission("sys:dict:save")
     public Result<Object> save(@RequestBody SysDictTypeReq dto) {
-        ValidatorUtils.validateEntity(dto, DefaultGroup.class);
         sysDictTypeService.save(dto);
         return new Result<>();
     }
@@ -61,7 +56,6 @@ public class SysDictTypeController {
     @LogOperation("修改")
     @SaCheckPermission("sys:dict:update")
     public Result<Object> update(@RequestBody SysDictTypeReq dto) {
-        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         sysDictTypeService.update(dto);
         return new Result<>();
     }
@@ -71,7 +65,6 @@ public class SysDictTypeController {
     @LogOperation("删除")
     @SaCheckPermission("sys:dict:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
-        AssertUtils.isArrayEmpty(ids, "id");
         sysDictTypeService.delete(ids);
         return new Result<>();
     }

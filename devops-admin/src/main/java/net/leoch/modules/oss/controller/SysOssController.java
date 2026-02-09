@@ -15,7 +15,6 @@ import net.leoch.modules.sys.vo.req.SysOssPageReq;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -66,7 +65,7 @@ public class SysOssController {
     @LogOperation("删除")
     @SaCheckPermission("sys:oss:all")
     public Result<Object> delete(@RequestBody Long[] ids) {
-        sysOssService.removeByIds(Arrays.asList(ids));
+        sysOssService.delete(ids);
         return new Result<>();
     }
 

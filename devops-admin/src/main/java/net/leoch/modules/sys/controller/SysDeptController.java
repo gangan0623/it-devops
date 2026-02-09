@@ -8,11 +8,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.utils.Result;
-import net.leoch.common.validator.AssertUtils;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.AddGroup;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
 import net.leoch.modules.sys.vo.req.SysDeptReq;
 import net.leoch.modules.sys.service.ISysDeptService;
@@ -37,8 +32,7 @@ public class SysDeptController {
     @Operation(summary = "列表")
     @SaCheckPermission("sys:dept:list")
     public Result<List<SysDeptRsp>> list() {
-        List<SysDeptRsp> list = sysDeptService.list(new HashMap<>(1));
-        return new Result<List<SysDeptRsp>>().ok(list);
+        return new Result<List<SysDeptRsp>>().ok(sysDeptService.list(new HashMap<>(1)));
     }
 
     @GetMapping("{id}")
@@ -53,7 +47,6 @@ public class SysDeptController {
     @LogOperation("保存")
     @SaCheckPermission("sys:dept:save")
     public Result<Object> save(@RequestBody SysDeptReq dto) {
-        ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         sysDeptService.save(dto);
         return new Result<>();
     }
@@ -63,7 +56,6 @@ public class SysDeptController {
     @LogOperation("修改")
     @SaCheckPermission("sys:dept:update")
     public Result<Object> update(@RequestBody SysDeptReq dto) {
-        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         sysDeptService.update(dto);
         return new Result<>();
     }
@@ -73,7 +65,6 @@ public class SysDeptController {
     @LogOperation("删除")
     @SaCheckPermission("sys:dept:delete")
     public Result<Object> delete(@PathVariable("id") Long id) {
-        AssertUtils.isNull(id, "id");
         sysDeptService.delete(id);
         return new Result<>();
     }

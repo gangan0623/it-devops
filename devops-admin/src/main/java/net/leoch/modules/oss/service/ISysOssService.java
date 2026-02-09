@@ -18,4 +18,10 @@ public interface ISysOssService extends IService<SysOssEntity> {
      * @return 包含 src(文件URL) 的结果
      */
     Map<String, Object> upload(MultipartFile file) throws Exception;
+
+    /**
+     * 批量删除
+     * @param ids ID数组
+     */
+    void delete(Long[] ids);
 }

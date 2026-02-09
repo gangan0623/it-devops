@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
+import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.alert.mapper.AlertTemplateMapper;
 import net.leoch.modules.alert.vo.req.AlertTemplatePageReq;
 import net.leoch.modules.alert.vo.req.AlertTemplateReq;
@@ -76,6 +77,7 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
 
     @Override
     public void delete(Long[] ids) {
+        AssertUtils.isArrayEmpty(ids, "id");
         this.removeByIds(Arrays.asList(ids));
     }
 

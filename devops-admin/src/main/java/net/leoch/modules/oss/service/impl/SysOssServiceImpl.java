@@ -8,6 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
+import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.oss.cloud.OSSFactory;
 import net.leoch.modules.oss.mapper.SysOssMapper;
 import net.leoch.modules.oss.entity.SysOssEntity;
@@ -17,6 +18,7 @@ import net.leoch.modules.sys.vo.req.SysOssPageReq;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -50,5 +52,11 @@ public class SysOssServiceImpl extends ServiceImpl<SysOssMapper, SysOssEntity> i
         Map<String, Object> data = new HashMap<>(1);
         data.put("src", url);
         return data;
+    }
+
+    @Override
+    public void delete(Long[] ids) {
+        AssertUtils.isArrayEmpty(ids, "id");
+        this.removeByIds(Arrays.asList(ids));
     }
 }

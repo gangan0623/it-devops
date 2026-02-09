@@ -6,7 +6,6 @@ import static net.leoch.common.constant.Constant.ORDER_FIELD;
 import static net.leoch.common.constant.Constant.PAGE;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import cn.hutool.core.util.StrUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -15,19 +14,12 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
-import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.alert.vo.rsp.AlertMediaRsp;
 import net.leoch.modules.alert.vo.req.AlertMediaPageReq;
 import net.leoch.modules.alert.vo.req.AlertMediaReq;
 import net.leoch.modules.alert.vo.req.AlertMediaTestReq;
-import net.leoch.modules.alert.entity.AlertMediaEntity;
-import net.leoch.modules.alert.service.AlertMailService;
 import net.leoch.modules.alert.service.IAlertMediaService;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 告警媒介
@@ -41,11 +33,9 @@ import java.util.stream.Collectors;
 public class AlertMediaController {
 
     private final IAlertMediaService alertMediaService;
-    private final AlertMailService alertMailService;
 
-    public AlertMediaController(IAlertMediaService alertMediaService, AlertMailService alertMailService) {
+    public AlertMediaController(IAlertMediaService alertMediaService) {
         this.alertMediaService = alertMediaService;
-        this.alertMailService = alertMailService;
     }
 
     @GetMapping("page")
@@ -91,7 +81,6 @@ public class AlertMediaController {
     @LogOperation("删除")
     @SaCheckPermission("alert:media:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
-        AssertUtils.isArrayEmpty(ids, "id");
         alertMediaService.delete(ids);
         return new Result<>();
     }
