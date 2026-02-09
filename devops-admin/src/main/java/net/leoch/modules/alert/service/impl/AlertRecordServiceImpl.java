@@ -249,18 +249,24 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
 
     @Override
     public PageData<AlertProblemRsp> problemPage(AlertProblemPageReq request) {
+        int page = parseInt(toStr(request.getPage()), 1);
+        int limit = parseInt(toStr(request.getLimit()), 10);
+
+        LambdaQueryWrapper<AlertRecordEntity> wrapper = buildProblemWrapper(request);
+        List<AlertRecordEntity> records = this.list(wrapper);
+        List<AlertProblemRsp> filtered = enrichAndFilterProblemRecords(records, request);
+        return paginateProblemResults(filtered, page, limit);
+    }
+
+    private LambdaQueryWrapper<AlertRecordEntity> buildProblemWrapper(AlertProblemPageReq request) {
         String category = toStr(request.getCategory(), "realtime");
-        String severityRaw = toStr(request.getSeverity());
-        List<String> severityList = parseSeverityList(severityRaw);
+        List<String> severityList = parseSeverityList(toStr(request.getSeverity()));
         String deviceType = toStr(request.getDeviceType());
         String hostName = toStr(request.getHostName());
         String instance = toStr(request.getInstance());
-        String ackStatus = toStr(request.getAckStatus());
         String statusFilter = toStr(request.getStatusFilter());
         Date startTime = parseDateTime(toStr(request.getStartTime()));
         Date endTime = parseDateTime(toStr(request.getEndTime()));
-        int page = parseInt(toStr(request.getPage()), 1);
-        int limit = parseInt(toStr(request.getLimit()), 10);
 
         LambdaQueryWrapper<AlertRecordEntity> wrapper = new LambdaQueryWrapper<AlertRecordEntity>()
             .in(!severityList.isEmpty(), AlertRecordEntity::getSeverity, severityList)
@@ -279,32 +285,49 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         }
 
         if ("realtime".equalsIgnoreCase(category)) {
-            Date recent12h = Date.from(Instant.now().minusSeconds(12L * 3600));
-            wrapper.ge(AlertRecordEntity::getStartsAt, recent12h);
-            if ("problem".equalsIgnoreCase(statusFilter)) {
-                wrapper.eq(AlertRecordEntity::getStatus, "firing")
-                    .and(w -> w.isNull(AlertRecordEntity::getClosed).or().eq(AlertRecordEntity::getClosed, 0))
-                    .and(w -> w.isNull(AlertRecordEntity::getSuppressedUntil).or().le(AlertRecordEntity::getSuppressedUntil, new Date()));
-            } else if ("manual".equalsIgnoreCase(statusFilter)) {
-                wrapper.eq(AlertRecordEntity::getClosed, 1);
-            } else if ("auto".equalsIgnoreCase(statusFilter) || "resolved".equalsIgnoreCase(statusFilter)) {
-                wrapper.and(w -> w
-                        .eq(AlertRecordEntity::getStatus, "resolved")
-                        .or()
-                        .eq(AlertRecordEntity::getSeverity, "recover"))
-                    .and(w -> w.isNull(AlertRecordEntity::getClosed).or().eq(AlertRecordEntity::getClosed, 0));
-            }
-            wrapper.last("limit 1000");
+            applyRealtimeFilters(wrapper, statusFilter);
         } else {
-            if (startTime == null) {
-                startTime = Date.from(Instant.now().minusSeconds(7L * 24 * 3600));
-            }
-            wrapper.ge(AlertRecordEntity::getStartsAt, startTime);
-            wrapper.le(endTime != null, AlertRecordEntity::getStartsAt, endTime);
-            wrapper.last("limit 5000");
+            applyHistoryFilters(wrapper, startTime, endTime);
         }
+        return wrapper;
+    }
 
-        List<AlertRecordEntity> records = this.list(wrapper);
+    private void applyRealtimeFilters(LambdaQueryWrapper<AlertRecordEntity> wrapper, String statusFilter) {
+        Date recent12h = Date.from(Instant.now().minusSeconds(12L * 3600));
+        wrapper.ge(AlertRecordEntity::getStartsAt, recent12h);
+        if ("problem".equalsIgnoreCase(statusFilter)) {
+            wrapper.eq(AlertRecordEntity::getStatus, "firing")
+                .and(w -> w.isNull(AlertRecordEntity::getClosed).or().eq(AlertRecordEntity::getClosed, 0))
+                .and(w -> w.isNull(AlertRecordEntity::getSuppressedUntil).or().le(AlertRecordEntity::getSuppressedUntil, new Date()));
+        } else if ("manual".equalsIgnoreCase(statusFilter)) {
+            wrapper.eq(AlertRecordEntity::getClosed, 1);
+        } else if ("auto".equalsIgnoreCase(statusFilter) || "resolved".equalsIgnoreCase(statusFilter)) {
+            wrapper.and(w -> w
+                    .eq(AlertRecordEntity::getStatus, "resolved")
+                    .or()
+                    .eq(AlertRecordEntity::getSeverity, "recover"))
+                .and(w -> w.isNull(AlertRecordEntity::getClosed).or().eq(AlertRecordEntity::getClosed, 0));
+        }
+        wrapper.last("limit 1000");
+    }
+
+    private void applyHistoryFilters(LambdaQueryWrapper<AlertRecordEntity> wrapper, Date startTime, Date endTime) {
+        Date effectiveStart = startTime;
+        if (effectiveStart == null) {
+            effectiveStart = Date.from(Instant.now().minusSeconds(7L * 24 * 3600));
+        }
+        wrapper.ge(AlertRecordEntity::getStartsAt, effectiveStart);
+        wrapper.le(endTime != null, AlertRecordEntity::getStartsAt, endTime);
+        wrapper.last("limit 5000");
+    }
+
+    private List<AlertProblemRsp> enrichAndFilterProblemRecords(List<AlertRecordEntity> records,
+                                                                AlertProblemPageReq request) {
+        String category = toStr(request.getCategory(), "realtime");
+        String deviceType = toStr(request.getDeviceType());
+        String hostName = toStr(request.getHostName());
+        String ackStatus = toStr(request.getAckStatus());
+        String statusFilter = toStr(request.getStatusFilter());
 
         Map<String, HostInfo> hostMap = loadHostInfoMap();
         List<Long> recordIds = records.stream().map(AlertRecordEntity::getId).collect(Collectors.toList());
@@ -322,23 +345,19 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
                 notifyLog = latestNotifyByAlert.get(buildAlertKey(record.getAlertName(), record.getInstance()));
             }
             AlertProblemRsp dto = toProblemDTO(record, hostMap, ackMap.get(record.getId()), notifyLog, actionMetaMap.get(record.getId()));
-            if (!matchesCategory(dto, category, statusFilter)) {
-                continue;
-            }
-            if (!matchesDeviceType(dto, deviceType)) {
-                continue;
-            }
-            if (!matchesHostName(dto, hostName)) {
-                continue;
-            }
-            if (!matchesAck(dto, ackStatus)) {
-                continue;
-            }
-            if (!matchesStatus(dto, statusFilter)) {
+            if (!matchesCategory(dto, category, statusFilter)
+                || !matchesDeviceType(dto, deviceType)
+                || !matchesHostName(dto, hostName)
+                || !matchesAck(dto, ackStatus)
+                || !matchesStatus(dto, statusFilter)) {
                 continue;
             }
             all.add(dto);
         }
+        return all;
+    }
+
+    private PageData<AlertProblemRsp> paginateProblemResults(List<AlertProblemRsp> all, int page, int limit) {
         int total = all.size();
         int firingCount = 0;
         int resolvedCount = 0;

@@ -15,6 +15,7 @@ import net.leoch.modules.ops.entity.MonitorComponentEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
 import net.leoch.modules.ops.service.IDashboardService;
 import net.leoch.modules.ops.service.ZabbixClient;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -25,61 +26,54 @@ import java.util.*;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class DashboardServiceImpl implements IDashboardService {
 
     private final WindowHostMapper windowHostMapper;
     private final LinuxHostMapper linuxHostMapper;
     private final BusinessSystemMapper businessSystemMapper;
     private final DeviceBackupMapper deviceBackupMapper;
-    private final DeviceBackupRecordMapper deviceBackupRecordDao;
+    private final DeviceBackupRecordMapper deviceBackupRecordMapper;
     private final MonitorComponentMapper monitorComponentMapper;
     private final AlertRecordMapper alertRecordMapper;
     private final ZabbixClient zabbixClient;
 
-    public DashboardServiceImpl(WindowHostMapper windowHostMapper,
-                                LinuxHostMapper linuxHostMapper,
-                                BusinessSystemMapper businessSystemMapper,
-                                DeviceBackupMapper deviceBackupMapper,
-                                DeviceBackupRecordMapper deviceBackupRecordDao,
-                                MonitorComponentMapper monitorComponentMapper,
-                                AlertRecordMapper alertRecordMapper,
-                                ZabbixClient zabbixClient) {
-        this.windowHostMapper = windowHostMapper;
-        this.linuxHostMapper = linuxHostMapper;
-        this.businessSystemMapper = businessSystemMapper;
-        this.deviceBackupMapper = deviceBackupMapper;
-        this.deviceBackupRecordDao = deviceBackupRecordDao;
-        this.monitorComponentMapper = monitorComponentMapper;
-        this.alertRecordMapper = alertRecordMapper;
-        this.zabbixClient = zabbixClient;
-    }
-
     @Override
     public DashboardSummaryRsp summary() {
         DashboardSummaryRsp data = new DashboardSummaryRsp();
+        data.setHostCounts(buildHostCounts());
+        data.setBackupStats(buildBackupStats());
+        data.setDeviceDiff(buildDeviceDiff());
+        data.setRecentAlerts(buildRecentAlerts());
+        data.setMonitorComponents(buildMonitorComponents());
+        return data;
+    }
 
+    private DashboardHostCountsRsp buildHostCounts() {
         DashboardHostCountsRsp hostCounts = new DashboardHostCountsRsp();
         hostCounts.setWindows(windowHostMapper.selectCount(new LambdaQueryWrapper<>()));
         hostCounts.setLinux(linuxHostMapper.selectCount(new LambdaQueryWrapper<>()));
         hostCounts.setBusiness(businessSystemMapper.selectCount(new LambdaQueryWrapper<>()));
-        data.setHostCounts(hostCounts);
+        return hostCounts;
+    }
 
+    private DashboardBackupStatsRsp buildBackupStats() {
         DashboardBackupStatsRsp backupStats = new DashboardBackupStatsRsp();
-        long total = deviceBackupRecordDao.selectCount(new LambdaQueryWrapper<>());
-        long success = deviceBackupRecordDao.selectCount(
+        long total = deviceBackupRecordMapper.selectCount(new LambdaQueryWrapper<>());
+        long success = deviceBackupRecordMapper.selectCount(
                 new LambdaQueryWrapper<DeviceBackupRecordEntity>().eq(DeviceBackupRecordEntity::getLastBackupStatus, 1)
         );
-        long fail = deviceBackupRecordDao.selectCount(
+        long fail = deviceBackupRecordMapper.selectCount(
                 new LambdaQueryWrapper<DeviceBackupRecordEntity>().eq(DeviceBackupRecordEntity::getLastBackupStatus, 0)
         );
-        DeviceBackupRecordEntity maxBackup = deviceBackupRecordDao.selectOne(
+        DeviceBackupRecordEntity maxBackup = deviceBackupRecordMapper.selectOne(
                 new LambdaQueryWrapper<DeviceBackupRecordEntity>()
                         .select(DeviceBackupRecordEntity::getBackupNum)
                         .orderByDesc(DeviceBackupRecordEntity::getBackupNum)
                         .last("limit 1")
         );
         Integer round = maxBackup == null ? 0 : maxBackup.getBackupNum();
-        DeviceBackupRecordEntity lastBackup = deviceBackupRecordDao.selectOne(
+        DeviceBackupRecordEntity lastBackup = deviceBackupRecordMapper.selectOne(
                 new LambdaQueryWrapper<DeviceBackupRecordEntity>()
                         .select(DeviceBackupRecordEntity::getLastBackupTime)
                         .orderByDesc(DeviceBackupRecordEntity::getLastBackupTime)
@@ -90,8 +84,10 @@ public class DashboardServiceImpl implements IDashboardService {
         backupStats.setSuccess(success);
         backupStats.setFail(fail);
         backupStats.setLastTime(lastBackup == null ? null : lastBackup.getLastBackupTime());
-        data.setBackupStats(backupStats);
+        return backupStats;
+    }
 
+    private DashboardDeviceDiffRsp buildDeviceDiff() {
         List<Map<String, String>> zabbixHosts = zabbixClient.getHostsByTemplates();
         List<DeviceBackupEntity> backupDevices = deviceBackupMapper.selectList(
                 new LambdaQueryWrapper<DeviceBackupEntity>()
@@ -137,8 +133,10 @@ public class DashboardServiceImpl implements IDashboardService {
         DashboardDeviceDiffRsp diff = new DashboardDeviceDiffRsp();
         diff.setZabbixOnly(zabbixOnly);
         diff.setBackupOnly(backupOnly);
-        data.setDeviceDiff(diff);
+        return diff;
+    }
 
+    private List<DashboardAlertSummaryRsp> buildRecentAlerts() {
         List<AlertRecordEntity> alerts = alertRecordMapper.selectList(
                 new LambdaQueryWrapper<AlertRecordEntity>()
                         .select(AlertRecordEntity::getAlertName, AlertRecordEntity::getInstance, AlertRecordEntity::getStartsAt,
@@ -158,8 +156,10 @@ public class DashboardServiceImpl implements IDashboardService {
             item.setStatus(alert.getStatus());
             recentAlerts.add(item);
         }
-        data.setRecentAlerts(recentAlerts);
+        return recentAlerts;
+    }
 
+    private List<DashboardMonitorComponentItemRsp> buildMonitorComponents() {
         List<MonitorComponentEntity> components = monitorComponentMapper.selectList(
                 new LambdaQueryWrapper<MonitorComponentEntity>()
                         .select(MonitorComponentEntity::getName, MonitorComponentEntity::getOnlineStatus, MonitorComponentEntity::getUpdateAvailable)
@@ -173,9 +173,7 @@ public class DashboardServiceImpl implements IDashboardService {
             item.setUpdateAvailable(component.getUpdateAvailable());
             monitorItems.add(item);
         }
-        data.setMonitorComponents(monitorItems);
-
-        return data;
+        return monitorItems;
     }
 
     private Map<String, String> loadHostMap() {
