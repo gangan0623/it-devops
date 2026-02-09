@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.task;
+package net.leoch.common.integration.schedule.task;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

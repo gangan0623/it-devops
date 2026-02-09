@@ -1,4 +1,4 @@
-package net.leoch.common.task;
+package net.leoch.common.integration.schedule.task;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

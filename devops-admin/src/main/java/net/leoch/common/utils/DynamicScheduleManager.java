@@ -8,7 +8,7 @@ import net.leoch.common.utils.SpringContextUtils;
 import net.leoch.modules.job.entity.ScheduleJobEntity;
 import net.leoch.modules.job.entity.ScheduleJobLogEntity;
 import net.leoch.modules.job.service.IScheduleJobLogService;
-import net.leoch.common.task.ITask;
+import net.leoch.common.integration.schedule.task.ITask;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;

@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.task;
+package net.leoch.common.integration.schedule.task;
 
 import net.leoch.common.integration.schedule.service.job.DeviceBackupJobService;
 import org.slf4j.Logger;
