@@ -2,7 +2,7 @@ package net.leoch.common.utils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.constant.Constant;
+import net.leoch.common.core.base.Constant;
 import net.leoch.common.exception.ExceptionUtils;
 import net.leoch.common.utils.SpringContextUtils;
 import net.leoch.modules.job.entity.ScheduleJobEntity;

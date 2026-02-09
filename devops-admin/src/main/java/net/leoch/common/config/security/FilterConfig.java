@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.config;
+package net.leoch.common.config.security;
 
 import jakarta.servlet.DispatcherType;
 import net.leoch.common.web.filter.xss.XssFilter;

@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.entity;
+package net.leoch.common.core.base;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;

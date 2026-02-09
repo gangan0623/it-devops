@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.config;
+package net.leoch.common.config.security;
 
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.databind.DeserializationFeature;

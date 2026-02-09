@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.constant;
+package net.leoch.common.core.base;
 
 /**
  * 常量

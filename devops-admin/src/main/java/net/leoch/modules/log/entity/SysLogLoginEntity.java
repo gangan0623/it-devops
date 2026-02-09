@@ -5,7 +5,7 @@ package net.leoch.modules.log.entity;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import net.leoch.common.entity.BaseEntity;
+import net.leoch.common.core.base.BaseEntity;
 
 /**
  * 登录日志

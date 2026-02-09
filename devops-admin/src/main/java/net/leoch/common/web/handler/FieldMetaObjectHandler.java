@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.handler;
+package net.leoch.common.web.handler;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
 import net.leoch.common.security.user.SecurityUser;

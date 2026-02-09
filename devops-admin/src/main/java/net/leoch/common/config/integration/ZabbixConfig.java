@@ -1,4 +1,4 @@
-package net.leoch.common.config;
+package net.leoch.common.config.integration;
 
 import lombok.Getter;
 import lombok.Setter;

@@ -1,10 +1,10 @@
 package net.leoch.modules.alert.controller;
 
 
-import static net.leoch.common.constant.Constant.LIMIT;
-import static net.leoch.common.constant.Constant.ORDER;
-import static net.leoch.common.constant.Constant.ORDER_FIELD;
-import static net.leoch.common.constant.Constant.PAGE;
+import static net.leoch.common.core.base.Constant.LIMIT;
+import static net.leoch.common.core.base.Constant.ORDER;
+import static net.leoch.common.core.base.Constant.ORDER_FIELD;
+import static net.leoch.common.core.base.Constant.PAGE;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;

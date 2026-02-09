@@ -1,4 +1,4 @@
-package net.leoch.common.config;
+package net.leoch.common.config.security;
 
 import cn.dev33.satoken.stp.StpInterface;
 import lombok.RequiredArgsConstructor;

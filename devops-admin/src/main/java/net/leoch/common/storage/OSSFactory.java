@@ -2,7 +2,7 @@
 
 package net.leoch.common.storage;
 
-import net.leoch.common.constant.Constant;
+import net.leoch.common.core.base.Constant;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.utils.SpringContextUtils;
 import net.leoch.modules.oss.service.ISysOssConfigService;

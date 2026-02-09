@@ -1,4 +1,4 @@
-package net.leoch.common.config;
+package net.leoch.common.config.schedule;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

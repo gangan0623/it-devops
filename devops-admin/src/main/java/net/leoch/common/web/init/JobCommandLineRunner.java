@@ -1,8 +1,8 @@
-package net.leoch.common.init;
+package net.leoch.common.web.init;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.constant.Constant;
+import net.leoch.common.core.base.Constant;
 import net.leoch.modules.job.mapper.ScheduleJobMapper;
 import net.leoch.modules.job.entity.ScheduleJobEntity;
 import net.leoch.common.utils.DynamicScheduleManager;

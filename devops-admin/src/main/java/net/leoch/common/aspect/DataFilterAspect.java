@@ -7,7 +7,7 @@ import cn.hutool.core.util.StrUtil;
 import com.qiniu.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.annotation.DataFilter;
-import net.leoch.common.constant.Constant;
+import net.leoch.common.core.base.Constant;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.interceptor.DataScope;

@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.convert;
+package net.leoch.common.data.convert;
 
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;

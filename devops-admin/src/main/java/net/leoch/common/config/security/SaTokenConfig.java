@@ -1,4 +1,4 @@
-package net.leoch.common.config;
+package net.leoch.common.config.security;
 
 import cn.dev33.satoken.context.SaHolder;
 import cn.dev33.satoken.filter.SaServletFilter;

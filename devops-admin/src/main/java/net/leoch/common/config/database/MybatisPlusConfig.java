@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.config;
+package net.leoch.common.config.database;
 
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.BlockAttackInnerInterceptor;
