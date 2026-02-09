@@ -1,4 +1,4 @@
-package net.leoch.modules.alert.utils;
+package net.leoch.common.utils;
 
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;

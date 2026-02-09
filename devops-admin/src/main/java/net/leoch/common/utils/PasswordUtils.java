@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.security.password;
+package net.leoch.common.utils;
 
 /**
  * 密码工具类

@@ -1,4 +1,4 @@
-package net.leoch.modules.alert.utils;
+package net.leoch.common.utils;
 
 import cn.hutool.core.util.StrUtil;
 

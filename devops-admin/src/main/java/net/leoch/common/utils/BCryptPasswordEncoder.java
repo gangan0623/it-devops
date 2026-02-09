@@ -1,4 +1,4 @@
-package net.leoch.modules.security.password;
+package net.leoch.common.utils;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

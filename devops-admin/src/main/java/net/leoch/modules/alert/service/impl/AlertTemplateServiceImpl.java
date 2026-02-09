@@ -17,9 +17,9 @@ import net.leoch.modules.alert.vo.req.AlertTemplatePreviewReq;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.entity.AlertTemplateEntity;
 import net.leoch.modules.alert.service.IAlertTemplateService;
-import net.leoch.modules.alert.utils.AlertJsonUtils;
-import net.leoch.modules.alert.utils.AlertPayloadUtils;
-import net.leoch.modules.alert.utils.AlertTemplateRenderer;
+import net.leoch.common.utils.AlertJsonUtils;
+import net.leoch.common.utils.AlertPayloadUtils;
+import net.leoch.common.utils.AlertTemplateRenderer;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 

@@ -16,7 +16,6 @@ import java.util.Set;
 
 /**
  * hibernate-validator校验工具类
- * 参考文档：http://docs.jboss.org/hibernate/validator/6.0/reference/en-US/html_single/
  *
  * @author Taohongqiang
  * @since 1.0.0

@@ -18,7 +18,7 @@ import net.leoch.modules.log.service.ISysLogLoginService;
 import net.leoch.modules.security.mapper.SysUserTokenMapper;
 import net.leoch.modules.security.vo.req.LoginReq;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
-import net.leoch.modules.security.password.PasswordUtils;
+import net.leoch.common.utils.PasswordUtils;
 import net.leoch.modules.security.service.ICaptchaService;
 import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.security.service.ISysUserTokenService;

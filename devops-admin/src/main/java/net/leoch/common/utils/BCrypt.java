@@ -1,4 +1,4 @@
-package net.leoch.modules.security.password;
+package net.leoch.common.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;

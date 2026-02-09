@@ -28,7 +28,7 @@ import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.excel.BusinessSystemExcel;
 import net.leoch.modules.ops.excel.template.BusinessSystemImportExcel;
 import net.leoch.modules.ops.service.IBusinessSystemService;
-import net.leoch.modules.ops.util.OpsQueryUtils;
+import net.leoch.common.utils.OpsQueryUtils;
 import net.leoch.modules.security.user.SecurityUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
