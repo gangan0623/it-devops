@@ -13,6 +13,7 @@ import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.mapper.SysDeptMapper;
 import net.leoch.modules.sys.mapper.SysUserMapper;
+import net.leoch.modules.sys.vo.req.SysDeptReq;
 import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
 import net.leoch.modules.sys.entity.SysDeptEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
@@ -62,7 +63,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysDeptRsp dto) {
+    public void save(SysDeptReq dto) {
         SysDeptEntity entity = ConvertUtils.sourceToTarget(dto, SysDeptEntity.class);
 
         entity.setPids(getPidList(entity.getPid()));
@@ -71,7 +72,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysDeptRsp dto) {
+    public void update(SysDeptReq dto) {
         SysDeptEntity entity = ConvertUtils.sourceToTarget(dto, SysDeptEntity.class);
 
         //上级部门不能为自身

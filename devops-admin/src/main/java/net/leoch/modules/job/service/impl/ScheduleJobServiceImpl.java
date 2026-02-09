@@ -10,8 +10,9 @@ import net.leoch.common.constant.Constant;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.job.mapper.ScheduleJobMapper;
-import net.leoch.modules.job.vo.rsp.ScheduleJobRsp;
 import net.leoch.modules.job.vo.req.ScheduleJobPageReq;
+import net.leoch.modules.job.vo.req.ScheduleJobReq;
+import net.leoch.modules.job.vo.rsp.ScheduleJobRsp;
 import net.leoch.modules.job.entity.ScheduleJobEntity;
 import net.leoch.modules.job.service.IScheduleJobService;
 import net.leoch.modules.job.utils.DynamicScheduleManager;
@@ -47,7 +48,7 @@ public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, Sched
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(ScheduleJobRsp dto) {
+    public void save(ScheduleJobReq dto) {
         ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
         entity.setStatus(Constant.ScheduleStatus.NORMAL.getValue());
         this.save(entity);
@@ -56,7 +57,7 @@ public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, Sched
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(ScheduleJobRsp dto) {
+    public void update(ScheduleJobReq dto) {
         ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
         this.updateById(entity);
         scheduleManager.updateJob(entity);

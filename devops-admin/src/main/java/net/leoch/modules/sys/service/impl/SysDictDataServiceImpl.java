@@ -8,8 +8,9 @@ import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.sys.mapper.SysDictDataMapper;
-import net.leoch.modules.sys.vo.rsp.SysDictDataRsp;
 import net.leoch.modules.sys.vo.req.SysDictDataPageReq;
+import net.leoch.modules.sys.vo.req.SysDictDataReq;
+import net.leoch.modules.sys.vo.rsp.SysDictDataRsp;
 import net.leoch.modules.sys.entity.SysDictDataEntity;
 import net.leoch.modules.sys.service.ISysDictDataService;
 import org.springframework.stereotype.Service;
@@ -60,7 +61,7 @@ public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDi
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysDictDataRsp dto) {
+    public void save(SysDictDataReq dto) {
         SysDictDataEntity entity = ConvertUtils.sourceToTarget(dto, SysDictDataEntity.class);
 
         this.save(entity);
@@ -68,7 +69,7 @@ public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDi
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysDictDataRsp dto) {
+    public void update(SysDictDataReq dto) {
         SysDictDataEntity entity = ConvertUtils.sourceToTarget(dto, SysDictDataEntity.class);
 
         this.updateById(entity);

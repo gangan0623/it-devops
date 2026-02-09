@@ -2,8 +2,9 @@ package net.leoch.modules.alert.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;
 import net.leoch.modules.alert.vo.req.AlertTriggerPageReq;
+import net.leoch.modules.alert.vo.req.AlertTriggerReq;
+import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;
 import net.leoch.modules.alert.entity.AlertTriggerEntity;
 
 import java.util.List;
@@ -19,8 +20,8 @@ public interface IAlertTriggerService extends IService<AlertTriggerEntity> {
     PageData<AlertTriggerRsp> page(AlertTriggerPageReq request);
     List<AlertTriggerRsp> list(AlertTriggerPageReq request);
     AlertTriggerRsp get(Long id);
-    void save(AlertTriggerRsp dto);
-    void update(AlertTriggerRsp dto);
+    void save(AlertTriggerReq dto);
+    void update(AlertTriggerReq dto);
     void delete(Long[] ids);
     void fillReceiverUserIdList(AlertTriggerRsp dto);
     void fillReceiverUserIdList(List<AlertTriggerRsp> list);

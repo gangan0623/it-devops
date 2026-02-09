@@ -19,6 +19,7 @@ import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.sys.vo.req.PasswordReq;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.vo.req.SysUserPageReq;
+import net.leoch.modules.sys.vo.req.SysUserReq;
 import net.leoch.modules.sys.excel.SysUserExcel;
 import net.leoch.modules.sys.service.ISysUserService;
 import org.springframework.web.bind.annotation.*;
@@ -74,7 +75,7 @@ public class SysUserController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:user:save")
-    public Result<Object> save(@RequestBody SysUserRsp dto) {
+    public Result<Object> save(@RequestBody SysUserReq dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
 
@@ -87,7 +88,7 @@ public class SysUserController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:user:update")
-    public Result<Object> update(@RequestBody SysUserRsp dto) {
+    public Result<Object> update(@RequestBody SysUserReq dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
 

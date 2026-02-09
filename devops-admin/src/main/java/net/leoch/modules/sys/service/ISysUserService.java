@@ -2,8 +2,9 @@ package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.vo.req.SysUserPageReq;
+import net.leoch.modules.sys.vo.req.SysUserReq;
+import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.entity.SysUserEntity;
 
 import java.util.List;
@@ -31,9 +32,9 @@ public interface ISysUserService extends IService<SysUserEntity> {
 
 	SysUserRsp getByUsername(String username);
 
-	void save(SysUserRsp dto);
+	void save(SysUserReq dto);
 
-	void update(SysUserRsp dto);
+	void update(SysUserReq dto);
 
 	void delete(Long[] ids);
 

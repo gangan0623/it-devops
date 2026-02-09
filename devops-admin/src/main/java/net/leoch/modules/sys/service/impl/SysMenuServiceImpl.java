@@ -10,6 +10,7 @@ import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.TreeUtils;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.mapper.SysMenuMapper;
+import net.leoch.modules.sys.vo.req.SysMenuReq;
 import net.leoch.modules.sys.vo.rsp.SysMenuRsp;
 import net.leoch.modules.sys.entity.SysMenuEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
@@ -37,7 +38,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysMenuRsp dto) {
+    public void save(SysMenuReq dto) {
         SysMenuEntity entity = ConvertUtils.sourceToTarget(dto, SysMenuEntity.class);
 
         //保存菜单
@@ -46,7 +47,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysMenuRsp dto) {
+    public void update(SysMenuReq dto) {
         SysMenuEntity entity = ConvertUtils.sourceToTarget(dto, SysMenuEntity.class);
 
         //上级菜单不能为自身

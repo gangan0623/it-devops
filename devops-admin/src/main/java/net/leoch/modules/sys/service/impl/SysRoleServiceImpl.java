@@ -11,8 +11,9 @@ import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.mapper.SysRoleMapper;
-import net.leoch.modules.sys.vo.rsp.SysRoleRsp;
 import net.leoch.modules.sys.vo.req.SysRolePageReq;
+import net.leoch.modules.sys.vo.req.SysRoleReq;
+import net.leoch.modules.sys.vo.rsp.SysRoleRsp;
 import net.leoch.modules.sys.entity.SysRoleEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
 import net.leoch.modules.sys.service.ISysDeptService;
@@ -82,7 +83,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysRoleRsp dto) {
+    public void save(SysRoleReq dto) {
         SysRoleEntity entity = ConvertUtils.sourceToTarget(dto, SysRoleEntity.class);
 
         //保存角色
@@ -97,7 +98,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysRoleRsp dto) {
+    public void update(SysRoleReq dto) {
         SysRoleEntity entity = ConvertUtils.sourceToTarget(dto, SysRoleEntity.class);
 
         //更新角色

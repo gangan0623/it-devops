@@ -1,6 +1,7 @@
 package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import net.leoch.modules.sys.vo.req.SysDeptReq;
 import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
 import net.leoch.modules.sys.entity.SysDeptEntity;
 
@@ -18,9 +19,9 @@ public interface ISysDeptService extends IService<SysDeptEntity> {
 
 	SysDeptRsp get(Long id);
 
-	void save(SysDeptRsp dto);
+	void save(SysDeptReq dto);
 
-	void update(SysDeptRsp dto);
+	void update(SysDeptReq dto);
 
 	void delete(Long id);
 

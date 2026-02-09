@@ -13,6 +13,7 @@ import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.vo.rsp.SysDictDataRsp;
 import net.leoch.modules.sys.vo.req.SysDictDataPageReq;
+import net.leoch.modules.sys.vo.req.SysDictDataReq;
 import net.leoch.modules.sys.service.ISysDictDataService;
 import org.springframework.web.bind.annotation.*;
 
@@ -51,7 +52,7 @@ public class SysDictDataController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:dict:save")
-    public Result<Object> save(@RequestBody SysDictDataRsp dto) {
+    public Result<Object> save(@RequestBody SysDictDataReq dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, DefaultGroup.class);
 
@@ -64,7 +65,7 @@ public class SysDictDataController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:dict:update")
-    public Result<Object> update(@RequestBody SysDictDataRsp dto) {
+    public Result<Object> update(@RequestBody SysDictDataReq dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
 

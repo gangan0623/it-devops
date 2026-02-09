@@ -16,6 +16,7 @@ import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.vo.rsp.SysParamsRsp;
 import net.leoch.modules.sys.vo.req.SysParamsPageReq;
+import net.leoch.modules.sys.vo.req.SysParamsReq;
 import net.leoch.modules.sys.excel.SysParamsExcel;
 import net.leoch.modules.sys.service.ISysParamsService;
 import org.springframework.web.bind.annotation.*;
@@ -58,7 +59,7 @@ public class SysParamsController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:params:save")
-    public Result<Object> save(@RequestBody SysParamsRsp dto) {
+    public Result<Object> save(@RequestBody SysParamsReq dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
 
@@ -71,7 +72,7 @@ public class SysParamsController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:params:update")
-    public Result<Object> update(@RequestBody SysParamsRsp dto) {
+    public Result<Object> update(@RequestBody SysParamsReq dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
 

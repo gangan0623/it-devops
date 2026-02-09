@@ -9,8 +9,9 @@ import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.alert.mapper.AlertTemplateMapper;
-import net.leoch.modules.alert.vo.rsp.AlertTemplateRsp;
 import net.leoch.modules.alert.vo.req.AlertTemplatePageReq;
+import net.leoch.modules.alert.vo.req.AlertTemplateReq;
+import net.leoch.modules.alert.vo.rsp.AlertTemplateRsp;
 import net.leoch.modules.alert.vo.req.AlertTemplatePreviewReq;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.entity.AlertTemplateEntity;
@@ -62,14 +63,14 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
     }
 
     @Override
-    public void save(AlertTemplateRsp dto) {
+    public void save(AlertTemplateReq dto) {
         AlertTemplateEntity entity = ConvertUtils.sourceToTarget(dto, AlertTemplateEntity.class);
         this.save(entity);
         BeanUtils.copyProperties(entity, dto);
     }
 
     @Override
-    public void update(AlertTemplateRsp dto) {
+    public void update(AlertTemplateReq dto) {
         this.updateById(ConvertUtils.sourceToTarget(dto, AlertTemplateEntity.class));
     }
 

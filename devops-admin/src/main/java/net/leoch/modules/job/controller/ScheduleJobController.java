@@ -13,6 +13,7 @@ import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.job.vo.rsp.ScheduleJobRsp;
 import net.leoch.modules.job.vo.req.ScheduleJobPageReq;
+import net.leoch.modules.job.vo.req.ScheduleJobReq;
 import net.leoch.modules.job.service.IScheduleJobService;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,7 +51,7 @@ public class ScheduleJobController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:schedule:save")
-    public Result<Object> save(@RequestBody ScheduleJobRsp dto) {
+    public Result<Object> save(@RequestBody ScheduleJobReq dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
 
         scheduleJobService.save(dto);
@@ -62,7 +63,7 @@ public class ScheduleJobController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:schedule:update")
-    public Result<Object> update(@RequestBody ScheduleJobRsp dto) {
+    public Result<Object> update(@RequestBody ScheduleJobReq dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
 
         scheduleJobService.update(dto);

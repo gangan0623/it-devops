@@ -11,6 +11,7 @@ import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.alert.mapper.AlertMediaMapper;
 import net.leoch.modules.alert.vo.rsp.AlertMediaRsp;
 import net.leoch.modules.alert.vo.req.AlertMediaPageReq;
+import net.leoch.modules.alert.vo.req.AlertMediaReq;
 import net.leoch.modules.alert.vo.req.AlertMediaTestReq;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
@@ -62,14 +63,14 @@ public class AlertMediaServiceImpl extends ServiceImpl<AlertMediaMapper, AlertMe
     }
 
     @Override
-    public void save(AlertMediaRsp dto) {
+    public void save(AlertMediaReq dto) {
         AlertMediaEntity entity = ConvertUtils.sourceToTarget(dto, AlertMediaEntity.class);
         this.save(entity);
         BeanUtils.copyProperties(entity, dto);
     }
 
     @Override
-    public void update(AlertMediaRsp dto) {
+    public void update(AlertMediaReq dto) {
         this.updateById(ConvertUtils.sourceToTarget(dto, AlertMediaEntity.class));
     }
 

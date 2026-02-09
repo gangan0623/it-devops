@@ -14,8 +14,9 @@ import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.mapper.SysUserMapper;
 import net.leoch.modules.sys.vo.req.PasswordReq;
-import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.vo.req.SysUserPageReq;
+import net.leoch.modules.sys.vo.req.SysUserReq;
+import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.entity.SysUserEntity;
 import net.leoch.modules.sys.enums.SuperAdminEnum;
 import net.leoch.modules.sys.service.ISysDeptService;
@@ -118,7 +119,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysUserRsp dto) {
+    public void save(SysUserReq dto) {
         SysUserEntity entity = ConvertUtils.sourceToTarget(dto, SysUserEntity.class);
 
         //密码加密
@@ -135,7 +136,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysUserRsp dto) {
+    public void update(SysUserReq dto) {
         SysUserEntity entity = ConvertUtils.sourceToTarget(dto, SysUserEntity.class);
 
         //密码加密

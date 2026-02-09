@@ -2,8 +2,9 @@ package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.sys.vo.rsp.SysParamsRsp;
 import net.leoch.modules.sys.vo.req.SysParamsPageReq;
+import net.leoch.modules.sys.vo.req.SysParamsReq;
+import net.leoch.modules.sys.vo.rsp.SysParamsRsp;
 import net.leoch.modules.sys.entity.SysParamsEntity;
 
 import java.util.List;
@@ -22,9 +23,9 @@ public interface ISysParamsService extends IService<SysParamsEntity> {
 
     SysParamsRsp get(Long id);
 
-    void save(SysParamsRsp dto);
+    void save(SysParamsReq dto);
 
-    void update(SysParamsRsp dto);
+    void update(SysParamsReq dto);
 
     void delete(Long[] ids);
 

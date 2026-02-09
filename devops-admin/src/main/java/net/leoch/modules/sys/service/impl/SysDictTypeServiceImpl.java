@@ -10,8 +10,9 @@ import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.sys.mapper.SysDictDataMapper;
 import net.leoch.modules.sys.mapper.SysDictTypeMapper;
-import net.leoch.modules.sys.vo.rsp.SysDictTypeRsp;
 import net.leoch.modules.sys.vo.req.SysDictTypePageReq;
+import net.leoch.modules.sys.vo.req.SysDictTypeReq;
+import net.leoch.modules.sys.vo.rsp.SysDictTypeRsp;
 import net.leoch.modules.sys.entity.DictData;
 import net.leoch.modules.sys.entity.DictType;
 import net.leoch.modules.sys.entity.SysDictTypeEntity;
@@ -65,7 +66,7 @@ public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDi
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysDictTypeRsp dto) {
+    public void save(SysDictTypeReq dto) {
         SysDictTypeEntity entity = ConvertUtils.sourceToTarget(dto, SysDictTypeEntity.class);
 
         this.save(entity);
@@ -73,7 +74,7 @@ public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDi
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysDictTypeRsp dto) {
+    public void update(SysDictTypeReq dto) {
         SysDictTypeEntity entity = ConvertUtils.sourceToTarget(dto, SysDictTypeEntity.class);
 
         this.updateById(entity);

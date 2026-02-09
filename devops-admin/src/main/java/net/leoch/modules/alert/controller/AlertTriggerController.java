@@ -19,6 +19,7 @@ import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;
 import net.leoch.modules.alert.vo.req.AlertTriggerPageReq;
+import net.leoch.modules.alert.vo.req.AlertTriggerReq;
 import net.leoch.modules.alert.service.IAlertTriggerService;
 import org.springframework.web.bind.annotation.*;
 
@@ -74,7 +75,7 @@ public class AlertTriggerController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("alert:trigger:save")
-    public Result<Object> save(@RequestBody AlertTriggerRsp dto){
+    public Result<Object> save(@RequestBody AlertTriggerReq dto){
         normalizeReceiverIds(dto);
         alertTriggerService.save(dto);
 
@@ -85,7 +86,7 @@ public class AlertTriggerController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("alert:trigger:update")
-    public Result<Object> update(@RequestBody AlertTriggerRsp dto){
+    public Result<Object> update(@RequestBody AlertTriggerReq dto){
         normalizeReceiverIds(dto);
         alertTriggerService.update(dto);
 
@@ -124,7 +125,7 @@ public class AlertTriggerController {
         return new Result<List<Map<String, Object>>>().ok(options);
     }
 
-    private void normalizeReceiverIds(AlertTriggerRsp dto) {
+    private void normalizeReceiverIds(AlertTriggerReq dto) {
         if (dto == null || dto.getReceiverUserIdList() == null) {
             return;
         }

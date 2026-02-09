@@ -12,8 +12,9 @@ import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.sys.mapper.SysParamsMapper;
-import net.leoch.modules.sys.vo.rsp.SysParamsRsp;
 import net.leoch.modules.sys.vo.req.SysParamsPageReq;
+import net.leoch.modules.sys.vo.req.SysParamsReq;
+import net.leoch.modules.sys.vo.rsp.SysParamsRsp;
 import net.leoch.modules.sys.entity.SysParamsEntity;
 import net.leoch.modules.sys.redis.SysParamsRedis;
 import net.leoch.modules.sys.service.ISysParamsService;
@@ -73,7 +74,7 @@ public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParams
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysParamsRsp dto) {
+    public void save(SysParamsReq dto) {
         SysParamsEntity entity = ConvertUtils.sourceToTarget(dto, SysParamsEntity.class);
         this.save(entity);
 
@@ -82,7 +83,7 @@ public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParams
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysParamsRsp dto) {
+    public void update(SysParamsReq dto) {
         SysParamsEntity entity = ConvertUtils.sourceToTarget(dto, SysParamsEntity.class);
         this.updateById(entity);
 

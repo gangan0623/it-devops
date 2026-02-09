@@ -18,6 +18,7 @@ import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.alert.vo.rsp.AlertTemplateRsp;
 import net.leoch.modules.alert.vo.req.AlertTemplatePageReq;
+import net.leoch.modules.alert.vo.req.AlertTemplateReq;
 import net.leoch.modules.alert.vo.req.AlertTemplatePreviewReq;
 import net.leoch.modules.alert.vo.req.AlertTemplateSendTestReq;
 import net.leoch.modules.alert.service.IAlertTemplateService;
@@ -74,7 +75,7 @@ public class AlertTemplateController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("alert:template:save")
-    public Result<Object> save(@RequestBody AlertTemplateRsp dto){
+    public Result<Object> save(@RequestBody AlertTemplateReq dto){
         alertTemplateService.save(dto);
 
         return new Result<>();
@@ -94,7 +95,7 @@ public class AlertTemplateController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("alert:template:update")
-    public Result<Object> update(@RequestBody AlertTemplateRsp dto){
+    public Result<Object> update(@RequestBody AlertTemplateReq dto){
         alertTemplateService.update(dto);
 
         return new Result<>();

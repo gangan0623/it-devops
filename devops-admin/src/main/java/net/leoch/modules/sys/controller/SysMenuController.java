@@ -18,6 +18,7 @@ import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.vo.rsp.SysMenuRsp;
+import net.leoch.modules.sys.vo.req.SysMenuReq;
 import net.leoch.modules.sys.enums.MenuTypeEnum;
 import net.leoch.modules.sys.service.ISysMenuService;
 import org.springframework.web.bind.annotation.*;
@@ -79,7 +80,7 @@ public class SysMenuController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:menu:save")
-    public Result<Object> save(@RequestBody SysMenuRsp dto) {
+    public Result<Object> save(@RequestBody SysMenuReq dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, DefaultGroup.class);
 
@@ -92,7 +93,7 @@ public class SysMenuController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:menu:update")
-    public Result<Object> update(@RequestBody SysMenuRsp dto) {
+    public Result<Object> update(@RequestBody SysMenuReq dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, DefaultGroup.class);
 

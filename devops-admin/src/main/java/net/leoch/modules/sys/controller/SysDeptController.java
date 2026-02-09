@@ -14,6 +14,7 @@ import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
+import net.leoch.modules.sys.vo.req.SysDeptReq;
 import net.leoch.modules.sys.service.ISysDeptService;
 import org.springframework.web.bind.annotation.*;
 
@@ -52,7 +53,7 @@ public class SysDeptController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:dept:save")
-    public Result<Object> save(@RequestBody SysDeptRsp dto) {
+    public Result<Object> save(@RequestBody SysDeptReq dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
 
@@ -65,7 +66,7 @@ public class SysDeptController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:dept:update")
-    public Result<Object> update(@RequestBody SysDeptRsp dto) {
+    public Result<Object> update(@RequestBody SysDeptReq dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
 

@@ -2,6 +2,7 @@ package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.modules.security.user.UserDetail;
+import net.leoch.modules.sys.vo.req.SysMenuReq;
 import net.leoch.modules.sys.vo.rsp.SysMenuRsp;
 import net.leoch.modules.sys.entity.SysMenuEntity;
 
@@ -17,9 +18,9 @@ public interface ISysMenuService extends IService<SysMenuEntity> {
 
 	SysMenuRsp get(Long id);
 
-	void save(SysMenuRsp dto);
+	void save(SysMenuReq dto);
 
-	void update(SysMenuRsp dto);
+	void update(SysMenuReq dto);
 
 	void delete(Long id);
 

@@ -2,8 +2,9 @@ package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.sys.vo.rsp.SysRoleRsp;
 import net.leoch.modules.sys.vo.req.SysRolePageReq;
+import net.leoch.modules.sys.vo.req.SysRoleReq;
+import net.leoch.modules.sys.vo.rsp.SysRoleRsp;
 import net.leoch.modules.sys.entity.SysRoleEntity;
 
 import java.util.List;
@@ -22,9 +23,9 @@ public interface ISysRoleService extends IService<SysRoleEntity> {
 
 	SysRoleRsp get(Long id);
 
-	void save(SysRoleRsp dto);
+	void save(SysRoleReq dto);
 
-	void update(SysRoleRsp dto);
+	void update(SysRoleReq dto);
 
 	void delete(Long[] ids);
 

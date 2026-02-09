@@ -14,6 +14,7 @@ import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.sys.vo.rsp.SysRoleRsp;
 import net.leoch.modules.sys.vo.req.SysRolePageReq;
+import net.leoch.modules.sys.vo.req.SysRoleReq;
 import net.leoch.modules.sys.service.ISysRoleDataScopeService;
 import net.leoch.modules.sys.service.ISysRoleMenuService;
 import net.leoch.modules.sys.service.ISysRoleService;
@@ -74,7 +75,7 @@ public class SysRoleController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:role:save")
-    public Result<Object> save(@RequestBody SysRoleRsp dto) {
+    public Result<Object> save(@RequestBody SysRoleReq dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
 
@@ -87,7 +88,7 @@ public class SysRoleController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:role:update")
-    public Result<Object> update(@RequestBody SysRoleRsp dto) {
+    public Result<Object> update(@RequestBody SysRoleReq dto) {
         //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
 

@@ -2,8 +2,9 @@ package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.page.PageData;
-import net.leoch.modules.sys.vo.rsp.SysDictDataRsp;
 import net.leoch.modules.sys.vo.req.SysDictDataPageReq;
+import net.leoch.modules.sys.vo.req.SysDictDataReq;
+import net.leoch.modules.sys.vo.rsp.SysDictDataRsp;
 import net.leoch.modules.sys.entity.SysDictDataEntity;
 
 /**
@@ -17,9 +18,9 @@ public interface ISysDictDataService extends IService<SysDictDataEntity> {
 
     SysDictDataRsp get(Long id);
 
-    void save(SysDictDataRsp dto);
+    void save(SysDictDataReq dto);
 
-    void update(SysDictDataRsp dto);
+    void update(SysDictDataReq dto);
 
     void delete(Long[] ids);
 

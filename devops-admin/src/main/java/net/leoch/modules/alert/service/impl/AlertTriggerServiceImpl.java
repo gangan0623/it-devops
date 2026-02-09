@@ -16,8 +16,9 @@ import net.leoch.modules.alert.service.IAlertNotifyLogService;
 import net.leoch.modules.alert.mapper.AlertRecordMapper;
 import net.leoch.modules.alert.mapper.AlertTemplateMapper;
 import net.leoch.modules.alert.mapper.AlertTriggerMapper;
-import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;
 import net.leoch.modules.alert.vo.req.AlertTriggerPageReq;
+import net.leoch.modules.alert.vo.req.AlertTriggerReq;
+import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
 import net.leoch.modules.alert.entity.AlertNotifyLogEntity;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
@@ -97,14 +98,14 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
     }
 
     @Override
-    public void save(AlertTriggerRsp dto) {
+    public void save(AlertTriggerReq dto) {
         AlertTriggerEntity entity = ConvertUtils.sourceToTarget(dto, AlertTriggerEntity.class);
         this.save(entity);
         BeanUtils.copyProperties(entity, dto);
     }
 
     @Override
-    public void update(AlertTriggerRsp dto) {
+    public void update(AlertTriggerReq dto) {
         this.updateById(ConvertUtils.sourceToTarget(dto, AlertTriggerEntity.class));
     }
 

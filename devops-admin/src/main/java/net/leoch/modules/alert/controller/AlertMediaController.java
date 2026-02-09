@@ -18,6 +18,7 @@ import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.alert.vo.rsp.AlertMediaRsp;
 import net.leoch.modules.alert.vo.req.AlertMediaPageReq;
+import net.leoch.modules.alert.vo.req.AlertMediaReq;
 import net.leoch.modules.alert.vo.req.AlertMediaTestReq;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
 import net.leoch.modules.alert.service.AlertMailService;
@@ -73,7 +74,7 @@ public class AlertMediaController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("alert:media:save")
-    public Result<Object> save(@RequestBody AlertMediaRsp dto){
+    public Result<Object> save(@RequestBody AlertMediaReq dto){
         alertMediaService.save(dto);
 
         return new Result<>();
@@ -83,7 +84,7 @@ public class AlertMediaController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("alert:media:update")
-    public Result<Object> update(@RequestBody AlertMediaRsp dto){
+    public Result<Object> update(@RequestBody AlertMediaReq dto){
         alertMediaService.update(dto);
 
         return new Result<>();
