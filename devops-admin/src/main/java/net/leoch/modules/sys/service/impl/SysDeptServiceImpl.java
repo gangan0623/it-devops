@@ -21,7 +21,7 @@ import net.leoch.modules.sys.mapper.SysUserMapper;
 import net.leoch.modules.sys.vo.req.SysDeptReq;
 import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
 import net.leoch.modules.sys.entity.SysDeptEntity;
-import net.leoch.modules.sys.enums.SuperAdminEnum;
+import net.leoch.common.enums.SuperAdminEnum;
 import net.leoch.modules.sys.service.ISysDeptService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

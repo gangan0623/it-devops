@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.log.enums;
+package net.leoch.common.enums;
 
 /**
  * 登录状态枚举

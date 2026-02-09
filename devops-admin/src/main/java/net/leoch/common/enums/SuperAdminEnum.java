@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.sys.enums;
+package net.leoch.common.enums;
 
 /**
  * 超级管理员枚举

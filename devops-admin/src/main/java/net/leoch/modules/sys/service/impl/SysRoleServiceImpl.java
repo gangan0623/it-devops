@@ -20,7 +20,7 @@ import net.leoch.modules.sys.vo.req.SysRolePageReq;
 import net.leoch.modules.sys.vo.req.SysRoleReq;
 import net.leoch.modules.sys.vo.rsp.SysRoleRsp;
 import net.leoch.modules.sys.entity.SysRoleEntity;
-import net.leoch.modules.sys.enums.SuperAdminEnum;
+import net.leoch.common.enums.SuperAdminEnum;
 import net.leoch.modules.sys.service.ISysDeptService;
 import net.leoch.modules.sys.service.ISysRoleDataScopeService;
 import net.leoch.modules.sys.service.ISysRoleMenuService;

@@ -1,26 +1,26 @@
 
 
-package net.leoch.modules.log.enums;
+package net.leoch.common.enums;
 
 /**
- * 操作状态枚举
+ * 登录操作枚举
  *
  * @author Taohongqiang
  * @since 1.0.0
  */
-public enum OperationStatusEnum {
+public enum LoginOperationEnum {
     /**
-     * 失败
+     * 用户登录
      */
-    FAIL(0),
+    LOGIN(0),
     /**
-     * 成功
+     * 用户退出
      */
-    SUCCESS(1);
+    LOGOUT(1);
 
     private int value;
 
-    OperationStatusEnum(int value) {
+    LoginOperationEnum(int value) {
         this.value = value;
     }
 

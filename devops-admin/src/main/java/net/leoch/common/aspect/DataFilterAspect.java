@@ -13,7 +13,7 @@ import net.leoch.common.exception.ServiceException;
 import net.leoch.common.interceptor.DataScope;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
-import net.leoch.modules.sys.enums.SuperAdminEnum;
+import net.leoch.common.enums.SuperAdminEnum;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;

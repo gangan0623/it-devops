@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.utils.Result;
-import net.leoch.modules.sys.enums.MenuTypeEnum;
+import net.leoch.common.enums.MenuTypeEnum;
 import net.leoch.modules.sys.vo.rsp.SysMenuRsp;
 import net.leoch.modules.sys.vo.req.SysMenuReq;
 import net.leoch.modules.sys.service.ISysMenuService;

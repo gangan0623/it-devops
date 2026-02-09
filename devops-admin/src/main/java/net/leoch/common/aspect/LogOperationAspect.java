@@ -10,7 +10,7 @@ import net.leoch.common.utils.HttpContextUtils;
 import net.leoch.common.utils.IpUtils;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.log.entity.SysLogOperationEntity;
-import net.leoch.modules.log.enums.OperationStatusEnum;
+import net.leoch.common.enums.OperationStatusEnum;
 import net.leoch.modules.log.service.ISysLogOperationService;
 import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
