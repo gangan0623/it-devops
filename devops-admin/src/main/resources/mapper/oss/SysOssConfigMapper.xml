@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.leoch.modules.oss.mapper.SysOssConfigMapper">
+
+    <resultMap type="net.leoch.modules.oss.entity.SysOssConfigEntity" id="sysOssConfigMap">
+        <result property="id" column="id"/>
+        <result property="configJson" column="config_json"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updater" column="updater"/>
+        <result property="updateDate" column="update_date"/>
+    </resultMap>
+
+</mapper>
