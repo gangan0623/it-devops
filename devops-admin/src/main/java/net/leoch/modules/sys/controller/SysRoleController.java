@@ -3,7 +3,7 @@ package net.leoch.modules.sys.controller;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
@@ -23,7 +23,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/sys/role")
 @Tag(name = "角色管理")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysRoleController {
     private final ISysRoleService sysRoleService;
 

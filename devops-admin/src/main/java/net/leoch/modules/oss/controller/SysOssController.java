@@ -3,7 +3,7 @@ package net.leoch.modules.oss.controller;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
@@ -25,7 +25,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("sys/oss")
 @Tag(name = "文件上传")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysOssController {
     private final ISysOssService sysOssService;
     private final ISysOssConfigService sysOssConfigService;

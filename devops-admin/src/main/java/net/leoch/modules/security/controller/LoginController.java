@@ -9,7 +9,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.security.vo.req.LoginReq;
 import net.leoch.modules.security.service.ICaptchaService;
@@ -28,7 +28,7 @@ import java.io.IOException;
  */
 @RestController
 @Tag(name = "登录管理")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class LoginController {
     private final ISecurityService securityService;
     private final ICaptchaService captchaService;

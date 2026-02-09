@@ -3,7 +3,7 @@ package net.leoch.modules.job.controller;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/sys/schedule")
 @Tag(name = "定时任务")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ScheduleJobController {
     private final IScheduleJobService scheduleJobService;
 

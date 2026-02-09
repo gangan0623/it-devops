@@ -3,7 +3,7 @@ package net.leoch.modules.job.controller;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.job.vo.rsp.ScheduleJobLogRsp;
@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/sys/scheduleLog")
 @Tag(name = "定时任务日志")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ScheduleJobLogController {
     private final IScheduleJobLogService scheduleJobLogService;
 

@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.sys.enums.MenuTypeEnum;
@@ -27,7 +27,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/sys/menu")
 @Tag(name = "菜单管理")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysMenuController {
     private final ISysMenuService sysMenuService;
 

@@ -3,7 +3,7 @@ package net.leoch.modules.sys.controller;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("sys/dict/data")
 @Tag(name = "字典数据")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysDictDataController {
     private final ISysDictDataService sysDictDataService;
 

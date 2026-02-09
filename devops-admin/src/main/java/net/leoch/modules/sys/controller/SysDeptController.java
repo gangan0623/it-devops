@@ -5,7 +5,7 @@ package net.leoch.modules.sys.controller;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
@@ -24,7 +24,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/sys/dept")
 @Tag(name = "部门管理")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysDeptController {
     private final ISysDeptService sysDeptService;
 
