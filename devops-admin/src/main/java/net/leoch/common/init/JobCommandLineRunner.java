@@ -1,11 +1,11 @@
-package net.leoch.modules.job.init;
+package net.leoch.common.init;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.constant.Constant;
 import net.leoch.modules.job.mapper.ScheduleJobMapper;
 import net.leoch.modules.job.entity.ScheduleJobEntity;
-import net.leoch.modules.job.utils.DynamicScheduleManager;
+import net.leoch.common.utils.DynamicScheduleManager;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 

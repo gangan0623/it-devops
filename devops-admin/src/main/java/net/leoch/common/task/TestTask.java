@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.job.task;
+package net.leoch.common.task;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

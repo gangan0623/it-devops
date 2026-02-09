@@ -1,4 +1,4 @@
-package net.leoch.modules.job.utils;
+package net.leoch.common.utils;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -8,7 +8,7 @@ import net.leoch.common.utils.SpringContextUtils;
 import net.leoch.modules.job.entity.ScheduleJobEntity;
 import net.leoch.modules.job.entity.ScheduleJobLogEntity;
 import net.leoch.modules.job.service.IScheduleJobLogService;
-import net.leoch.modules.job.task.ITask;
+import net.leoch.common.task.ITask;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;

@@ -19,7 +19,7 @@ import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
 import net.leoch.modules.job.service.IScheduleJobService;
-import net.leoch.modules.job.utils.DynamicScheduleManager;
+import net.leoch.common.utils.DynamicScheduleManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
