@@ -126,9 +126,7 @@ public class DeviceBackupController {
     @LogOperation("删除")
     @SaCheckPermission("ops:devicebackup:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
-        DeviceBackupDeleteReq request = new DeviceBackupDeleteReq();
-        request.setIds(ids);
-        deviceBackupService.delete(request);
+        deviceBackupService.delete(DeviceBackupDeleteReq.of(ids));
         return new Result<>();
     }
 

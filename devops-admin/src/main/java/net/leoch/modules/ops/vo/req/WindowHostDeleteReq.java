@@ -16,4 +16,10 @@ public class WindowHostDeleteReq implements Serializable  {
 
     @Schema(description = "ID数组")
     private Long[] ids;
+
+    public static WindowHostDeleteReq of(Long[] ids) {
+        WindowHostDeleteReq req = new WindowHostDeleteReq();
+        req.setIds(ids);
+        return req;
+    }
 }

@@ -16,4 +16,10 @@ public class DeviceBackupRecordDeleteReq implements Serializable  {
 
     @Schema(description = "ID数组")
     private Long[] ids;
+
+    public static DeviceBackupRecordDeleteReq of(Long[] ids) {
+        DeviceBackupRecordDeleteReq req = new DeviceBackupRecordDeleteReq();
+        req.setIds(ids);
+        return req;
+    }
 }

@@ -16,4 +16,10 @@ public class BackupAgentDeleteReq implements Serializable  {
 
     @Schema(description = "ID数组")
     private Long[] ids;
+
+    public static BackupAgentDeleteReq of(Long[] ids) {
+        BackupAgentDeleteReq req = new BackupAgentDeleteReq();
+        req.setIds(ids);
+        return req;
+    }
 }

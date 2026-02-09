@@ -83,9 +83,7 @@ public class MonitorComponentController {
     @LogOperation("删除")
     @SaCheckPermission("ops:monitorcomponent:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
-        MonitorComponentDeleteReq request = new MonitorComponentDeleteReq();
-        request.setIds(ids);
-        monitorComponentService.delete(request);
+        monitorComponentService.delete(MonitorComponentDeleteReq.of(ids));
         return new Result<>();
     }
 

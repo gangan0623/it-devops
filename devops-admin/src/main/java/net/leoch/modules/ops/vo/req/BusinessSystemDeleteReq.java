@@ -16,4 +16,10 @@ public class BusinessSystemDeleteReq implements Serializable  {
 
     @Schema(description = "ID数组")
     private Long[] ids;
+
+    public static BusinessSystemDeleteReq of(Long[] ids) {
+        BusinessSystemDeleteReq req = new BusinessSystemDeleteReq();
+        req.setIds(ids);
+        return req;
+    }
 }

@@ -16,4 +16,10 @@ public class MonitorComponentDeleteReq implements Serializable  {
 
     @Schema(description = "ID数组")
     private Long[] ids;
+
+    public static MonitorComponentDeleteReq of(Long[] ids) {
+        MonitorComponentDeleteReq req = new MonitorComponentDeleteReq();
+        req.setIds(ids);
+        return req;
+    }
 }

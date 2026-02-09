@@ -126,9 +126,7 @@ public class BackupAgentController {
     @LogOperation("删除")
     @SaCheckPermission("ops:backupagent:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
-        BackupAgentDeleteReq request = new BackupAgentDeleteReq();
-        request.setIds(ids);
-        backupAgentService.delete(request);
+        backupAgentService.delete(BackupAgentDeleteReq.of(ids));
         return new Result<>();
     }
 

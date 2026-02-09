@@ -16,4 +16,10 @@ public class LinuxHostDeleteReq implements Serializable  {
 
     @Schema(description = "ID数组")
     private Long[] ids;
+
+    public static LinuxHostDeleteReq of(Long[] ids) {
+        LinuxHostDeleteReq req = new LinuxHostDeleteReq();
+        req.setIds(ids);
+        return req;
+    }
 }

@@ -125,9 +125,7 @@ public class LinuxHostController {
     @LogOperation("删除")
     @SaCheckPermission("ops:linuxhost:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
-        LinuxHostDeleteReq request = new LinuxHostDeleteReq();
-        request.setIds(ids);
-        linuxHostService.delete(request);
+        linuxHostService.delete(LinuxHostDeleteReq.of(ids));
         return new Result<>();
     }
 

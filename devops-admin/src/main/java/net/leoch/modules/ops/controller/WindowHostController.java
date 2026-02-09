@@ -126,9 +126,7 @@ public class WindowHostController {
     @LogOperation("删除")
     @SaCheckPermission("ops:windowhost:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
-        WindowHostDeleteReq request = new WindowHostDeleteReq();
-        request.setIds(ids);
-        windowHostService.delete(request);
+        windowHostService.delete(WindowHostDeleteReq.of(ids));
         return new Result<>();
     }
 

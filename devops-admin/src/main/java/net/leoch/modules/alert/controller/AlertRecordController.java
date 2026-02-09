@@ -97,7 +97,7 @@ public class AlertRecordController {
     @LogOperation("告警更改严重性")
     @SaCheckPermission("alert:record:info")
     public Result<Object> changeSeverity(@PathVariable("id") Long id, @RequestBody AlertRecordActionReq request) {
-        alertRecordService.changeSeverity(id, request == null ? null : request.getSeverity(), request == null ? null : request.getMessage());
+        alertRecordService.changeSeverity(id, request.getSeverity(), request.getMessage());
         return new Result<>();
     }
 
@@ -106,7 +106,7 @@ public class AlertRecordController {
     @LogOperation("告警抑制")
     @SaCheckPermission("alert:record:info")
     public Result<Object> suppress(@PathVariable("id") Long id, @RequestBody AlertRecordActionReq request) {
-        alertRecordService.suppress(id, request == null ? null : request.getDays(), request == null ? null : request.getMessage());
+        alertRecordService.suppress(id, request.getDays(), request.getMessage());
         return new Result<>();
     }
 
@@ -115,7 +115,7 @@ public class AlertRecordController {
     @LogOperation("告警确定")
     @SaCheckPermission("alert:record:info")
     public Result<Object> acknowledge(@PathVariable("id") Long id, @RequestBody AlertRecordActionReq request) {
-        alertRecordService.acknowledge(id, request == null ? null : request.getMessage());
+        alertRecordService.acknowledge(id, request.getMessage());
         return new Result<>();
     }
 
@@ -124,7 +124,7 @@ public class AlertRecordController {
     @LogOperation("告警关闭")
     @SaCheckPermission("alert:record:info")
     public Result<Object> close(@PathVariable("id") Long id, @RequestBody AlertRecordActionReq request) {
-        alertRecordService.close(id, request == null ? null : request.getMessage());
+        alertRecordService.close(id, request.getMessage());
         return new Result<>();
     }
 

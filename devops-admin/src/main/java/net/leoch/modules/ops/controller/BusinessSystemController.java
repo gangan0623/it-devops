@@ -125,9 +125,7 @@ public class BusinessSystemController {
     @LogOperation("删除")
     @SaCheckPermission("ops:businesssystem:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
-        BusinessSystemDeleteReq request = new BusinessSystemDeleteReq();
-        request.setIds(ids);
-        businessSystemService.delete(request);
+        businessSystemService.delete(BusinessSystemDeleteReq.of(ids));
         return new Result<>();
     }
 

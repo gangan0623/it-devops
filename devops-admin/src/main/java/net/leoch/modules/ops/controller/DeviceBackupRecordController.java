@@ -62,9 +62,7 @@ public class DeviceBackupRecordController {
     @LogOperation("删除")
     @SaCheckPermission("ops:devicebackuprecord:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
-        DeviceBackupRecordDeleteReq request = new DeviceBackupRecordDeleteReq();
-        request.setIds(ids);
-        deviceBackupRecordService.delete(request);
+        deviceBackupRecordService.delete(DeviceBackupRecordDeleteReq.of(ids));
         return new Result<>();
     }
 
