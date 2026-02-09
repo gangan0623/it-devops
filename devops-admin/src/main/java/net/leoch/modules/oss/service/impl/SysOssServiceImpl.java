@@ -9,7 +9,7 @@ import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.data.validator.AssertUtils;
-import net.leoch.common.storage.OSSFactory;
+import net.leoch.common.integration.storage.OSSFactory;
 import net.leoch.modules.oss.mapper.SysOssMapper;
 import net.leoch.modules.oss.entity.SysOssEntity;
 import net.leoch.modules.oss.vo.rsp.SysOssRsp;

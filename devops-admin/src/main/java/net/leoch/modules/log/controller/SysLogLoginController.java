@@ -11,7 +11,7 @@ import net.leoch.common.utils.ExcelUtils;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.log.vo.rsp.SysLogLoginRsp;
 import net.leoch.modules.log.vo.req.SysLogLoginPageReq;
-import net.leoch.common.excel.SysLogLoginExcel;
+import net.leoch.common.integration.excel.SysLogLoginExcel;
 import net.leoch.modules.log.service.ISysLogLoginService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;

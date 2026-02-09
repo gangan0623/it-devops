@@ -21,7 +21,7 @@ import net.leoch.modules.sys.vo.req.SysParamsPageReq;
 import net.leoch.modules.sys.vo.req.SysParamsReq;
 import net.leoch.modules.sys.vo.rsp.SysParamsRsp;
 import net.leoch.modules.sys.entity.SysParamsEntity;
-import net.leoch.common.redis.SysParamsRedis;
+import net.leoch.common.integration.redis.SysParamsRedis;
 import net.leoch.modules.sys.service.ISysParamsService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

@@ -12,7 +12,7 @@ import net.leoch.common.utils.Result;
 import net.leoch.modules.sys.vo.rsp.SysParamsRsp;
 import net.leoch.modules.sys.vo.req.SysParamsPageReq;
 import net.leoch.modules.sys.vo.req.SysParamsReq;
-import net.leoch.common.excel.SysParamsExcel;
+import net.leoch.common.integration.excel.SysParamsExcel;
 import net.leoch.modules.sys.service.ISysParamsService;
 import org.springframework.web.bind.annotation.*;
 
