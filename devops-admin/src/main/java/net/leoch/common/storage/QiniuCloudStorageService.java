@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.cloud;
+package net.leoch.common.storage;
 
 import com.qiniu.http.Response;
 import com.qiniu.storage.Configuration;

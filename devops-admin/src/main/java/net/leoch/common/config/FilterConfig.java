@@ -3,7 +3,7 @@
 package net.leoch.common.config;
 
 import jakarta.servlet.DispatcherType;
-import net.leoch.common.xss.XssFilter;
+import net.leoch.common.web.filter.xss.XssFilter;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

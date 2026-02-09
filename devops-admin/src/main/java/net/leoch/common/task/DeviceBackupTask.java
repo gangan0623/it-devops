@@ -2,7 +2,7 @@
 
 package net.leoch.common.task;
 
-import net.leoch.common.job.DeviceBackupJobService;
+import net.leoch.common.integration.schedule.service.job.DeviceBackupJobService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;

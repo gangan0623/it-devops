@@ -2,7 +2,7 @@ package net.leoch.modules.ops.service.impl;
 
 import net.leoch.common.utils.Result;
 import net.leoch.modules.ops.vo.req.BackupCallbackReq;
-import net.leoch.common.job.DeviceBackupJobService;
+import net.leoch.common.integration.schedule.service.job.DeviceBackupJobService;
 import net.leoch.modules.ops.service.IBackupCallbackService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

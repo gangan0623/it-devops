@@ -1,6 +1,6 @@
 package net.leoch.modules.oss.service;
 
-import net.leoch.common.cloud.CloudStorageConfig;
+import net.leoch.common.storage.CloudStorageConfig;
 
 /**
  * 云存储配置

@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
-import net.leoch.common.cloud.CloudStorageConfig;
+import net.leoch.common.storage.CloudStorageConfig;
 import net.leoch.modules.oss.vo.rsp.SysOssRsp;
 import net.leoch.modules.oss.service.ISysOssConfigService;
 import net.leoch.modules.oss.service.ISysOssService;

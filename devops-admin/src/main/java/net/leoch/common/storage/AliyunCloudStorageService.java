@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.cloud;
+package net.leoch.common.storage;
 
 import com.aliyun.oss.OSSClient;
 import net.leoch.common.exception.ErrorCode;

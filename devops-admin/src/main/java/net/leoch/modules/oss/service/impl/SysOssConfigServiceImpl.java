@@ -10,7 +10,7 @@ import net.leoch.common.validator.group.AliyunGroup;
 import net.leoch.common.validator.group.MinioGroup;
 import net.leoch.common.validator.group.QcloudGroup;
 import net.leoch.common.validator.group.QiniuGroup;
-import net.leoch.common.cloud.CloudStorageConfig;
+import net.leoch.common.storage.CloudStorageConfig;
 import net.leoch.modules.oss.mapper.SysOssConfigMapper;
 import net.leoch.modules.oss.entity.SysOssConfigEntity;
 import net.leoch.modules.oss.service.ISysOssConfigService;

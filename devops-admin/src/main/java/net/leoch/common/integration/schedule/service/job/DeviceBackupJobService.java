@@ -1,4 +1,4 @@
-package net.leoch.common.job;
+package net.leoch.common.integration.schedule.service;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
