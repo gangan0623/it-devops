@@ -1,14 +1,14 @@
 
 
-package net.leoch.common.enums;
+package net.leoch.common.core.enums;
 
 /**
- * 操作状态枚举
+ * 登录状态枚举
  *
  * @author Taohongqiang
  * @since 1.0.0
  */
-public enum OperationStatusEnum {
+public enum LoginStatusEnum {
     /**
      * 失败
      */
@@ -16,11 +16,15 @@ public enum OperationStatusEnum {
     /**
      * 成功
      */
-    SUCCESS(1);
+    SUCCESS(1),
+    /**
+     * 账号已锁定
+     */
+    LOCK(2);
 
     private int value;
 
-    OperationStatusEnum(int value) {
+    LoginStatusEnum(int value) {
         this.value = value;
     }
 

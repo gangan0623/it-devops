@@ -18,7 +18,7 @@ import net.leoch.modules.sys.mapper.SysMenuMapper;
 import net.leoch.modules.sys.vo.req.SysMenuReq;
 import net.leoch.modules.sys.vo.rsp.SysMenuRsp;
 import net.leoch.modules.sys.entity.SysMenuEntity;
-import net.leoch.common.enums.SuperAdminEnum;
+import net.leoch.common.core.enums.SuperAdminEnum;
 import net.leoch.modules.sys.service.ISysMenuService;
 import net.leoch.modules.sys.service.ISysRoleMenuService;
 import org.springframework.stereotype.Service;

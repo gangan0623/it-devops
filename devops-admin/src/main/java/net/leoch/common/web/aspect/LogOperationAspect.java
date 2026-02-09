@@ -1,16 +1,16 @@
 
 
-package net.leoch.common.aspect;
+package net.leoch.common.web.aspect;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.annotation.LogOperation;
+import net.leoch.common.core.annotation.LogOperation;
 import net.leoch.common.utils.HttpContextUtils;
 import net.leoch.common.utils.IpUtils;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.log.entity.SysLogOperationEntity;
-import net.leoch.common.enums.OperationStatusEnum;
+import net.leoch.common.core.enums.OperationStatusEnum;
 import net.leoch.modules.log.service.ISysLogOperationService;
 import net.leoch.common.security.user.SecurityUser;
 import net.leoch.common.security.user.UserDetail;

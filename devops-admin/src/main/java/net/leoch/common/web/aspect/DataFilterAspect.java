@@ -1,19 +1,19 @@
 
 
-package net.leoch.common.aspect;
+package net.leoch.common.web.aspect;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.qiniu.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.annotation.DataFilter;
+import net.leoch.common.core.annotation.DataFilter;
 import net.leoch.common.core.base.Constant;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
-import net.leoch.common.interceptor.DataScope;
+import net.leoch.common.web.interceptor.DataScope;
 import net.leoch.common.security.user.SecurityUser;
 import net.leoch.common.security.user.UserDetail;
-import net.leoch.common.enums.SuperAdminEnum;
+import net.leoch.common.core.enums.SuperAdminEnum;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;

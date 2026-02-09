@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.aspect;
+package net.leoch.common.web.aspect;
 
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ErrorCode;

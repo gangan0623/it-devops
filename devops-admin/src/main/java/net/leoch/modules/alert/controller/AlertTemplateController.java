@@ -13,7 +13,7 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import net.leoch.common.annotation.LogOperation;
+import net.leoch.common.core.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.alert.vo.rsp.AlertTemplateRsp;

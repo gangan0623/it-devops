@@ -23,7 +23,7 @@ import net.leoch.modules.sys.vo.req.SysUserPageReq;
 import net.leoch.modules.sys.vo.req.SysUserReq;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.entity.SysUserEntity;
-import net.leoch.common.enums.SuperAdminEnum;
+import net.leoch.common.core.enums.SuperAdminEnum;
 import net.leoch.modules.sys.service.ISysDeptService;
 import net.leoch.modules.sys.service.ISysRoleUserService;
 import net.leoch.modules.sys.service.ISysUserService;

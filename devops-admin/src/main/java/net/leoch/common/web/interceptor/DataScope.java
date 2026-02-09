@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.interceptor;
+package net.leoch.common.web.interceptor;
 
 /**
  * 数据范围

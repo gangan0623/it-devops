@@ -1,20 +1,20 @@
 
 
-package net.leoch.common.enums;
+package net.leoch.common.core.enums;
 
 /**
- * 用户状态
+ * 超级管理员枚举
  *
  * @author Taohongqiang
  * @since 1.0.0
  */
-public enum UserStatusEnum {
-    DISABLE(0),
-    ENABLED(1);
+public enum SuperAdminEnum {
+    YES(1),
+    NO(0);
 
     private int value;
 
-    UserStatusEnum(int value) {
+    SuperAdminEnum(int value) {
         this.value = value;
     }
 

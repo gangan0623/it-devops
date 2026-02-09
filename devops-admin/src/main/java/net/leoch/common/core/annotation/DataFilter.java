@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.annotation;
+package net.leoch.common.core.annotation;
 
 import java.lang.annotation.*;
 

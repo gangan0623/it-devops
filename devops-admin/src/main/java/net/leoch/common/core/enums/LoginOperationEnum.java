@@ -1,26 +1,26 @@
 
 
-package net.leoch.common.enums;
+package net.leoch.common.core.enums;
 
 /**
- * 菜单类型枚举
+ * 登录操作枚举
  *
  * @author Taohongqiang
  * @since 1.0.0
  */
-public enum MenuTypeEnum {
+public enum LoginOperationEnum {
     /**
-     * 菜单
+     * 用户登录
      */
-    MENU(0),
+    LOGIN(0),
     /**
-     * 按钮
+     * 用户退出
      */
-    BUTTON(1);
+    LOGOUT(1);
 
     private int value;
 
-    MenuTypeEnum(int value) {
+    LoginOperationEnum(int value) {
         this.value = value;
     }
 
