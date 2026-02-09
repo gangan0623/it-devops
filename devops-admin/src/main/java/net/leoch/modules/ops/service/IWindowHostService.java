@@ -19,9 +19,9 @@ public interface IWindowHostService extends IService<WindowHostEntity> {
 
     WindowHostRsp get(WindowHostIdReq request);
 
-    void save(WindowHostRsp dto);
+    void save(WindowHostSaveReq dto);
 
-    void update(WindowHostRsp dto);
+    void update(WindowHostUpdateReq dto);
 
     void updateStatus(WindowHostStatusUpdateReq request);
 

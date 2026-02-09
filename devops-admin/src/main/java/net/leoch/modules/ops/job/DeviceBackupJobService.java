@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.ops.mapper.BackupAgentMapper;
 import net.leoch.modules.ops.mapper.DeviceBackupMapper;
-import net.leoch.modules.ops.vo.rsp.BackupCallbackItemRsp;
+import net.leoch.modules.ops.vo.req.BackupCallbackItemReq;
 import net.leoch.modules.ops.entity.BackupAgentEntity;
 import net.leoch.modules.ops.entity.DeviceBackupEntity;
 import net.leoch.modules.ops.service.IDeviceBackupHistoryService;
@@ -64,7 +64,7 @@ public class DeviceBackupJobService {
         }
     }
 
-    public boolean handleCallback(String token, List<BackupCallbackItemRsp> items) {
+    public boolean handleCallback(String token, List<BackupCallbackItemReq> items) {
         if (StrUtil.isBlank(token) || CollUtil.isEmpty(items)) {
             return false;
         }
@@ -82,7 +82,7 @@ public class DeviceBackupJobService {
             : devices.stream()
                 .filter(item -> item != null && StrUtil.isNotBlank(item.getInstance()))
                 .collect(Collectors.toMap(DeviceBackupEntity::getInstance, item -> item, (a, b) -> a));
-        for (BackupCallbackItemRsp item : items) {
+        for (BackupCallbackItemReq item : items) {
             if (item == null || StrUtil.isBlank(item.getInstance())) {
                 continue;
             }

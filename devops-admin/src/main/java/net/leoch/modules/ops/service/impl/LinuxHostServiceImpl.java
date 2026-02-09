@@ -82,18 +82,18 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     }
 
     @Override
-    public void save(LinuxHostRsp dto) {
+    public void save(LinuxHostSaveReq dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-        validateUnique(dto);
+        validateUnique(dto.getInstance(), dto.getName(), dto.getId());
         LinuxHostEntity entity = ConvertUtils.sourceToTarget(dto, LinuxHostEntity.class);
         this.save(entity);
         BeanUtils.copyProperties(entity, dto);
     }
 
     @Override
-    public void update(LinuxHostRsp dto) {
+    public void update(LinuxHostUpdateReq dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-        validateUnique(dto);
+        validateUnique(dto.getInstance(), dto.getName(), dto.getId());
         LinuxHostEntity entity = ConvertUtils.sourceToTarget(dto, LinuxHostEntity.class);
         this.updateById(entity);
     }
@@ -253,8 +253,8 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
         this.update(entity, wrapper);
     }
 
-    private void validateUnique(LinuxHostRsp dto) {
-        if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
+    private void validateUnique(String instance, String name, Long excludeId) {
+        if (existsByInstanceOrName(instance, name, excludeId)) {
             throw new ServiceException("地址或名称已存在");
         }
     }

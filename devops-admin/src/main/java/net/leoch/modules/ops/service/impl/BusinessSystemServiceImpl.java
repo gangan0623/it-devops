@@ -82,18 +82,18 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     }
 
     @Override
-    public void save(BusinessSystemRsp dto) {
+    public void save(BusinessSystemSaveReq dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-        validateUnique(dto);
+        validateUnique(dto.getInstance(), dto.getName(), dto.getId());
         BusinessSystemEntity entity = ConvertUtils.sourceToTarget(dto, BusinessSystemEntity.class);
         this.save(entity);
         BeanUtils.copyProperties(entity, dto);
     }
 
     @Override
-    public void update(BusinessSystemRsp dto) {
+    public void update(BusinessSystemUpdateReq dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-        validateUnique(dto);
+        validateUnique(dto.getInstance(), dto.getName(), dto.getId());
         BusinessSystemEntity entity = ConvertUtils.sourceToTarget(dto, BusinessSystemEntity.class);
         this.updateById(entity);
     }
@@ -250,8 +250,8 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
         return entity;
     }
 
-    private void validateUnique(BusinessSystemRsp dto) {
-        if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
+    private void validateUnique(String instance, String name, Long excludeId) {
+        if (existsByInstanceOrName(instance, name, excludeId)) {
             throw new ServiceException("地址或名称已存在");
         }
     }

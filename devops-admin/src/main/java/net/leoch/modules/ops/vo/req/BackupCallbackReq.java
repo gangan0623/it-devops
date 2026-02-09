@@ -1,5 +1,4 @@
 package net.leoch.modules.ops.vo.req;
-import net.leoch.modules.ops.vo.rsp.BackupCallbackItemRsp;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
@@ -20,9 +19,9 @@ public class BackupCallbackReq implements Serializable  {
     private String token;
 
     @Schema(description = "回调项")
-    private List<BackupCallbackItemRsp> items;
+    private List<BackupCallbackItemReq> items;
 
-    public static BackupCallbackReq of(String token, List<BackupCallbackItemRsp> items) {
+    public static BackupCallbackReq of(String token, List<BackupCallbackItemReq> items) {
         BackupCallbackReq request = new BackupCallbackReq();
         request.setToken(token);
         request.setItems(items);

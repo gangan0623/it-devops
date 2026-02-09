@@ -82,18 +82,18 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     }
 
     @Override
-    public void save(WindowHostRsp dto) {
+    public void save(WindowHostSaveReq dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-        validateUnique(dto);
+        validateUnique(dto.getInstance(), dto.getName(), dto.getId());
         WindowHostEntity entity = ConvertUtils.sourceToTarget(dto, WindowHostEntity.class);
         this.save(entity);
         BeanUtils.copyProperties(entity, dto);
     }
 
     @Override
-    public void update(WindowHostRsp dto) {
+    public void update(WindowHostUpdateReq dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-        validateUnique(dto);
+        validateUnique(dto.getInstance(), dto.getName(), dto.getId());
         WindowHostEntity entity = ConvertUtils.sourceToTarget(dto, WindowHostEntity.class);
         this.updateById(entity);
     }
@@ -253,8 +253,8 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
         this.update(entity, wrapper);
     }
 
-    private void validateUnique(WindowHostRsp dto) {
-        if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
+    private void validateUnique(String instance, String name, Long excludeId) {
+        if (existsByInstanceOrName(instance, name, excludeId)) {
             throw new ServiceException("地址或名称已存在");
         }
     }

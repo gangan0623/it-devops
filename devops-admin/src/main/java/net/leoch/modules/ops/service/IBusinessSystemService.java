@@ -19,9 +19,9 @@ public interface IBusinessSystemService extends IService<BusinessSystemEntity> {
 
     BusinessSystemRsp get(BusinessSystemIdReq request);
 
-    void save(BusinessSystemRsp dto);
+    void save(BusinessSystemSaveReq dto);
 
-    void update(BusinessSystemRsp dto);
+    void update(BusinessSystemUpdateReq dto);
 
     void updateStatus(BusinessSystemStatusUpdateReq request);
 

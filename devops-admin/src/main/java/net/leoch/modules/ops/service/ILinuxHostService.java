@@ -19,9 +19,9 @@ public interface ILinuxHostService extends IService<LinuxHostEntity> {
 
     LinuxHostRsp get(LinuxHostIdReq request);
 
-    void save(LinuxHostRsp dto);
+    void save(LinuxHostSaveReq dto);
 
-    void update(LinuxHostRsp dto);
+    void update(LinuxHostUpdateReq dto);
 
     void updateStatus(LinuxHostStatusUpdateReq request);
 
