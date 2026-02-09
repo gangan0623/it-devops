@@ -1,16 +1,16 @@
-package net.leoch.modules.ops.excel.template;
+package net.leoch.common.excel.template;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Data;
 
 /**
- * 业务系统导入模板
+ * Windows主机导入模板
  *
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
 @Data
-public class BusinessSystemImportExcel {
+public class WindowHostImportExcel {
     @ExcelProperty(value = "地址")
     private String instance;
     @ExcelProperty(value = "名称")
@@ -23,6 +23,8 @@ public class BusinessSystemImportExcel {
     private String menuName;
     @ExcelProperty(value = "子组名称")
     private String subMenuName;
+    @ExcelProperty(value = "主机类型(Physical/VM)")
+    private String type;
     @ExcelProperty(value = "状态(0禁用,1启用)")
     private Integer status;
 }

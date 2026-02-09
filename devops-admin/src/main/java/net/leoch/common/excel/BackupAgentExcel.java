@@ -1,4 +1,4 @@
-package net.leoch.modules.ops.excel;
+package net.leoch.common.excel;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Data;
@@ -6,13 +6,13 @@ import lombok.Data;
 import java.util.Date;
 
 /**
- * 业务系统表
+ * 备份节点表
  *
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
 @Data
-public class BusinessSystemExcel {
+public class BackupAgentExcel {
     @ExcelProperty(value = "主键ID")
     private Long id;
     @ExcelProperty(value = "地址")
@@ -21,12 +21,8 @@ public class BusinessSystemExcel {
     private String name;
     @ExcelProperty(value = "区域名称")
     private String areaName;
-    @ExcelProperty(value = "站点位置")
-    private String siteLocation;
-    @ExcelProperty(value = "分组名称")
-    private String menuName;
-    @ExcelProperty(value = "子组名称")
-    private String subMenuName;
+    @ExcelProperty(value = "Token")
+    private String token;
     @ExcelProperty(value = "状态 0禁用 1启用")
     private Integer status;
     @ExcelProperty(value = "创建者")

@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.sys.excel;
+package net.leoch.common.excel;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Data;

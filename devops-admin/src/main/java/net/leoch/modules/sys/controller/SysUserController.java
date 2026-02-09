@@ -13,7 +13,7 @@ import net.leoch.modules.sys.vo.req.PasswordReq;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.vo.req.SysUserPageReq;
 import net.leoch.modules.sys.vo.req.SysUserReq;
-import net.leoch.modules.sys.excel.SysUserExcel;
+import net.leoch.common.excel.SysUserExcel;
 import net.leoch.modules.sys.service.ISysUserService;
 import org.springframework.web.bind.annotation.*;
 

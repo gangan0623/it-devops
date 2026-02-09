@@ -1,12 +1,12 @@
 
 
-package net.leoch.modules.sys.excel;
+package net.leoch.common.excel;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import com.alibaba.excel.annotation.format.DateTimeFormat;
 import lombok.Data;
-import net.leoch.modules.sys.excel.converter.GenderConverter;
-import net.leoch.modules.sys.excel.converter.StatusConverter;
+import net.leoch.common.excel.converter.GenderConverter;
+import net.leoch.common.excel.converter.StatusConverter;
 
 import java.util.Date;
 

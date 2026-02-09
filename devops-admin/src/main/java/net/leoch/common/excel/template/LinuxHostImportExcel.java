@@ -1,20 +1,16 @@
-package net.leoch.modules.ops.excel;
+package net.leoch.common.excel.template;
 
 import com.alibaba.excel.annotation.ExcelProperty;
 import lombok.Data;
 
-import java.util.Date;
-
 /**
- * Linux主机表
+ * Linux主机导入模板
  *
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
 @Data
-public class LinuxHostExcel {
-    @ExcelProperty(value = "主键ID")
-    private Long id;
+public class LinuxHostImportExcel {
     @ExcelProperty(value = "地址")
     private String instance;
     @ExcelProperty(value = "名称")
@@ -27,17 +23,8 @@ public class LinuxHostExcel {
     private String menuName;
     @ExcelProperty(value = "子组名称")
     private String subMenuName;
-    @ExcelProperty(value = "主机类型")
+    @ExcelProperty(value = "主机类型(Physical/VM)")
     private String type;
-    @ExcelProperty(value = "状态 0禁用 1启用")
+    @ExcelProperty(value = "状态(0禁用,1启用)")
     private Integer status;
-    @ExcelProperty(value = "创建者")
-    private Long creator;
-    @ExcelProperty(value = "创建时间")
-    private Date createDate;
-    @ExcelProperty(value = "更新者")
-    private Long updater;
-    @ExcelProperty(value = "更新时间")
-    private Date updateDate;
-
 }
