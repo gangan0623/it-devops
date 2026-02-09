@@ -29,7 +29,7 @@ import net.leoch.common.excel.template.LinuxHostImportExcel;
 import net.leoch.modules.ops.service.ILinuxHostService;
 import net.leoch.common.utils.MetricsUtils;
 import net.leoch.common.utils.OpsQueryUtils;
-import net.leoch.modules.security.user.SecurityUser;
+import net.leoch.common.security.user.SecurityUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;

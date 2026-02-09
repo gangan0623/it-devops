@@ -1,7 +1,7 @@
 package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import net.leoch.modules.security.user.UserDetail;
+import net.leoch.common.security.user.UserDetail;
 import net.leoch.modules.sys.vo.req.SysMenuReq;
 import net.leoch.modules.sys.vo.rsp.SysMenuRsp;
 import net.leoch.modules.sys.entity.SysMenuEntity;

@@ -21,7 +21,7 @@ import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
 import net.leoch.modules.ops.service.IMonitorComponentService;
-import net.leoch.modules.security.user.SecurityUser;
+import net.leoch.common.security.user.SecurityUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

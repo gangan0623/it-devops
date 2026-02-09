@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.oss.cloud;
+package net.leoch.common.cloud;
 
 import com.qiniu.http.Response;
 import com.qiniu.storage.Configuration;

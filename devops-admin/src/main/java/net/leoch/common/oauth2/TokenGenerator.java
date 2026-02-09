@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.security.oauth2;
+package net.leoch.common.oauth2;
 
 import net.leoch.common.exception.ServiceException;
 

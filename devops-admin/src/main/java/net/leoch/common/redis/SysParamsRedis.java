@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.sys.redis;
+package net.leoch.common.redis;
 
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.redis.RedisKeys;

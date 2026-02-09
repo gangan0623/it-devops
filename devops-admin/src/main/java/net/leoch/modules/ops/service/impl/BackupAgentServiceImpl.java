@@ -30,7 +30,7 @@ import net.leoch.modules.ops.entity.DeviceBackupEntity;
 import net.leoch.common.excel.BackupAgentExcel;
 import net.leoch.common.excel.template.BackupAgentImportExcel;
 import net.leoch.modules.ops.service.IBackupAgentService;
-import net.leoch.modules.security.user.SecurityUser;
+import net.leoch.common.security.user.SecurityUser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

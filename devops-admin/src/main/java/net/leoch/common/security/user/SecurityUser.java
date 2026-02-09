@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.security.user;
+package net.leoch.common.security.user;
 
 import cn.dev33.satoken.session.SaSession;
 import cn.dev33.satoken.stp.StpUtil;

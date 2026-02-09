@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.oss.cloud;
+package net.leoch.common.cloud;
 
 import cn.hutool.core.util.StrUtil;
 import io.minio.MinioClient;

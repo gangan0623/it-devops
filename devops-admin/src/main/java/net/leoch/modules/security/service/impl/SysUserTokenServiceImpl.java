@@ -12,7 +12,7 @@ import net.leoch.modules.security.mapper.SysUserTokenMapper;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
 import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.security.service.ISysUserTokenService;
-import net.leoch.modules.security.user.UserDetail;
+import net.leoch.common.security.user.UserDetail;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.service.ISysUserService;
 import org.springframework.stereotype.Service;

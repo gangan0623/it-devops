@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.security.user;
+package net.leoch.common.security.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Data;

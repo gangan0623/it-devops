@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.oss.cloud;
+package net.leoch.common.cloud;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;

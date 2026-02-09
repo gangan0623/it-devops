@@ -3,8 +3,8 @@
 package net.leoch.common.handler;
 
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
-import net.leoch.modules.security.user.SecurityUser;
-import net.leoch.modules.security.user.UserDetail;
+import net.leoch.common.security.user.SecurityUser;
+import net.leoch.common.security.user.UserDetail;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.stereotype.Component;
 

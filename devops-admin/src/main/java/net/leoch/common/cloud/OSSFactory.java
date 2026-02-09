@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.oss.cloud;
+package net.leoch.common.cloud;
 
 import net.leoch.common.constant.Constant;
 import net.leoch.common.exception.ServiceException;

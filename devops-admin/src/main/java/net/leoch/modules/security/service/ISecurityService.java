@@ -6,7 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.security.vo.req.LoginReq;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
-import net.leoch.modules.security.user.UserDetail;
+import net.leoch.common.security.user.UserDetail;
 import net.leoch.modules.sys.entity.SysUserEntity;
 
 import java.util.List;

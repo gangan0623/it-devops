@@ -1,6 +1,6 @@
 
 
-package net.leoch.modules.oss.cloud;
+package net.leoch.common.cloud;
 
 import com.qcloud.cos.COSClient;
 import com.qcloud.cos.ClientConfig;

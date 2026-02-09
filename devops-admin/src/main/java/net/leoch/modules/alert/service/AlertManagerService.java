@@ -6,7 +6,7 @@ import net.leoch.common.utils.JsonUtils;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
 import net.leoch.modules.ops.mapper.MonitorComponentMapper;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
-import net.leoch.modules.security.user.SecurityUser;
+import net.leoch.common.security.user.SecurityUser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
