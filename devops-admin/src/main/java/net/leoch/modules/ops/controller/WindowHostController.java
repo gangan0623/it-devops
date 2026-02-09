@@ -12,8 +12,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
@@ -32,10 +32,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("ops/windowhost")
 @Tag(name="Windows主机表")
+@RequiredArgsConstructor
 public class WindowHostController {
-    
-    @Resource
-    private IWindowHostService windowHostService;
+    private final IWindowHostService windowHostService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

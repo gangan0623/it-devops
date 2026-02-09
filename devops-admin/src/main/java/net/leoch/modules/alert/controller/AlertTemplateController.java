@@ -7,8 +7,6 @@ import static net.leoch.common.constant.Constant.ORDER_FIELD;
 import static net.leoch.common.constant.Constant.PAGE;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -24,14 +22,9 @@ import net.leoch.modules.alert.vo.req.AlertTemplatePreviewReq;
 import net.leoch.modules.alert.vo.req.AlertTemplateSendTestReq;
 import net.leoch.modules.alert.service.IAlertTemplateService;
 import net.leoch.modules.alert.service.IAlertTriggerService;
-import net.leoch.modules.alert.utils.AlertJsonUtils;
-import net.leoch.modules.alert.utils.AlertPayloadUtils;
-import net.leoch.modules.alert.utils.AlertTemplateRenderer;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -132,22 +125,7 @@ public class AlertTemplateController {
     @Operation(summary = "模板预览")
     @SaCheckPermission("alert:template:test")
     public Result<Map<String, Object>> preview(@RequestBody AlertTemplatePreviewReq dto) {
-        if (dto == null || StrUtil.isBlank(dto.getRawJson())) {
-            return new Result<Map<String, Object>>().error("原始JSON不能为空");
-        }
-        AlertTemplateRsp template = alertTemplateService.get(dto.getTemplateId());
-        if (template == null) {
-            return new Result<Map<String, Object>>().error("模板不存在");
-        }
-        Map<String, Object> payload = AlertJsonUtils.parsePayload(dto.getRawJson());
-        List<Map<String, Object>> alerts = AlertPayloadUtils.getAlerts(payload);
-        Map<String, Object> alert = CollUtil.isNotEmpty(alerts) ? alerts.get(0) : new HashMap<>();
-        Map<String, Object> context = AlertPayloadUtils.buildContext(payload, alert, null);
-        Map<String, Object> result = new HashMap<>();
-        result.put("subject", AlertTemplateRenderer.render(template.getEmailSubject(), context));
-        result.put("html", AlertTemplateRenderer.render(template.getEmailHtml(), context));
-
-        return new Result<Map<String, Object>>().ok(result);
+        return new Result<Map<String, Object>>().ok(alertTemplateService.preview(dto));
     }
 
     @PostMapping("test-send")

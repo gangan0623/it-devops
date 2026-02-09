@@ -1,6 +1,8 @@
 package net.leoch.modules.alert.service;
 
+import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.utils.JsonUtils;
 import org.springframework.stereotype.Service;
 
@@ -10,17 +12,20 @@ import java.util.Map;
  * 告警Webhook处理
  */
 @Service
-public class IAlertWebhookService {
+public class AlertWebhookService {
 
     private final IAlertRecordService alertRecordService;
     private final IAlertTriggerService alertTriggerService;
 
-    public IAlertWebhookService(IAlertRecordService alertRecordService, IAlertTriggerService alertTriggerService) {
+    public AlertWebhookService(IAlertRecordService alertRecordService, IAlertTriggerService alertTriggerService) {
         this.alertRecordService = alertRecordService;
         this.alertTriggerService = alertTriggerService;
     }
 
     public void handle(String severity, String rawJson) {
+        if (StrUtil.isBlank(rawJson)) {
+            throw new ServiceException("payload不能为空");
+        }
         Map<String, Object> payload = JsonUtils.parseObject(rawJson, new TypeReference<Map<String, Object>>() {});
         String actualSeverity = severityFromPayload(payload, severity);
         alertRecordService.saveFromWebhook(payload, rawJson, actualSeverity);

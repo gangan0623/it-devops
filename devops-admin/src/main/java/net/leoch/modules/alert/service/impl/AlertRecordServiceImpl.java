@@ -14,11 +14,12 @@ import net.leoch.modules.alert.mapper.AlertRecordMapper;
 import net.leoch.modules.alert.vo.rsp.AlertRecordActionRsp;
 import net.leoch.modules.alert.vo.rsp.AlertProblemRsp;
 import net.leoch.modules.alert.vo.rsp.AlertRecordRsp;
+import net.leoch.modules.alert.vo.req.AlertProblemPageReq;
 import net.leoch.modules.alert.vo.req.AlertRecordPageReq;
 import net.leoch.modules.alert.entity.AlertNotifyLogEntity;
 import net.leoch.modules.alert.entity.AlertRecordActionEntity;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
-import net.leoch.modules.alert.service.IAlertManagerService;
+import net.leoch.modules.alert.service.AlertManagerService;
 import net.leoch.modules.alert.service.IAlertNotifyLogService;
 import net.leoch.modules.alert.service.IAlertRecordActionService;
 import net.leoch.modules.alert.service.IAlertRecordService;
@@ -51,7 +52,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
 
     private final IAlertSseService alertSseService;
     private final IAlertRecordActionService alertRecordActionService;
-    private final IAlertManagerService alertManagerService;
+    private final AlertManagerService alertManagerService;
     private final IAlertTriggerService alertTriggerService;
     private final IAlertNotifyLogService alertNotifyLogService;
     private final SysUserMapper sysUserMapper;
@@ -61,7 +62,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
 
     public AlertRecordServiceImpl(IAlertSseService alertSseService,
                                   IAlertRecordActionService alertRecordActionService,
-                                  IAlertManagerService alertManagerService,
+                                  AlertManagerService alertManagerService,
                                   IAlertTriggerService alertTriggerService,
                                   IAlertNotifyLogService alertNotifyLogService,
                                   SysUserMapper sysUserMapper,
@@ -247,19 +248,19 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
     }
 
     @Override
-    public PageData<AlertProblemRsp> problemPage(Map<String, Object> params) {
-        String category = toStr(params.get("category"), "realtime");
-        String severityRaw = toStr(params.get("severity"));
+    public PageData<AlertProblemRsp> problemPage(AlertProblemPageReq request) {
+        String category = toStr(request.getCategory(), "realtime");
+        String severityRaw = toStr(request.getSeverity());
         List<String> severityList = parseSeverityList(severityRaw);
-        String deviceType = toStr(params.get("deviceType"));
-        String hostName = toStr(params.get("hostName"));
-        String instance = toStr(params.get("instance"));
-        String ackStatus = toStr(params.get("ackStatus"));
-        String statusFilter = toStr(params.get("statusFilter"));
-        Date startTime = parseDateTime(toStr(params.get("startTime")));
-        Date endTime = parseDateTime(toStr(params.get("endTime")));
-        int page = parseInt(toStr(params.get("page")), 1);
-        int limit = parseInt(toStr(params.get("limit")), 10);
+        String deviceType = toStr(request.getDeviceType());
+        String hostName = toStr(request.getHostName());
+        String instance = toStr(request.getInstance());
+        String ackStatus = toStr(request.getAckStatus());
+        String statusFilter = toStr(request.getStatusFilter());
+        Date startTime = parseDateTime(toStr(request.getStartTime()));
+        Date endTime = parseDateTime(toStr(request.getEndTime()));
+        int page = parseInt(toStr(request.getPage()), 1);
+        int limit = parseInt(toStr(request.getLimit()), 10);
 
         LambdaQueryWrapper<AlertRecordEntity> wrapper = new LambdaQueryWrapper<AlertRecordEntity>()
             .in(!severityList.isEmpty(), AlertRecordEntity::getSeverity, severityList)

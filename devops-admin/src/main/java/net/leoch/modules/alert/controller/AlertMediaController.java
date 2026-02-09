@@ -20,7 +20,7 @@ import net.leoch.modules.alert.vo.rsp.AlertMediaRsp;
 import net.leoch.modules.alert.vo.req.AlertMediaPageReq;
 import net.leoch.modules.alert.vo.req.AlertMediaTestReq;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
-import net.leoch.modules.alert.service.IAlertMailService;
+import net.leoch.modules.alert.service.AlertMailService;
 import net.leoch.modules.alert.service.IAlertMediaService;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,9 +40,9 @@ import java.util.stream.Collectors;
 public class AlertMediaController {
 
     private final IAlertMediaService alertMediaService;
-    private final IAlertMailService alertMailService;
+    private final AlertMailService alertMailService;
 
-    public AlertMediaController(IAlertMediaService alertMediaService, IAlertMailService alertMailService) {
+    public AlertMediaController(IAlertMediaService alertMediaService, AlertMailService alertMailService) {
         this.alertMediaService = alertMediaService;
         this.alertMailService = alertMailService;
     }

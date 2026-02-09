@@ -5,6 +5,7 @@ import net.leoch.common.page.PageData;
 import net.leoch.modules.alert.vo.rsp.AlertRecordActionRsp;
 import net.leoch.modules.alert.vo.rsp.AlertProblemRsp;
 import net.leoch.modules.alert.vo.rsp.AlertRecordRsp;
+import net.leoch.modules.alert.vo.req.AlertProblemPageReq;
 import net.leoch.modules.alert.vo.req.AlertRecordPageReq;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
 
@@ -27,5 +28,5 @@ public interface IAlertRecordService extends IService<AlertRecordEntity> {
     void suppress(Long recordId, Integer days, String message);
     void acknowledge(Long recordId, String message);
     void close(Long recordId, String message);
-    PageData<AlertProblemRsp> problemPage(Map<String, Object> params);
+    PageData<AlertProblemRsp> problemPage(AlertProblemPageReq request);
 }

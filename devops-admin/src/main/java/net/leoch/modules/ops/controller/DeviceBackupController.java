@@ -12,8 +12,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
@@ -32,10 +32,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("ops/devicebackup")
 @Tag(name="设备备份表")
+@RequiredArgsConstructor
 public class DeviceBackupController {
-
-    @Resource
-    private IDeviceBackupService deviceBackupService;
+    private final IDeviceBackupService deviceBackupService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

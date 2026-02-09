@@ -37,6 +37,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -48,6 +49,11 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, DeviceBackupEntity> implements IDeviceBackupService {
+
+    /** 允许排序的数据库列名白名单 */
+    private static final Set<String> ALLOWED_ORDER_FIELDS = Set.of(
+            "id", "instance", "name", "area_name", "group_name", "device_model",
+            "status", "agent_id", "create_date", "update_date");
 
     private final BackupAgentMapper backupAgentMapper;
     private final RedisUtils redisUtils;
@@ -274,10 +280,13 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
             return page;
         }
         if (StrUtil.isNotBlank(request.getOrderField()) && StrUtil.isNotBlank(request.getOrder())) {
-            if (Constant.ASC.equalsIgnoreCase(request.getOrder())) {
-                page.addOrder(OrderItem.asc(request.getOrderField()));
+            String orderField = request.getOrderField();
+            if (!ALLOWED_ORDER_FIELDS.contains(orderField)) {
+                log.warn("[设备备份] 非法排序字段: {}", orderField);
+            } else if (Constant.ASC.equalsIgnoreCase(request.getOrder())) {
+                page.addOrder(OrderItem.asc(orderField));
             } else {
-                page.addOrder(OrderItem.desc(request.getOrderField()));
+                page.addOrder(OrderItem.desc(orderField));
             }
         }
         return page;

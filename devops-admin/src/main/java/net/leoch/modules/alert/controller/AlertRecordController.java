@@ -17,6 +17,7 @@ import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
 import net.leoch.modules.alert.vo.rsp.AlertRecordActionRsp;
+import net.leoch.modules.alert.vo.req.AlertProblemPageReq;
 import net.leoch.modules.alert.vo.req.AlertRecordActionReq;
 import net.leoch.modules.alert.vo.rsp.AlertProblemRsp;
 import net.leoch.modules.alert.vo.rsp.AlertRecordRsp;
@@ -26,7 +27,6 @@ import net.leoch.modules.alert.service.IAlertSseService;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
-import java.util.Map;
 import java.util.List;
 
 /**
@@ -74,13 +74,9 @@ public class AlertRecordController {
 
     @GetMapping("problem/page")
     @Operation(summary = "问题分页")
-    @Parameters({
-        @Parameter(name = Constant.PAGE, description = "当前页码，从1开始", in = ParameterIn.QUERY, required = true, ref="int") ,
-        @Parameter(name = Constant.LIMIT, description = "每页显示记录数", in = ParameterIn.QUERY,required = true, ref="int")
-    })
     @SaCheckPermission("alert:problem:page")
-    public Result<PageData<AlertProblemRsp>> problemPage(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
-        return new Result<PageData<AlertProblemRsp>>().ok(alertRecordService.problemPage(params));
+    public Result<PageData<AlertProblemRsp>> problemPage(AlertProblemPageReq request) {
+        return new Result<PageData<AlertProblemRsp>>().ok(alertRecordService.problemPage(request));
     }
 
     @DeleteMapping

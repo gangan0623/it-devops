@@ -23,9 +23,9 @@ import java.util.Map;
 @Slf4j
 @Service
 public class ZabbixClient {
-    private final IZabbixConfigService configService;
+    private final ZabbixConfigService configService;
 
-    public ZabbixClient(IZabbixConfigService configService) {
+    public ZabbixClient(ZabbixConfigService configService) {
         this.configService = configService;
     }
 

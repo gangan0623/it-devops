@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 @AllArgsConstructor
-public class IZabbixConfigService {
+public class ZabbixConfigService {
     private final ISysParamsService sysParamsService;
 
     public ZabbixConfig getConfig() {

@@ -5,6 +5,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.AllArgsConstructor;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.utils.JsonUtils;
+import net.leoch.common.validator.ValidatorUtils;
+import net.leoch.common.validator.group.AliyunGroup;
+import net.leoch.common.validator.group.MinioGroup;
+import net.leoch.common.validator.group.QcloudGroup;
+import net.leoch.common.validator.group.QiniuGroup;
 import net.leoch.modules.oss.cloud.CloudStorageConfig;
 import net.leoch.modules.oss.mapper.SysOssConfigMapper;
 import net.leoch.modules.oss.entity.SysOssConfigEntity;
@@ -42,6 +47,17 @@ public class SysOssConfigServiceImpl extends ServiceImpl<SysOssConfigMapper, Sys
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveConfig(CloudStorageConfig config) {
+        ValidatorUtils.validateEntity(config);
+        if (config.getType() == Constant.CloudService.QINIU.getValue()) {
+            ValidatorUtils.validateEntity(config, QiniuGroup.class);
+        } else if (config.getType() == Constant.CloudService.ALIYUN.getValue()) {
+            ValidatorUtils.validateEntity(config, AliyunGroup.class);
+        } else if (config.getType() == Constant.CloudService.QCLOUD.getValue()) {
+            ValidatorUtils.validateEntity(config, QcloudGroup.class);
+        } else if (config.getType() == Constant.CloudService.MINIO.getValue()) {
+            ValidatorUtils.validateEntity(config, MinioGroup.class);
+        }
+
         SysOssConfigEntity entity = new SysOssConfigEntity();
         entity.setId(CONFIG_ID);
         entity.setConfigJson(JsonUtils.toJsonString(config));

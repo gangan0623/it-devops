@@ -4,8 +4,8 @@ package net.leoch.modules.security.service.impl;
 
 import com.wf.captcha.SpecCaptcha;
 import com.wf.captcha.base.Captcha;
-import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.redis.RedisKeys;
 import net.leoch.common.redis.RedisUtils;
@@ -21,9 +21,9 @@ import java.io.IOException;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class CaptchaServiceImpl implements ICaptchaService {
-    @Resource
-    private RedisUtils redisUtils;
+    private final RedisUtils redisUtils;
 
     @Override
     public void create(HttpServletResponse response, String uuid) throws IOException {

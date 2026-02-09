@@ -19,7 +19,7 @@ import net.leoch.common.utils.Result;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.service.IBusinessSystemService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -31,9 +31,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("ops/businesssystem")
 @Tag(name="业务系统表")
+@RequiredArgsConstructor
 public class BusinessSystemController {
-    @Autowired
-    private IBusinessSystemService businessSystemService;
+    private final IBusinessSystemService businessSystemService;
 
     @GetMapping("page")
     @Operation(summary = "分页")

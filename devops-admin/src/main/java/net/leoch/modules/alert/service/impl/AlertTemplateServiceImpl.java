@@ -1,22 +1,30 @@
 package net.leoch.modules.alert.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.modules.alert.mapper.AlertTemplateMapper;
 import net.leoch.modules.alert.vo.rsp.AlertTemplateRsp;
 import net.leoch.modules.alert.vo.req.AlertTemplatePageReq;
+import net.leoch.modules.alert.vo.req.AlertTemplatePreviewReq;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.entity.AlertTemplateEntity;
 import net.leoch.modules.alert.service.IAlertTemplateService;
+import net.leoch.modules.alert.utils.AlertJsonUtils;
+import net.leoch.modules.alert.utils.AlertPayloadUtils;
+import net.leoch.modules.alert.utils.AlertTemplateRenderer;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 告警模板
@@ -68,5 +76,25 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
     @Override
     public void delete(Long[] ids) {
         this.removeByIds(Arrays.asList(ids));
+    }
+
+    @Override
+    public Map<String, Object> preview(AlertTemplatePreviewReq req) {
+        if (req == null || StrUtil.isBlank(req.getRawJson())) {
+            throw new ServiceException("原始JSON不能为空");
+        }
+        AlertTemplateRsp template = this.get(req.getTemplateId());
+        if (template == null) {
+            throw new ServiceException("模板不存在");
+        }
+        Map<String, Object> payload = AlertJsonUtils.parsePayload(req.getRawJson());
+        List<Map<String, Object>> alerts = AlertPayloadUtils.getAlerts(payload);
+        Map<String, Object> alert = CollUtil.isNotEmpty(alerts) ? alerts.get(0) : new HashMap<>();
+        Map<String, Object> context = AlertPayloadUtils.buildContext(payload, alert, null);
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("subject", AlertTemplateRenderer.render(template.getEmailSubject(), context));
+        result.put("html", AlertTemplateRenderer.render(template.getEmailHtml(), context));
+        return result;
     }
 }

@@ -17,9 +17,9 @@ import java.util.Properties;
  * 邮件发送
  */
 @Service
-public class IAlertMailService {
+public class AlertMailService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(IAlertMailService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AlertMailService.class);
 
     public void send(AlertMediaEntity media, List<String> receivers, String subject, String content, String html) {
         if (media == null || receivers == null || receivers.isEmpty()) {

@@ -14,7 +14,7 @@ import net.leoch.modules.alert.vo.req.AlertMediaPageReq;
 import net.leoch.modules.alert.vo.req.AlertMediaTestReq;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
-import net.leoch.modules.alert.service.IAlertMailService;
+import net.leoch.modules.alert.service.AlertMailService;
 import net.leoch.modules.alert.service.IAlertMediaService;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AlertMediaServiceImpl extends ServiceImpl<AlertMediaMapper, AlertMediaEntity> implements IAlertMediaService {
 
-    private final IAlertMailService alertMailService;
+    private final AlertMailService alertMailService;
 
     @Override
     public PageData<AlertMediaRsp> page(AlertMediaPageReq request) {

@@ -27,7 +27,7 @@ import java.util.Map;
  */
 @Slf4j
 @Service
-public class IAlertManagerService {
+public class AlertManagerService {
 
     private static final String TYPE_ALERTMANAGER = "alertmanager";
 
@@ -36,7 +36,7 @@ public class IAlertManagerService {
 
     private final MonitorComponentMapper monitorComponentMapper;
 
-    public IAlertManagerService(MonitorComponentMapper monitorComponentMapper) {
+    public AlertManagerService(MonitorComponentMapper monitorComponentMapper) {
         this.monitorComponentMapper = monitorComponentMapper;
     }
 

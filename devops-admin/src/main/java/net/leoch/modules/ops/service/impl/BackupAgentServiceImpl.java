@@ -40,6 +40,7 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.*;
+import java.util.Set;
 
 /**
  * 备份节点表
@@ -50,6 +51,10 @@ import java.util.*;
 @Slf4j
 @Service
 public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, BackupAgentEntity> implements IBackupAgentService {
+
+    /** 允许排序的数据库列名白名单 */
+    private static final Set<String> ALLOWED_ORDER_FIELDS = Set.of(
+            "id", "instance", "name", "area_name", "status", "create_date", "update_date");
 
     private final DeviceBackupMapper deviceBackupMapper;
     private final RedisUtils redisUtils;
@@ -271,10 +276,13 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
             return page;
         }
         if (StrUtil.isNotBlank(request.getOrderField()) && StrUtil.isNotBlank(request.getOrder())) {
-            if (Constant.ASC.equalsIgnoreCase(request.getOrder())) {
-                page.addOrder(OrderItem.asc(request.getOrderField()));
+            String orderField = request.getOrderField();
+            if (!ALLOWED_ORDER_FIELDS.contains(orderField)) {
+                log.warn("[备份节点] 非法排序字段: {}", orderField);
+            } else if (Constant.ASC.equalsIgnoreCase(request.getOrder())) {
+                page.addOrder(OrderItem.asc(orderField));
             } else {
-                page.addOrder(OrderItem.desc(request.getOrderField()));
+                page.addOrder(OrderItem.desc(orderField));
             }
         }
         return page;
