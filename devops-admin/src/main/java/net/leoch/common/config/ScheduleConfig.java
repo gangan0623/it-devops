@@ -1,4 +1,4 @@
-package net.leoch.modules.job.config;
+package net.leoch.common.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
