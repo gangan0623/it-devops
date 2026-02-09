@@ -10,7 +10,7 @@ import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.utils.IpUtils;
 import net.leoch.common.utils.Result;
-import net.leoch.common.validator.ValidatorUtils;
+import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.modules.log.entity.SysLogLoginEntity;
 import net.leoch.common.core.enums.LoginOperationEnum;
 import net.leoch.common.core.enums.LoginStatusEnum;

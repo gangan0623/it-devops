@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.core.annotation.LogOperation;
-import net.leoch.common.page.PageData;
+import net.leoch.common.data.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.common.storage.CloudStorageConfig;
 import net.leoch.modules.oss.vo.rsp.SysOssRsp;

@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.validator.group;
+package net.leoch.common.data.validator.group;
 
 
 import jakarta.validation.GroupSequence;

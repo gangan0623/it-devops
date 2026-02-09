@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.validator;
+package net.leoch.common.data.validator;
 
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;

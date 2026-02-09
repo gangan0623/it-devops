@@ -1,7 +1,7 @@
 package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import net.leoch.common.page.PageData;
+import net.leoch.common.data.page.PageData;
 import net.leoch.modules.sys.vo.req.SysDictDataPageReq;
 import net.leoch.modules.sys.vo.req.SysDictDataReq;
 import net.leoch.modules.sys.vo.rsp.SysDictDataRsp;

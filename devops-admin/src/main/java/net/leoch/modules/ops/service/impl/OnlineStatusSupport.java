@@ -1,7 +1,7 @@
 package net.leoch.modules.ops.service.impl;
 
 import cn.hutool.core.util.StrUtil;
-import net.leoch.common.page.PageData;
+import net.leoch.common.data.page.PageData;
 
 import java.util.Collections;
 import java.util.Comparator;

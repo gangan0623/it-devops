@@ -10,7 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.redis.RedisKeys;
 import net.leoch.common.redis.RedisUtils;
-import net.leoch.common.validator.AssertUtils;
+import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.modules.security.service.ICaptchaService;
 import org.springframework.stereotype.Service;
 

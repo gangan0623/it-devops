@@ -3,7 +3,7 @@ package net.leoch.modules.job.vo.req;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import net.leoch.common.page.BasePage;
+import net.leoch.common.data.page.BasePage;
 
 /**
  * 定时任务分页请求

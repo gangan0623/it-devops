@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.validator;
+package net.leoch.common.data.validator;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.map.MapUtil;

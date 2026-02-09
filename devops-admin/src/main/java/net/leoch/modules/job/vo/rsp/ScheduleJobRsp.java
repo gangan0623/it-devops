@@ -8,9 +8,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import lombok.Data;
-import net.leoch.common.validator.group.AddGroup;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
+import net.leoch.common.data.validator.group.AddGroup;
+import net.leoch.common.data.validator.group.DefaultGroup;
+import net.leoch.common.data.validator.group.UpdateGroup;
 import org.hibernate.validator.constraints.Range;
 
 import java.io.Serializable;

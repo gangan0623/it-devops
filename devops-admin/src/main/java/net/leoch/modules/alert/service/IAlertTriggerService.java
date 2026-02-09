@@ -1,7 +1,7 @@
 package net.leoch.modules.alert.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import net.leoch.common.page.PageData;
+import net.leoch.common.data.page.PageData;
 import net.leoch.modules.alert.vo.req.AlertTriggerPageReq;
 import net.leoch.modules.alert.vo.req.AlertTriggerReq;
 import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;

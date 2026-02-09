@@ -4,8 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Null;
 import lombok.Data;
-import net.leoch.common.validator.group.AddGroup;
-import net.leoch.common.validator.group.DefaultGroup;
+import net.leoch.common.data.validator.group.AddGroup;
+import net.leoch.common.data.validator.group.DefaultGroup;
 
 import java.io.Serial;
 import java.io.Serializable;

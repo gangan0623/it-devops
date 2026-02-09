@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.page;
+package net.leoch.common.data.page;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;

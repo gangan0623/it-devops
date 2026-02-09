@@ -6,10 +6,10 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
-import net.leoch.common.validator.group.AliyunGroup;
-import net.leoch.common.validator.group.MinioGroup;
-import net.leoch.common.validator.group.QcloudGroup;
-import net.leoch.common.validator.group.QiniuGroup;
+import net.leoch.common.data.validator.group.AliyunGroup;
+import net.leoch.common.data.validator.group.MinioGroup;
+import net.leoch.common.data.validator.group.QcloudGroup;
+import net.leoch.common.data.validator.group.QiniuGroup;
 import org.hibernate.validator.constraints.Range;
 import org.hibernate.validator.constraints.URL;
 

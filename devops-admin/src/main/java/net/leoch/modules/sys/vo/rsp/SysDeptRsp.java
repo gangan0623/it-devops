@@ -11,9 +11,9 @@ import jakarta.validation.constraints.Null;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import net.leoch.common.utils.TreeNode;
-import net.leoch.common.validator.group.AddGroup;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
+import net.leoch.common.data.validator.group.AddGroup;
+import net.leoch.common.data.validator.group.DefaultGroup;
+import net.leoch.common.data.validator.group.UpdateGroup;
 
 import java.io.Serializable;
 import java.util.Date;
