@@ -1,7 +1,7 @@
 package net.leoch.modules.security.config;
 
 import cn.dev33.satoken.stp.StpInterface;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.entity.SysUserEntity;
@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.Set;
 
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SaTokenStpInterface implements StpInterface {
     private final ISecurityService securityService;
 

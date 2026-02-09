@@ -2,6 +2,7 @@ package net.leoch.modules.ops.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.utils.Result;
 import net.leoch.modules.ops.vo.req.BackupCallbackItemReq;
 import net.leoch.modules.ops.vo.req.BackupCallbackReq;
@@ -16,13 +17,10 @@ import java.util.List;
 @RestController
 @RequestMapping("ops/backup")
 @Tag(name = "备份回调")
+@RequiredArgsConstructor
 public class BackupCallbackController {
 
     private final IBackupCallbackService backupCallbackService;
-
-    public BackupCallbackController(IBackupCallbackService backupCallbackService) {
-        this.backupCallbackService = backupCallbackService;
-    }
 
     @PostMapping("callback")
     @Operation(summary = "备份回调")

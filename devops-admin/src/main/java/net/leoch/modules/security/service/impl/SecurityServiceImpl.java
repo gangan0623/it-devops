@@ -4,7 +4,7 @@ package net.leoch.modules.security.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
@@ -43,7 +43,7 @@ import java.util.Set;
 
 @Slf4j
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SecurityServiceImpl implements ISecurityService {
     private final SysMenuMapper sysMenuMapper;
     private final SysUserMapper sysUserMapper;

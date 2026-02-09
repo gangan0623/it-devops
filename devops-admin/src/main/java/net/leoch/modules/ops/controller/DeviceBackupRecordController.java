@@ -13,6 +13,7 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
@@ -29,13 +30,10 @@ import java.util.List;
 @RestController
 @RequestMapping("ops/devicebackuprecord")
 @Tag(name="设备备份信息表")
+@RequiredArgsConstructor
 public class DeviceBackupRecordController {
 
     private final IDeviceBackupRecordService deviceBackupRecordService;
-
-    public DeviceBackupRecordController(IDeviceBackupRecordService deviceBackupRecordService) {
-        this.deviceBackupRecordService = deviceBackupRecordService;
-    }
 
     @GetMapping("page")
     @Operation(summary = "分页")

@@ -2,6 +2,7 @@ package net.leoch.modules.ops.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import net.leoch.modules.ops.vo.req.PrometheusSdReq;
 import net.leoch.modules.ops.vo.rsp.PrometheusSdRsp;
 import net.leoch.modules.ops.service.IPrometheusSdService;
@@ -18,13 +19,10 @@ import java.util.List;
 @RestController
 @RequestMapping("/sd")
 @Tag(name = "Prometheus SD")
+@RequiredArgsConstructor
 public class PrometheusSdController {
 
     private final IPrometheusSdService prometheusSdService;
-
-    public PrometheusSdController(IPrometheusSdService prometheusSdService) {
-        this.prometheusSdService = prometheusSdService;
-    }
 
     @GetMapping("/linux/{area}/info")
     @Operation(summary = "Linux Prometheus SD")

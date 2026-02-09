@@ -2,7 +2,7 @@
 
 package net.leoch.modules.sys.redis;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.redis.RedisKeys;
 import net.leoch.common.redis.RedisUtils;
 import org.springframework.stereotype.Component;
@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
  * @since 1.0.0
  */
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysParamsRedis {
     private final RedisUtils redisUtils;
 

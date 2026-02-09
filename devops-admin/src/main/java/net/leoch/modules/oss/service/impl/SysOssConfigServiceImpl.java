@@ -2,7 +2,7 @@ package net.leoch.modules.oss.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.constant.Constant;
 import net.leoch.common.utils.JsonUtils;
 import net.leoch.common.validator.ValidatorUtils;
@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @author Taohongqiang
  */
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysOssConfigServiceImpl extends ServiceImpl<SysOssConfigMapper, SysOssConfigEntity> implements ISysOssConfigService {
     private static final Long CONFIG_ID = 1L;
 

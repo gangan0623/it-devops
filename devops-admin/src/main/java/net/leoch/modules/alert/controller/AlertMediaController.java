@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
@@ -30,13 +31,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("alert/media")
 @Tag(name = "告警媒介")
+@RequiredArgsConstructor
 public class AlertMediaController {
 
     private final IAlertMediaService alertMediaService;
-
-    public AlertMediaController(IAlertMediaService alertMediaService) {
-        this.alertMediaService = alertMediaService;
-    }
 
     @GetMapping("page")
     @Operation(summary = "分页")
