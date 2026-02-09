@@ -190,6 +190,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
     }
 
     @Override
+    public SysUserRsp getCurrentUserInfo() {
+        return ConvertUtils.sourceToTarget(SecurityUser.getUser(), SysUserRsp.class);
+    }
+
+    @Override
     public int getCountByDeptId(Long deptId) {
         return this.getBaseMapper().getCountByDeptId(deptId);
     }

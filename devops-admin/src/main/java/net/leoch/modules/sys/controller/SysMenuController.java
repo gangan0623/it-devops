@@ -9,17 +9,12 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.AllArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
-import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
 import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.modules.security.service.ISecurityService;
-import net.leoch.modules.security.user.SecurityUser;
-import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.vo.rsp.SysMenuRsp;
 import net.leoch.modules.sys.vo.req.SysMenuReq;
-import net.leoch.modules.sys.enums.MenuTypeEnum;
 import net.leoch.modules.sys.service.ISysMenuService;
 import org.springframework.web.bind.annotation.*;
 
@@ -37,24 +32,17 @@ import java.util.Set;
 @AllArgsConstructor
 public class SysMenuController {
     private final ISysMenuService sysMenuService;
-    private final ISecurityService securityService;
 
     @GetMapping("nav")
     @Operation(summary = "导航")
     public Result<List<SysMenuRsp>> nav() {
-        UserDetail user = SecurityUser.getUser();
-        List<SysMenuRsp> list = sysMenuService.getUserMenuList(user, MenuTypeEnum.MENU.value());
-
-        return new Result<List<SysMenuRsp>>().ok(list);
+        return new Result<List<SysMenuRsp>>().ok(sysMenuService.getCurrentUserMenuList(MenuTypeEnum.MENU.value()));
     }
 
     @GetMapping("permissions")
     @Operation(summary = "权限标识")
     public Result<Set<String>> permissions() {
-        UserDetail user = SecurityUser.getUser();
-        Set<String> set = securityService.getUserPermissions(user);
-
-        return new Result<Set<String>>().ok(set);
+        return new Result<Set<String>>().ok(sysMenuService.getCurrentUserPermissions());
     }
 
     @GetMapping("list")
@@ -62,18 +50,14 @@ public class SysMenuController {
     @Parameter(name = "type", description = "菜单类型 0：菜单 1：按钮  null：全部", in = ParameterIn.QUERY, ref = "int")
     @SaCheckPermission("sys:menu:list")
     public Result<List<SysMenuRsp>> list(Integer type) {
-        List<SysMenuRsp> list = sysMenuService.getAllMenuList(type);
-
-        return new Result<List<SysMenuRsp>>().ok(list);
+        return new Result<List<SysMenuRsp>>().ok(sysMenuService.getAllMenuList(type));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("sys:menu:info")
     public Result<SysMenuRsp> get(@PathVariable("id") Long id) {
-        SysMenuRsp data = sysMenuService.get(id);
-
-        return new Result<SysMenuRsp>().ok(data);
+        return new Result<SysMenuRsp>().ok(sysMenuService.get(id));
     }
 
     @PostMapping
@@ -81,11 +65,8 @@ public class SysMenuController {
     @LogOperation("保存")
     @SaCheckPermission("sys:menu:save")
     public Result<Object> save(@RequestBody SysMenuReq dto) {
-        //效验数据
         ValidatorUtils.validateEntity(dto, DefaultGroup.class);
-
         sysMenuService.save(dto);
-
         return new Result<>();
     }
 
@@ -94,11 +75,8 @@ public class SysMenuController {
     @LogOperation("修改")
     @SaCheckPermission("sys:menu:update")
     public Result<Object> update(@RequestBody SysMenuReq dto) {
-        //效验数据
         ValidatorUtils.validateEntity(dto, DefaultGroup.class);
-
         sysMenuService.update(dto);
-
         return new Result<>();
     }
 
@@ -107,17 +85,8 @@ public class SysMenuController {
     @LogOperation("删除")
     @SaCheckPermission("sys:menu:delete")
     public Result<Object> delete(@PathVariable("id") Long id) {
-        //效验数据
         AssertUtils.isNull(id, "id");
-
-        //判断是否有子菜单或按钮
-        List<SysMenuRsp> list = sysMenuService.getListPid(id);
-        if (list.size() > 0) {
-            return new Result().error(ErrorCode.SUB_MENU_EXIST);
-        }
-
-        sysMenuService.delete(id);
-
+        sysMenuService.deleteWithChildCheck(id);
         return new Result<>();
     }
 
@@ -125,9 +94,6 @@ public class SysMenuController {
     @Operation(summary = "角色菜单权限")
     @SaCheckPermission("sys:menu:select")
     public Result<List<SysMenuRsp>> select() {
-        UserDetail user = SecurityUser.getUser();
-        List<SysMenuRsp> list = sysMenuService.getUserMenuList(user, null);
-
-        return new Result<List<SysMenuRsp>>().ok(list);
+        return new Result<List<SysMenuRsp>>().ok(sysMenuService.getCurrentUserMenuList(null));
     }
 }

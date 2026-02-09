@@ -37,9 +37,7 @@ public class SysLogOperationController {
     @Operation(summary = "分页")
     @SaCheckPermission("sys:log:operation")
     public Result<PageData<SysLogOperationRsp>> page(SysLogOperationPageReq request) {
-        PageData<SysLogOperationRsp> page = sysLogOperationService.page(request);
-
-        return new Result<PageData<SysLogOperationRsp>>().ok(page);
+        return new Result<PageData<SysLogOperationRsp>>().ok(sysLogOperationService.page(request));
     }
 
     @GetMapping("export")
@@ -47,9 +45,7 @@ public class SysLogOperationController {
     @LogOperation("导出")
     @SaCheckPermission("sys:log:operation")
     public void export(SysLogOperationPageReq request, HttpServletResponse response) throws Exception {
-        List<SysLogOperationRsp> list = sysLogOperationService.list(request);
-
-        ExcelUtils.exportExcelToTarget(response, null, "操作日志", list, SysLogOperationExcel.class);
+        ExcelUtils.exportExcelToTarget(response, null, "操作日志", sysLogOperationService.list(request), SysLogOperationExcel.class);
     }
 
 }

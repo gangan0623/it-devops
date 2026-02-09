@@ -58,18 +58,14 @@ public class AlertRecordController {
     })
     @SaCheckPermission("alert:record:page")
     public Result<PageData<AlertRecordRsp>> page(AlertRecordPageReq request){
-        PageData<AlertRecordRsp> page = alertRecordService.page(request);
-
-        return new Result<PageData<AlertRecordRsp>>().ok(page);
+        return new Result<PageData<AlertRecordRsp>>().ok(alertRecordService.page(request));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("alert:record:info")
     public Result<AlertRecordRsp> get(@PathVariable("id") Long id){
-        AlertRecordRsp data = alertRecordService.get(id);
-
-        return new Result<AlertRecordRsp>().ok(data);
+        return new Result<AlertRecordRsp>().ok(alertRecordService.get(id));
     }
 
     @GetMapping("problem/page")
@@ -86,7 +82,6 @@ public class AlertRecordController {
     public Result<Object> delete(@RequestBody Long[] ids){
         AssertUtils.isArrayEmpty(ids, "id");
         alertRecordService.delete(ids);
-
         return new Result<>();
     }
 

@@ -18,8 +18,11 @@ import java.util.Map;
  */
 public interface IAlertTriggerService extends IService<AlertTriggerEntity> {
     PageData<AlertTriggerRsp> page(AlertTriggerPageReq request);
+    PageData<AlertTriggerRsp> pageWithReceivers(AlertTriggerPageReq request);
     List<AlertTriggerRsp> list(AlertTriggerPageReq request);
     AlertTriggerRsp get(Long id);
+    AlertTriggerRsp getWithReceivers(Long id);
+    List<Map<String, Object>> options();
     void save(AlertTriggerReq dto);
     void update(AlertTriggerReq dto);
     void delete(Long[] ids);

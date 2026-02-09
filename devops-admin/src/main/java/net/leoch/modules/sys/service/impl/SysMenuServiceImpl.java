@@ -8,6 +8,8 @@ import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.TreeUtils;
+import net.leoch.modules.security.service.ISecurityService;
+import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.security.user.UserDetail;
 import net.leoch.modules.sys.mapper.SysMenuMapper;
 import net.leoch.modules.sys.vo.req.SysMenuReq;
@@ -20,12 +22,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @Service
 @AllArgsConstructor
 public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity> implements ISysMenuService {
     private final ISysRoleMenuService sysRoleMenuService;
+    private final ISecurityService securityService;
 
     @Override
     public SysMenuRsp get(Long id) {
@@ -99,6 +103,28 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
         List<SysMenuEntity> menuList = this.getBaseMapper().getListPid(pid);
 
         return ConvertUtils.sourceToTarget(menuList, SysMenuRsp.class);
+    }
+
+    @Override
+    public List<SysMenuRsp> getCurrentUserMenuList(Integer menuType) {
+        UserDetail user = SecurityUser.getUser();
+        return getUserMenuList(user, menuType);
+    }
+
+    @Override
+    public Set<String> getCurrentUserPermissions() {
+        UserDetail user = SecurityUser.getUser();
+        return securityService.getUserPermissions(user);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteWithChildCheck(Long id) {
+        List<SysMenuRsp> children = this.getListPid(id);
+        if (!children.isEmpty()) {
+            throw new ServiceException(ErrorCode.SUB_MENU_EXIST);
+        }
+        this.delete(id);
     }
 
 }

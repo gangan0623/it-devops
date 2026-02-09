@@ -36,19 +36,14 @@ public class SysDictTypeController {
     @Operation(summary = "字典类型")
     @SaCheckPermission("sys:dict:page")
     public Result<PageData<SysDictTypeRsp>> page(SysDictTypePageReq request) {
-        //字典类型
-        PageData<SysDictTypeRsp> page = sysDictTypeService.page(request);
-
-        return new Result<PageData<SysDictTypeRsp>>().ok(page);
+        return new Result<PageData<SysDictTypeRsp>>().ok(sysDictTypeService.page(request));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("sys:dict:info")
     public Result<SysDictTypeRsp> get(@PathVariable("id") Long id) {
-        SysDictTypeRsp data = sysDictTypeService.get(id);
-
-        return new Result<SysDictTypeRsp>().ok(data);
+        return new Result<SysDictTypeRsp>().ok(sysDictTypeService.get(id));
     }
 
     @PostMapping
@@ -56,11 +51,8 @@ public class SysDictTypeController {
     @LogOperation("保存")
     @SaCheckPermission("sys:dict:save")
     public Result<Object> save(@RequestBody SysDictTypeReq dto) {
-        //效验数据
         ValidatorUtils.validateEntity(dto, DefaultGroup.class);
-
         sysDictTypeService.save(dto);
-
         return new Result<>();
     }
 
@@ -69,11 +61,8 @@ public class SysDictTypeController {
     @LogOperation("修改")
     @SaCheckPermission("sys:dict:update")
     public Result<Object> update(@RequestBody SysDictTypeReq dto) {
-        //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-
         sysDictTypeService.update(dto);
-
         return new Result<>();
     }
 
@@ -82,20 +71,15 @@ public class SysDictTypeController {
     @LogOperation("删除")
     @SaCheckPermission("sys:dict:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
-        //效验数据
         AssertUtils.isArrayEmpty(ids, "id");
-
         sysDictTypeService.delete(ids);
-
         return new Result<>();
     }
 
     @GetMapping("all")
     @Operation(summary = "所有字典数据")
     public Result<List<DictType>> all() {
-        List<DictType> list = sysDictTypeService.getAllList();
-
-        return new Result<List<DictType>>().ok(list);
+        return new Result<List<DictType>>().ok(sysDictTypeService.getAllList());
     }
 
 }

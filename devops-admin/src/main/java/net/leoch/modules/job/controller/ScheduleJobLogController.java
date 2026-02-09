@@ -34,8 +34,6 @@ public class ScheduleJobLogController {
     @Operation(summary = "信息")
     @SaCheckPermission("sys:schedule:log")
     public Result<ScheduleJobLogRsp> info(@PathVariable("id") Long id) {
-        ScheduleJobLogRsp log = scheduleJobLogService.get(id);
-
-        return new Result<ScheduleJobLogRsp>().ok(log);
+        return new Result<ScheduleJobLogRsp>().ok(scheduleJobLogService.get(id));
     }
 }

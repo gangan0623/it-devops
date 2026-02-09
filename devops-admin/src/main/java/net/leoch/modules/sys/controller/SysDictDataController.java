@@ -33,19 +33,14 @@ public class SysDictDataController {
     @Operation(summary = "字典数据")
     @SaCheckPermission("sys:dict:page")
     public Result<PageData<SysDictDataRsp>> page(SysDictDataPageReq request) {
-        //字典类型
-        PageData<SysDictDataRsp> page = sysDictDataService.page(request);
-
-        return new Result<PageData<SysDictDataRsp>>().ok(page);
+        return new Result<PageData<SysDictDataRsp>>().ok(sysDictDataService.page(request));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("sys:dict:info")
     public Result<SysDictDataRsp> get(@PathVariable("id") Long id) {
-        SysDictDataRsp data = sysDictDataService.get(id);
-
-        return new Result<SysDictDataRsp>().ok(data);
+        return new Result<SysDictDataRsp>().ok(sysDictDataService.get(id));
     }
 
     @PostMapping
@@ -53,11 +48,8 @@ public class SysDictDataController {
     @LogOperation("保存")
     @SaCheckPermission("sys:dict:save")
     public Result<Object> save(@RequestBody SysDictDataReq dto) {
-        //效验数据
         ValidatorUtils.validateEntity(dto, DefaultGroup.class);
-
         sysDictDataService.save(dto);
-
         return new Result<>();
     }
 
@@ -66,11 +58,8 @@ public class SysDictDataController {
     @LogOperation("修改")
     @SaCheckPermission("sys:dict:update")
     public Result<Object> update(@RequestBody SysDictDataReq dto) {
-        //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-
         sysDictDataService.update(dto);
-
         return new Result<>();
     }
 
@@ -79,11 +68,8 @@ public class SysDictDataController {
     @LogOperation("删除")
     @SaCheckPermission("sys:dict:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
-        //效验数据
         AssertUtils.isArrayEmpty(ids, "id");
-
         sysDictDataService.delete(ids);
-
         return new Result<>();
     }
 

@@ -45,8 +45,7 @@ public class SysDeptController {
     @Operation(summary = "信息")
     @SaCheckPermission("sys:dept:info")
     public Result<SysDeptRsp> get(@PathVariable("id") Long id) {
-        SysDeptRsp data = sysDeptService.get(id);
-        return new Result<SysDeptRsp>().ok(data);
+        return new Result<SysDeptRsp>().ok(sysDeptService.get(id));
     }
 
     @PostMapping
@@ -54,11 +53,8 @@ public class SysDeptController {
     @LogOperation("保存")
     @SaCheckPermission("sys:dept:save")
     public Result<Object> save(@RequestBody SysDeptReq dto) {
-        //效验数据
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-
         sysDeptService.save(dto);
-
         return new Result<>();
     }
 
@@ -67,11 +63,8 @@ public class SysDeptController {
     @LogOperation("修改")
     @SaCheckPermission("sys:dept:update")
     public Result<Object> update(@RequestBody SysDeptReq dto) {
-        //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-
         sysDeptService.update(dto);
-
         return new Result<>();
     }
 
@@ -80,9 +73,7 @@ public class SysDeptController {
     @LogOperation("删除")
     @SaCheckPermission("sys:dept:delete")
     public Result<Object> delete(@PathVariable("id") Long id) {
-        //效验数据
         AssertUtils.isNull(id, "id");
-
         sysDeptService.delete(id);
         return new Result<>();
     }

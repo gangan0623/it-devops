@@ -82,6 +82,16 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
     }
 
     @Override
+    public SysRoleRsp getWithMenuAndDataScope(Long id) {
+        SysRoleRsp role = this.get(id);
+        if (role != null) {
+            role.setMenuIdList(sysRoleMenuService.getMenuIdList(id));
+            role.setDeptIdList(sysRoleDataScopeService.getDeptIdList(id));
+        }
+        return role;
+    }
+
+    @Override
     @Transactional(rollbackFor = Exception.class)
     public void save(SysRoleReq dto) {
         SysRoleEntity entity = ConvertUtils.sourceToTarget(dto, SysRoleEntity.class);

@@ -57,18 +57,14 @@ public class AlertTemplateController {
     })
     @SaCheckPermission("alert:template:page")
     public Result<PageData<AlertTemplateRsp>> page(AlertTemplatePageReq request){
-        PageData<AlertTemplateRsp> page = alertTemplateService.page(request);
-
-        return new Result<PageData<AlertTemplateRsp>>().ok(page);
+        return new Result<PageData<AlertTemplateRsp>>().ok(alertTemplateService.page(request));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("alert:template:info")
     public Result<AlertTemplateRsp> get(@PathVariable("id") Long id){
-        AlertTemplateRsp data = alertTemplateService.get(id);
-
-        return new Result<AlertTemplateRsp>().ok(data);
+        return new Result<AlertTemplateRsp>().ok(alertTemplateService.get(id));
     }
 
     @PostMapping
@@ -77,7 +73,6 @@ public class AlertTemplateController {
     @SaCheckPermission("alert:template:save")
     public Result<Object> save(@RequestBody AlertTemplateReq dto){
         alertTemplateService.save(dto);
-
         return new Result<>();
     }
 
@@ -85,9 +80,8 @@ public class AlertTemplateController {
     @Operation(summary = "保存(表单)")
     @LogOperation("保存")
     @SaCheckPermission("alert:template:save")
-    public Result<Object> saveForm(AlertTemplateRsp dto){
+    public Result<Object> saveForm(AlertTemplateReq dto){
         alertTemplateService.save(dto);
-
         return new Result<>();
     }
 
@@ -97,7 +91,6 @@ public class AlertTemplateController {
     @SaCheckPermission("alert:template:update")
     public Result<Object> update(@RequestBody AlertTemplateReq dto){
         alertTemplateService.update(dto);
-
         return new Result<>();
     }
 
@@ -105,9 +98,8 @@ public class AlertTemplateController {
     @Operation(summary = "修改(表单)")
     @LogOperation("修改")
     @SaCheckPermission("alert:template:update")
-    public Result<Object> updateForm(AlertTemplateRsp dto){
+    public Result<Object> updateForm(AlertTemplateReq dto){
         alertTemplateService.update(dto);
-
         return new Result<>();
     }
 
@@ -118,7 +110,6 @@ public class AlertTemplateController {
     public Result<Object> delete(@RequestBody Long[] ids){
         AssertUtils.isArrayEmpty(ids, "id");
         alertTemplateService.delete(ids);
-
         return new Result<>();
     }
 

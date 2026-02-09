@@ -37,9 +37,7 @@ public class SysLogLoginController {
     @Operation(summary = "分页")
     @SaCheckPermission("sys:log:login")
     public Result<PageData<SysLogLoginRsp>> page(SysLogLoginPageReq request) {
-        PageData<SysLogLoginRsp> page = sysLogLoginService.page(request);
-
-        return new Result<PageData<SysLogLoginRsp>>().ok(page);
+        return new Result<PageData<SysLogLoginRsp>>().ok(sysLogLoginService.page(request));
     }
 
     @GetMapping("export")
@@ -47,10 +45,7 @@ public class SysLogLoginController {
     @LogOperation("导出")
     @SaCheckPermission("sys:log:login")
     public void export(SysLogLoginPageReq request, HttpServletResponse response) throws Exception {
-        List<SysLogLoginRsp> list = sysLogLoginService.list(request);
-
-        ExcelUtils.exportExcelToTarget(response, null, "登录日志", list, SysLogLoginExcel.class);
-
+        ExcelUtils.exportExcelToTarget(response, null, "登录日志", sysLogLoginService.list(request), SysLogLoginExcel.class);
     }
 
 }

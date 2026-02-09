@@ -7,6 +7,7 @@ import net.leoch.modules.sys.vo.rsp.SysMenuRsp;
 import net.leoch.modules.sys.entity.SysMenuEntity;
 
 import java.util.List;
+import java.util.Set;
 
 
 /**
@@ -44,4 +45,21 @@ public interface ISysMenuService extends IService<SysMenuEntity> {
 	 * @param pid  父菜单ID
 	 */
 	List<SysMenuRsp> getListPid(Long pid);
+
+	/**
+	 * 当前登录用户菜单列表
+	 * @param menuType 菜单类型
+	 */
+	List<SysMenuRsp> getCurrentUserMenuList(Integer menuType);
+
+	/**
+	 * 当前登录用户权限标识
+	 */
+	Set<String> getCurrentUserPermissions();
+
+	/**
+	 * 删除菜单（含子菜单检查）
+	 * @param id 菜单ID
+	 */
+	void deleteWithChildCheck(Long id);
 }

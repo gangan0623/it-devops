@@ -52,6 +52,12 @@ public interface ISysUserService extends IService<SysUserEntity> {
 	void changePassword(net.leoch.modules.sys.vo.req.PasswordReq dto);
 
 	/**
+	 * 获取当前登录用户信息
+	 * @return 当前用户信息
+	 */
+	SysUserRsp getCurrentUserInfo();
+
+	/**
 	 * 根据部门ID，查询用户数
 	 */
 	int getCountByDeptId(Long deptId);

@@ -42,9 +42,7 @@ public class SysOssController {
     @Operation(summary = "云存储配置信息")
     @SaCheckPermission("sys:oss:all")
     public Result<CloudStorageConfig> info() {
-        CloudStorageConfig config = sysOssConfigService.getConfig();
-
-        return new Result<CloudStorageConfig>().ok(config);
+        return new Result<CloudStorageConfig>().ok(sysOssConfigService.getConfig());
     }
 
     @PostMapping
@@ -69,7 +67,6 @@ public class SysOssController {
     @SaCheckPermission("sys:oss:all")
     public Result<Object> delete(@RequestBody Long[] ids) {
         sysOssService.removeByIds(Arrays.asList(ids));
-
         return new Result<>();
     }
 

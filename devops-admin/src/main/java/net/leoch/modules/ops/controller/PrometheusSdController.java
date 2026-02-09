@@ -29,24 +29,18 @@ public class PrometheusSdController {
     @GetMapping("/linux/{area}/info")
     @Operation(summary = "Linux Prometheus SD")
     public List<PrometheusSdRsp> linux(@PathVariable String area) {
-        PrometheusSdReq request = new PrometheusSdReq();
-        request.setArea(area);
-        return prometheusSdService.linux(request);
+        return prometheusSdService.linux(PrometheusSdReq.ofArea(area));
     }
 
     @GetMapping("/windows/{area}/info")
     @Operation(summary = "Windows Prometheus SD")
     public List<PrometheusSdRsp> windows(@PathVariable String area) {
-        PrometheusSdReq request = new PrometheusSdReq();
-        request.setArea(area);
-        return prometheusSdService.windows(request);
+        return prometheusSdService.windows(PrometheusSdReq.ofArea(area));
     }
 
     @GetMapping("/probe/{area}/info")
     @Operation(summary = "HTTP Probe Prometheus SD")
     public List<PrometheusSdRsp> httpProbe(@PathVariable String area) {
-        PrometheusSdReq request = new PrometheusSdReq();
-        request.setArea(area);
-        return prometheusSdService.httpProbe(request);
+        return prometheusSdService.httpProbe(PrometheusSdReq.ofArea(area));
     }
 }

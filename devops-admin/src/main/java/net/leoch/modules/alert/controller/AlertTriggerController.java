@@ -7,7 +7,6 @@ import static net.leoch.common.constant.Constant.ORDER_FIELD;
 import static net.leoch.common.constant.Constant.PAGE;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import cn.hutool.core.util.StrUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
@@ -17,16 +16,14 @@ import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
-import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;
 import net.leoch.modules.alert.vo.req.AlertTriggerPageReq;
+import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;
 import net.leoch.modules.alert.vo.req.AlertTriggerReq;
 import net.leoch.modules.alert.service.IAlertTriggerService;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 告警触发器
@@ -55,20 +52,14 @@ public class AlertTriggerController {
     })
     @SaCheckPermission("alert:trigger:page")
     public Result<PageData<AlertTriggerRsp>> page(AlertTriggerPageReq request){
-        PageData<AlertTriggerRsp> page = alertTriggerService.page(request);
-        alertTriggerService.fillReceiverUserIdList(page.getList());
-
-        return new Result<PageData<AlertTriggerRsp>>().ok(page);
+        return new Result<PageData<AlertTriggerRsp>>().ok(alertTriggerService.pageWithReceivers(request));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("alert:trigger:info")
     public Result<AlertTriggerRsp> get(@PathVariable("id") Long id){
-        AlertTriggerRsp data = alertTriggerService.get(id);
-        alertTriggerService.fillReceiverUserIdList(data);
-
-        return new Result<AlertTriggerRsp>().ok(data);
+        return new Result<AlertTriggerRsp>().ok(alertTriggerService.getWithReceivers(id));
     }
 
     @PostMapping
@@ -76,9 +67,7 @@ public class AlertTriggerController {
     @LogOperation("保存")
     @SaCheckPermission("alert:trigger:save")
     public Result<Object> save(@RequestBody AlertTriggerReq dto){
-        normalizeReceiverIds(dto);
         alertTriggerService.save(dto);
-
         return new Result<>();
     }
 
@@ -87,9 +76,7 @@ public class AlertTriggerController {
     @LogOperation("修改")
     @SaCheckPermission("alert:trigger:update")
     public Result<Object> update(@RequestBody AlertTriggerReq dto){
-        normalizeReceiverIds(dto);
         alertTriggerService.update(dto);
-
         return new Result<>();
     }
 
@@ -100,7 +87,6 @@ public class AlertTriggerController {
     public Result<Object> delete(@RequestBody Long[] ids){
         AssertUtils.isArrayEmpty(ids, "id");
         alertTriggerService.delete(ids);
-
         return new Result<>();
     }
 
@@ -115,24 +101,6 @@ public class AlertTriggerController {
     @Operation(summary = "触发器选项")
     @SaCheckPermission("alert:trigger:page")
     public Result<List<Map<String, Object>>> options() {
-        List<AlertTriggerRsp> list = alertTriggerService.list(new AlertTriggerPageReq());
-        List<Map<String, Object>> options = list.stream().map(item -> {
-            Map<String, Object> map = new HashMap<>();
-            map.put("id", item.getId());
-            map.put("name", item.getName());
-            return map;
-        }).collect(Collectors.toList());
-        return new Result<List<Map<String, Object>>>().ok(options);
-    }
-
-    private void normalizeReceiverIds(AlertTriggerReq dto) {
-        if (dto == null || dto.getReceiverUserIdList() == null) {
-            return;
-        }
-        String joined = dto.getReceiverUserIdList().stream()
-            .filter(id -> id != null)
-            .map(String::valueOf)
-            .collect(Collectors.joining(","));
-        dto.setReceiverUserIds(StrUtil.isNotBlank(joined) ? joined : null);
+        return new Result<List<Map<String, Object>>>().ok(alertTriggerService.options());
     }
 }

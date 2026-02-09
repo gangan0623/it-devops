@@ -98,7 +98,33 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
     }
 
     @Override
+    public PageData<AlertTriggerRsp> pageWithReceivers(AlertTriggerPageReq request) {
+        PageData<AlertTriggerRsp> pageData = this.page(request);
+        fillReceiverUserIdList(pageData.getList());
+        return pageData;
+    }
+
+    @Override
+    public AlertTriggerRsp getWithReceivers(Long id) {
+        AlertTriggerRsp dto = this.get(id);
+        fillReceiverUserIdList(dto);
+        return dto;
+    }
+
+    @Override
+    public List<Map<String, Object>> options() {
+        List<AlertTriggerEntity> list = this.list();
+        return list.stream().map(item -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", item.getId());
+            map.put("name", item.getName());
+            return map;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
     public void save(AlertTriggerReq dto) {
+        normalizeReceiverIds(dto);
         AlertTriggerEntity entity = ConvertUtils.sourceToTarget(dto, AlertTriggerEntity.class);
         this.save(entity);
         BeanUtils.copyProperties(entity, dto);
@@ -106,6 +132,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
 
     @Override
     public void update(AlertTriggerReq dto) {
+        normalizeReceiverIds(dto);
         this.updateById(ConvertUtils.sourceToTarget(dto, AlertTriggerEntity.class));
     }
 
@@ -416,6 +443,15 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
             return value;
         }
         return extraFallback;
+    }
+
+    private void normalizeReceiverIds(AlertTriggerReq dto) {
+        if (dto == null || CollUtil.isEmpty(dto.getReceiverUserIdList())) {
+            return;
+        }
+        dto.setReceiverUserIds(dto.getReceiverUserIdList().stream()
+            .map(String::valueOf)
+            .collect(Collectors.joining(",")));
     }
 
     private List<Long> splitIds(String ids) {

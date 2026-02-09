@@ -23,6 +23,13 @@ public interface ISysRoleService extends IService<SysRoleEntity> {
 
 	SysRoleRsp get(Long id);
 
+	/**
+	 * 获取角色详情（含菜单和数据权限）
+	 * @param id 角色ID
+	 * @return 角色详情
+	 */
+	SysRoleRsp getWithMenuAndDataScope(Long id);
+
 	void save(SysRoleReq dto);
 
 	void update(SysRoleReq dto);

@@ -17,4 +17,10 @@ public class PrometheusSdReq implements Serializable {
 
     @Schema(description = "区域代码")
     private String area;
+
+    public static PrometheusSdReq ofArea(String area) {
+        PrometheusSdReq req = new PrometheusSdReq();
+        req.setArea(area);
+        return req;
+    }
 }

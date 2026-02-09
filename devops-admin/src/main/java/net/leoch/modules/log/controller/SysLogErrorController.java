@@ -37,9 +37,7 @@ public class SysLogErrorController {
     @Operation(summary = "分页")
     @SaCheckPermission("sys:log:error")
     public Result<PageData<SysLogErrorRsp>> page(SysLogErrorPageReq request) {
-        PageData<SysLogErrorRsp> page = sysLogErrorService.page(request);
-
-        return new Result<PageData<SysLogErrorRsp>>().ok(page);
+        return new Result<PageData<SysLogErrorRsp>>().ok(sysLogErrorService.page(request));
     }
 
     @GetMapping("export")
@@ -47,9 +45,7 @@ public class SysLogErrorController {
     @LogOperation("导出")
     @SaCheckPermission("sys:log:error")
     public void export(SysLogErrorPageReq request, HttpServletResponse response) throws Exception {
-        List<SysLogErrorRsp> list = sysLogErrorService.list(request);
-
-        ExcelUtils.exportExcelToTarget(response, null, "异常日志", list, SysLogErrorExcel.class);
+        ExcelUtils.exportExcelToTarget(response, null, "异常日志", sysLogErrorService.list(request), SysLogErrorExcel.class);
     }
 
 }

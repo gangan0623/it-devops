@@ -65,9 +65,7 @@ public class AlertMediaController {
     @Operation(summary = "信息")
     @SaCheckPermission("alert:media:info")
     public Result<AlertMediaRsp> get(@PathVariable("id") Long id){
-        AlertMediaRsp data = alertMediaService.get(id);
-
-        return new Result<AlertMediaRsp>().ok(data);
+        return new Result<AlertMediaRsp>().ok(alertMediaService.get(id));
     }
 
     @PostMapping
@@ -76,7 +74,6 @@ public class AlertMediaController {
     @SaCheckPermission("alert:media:save")
     public Result<Object> save(@RequestBody AlertMediaReq dto){
         alertMediaService.save(dto);
-
         return new Result<>();
     }
 
@@ -86,7 +83,6 @@ public class AlertMediaController {
     @SaCheckPermission("alert:media:update")
     public Result<Object> update(@RequestBody AlertMediaReq dto){
         alertMediaService.update(dto);
-
         return new Result<>();
     }
 
@@ -97,7 +93,6 @@ public class AlertMediaController {
     public Result<Object> delete(@RequestBody Long[] ids){
         AssertUtils.isArrayEmpty(ids, "id");
         alertMediaService.delete(ids);
-
         return new Result<>();
     }
 

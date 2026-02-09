@@ -33,18 +33,14 @@ public class ScheduleJobController {
     @Operation(summary = "分页")
     @SaCheckPermission("sys:schedule:page")
     public Result<PageData<ScheduleJobRsp>> page(ScheduleJobPageReq request) {
-        PageData<ScheduleJobRsp> page = scheduleJobService.page(request);
-
-        return new Result<PageData<ScheduleJobRsp>>().ok(page);
+        return new Result<PageData<ScheduleJobRsp>>().ok(scheduleJobService.page(request));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("sys:schedule:info")
     public Result<ScheduleJobRsp> info(@PathVariable("id") Long id) {
-        ScheduleJobRsp schedule = scheduleJobService.get(id);
-
-        return new Result<ScheduleJobRsp>().ok(schedule);
+        return new Result<ScheduleJobRsp>().ok(scheduleJobService.get(id));
     }
 
     @PostMapping
@@ -53,9 +49,7 @@ public class ScheduleJobController {
     @SaCheckPermission("sys:schedule:save")
     public Result<Object> save(@RequestBody ScheduleJobReq dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-
         scheduleJobService.save(dto);
-
         return new Result<>();
     }
 
@@ -65,9 +59,7 @@ public class ScheduleJobController {
     @SaCheckPermission("sys:schedule:update")
     public Result<Object> update(@RequestBody ScheduleJobReq dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-
         scheduleJobService.update(dto);
-
         return new Result<>();
     }
 
@@ -77,7 +69,6 @@ public class ScheduleJobController {
     @SaCheckPermission("sys:schedule:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
         scheduleJobService.deleteBatch(ids);
-
         return new Result<>();
     }
 
@@ -87,7 +78,6 @@ public class ScheduleJobController {
     @SaCheckPermission("sys:schedule:run")
     public Result<Object> run(@RequestBody Long[] ids) {
         scheduleJobService.run(ids);
-
         return new Result<>();
     }
 
@@ -97,7 +87,6 @@ public class ScheduleJobController {
     @SaCheckPermission("sys:schedule:pause")
     public Result<Object> pause(@RequestBody Long[] ids) {
         scheduleJobService.pause(ids);
-
         return new Result<>();
     }
 
@@ -107,7 +96,6 @@ public class ScheduleJobController {
     @SaCheckPermission("sys:schedule:resume")
     public Result<Object> resume(@RequestBody Long[] ids) {
         scheduleJobService.resume(ids);
-
         return new Result<>();
     }
 

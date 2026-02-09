@@ -41,18 +41,14 @@ public class SysParamsController {
     @Operation(summary = "分页")
     @SaCheckPermission("sys:params:page")
     public Result<PageData<SysParamsRsp>> page(SysParamsPageReq request) {
-        PageData<SysParamsRsp> page = sysParamsService.page(request);
-
-        return new Result<PageData<SysParamsRsp>>().ok(page);
+        return new Result<PageData<SysParamsRsp>>().ok(sysParamsService.page(request));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("sys:params:info")
     public Result<SysParamsRsp> get(@PathVariable("id") Long id) {
-        SysParamsRsp data = sysParamsService.get(id);
-
-        return new Result<SysParamsRsp>().ok(data);
+        return new Result<SysParamsRsp>().ok(sysParamsService.get(id));
     }
 
     @PostMapping
@@ -60,11 +56,8 @@ public class SysParamsController {
     @LogOperation("保存")
     @SaCheckPermission("sys:params:save")
     public Result<Object> save(@RequestBody SysParamsReq dto) {
-        //效验数据
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-
         sysParamsService.save(dto);
-
         return new Result<>();
     }
 
@@ -73,11 +66,8 @@ public class SysParamsController {
     @LogOperation("修改")
     @SaCheckPermission("sys:params:update")
     public Result<Object> update(@RequestBody SysParamsReq dto) {
-        //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-
         sysParamsService.update(dto);
-
         return new Result<>();
     }
 
@@ -86,11 +76,8 @@ public class SysParamsController {
     @LogOperation("删除")
     @SaCheckPermission("sys:params:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
-        //效验数据
         AssertUtils.isArrayEmpty(ids, "id");
-
         sysParamsService.delete(ids);
-
         return new Result<>();
     }
 
@@ -99,9 +86,7 @@ public class SysParamsController {
     @LogOperation("导出")
     @SaCheckPermission("sys:params:export")
     public void export(SysParamsPageReq request, HttpServletResponse response) throws Exception {
-        List<SysParamsRsp> list = sysParamsService.list(request);
-
-        ExcelUtils.exportExcelToTarget(response, null, "参数管理", list, SysParamsExcel.class);
+        ExcelUtils.exportExcelToTarget(response, null, "参数管理", sysParamsService.list(request), SysParamsExcel.class);
     }
 
 }

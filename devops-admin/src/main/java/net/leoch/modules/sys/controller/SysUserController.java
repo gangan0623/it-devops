@@ -7,7 +7,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.AllArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.page.PageData;
-import net.leoch.common.utils.ConvertUtils;
 import net.leoch.common.utils.ExcelUtils;
 import net.leoch.common.utils.Result;
 import net.leoch.common.validator.AssertUtils;
@@ -15,7 +14,6 @@ import net.leoch.common.validator.ValidatorUtils;
 import net.leoch.common.validator.group.AddGroup;
 import net.leoch.common.validator.group.DefaultGroup;
 import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.security.user.SecurityUser;
 import net.leoch.modules.sys.vo.req.PasswordReq;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.vo.req.SysUserPageReq;
@@ -42,9 +40,7 @@ public class SysUserController {
     @Operation(summary = "分页")
     @SaCheckPermission("sys:user:page")
     public Result<PageData<SysUserRsp>> page(SysUserPageReq request) {
-        PageData<SysUserRsp> page = sysUserService.page(request);
-
-        return new Result<PageData<SysUserRsp>>().ok(page);
+        return new Result<PageData<SysUserRsp>>().ok(sysUserService.page(request));
     }
 
     @GetMapping("{id}")
@@ -57,16 +53,13 @@ public class SysUserController {
     @GetMapping("info")
     @Operation(summary = "登录用户信息")
     public Result<SysUserRsp> info() {
-        SysUserRsp data = ConvertUtils.sourceToTarget(SecurityUser.getUser(), SysUserRsp.class);
-        return new Result<SysUserRsp>().ok(data);
+        return new Result<SysUserRsp>().ok(sysUserService.getCurrentUserInfo());
     }
 
     @PutMapping("password")
     @Operation(summary = "修改密码")
     @LogOperation("修改密码")
     public Result<Object> password(@RequestBody PasswordReq dto) {
-        //效验数据
-        ValidatorUtils.validateEntity(dto);
         sysUserService.changePassword(dto);
         return new Result<>();
     }
@@ -76,11 +69,8 @@ public class SysUserController {
     @LogOperation("保存")
     @SaCheckPermission("sys:user:save")
     public Result<Object> save(@RequestBody SysUserReq dto) {
-        //效验数据
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-
         sysUserService.save(dto);
-
         return new Result<>();
     }
 
@@ -89,11 +79,8 @@ public class SysUserController {
     @LogOperation("修改")
     @SaCheckPermission("sys:user:update")
     public Result<Object> update(@RequestBody SysUserReq dto) {
-        //效验数据
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-
         sysUserService.update(dto);
-
         return new Result<>();
     }
 
@@ -102,11 +89,8 @@ public class SysUserController {
     @LogOperation("删除")
     @SaCheckPermission("sys:user:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
-        //效验数据
         AssertUtils.isArrayEmpty(ids, "id");
-
         sysUserService.delete(ids);
-
         return new Result<>();
     }
 
@@ -115,8 +99,6 @@ public class SysUserController {
     @LogOperation("导出")
     @SaCheckPermission("sys:user:export")
     public void export(SysUserPageReq request, HttpServletResponse response) throws Exception {
-        List<SysUserRsp> list = sysUserService.list(request);
-
-        ExcelUtils.exportExcelToTarget(response, null, "用户管理", list, SysUserExcel.class);
+        ExcelUtils.exportExcelToTarget(response, null, "用户管理", sysUserService.list(request), SysUserExcel.class);
     }
 }
