@@ -3,11 +3,11 @@
 
 <mapper namespace="net.leoch.modules.sys.mapper.SysDictDataMapper">
 
-    <select id="getDictDataList" resultType="net.leoch.modules.sys.entity.DictData">
+    <select id="getDictDataList" resultType="net.leoch.modules.sys.vo.rsp.DictDataRsp">
         select dict_type_id, dict_label, dict_value from sys_dict_data order by dict_type_id, sort
     </select>
 
-    <select id="getDictDataListByType" resultType="net.leoch.modules.sys.entity.DictData">
+    <select id="getDictDataListByType" resultType="net.leoch.modules.sys.vo.rsp.DictDataRsp">
         select d.dict_type_id, d.dict_label, d.dict_value
         from sys_dict_data d
         join sys_dict_type t on t.id = d.dict_type_id

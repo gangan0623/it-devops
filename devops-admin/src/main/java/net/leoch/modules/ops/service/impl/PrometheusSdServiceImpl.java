@@ -11,7 +11,8 @@ import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
 import net.leoch.modules.ops.service.IPrometheusSdService;
 import net.leoch.modules.sys.mapper.SysDictDataMapper;
-import net.leoch.modules.sys.entity.DictData;
+import net.leoch.modules.sys.vo.rsp.DictDataRsp;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -22,19 +23,13 @@ import java.util.stream.Collectors;
  * Prometheus SD 服务
  */
 @Service
+@RequiredArgsConstructor
 public class PrometheusSdServiceImpl implements IPrometheusSdService {
 
     private final LinuxHostMapper linuxHostMapper;
     private final WindowHostMapper windowHostMapper;
     private final BusinessSystemMapper businessSystemMapper;
     private final SysDictDataMapper sysDictDataMapper;
-
-    public PrometheusSdServiceImpl(LinuxHostMapper linuxHostMapper, WindowHostMapper windowHostMapper, BusinessSystemMapper businessSystemMapper, SysDictDataMapper sysDictDataMapper) {
-        this.linuxHostMapper = linuxHostMapper;
-        this.windowHostMapper = windowHostMapper;
-        this.businessSystemMapper = businessSystemMapper;
-        this.sysDictDataMapper = sysDictDataMapper;
-    }
 
     @Override
     public List<PrometheusSdRsp> linux(PrometheusSdReq request) {
@@ -135,12 +130,12 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
     }
 
     private Map<String, String> getDictMapByType(String dictType) {
-        List<DictData> dictDataList = sysDictDataMapper.getDictDataListByType(dictType);
+        List<DictDataRsp> dictDataList = sysDictDataMapper.getDictDataListByType(dictType);
         if (dictDataList == null || dictDataList.isEmpty()) {
             return Collections.emptyMap();
         }
         Map<String, String> map = new HashMap<>();
-        for (DictData data : dictDataList) {
+        for (DictDataRsp data : dictDataList) {
             if (data.getDictLabel() != null && data.getDictValue() != null) {
                 String key = data.getDictLabel().trim();
                 if (!key.isEmpty()) {

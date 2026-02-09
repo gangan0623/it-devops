@@ -5,7 +5,7 @@ package net.leoch.common.exception;
 import cn.dev33.satoken.exception.SaTokenException;
 import cn.hutool.core.map.MapUtil;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.utils.HttpContextUtils;
 import net.leoch.common.utils.IpUtils;
@@ -29,7 +29,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestControllerAdvice
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ServiceExceptionHandler {
     private final ISysLogErrorService sysLogErrorService;
 

@@ -3,7 +3,7 @@
 package net.leoch.common.aspect;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.utils.HttpContextUtils;
@@ -32,7 +32,7 @@ import java.lang.reflect.Method;
 @Slf4j
 @Aspect
 @Component
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class LogOperationAspect {
     private final ISysLogOperationService sysLogOperationService;
 

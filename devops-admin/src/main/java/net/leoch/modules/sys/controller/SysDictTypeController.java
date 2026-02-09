@@ -10,7 +10,7 @@ import net.leoch.common.utils.Result;
 import net.leoch.modules.sys.vo.rsp.SysDictTypeRsp;
 import net.leoch.modules.sys.vo.req.SysDictTypePageReq;
 import net.leoch.modules.sys.vo.req.SysDictTypeReq;
-import net.leoch.modules.sys.entity.DictType;
+import net.leoch.modules.sys.vo.rsp.DictTypeRsp;
 import net.leoch.modules.sys.service.ISysDictTypeService;
 import org.springframework.web.bind.annotation.*;
 
@@ -71,8 +71,8 @@ public class SysDictTypeController {
 
     @GetMapping("all")
     @Operation(summary = "所有字典数据")
-    public Result<List<DictType>> all() {
-        return new Result<List<DictType>>().ok(sysDictTypeService.getAllList());
+    public Result<List<DictTypeRsp>> all() {
+        return new Result<List<DictTypeRsp>>().ok(sysDictTypeService.getAllList());
     }
 
 }

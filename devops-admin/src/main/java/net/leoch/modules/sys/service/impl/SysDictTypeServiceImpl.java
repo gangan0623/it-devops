@@ -16,9 +16,9 @@ import net.leoch.modules.sys.mapper.SysDictDataMapper;
 import net.leoch.modules.sys.mapper.SysDictTypeMapper;
 import net.leoch.modules.sys.vo.req.SysDictTypePageReq;
 import net.leoch.modules.sys.vo.req.SysDictTypeReq;
+import net.leoch.modules.sys.vo.rsp.DictDataRsp;
+import net.leoch.modules.sys.vo.rsp.DictTypeRsp;
 import net.leoch.modules.sys.vo.rsp.SysDictTypeRsp;
-import net.leoch.modules.sys.entity.DictData;
-import net.leoch.modules.sys.entity.DictType;
 import net.leoch.modules.sys.entity.SysDictTypeEntity;
 import net.leoch.modules.sys.service.ISysDictTypeService;
 import org.springframework.stereotype.Service;
@@ -26,6 +26,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 字典类型
@@ -95,14 +97,17 @@ public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDi
     }
 
     @Override
-    public List<DictType> getAllList() {
-        List<DictType> typeList = this.getBaseMapper().getDictTypeList();
-        List<DictData> dataList = sysDictDataMapper.getDictDataList();
-        for (DictType type : typeList) {
-            for (DictData data : dataList) {
-                if (type.getId().equals(data.getDictTypeId())) {
-                    type.getDataList().add(data);
-                }
+    public List<DictTypeRsp> getAllList() {
+        List<DictTypeRsp> typeList = this.getBaseMapper().getDictTypeList();
+        List<DictDataRsp> dataList = sysDictDataMapper.getDictDataList();
+
+        Map<Long, List<DictDataRsp>> dataMap = dataList.stream()
+                .collect(Collectors.groupingBy(DictDataRsp::getDictTypeId));
+
+        for (DictTypeRsp type : typeList) {
+            List<DictDataRsp> items = dataMap.get(type.getId());
+            if (items != null) {
+                type.setDataList(items);
             }
         }
         return typeList;

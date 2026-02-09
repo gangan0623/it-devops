@@ -3,7 +3,7 @@
 package net.leoch.modules.sys.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import net.leoch.modules.sys.entity.DictData;
+import net.leoch.modules.sys.vo.rsp.DictDataRsp;
 import net.leoch.modules.sys.entity.SysDictDataEntity;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -21,10 +21,10 @@ public interface SysDictDataMapper extends BaseMapper<SysDictDataEntity> {
     /**
      * 字典数据列表
      */
-    List<DictData> getDictDataList();
+    List<DictDataRsp> getDictDataList();
 
     /**
      * 按字典类型查询数据列表
      */
-    List<DictData> getDictDataListByType(@Param("dictType") String dictType);
+    List<DictDataRsp> getDictDataListByType(@Param("dictType") String dictType);
 }

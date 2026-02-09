@@ -5,7 +5,7 @@ import net.leoch.common.page.PageData;
 import net.leoch.modules.sys.vo.req.SysDictTypePageReq;
 import net.leoch.modules.sys.vo.req.SysDictTypeReq;
 import net.leoch.modules.sys.vo.rsp.SysDictTypeRsp;
-import net.leoch.modules.sys.entity.DictType;
+import net.leoch.modules.sys.vo.rsp.DictTypeRsp;
 import net.leoch.modules.sys.entity.SysDictTypeEntity;
 
 import java.util.List;
@@ -30,6 +30,6 @@ public interface ISysDictTypeService extends IService<SysDictTypeEntity> {
     /**
      * 获取所有字典
      */
-    List<DictType> getAllList();
+    List<DictTypeRsp> getAllList();
 
 }
