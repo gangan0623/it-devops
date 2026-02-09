@@ -3,8 +3,8 @@
 package net.leoch.common.web.filter.xss;
 
 import cn.hutool.core.util.StrUtil;
-import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.ServiceException;
+import net.leoch.common.support.exception.ErrorCode;
+import net.leoch.common.support.exception.ServiceException;
 
 /**
  * SQL过滤

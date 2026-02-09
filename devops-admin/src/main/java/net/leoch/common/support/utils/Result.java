@@ -1,11 +1,11 @@
 
 
-package net.leoch.common.utils;
+package net.leoch.common.support.utils;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
-import net.leoch.common.exception.ErrorCode;
+import net.leoch.common.support.exception.ErrorCode;
 
 import java.io.Serial;
 import java.io.Serializable;

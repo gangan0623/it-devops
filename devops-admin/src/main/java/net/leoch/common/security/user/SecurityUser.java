@@ -5,8 +5,8 @@ package net.leoch.common.security.user;
 import cn.dev33.satoken.session.SaSession;
 import cn.dev33.satoken.stp.StpUtil;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.utils.ConvertUtils;
-import net.leoch.common.utils.SpringContextUtils;
+import net.leoch.common.support.utils.ConvertUtils;
+import net.leoch.common.support.utils.SpringContextUtils;
 import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.sys.entity.SysUserEntity;
 

@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.exception;
+package net.leoch.common.support.exception;
 
 import java.io.IOException;
 import java.io.PrintWriter;

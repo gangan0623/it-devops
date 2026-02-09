@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.exception;
+package net.leoch.common.support.exception;
 
 /**
  * 错误编码，由5位数字组成，前2位为模块编码，后3位为业务编码

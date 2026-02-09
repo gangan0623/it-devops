@@ -1,11 +1,11 @@
 
 
-package net.leoch.common.exception;
+package net.leoch.common.support.exception;
 
 
 import lombok.Getter;
 import lombok.Setter;
-import net.leoch.common.utils.MessageUtils;
+import net.leoch.common.support.utils.MessageUtils;
 
 import java.io.Serial;
 

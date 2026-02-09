@@ -2,7 +2,7 @@
 
 package net.leoch.common.security.oauth2;
 
-import net.leoch.common.exception.ServiceException;
+import net.leoch.common.support.exception.ServiceException;
 
 import java.security.MessageDigest;
 import java.util.UUID;

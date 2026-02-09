@@ -10,7 +10,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import net.leoch.common.utils.Result;
+import net.leoch.common.support.utils.Result;
 import net.leoch.modules.security.vo.req.LoginReq;
 import net.leoch.modules.security.service.ICaptchaService;
 import net.leoch.modules.security.service.ISecurityService;

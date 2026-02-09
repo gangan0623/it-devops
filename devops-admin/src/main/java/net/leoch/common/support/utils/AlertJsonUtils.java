@@ -1,9 +1,9 @@
-package net.leoch.common.utils;
+package net.leoch.common.support.utils;
 
 import com.fasterxml.jackson.core.json.JsonReadFeature;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import net.leoch.common.utils.JsonUtils;
+import net.leoch.common.support.utils.JsonUtils;
 
 import java.util.HashMap;
 import java.util.Map;

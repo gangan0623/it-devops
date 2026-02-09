@@ -7,7 +7,7 @@ import com.wf.captcha.base.Captcha;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.exception.ErrorCode;
+import net.leoch.common.support.exception.ErrorCode;
 import net.leoch.common.integration.redis.RedisKeys;
 import net.leoch.common.integration.redis.RedisUtils;
 import net.leoch.common.data.validator.AssertUtils;

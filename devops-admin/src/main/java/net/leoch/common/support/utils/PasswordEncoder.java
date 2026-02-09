@@ -1,4 +1,4 @@
-package net.leoch.common.utils;
+package net.leoch.common.support.utils;
 
 /**
  * Service interface for encoding passwords.

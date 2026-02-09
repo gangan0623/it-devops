@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.ConvertUtils;
+import net.leoch.common.support.utils.ConvertUtils;
 import net.leoch.modules.log.mapper.SysLogErrorMapper;
 import net.leoch.modules.log.vo.rsp.SysLogErrorRsp;
 import net.leoch.modules.log.vo.req.SysLogErrorPageReq;

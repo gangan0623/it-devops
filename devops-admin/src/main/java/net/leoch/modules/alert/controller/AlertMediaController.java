@@ -14,7 +14,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.core.annotation.LogOperation;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.Result;
+import net.leoch.common.support.utils.Result;
 import net.leoch.modules.alert.vo.rsp.AlertMediaRsp;
 import net.leoch.modules.alert.vo.req.AlertMediaPageReq;
 import net.leoch.modules.alert.vo.req.AlertMediaReq;

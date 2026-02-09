@@ -1,7 +1,7 @@
 package net.leoch.modules.security.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import net.leoch.common.utils.Result;
+import net.leoch.common.support.utils.Result;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
 
 /**

@@ -3,7 +3,7 @@ package net.leoch.modules.alert.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import net.leoch.common.utils.Result;
+import net.leoch.common.support.utils.Result;
 import net.leoch.modules.alert.service.AlertWebhookService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;

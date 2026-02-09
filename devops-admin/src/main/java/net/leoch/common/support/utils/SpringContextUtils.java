@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.utils;
+package net.leoch.common.support.utils;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;

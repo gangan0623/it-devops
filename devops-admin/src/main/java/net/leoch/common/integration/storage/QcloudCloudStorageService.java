@@ -10,8 +10,8 @@ import com.qcloud.cos.model.ObjectMetadata;
 import com.qcloud.cos.model.PutObjectRequest;
 import com.qcloud.cos.model.PutObjectResult;
 import com.qcloud.cos.region.Region;
-import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.ServiceException;
+import net.leoch.common.support.exception.ErrorCode;
+import net.leoch.common.support.exception.ServiceException;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;

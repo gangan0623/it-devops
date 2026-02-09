@@ -7,7 +7,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.core.annotation.LogOperation;
-import net.leoch.common.utils.Result;
+import net.leoch.common.support.utils.Result;
 import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
 import net.leoch.modules.sys.vo.req.SysDeptReq;
 import net.leoch.modules.sys.service.ISysDeptService;

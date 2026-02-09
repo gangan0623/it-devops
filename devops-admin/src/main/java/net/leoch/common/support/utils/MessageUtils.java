@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.utils;
+package net.leoch.common.support.utils;
 
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;

@@ -1,4 +1,4 @@
-package net.leoch.common.utils;
+package net.leoch.common.support.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;

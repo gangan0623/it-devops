@@ -3,8 +3,8 @@
 package net.leoch.common.web.aspect;
 
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.ServiceException;
+import net.leoch.common.support.exception.ErrorCode;
+import net.leoch.common.support.exception.ServiceException;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;

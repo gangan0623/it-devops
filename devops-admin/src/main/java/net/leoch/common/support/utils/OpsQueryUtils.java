@@ -1,4 +1,4 @@
-package net.leoch.common.utils;
+package net.leoch.common.support.utils;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;

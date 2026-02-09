@@ -1,16 +1,16 @@
 
 
-package net.leoch.common.exception;
+package net.leoch.common.support.exception;
 
 import cn.dev33.satoken.exception.SaTokenException;
 import cn.hutool.core.map.MapUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.utils.HttpContextUtils;
-import net.leoch.common.utils.IpUtils;
-import net.leoch.common.utils.JsonUtils;
-import net.leoch.common.utils.Result;
+import net.leoch.common.support.utils.HttpContextUtils;
+import net.leoch.common.support.utils.IpUtils;
+import net.leoch.common.support.utils.JsonUtils;
+import net.leoch.common.support.utils.Result;
 import net.leoch.modules.log.entity.SysLogErrorEntity;
 import net.leoch.modules.log.service.ISysLogErrorService;
 import org.springframework.dao.DuplicateKeyException;

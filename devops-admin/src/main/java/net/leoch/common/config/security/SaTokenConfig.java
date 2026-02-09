@@ -4,9 +4,9 @@ import cn.dev33.satoken.context.SaHolder;
 import cn.dev33.satoken.filter.SaServletFilter;
 import cn.dev33.satoken.router.SaRouter;
 import cn.dev33.satoken.stp.StpUtil;
-import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.utils.JsonUtils;
-import net.leoch.common.utils.Result;
+import net.leoch.common.support.exception.ErrorCode;
+import net.leoch.common.support.utils.JsonUtils;
+import net.leoch.common.support.utils.Result;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 

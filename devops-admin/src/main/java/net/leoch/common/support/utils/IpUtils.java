@@ -1,6 +1,6 @@
 
 
-package net.leoch.common.utils;
+package net.leoch.common.support.utils;
 
 import cn.hutool.core.util.StrUtil;
 import jakarta.servlet.http.HttpServletRequest;

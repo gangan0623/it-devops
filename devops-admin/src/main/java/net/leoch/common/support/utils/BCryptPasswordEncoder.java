@@ -1,4 +1,4 @@
-package net.leoch.common.utils;
+package net.leoch.common.support.utils;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;

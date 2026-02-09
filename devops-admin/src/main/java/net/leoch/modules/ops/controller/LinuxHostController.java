@@ -16,7 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.core.annotation.LogOperation;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.Result;
+import net.leoch.common.support.utils.Result;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.service.ILinuxHostService;

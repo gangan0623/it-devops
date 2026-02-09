@@ -9,7 +9,7 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.core.annotation.LogOperation;
-import net.leoch.common.utils.Result;
+import net.leoch.common.support.utils.Result;
 import net.leoch.common.core.enums.MenuTypeEnum;
 import net.leoch.modules.sys.vo.rsp.SysMenuRsp;
 import net.leoch.modules.sys.vo.req.SysMenuReq;

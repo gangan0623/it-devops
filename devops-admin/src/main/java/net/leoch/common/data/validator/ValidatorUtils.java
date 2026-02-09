@@ -5,7 +5,7 @@ package net.leoch.common.data.validator;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
 import jakarta.validation.Validator;
-import net.leoch.common.exception.ServiceException;
+import net.leoch.common.support.exception.ServiceException;
 import org.hibernate.validator.messageinterpolation.ResourceBundleMessageInterpolator;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.context.support.ResourceBundleMessageSource;
