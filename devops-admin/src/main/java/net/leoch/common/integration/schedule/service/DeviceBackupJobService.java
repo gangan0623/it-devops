@@ -41,12 +41,18 @@ public class DeviceBackupJobService {
     }
 
     public void backup(String params) {
+        log.info("[设备备份] 开始执行设备备份任务, params={}", params);
+        long startTime = System.currentTimeMillis();
         List<BackupAgentEntity> agents = backupAgentMapper.selectList(
             new LambdaQueryWrapper<BackupAgentEntity>().eq(BackupAgentEntity::getStatus, 1)
         );
         if (CollUtil.isEmpty(agents)) {
+            log.warn("[设备备份] 无可用备份代理");
             return;
         }
+        log.info("[设备备份] 找到{}个可用代理", agents.size());
+        int totalDevices = 0;
+        int successAgents = 0;
         for (BackupAgentEntity agent : agents) {
             if (agent == null || agent.getId() == null) {
                 continue;
@@ -57,24 +63,33 @@ public class DeviceBackupJobService {
                     .eq(DeviceBackupEntity::getStatus, 1)
             );
             if (CollUtil.isEmpty(devices)) {
+                log.debug("[设备备份] 代理{}({})无设备", agent.getName(), agent.getInstance());
                 continue;
             }
+            log.info("[设备备份] 代理{}({})有{}个设备", agent.getName(), agent.getInstance(), devices.size());
+            totalDevices += devices.size();
             List<Map<String, Object>> requestList = buildRequest(devices);
             triggerAgentBackup(agent, requestList);
+            successAgents++;
         }
+        long elapsedTime = System.currentTimeMillis() - startTime;
+        log.info("[设备备份] 任务执行完成, 触发代理数={}, 设备总数={}, 耗时={}ms", successAgents, totalDevices, elapsedTime);
     }
 
     public boolean handleCallback(String token, List<BackupCallbackItemReq> items) {
         if (StrUtil.isBlank(token) || CollUtil.isEmpty(items)) {
+            log.warn("[设备备份] 回调参数无效, token={}, itemsSize={}", token, items != null ? items.size() : 0);
             return false;
         }
-        log.info("[设备备份] 备份回调收到：token={}***，数量={}", token != null && token.length() > 4 ? token.substring(0, 4) : "****", items == null ? 0 : items.size());
+        log.info("[设备备份] 收到备份回调, token={}***, 数量={}", token != null && token.length() > 4 ? token.substring(0, 4) : "****", items.size());
         BackupAgentEntity agent = backupAgentMapper.selectOne(
             new LambdaQueryWrapper<BackupAgentEntity>().eq(BackupAgentEntity::getToken, token).last("limit 1")
         );
         if (agent == null || agent.getId() == null) {
+            log.error("[设备备份] 回调token无效, 找不到对应代理, token={}", token);
             return false;
         }
+        log.info("[设备备份] 找到回调代理: {}({})", agent.getName(), agent.getInstance());
         List<DeviceBackupEntity> devices = deviceBackupMapper.selectList(
             new LambdaQueryWrapper<DeviceBackupEntity>().eq(DeviceBackupEntity::getAgentId, agent.getId()).eq(DeviceBackupEntity::getStatus, 1)
         );
@@ -82,6 +97,8 @@ public class DeviceBackupJobService {
             : devices.stream()
                 .filter(item -> item != null && StrUtil.isNotBlank(item.getInstance()))
                 .collect(Collectors.toMap(DeviceBackupEntity::getInstance, item -> item, (a, b) -> a));
+        int successCount = 0;
+        int failCount = 0;
         for (BackupCallbackItemReq item : items) {
             if (item == null || StrUtil.isBlank(item.getInstance())) {
                 continue;
@@ -90,9 +107,17 @@ public class DeviceBackupJobService {
             String name = device == null ? item.getInstance() : device.getName();
             String url = item.getUrl() == null ? "" : item.getUrl();
             boolean success = StrUtil.isNotBlank(url);
+            if (success) {
+                successCount++;
+                log.info("[设备备份] 设备备份成功, instance={}, name={}, url={}", item.getInstance(), name, url);
+            } else {
+                failCount++;
+                log.warn("[设备备份] 设备备份失败, instance={}, name={}", item.getInstance(), name);
+            }
             deviceBackupRecordService.upsertRecord(name, item.getInstance(), url, success);
             deviceBackupHistoryService.saveHistory(name, item.getInstance(), url, success ? 1 : 0);
         }
+        log.info("[设备备份] 回调处理完成, 代理={}, 成功={}, 失败={}", agent.getName(), successCount, failCount);
         return true;
     }
 
@@ -115,15 +140,18 @@ public class DeviceBackupJobService {
 
     private void triggerAgentBackup(BackupAgentEntity agent, List<Map<String, Object>> payload) {
         if (agent == null || CollUtil.isEmpty(payload)) {
+            log.warn("[设备备份] 触发参数无效, agent={}, payloadSize={}", agent, payload != null ? payload.size() : 0);
             return;
         }
         String url = buildBackupUrl(agent.getInstance());
         if (StrUtil.isBlank(url)) {
+            log.error("[设备备份] 构建备份URL失败, instance={}", agent.getInstance());
             return;
         }
         HttpURLConnection connection = null;
+        long startTime = System.currentTimeMillis();
         try {
-            log.info("[设备备份] 触发备份节点接口（回调模式）：{}", url);
+            log.info("[设备备份] 触发备份代理, name={}, url={}, 设备数={}", agent.getName(), url, payload.size());
             connection = (HttpURLConnection) new URL(url).openConnection();
             connection.setRequestMethod("POST");
             connection.setConnectTimeout(5000);
@@ -139,9 +167,11 @@ public class DeviceBackupJobService {
                 out.write(body.getBytes(StandardCharsets.UTF_8));
             }
             int code = connection.getResponseCode();
-            log.info("[设备备份] 节点{}({}) 触发响应code={}，等待回调", agent.getName(), agent.getInstance(), code);
-        } catch (Exception ignore) {
-            log.warn("[设备备份] 节点接口调用失败：{}", url, ignore);
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            log.info("[设备备份] 代理触发成功, name={}, code={}, 耗时={}ms, 等待回调", agent.getName(), code, elapsedTime);
+        } catch (Exception e) {
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            log.error("[设备备份] 代理触发失败, name={}, url={}, 耗时={}ms", agent.getName(), url, elapsedTime, e);
         } finally {
             if (connection != null) {
                 connection.disconnect();
