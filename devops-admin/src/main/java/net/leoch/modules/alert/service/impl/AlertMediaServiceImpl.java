@@ -45,7 +45,7 @@ public class AlertMediaServiceImpl extends ServiceImpl<AlertMediaMapper, AlertMe
                 .like(StrUtil.isNotBlank(request.getName()), AlertMediaEntity::getName, request.getName())
                 .eq(StrUtil.isNotBlank(request.getStatus()), AlertMediaEntity::getStatus, request.getStatus())
         );
-        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), AlertMediaRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), AlertMediaRsp.class), page.getTotal());
     }
 
     @Override

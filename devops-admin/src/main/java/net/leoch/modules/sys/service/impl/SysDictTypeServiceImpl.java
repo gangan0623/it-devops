@@ -49,7 +49,7 @@ public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDi
                 getWrapper(request)
         );
 
-        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), SysDictTypeRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), SysDictTypeRsp.class), page.getTotal());
     }
 
     private QueryWrapper<SysDictTypeEntity> getWrapper(SysDictTypePageReq request) {

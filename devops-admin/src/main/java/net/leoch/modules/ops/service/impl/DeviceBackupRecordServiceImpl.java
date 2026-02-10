@@ -52,7 +52,7 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), DeviceBackupRecordEntity::getLastBackupStatus, request.getStatus());
         Page<DeviceBackupRecordEntity> page = request.buildPage();
         IPage<DeviceBackupRecordEntity> result = this.page(page, wrapper);
-        List<DeviceBackupRecordRsp> list = BeanUtil.copyProperties(result.getRecords(), DeviceBackupRecordRsp.class);
+        List<DeviceBackupRecordRsp> list = BeanUtil.copyToList(result.getRecords(), DeviceBackupRecordRsp.class);
         return new PageData<>(list, result.getTotal());
     }
 

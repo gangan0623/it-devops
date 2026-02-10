@@ -114,7 +114,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         wrapper.orderByDesc(AlertRecordEntity::getStartsAt);
 
         IPage<AlertRecordEntity> page = this.page(request.buildPage(), wrapper);
-        PageData<AlertRecordRsp> pageData = new PageData<>(BeanUtil.copyProperties(page.getRecords(), AlertRecordRsp.class), page.getTotal());
+        PageData<AlertRecordRsp> pageData = new PageData<>(BeanUtil.copyToList(page.getRecords(), AlertRecordRsp.class), page.getTotal());
 
         if (pageData.getList() == null || pageData.getList().isEmpty()) {
             return pageData;

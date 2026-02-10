@@ -27,7 +27,7 @@ public class SysLogOperationServiceImpl extends ServiceImpl<SysLogOperationMappe
                 .eq(StrUtil.isNotBlank(request.getStatus()), SysLogOperationEntity::getStatus, request.getStatus())
                 .orderByDesc(SysLogOperationEntity::getCreateDate)
         );
-        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), SysLogOperationRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), SysLogOperationRsp.class), page.getTotal());
     }
 
     @Override

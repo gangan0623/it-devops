@@ -50,7 +50,7 @@ public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParams
                 getWrapper(request)
         );
 
-        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), SysParamsRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), SysParamsRsp.class), page.getTotal());
     }
 
     @Override

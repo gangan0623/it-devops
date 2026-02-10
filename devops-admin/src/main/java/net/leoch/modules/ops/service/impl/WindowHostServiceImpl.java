@@ -63,7 +63,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
         }
         Page<WindowHostEntity> page = request.buildPage();
         IPage<WindowHostEntity> result = this.page(page, wrapper);
-        List<WindowHostRsp> dtoList = BeanUtil.copyProperties(result.getRecords(), WindowHostRsp.class);
+        List<WindowHostRsp> dtoList = BeanUtil.copyToList(result.getRecords(), WindowHostRsp.class);
         fillOnlineStatus(dtoList);
         return new PageData<>(dtoList, result.getTotal());
     }

@@ -25,7 +25,7 @@ public class SysLogErrorServiceImpl extends ServiceImpl<SysLogErrorMapper, SysLo
             new LambdaQueryWrapper<SysLogErrorEntity>()
                 .orderByDesc(SysLogErrorEntity::getCreateDate)
         );
-        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), SysLogErrorRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), SysLogErrorRsp.class), page.getTotal());
     }
 
     @Override

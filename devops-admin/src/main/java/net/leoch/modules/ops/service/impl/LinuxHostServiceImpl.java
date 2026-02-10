@@ -63,7 +63,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
         }
         Page<LinuxHostEntity> page = request.buildPage();
         IPage<LinuxHostEntity> result = this.page(page, wrapper);
-        List<LinuxHostRsp> dtoList = BeanUtil.copyProperties(result.getRecords(), LinuxHostRsp.class);
+        List<LinuxHostRsp> dtoList = BeanUtil.copyToList(result.getRecords(), LinuxHostRsp.class);
         fillOnlineStatus(dtoList);
         return new PageData<>(dtoList, result.getTotal());
     }

@@ -45,7 +45,7 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
                 .like(StrUtil.isNotBlank(request.getName()), AlertTemplateEntity::getName, request.getName())
                 .eq(StrUtil.isNotBlank(request.getStatus()), AlertTemplateEntity::getStatus, request.getStatus())
         );
-        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), AlertTemplateRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), AlertTemplateRsp.class), page.getTotal());
     }
 
     @Override

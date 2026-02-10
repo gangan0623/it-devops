@@ -25,7 +25,7 @@ public class ScheduleJobLogServiceImpl extends ServiceImpl<ScheduleJobLogMapper,
                 .eq(StrUtil.isNotBlank(request.getJobId()), ScheduleJobLogEntity::getJobId, request.getJobId())
                 .orderByDesc(ScheduleJobLogEntity::getCreateDate)
         );
-        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), ScheduleJobLogRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), ScheduleJobLogRsp.class), page.getTotal());
     }
 
     @Override

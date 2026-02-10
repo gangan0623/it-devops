@@ -63,7 +63,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
         }
         Page<BusinessSystemEntity> page = request.buildPage();
         IPage<BusinessSystemEntity> result = this.page(page, wrapper);
-        List<BusinessSystemRsp> dtoList = BeanUtil.copyProperties(result.getRecords(), BusinessSystemRsp.class);
+        List<BusinessSystemRsp> dtoList = BeanUtil.copyToList(result.getRecords(), BusinessSystemRsp.class);
         fillOnlineStatus(dtoList);
         return new PageData<>(dtoList, result.getTotal());
     }

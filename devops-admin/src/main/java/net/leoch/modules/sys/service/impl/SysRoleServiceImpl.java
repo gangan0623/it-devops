@@ -53,7 +53,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
                 getWrapper(request)
         );
 
-        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), SysRoleRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), SysRoleRsp.class), page.getTotal());
     }
 
     @Override

@@ -75,7 +75,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
         wrapper.eq(StrUtil.isNotBlank(request.getAgentId()), DeviceBackupEntity::getAgentId, request.getAgentId());
         Page<DeviceBackupEntity> page = buildPage(request);
         IPage<DeviceBackupEntity> result = this.page(page, wrapper);
-        List<DeviceBackupRsp> list = BeanUtil.copyProperties(result.getRecords(), DeviceBackupRsp.class);
+        List<DeviceBackupRsp> list = BeanUtil.copyToList(result.getRecords(), DeviceBackupRsp.class);
         fillOnlineStatus(list);
         fillAgentNames(list);
         maskPasswords(list);

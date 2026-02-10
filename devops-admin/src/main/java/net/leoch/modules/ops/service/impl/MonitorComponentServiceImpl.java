@@ -64,7 +64,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         wrapper.like(StrUtil.isNotBlank(request.getIp()), MonitorComponentEntity::getIp, request.getIp());
         Page<MonitorComponentEntity> page = buildPage(request);
         IPage<MonitorComponentEntity> result = this.page(page, wrapper);
-        return new PageData<>(BeanUtil.copyProperties(result.getRecords(), MonitorComponentRsp.class), result.getTotal());
+        return new PageData<>(BeanUtil.copyToList(result.getRecords(), MonitorComponentRsp.class), result.getTotal());
     }
 
     @Override

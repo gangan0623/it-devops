@@ -81,7 +81,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
             new LambdaQueryWrapper<AlertTriggerEntity>()
                 .like(StrUtil.isNotBlank(request.getName()), AlertTriggerEntity::getName, request.getName())
         );
-        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), AlertTriggerRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), AlertTriggerRsp.class), page.getTotal());
     }
 
     @Override

@@ -28,7 +28,7 @@ public class SysLogLoginServiceImpl extends ServiceImpl<SysLogLoginMapper, SysLo
                 .like(StrUtil.isNotBlank(request.getCreatorName()), SysLogLoginEntity::getCreatorName, request.getCreatorName())
                 .orderByDesc(SysLogLoginEntity::getCreateDate)
         );
-        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), SysLogLoginRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), SysLogLoginRsp.class), page.getTotal());
     }
 
     @Override

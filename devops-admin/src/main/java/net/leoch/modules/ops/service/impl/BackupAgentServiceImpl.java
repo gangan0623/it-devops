@@ -74,7 +74,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
                         .eq(StrUtil.isNotBlank(request.getAreaName()), BackupAgentEntity::getAreaName, request.getAreaName())
                         .eq(StrUtil.isNotBlank(request.getStatus()), BackupAgentEntity::getStatus, request.getStatus())
         );
-        List<BackupAgentRsp> list = BeanUtil.copyProperties(result.getRecords(), BackupAgentRsp.class);
+        List<BackupAgentRsp> list = BeanUtil.copyToList(result.getRecords(), BackupAgentRsp.class);
         fillOnlineStatus(list);
         maskTokens(list);
         return new PageData<>(list, result.getTotal());

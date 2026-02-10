@@ -40,7 +40,7 @@ public class SysDictDataServiceImpl extends ServiceImpl<SysDictDataMapper, SysDi
             getWrapper(request)
         );
 
-        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), SysDictDataRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), SysDictDataRsp.class), page.getTotal());
     }
 
     private QueryWrapper<SysDictDataEntity> getWrapper(SysDictDataPageReq request) {

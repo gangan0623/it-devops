@@ -33,7 +33,7 @@ public class SysOssServiceImpl extends ServiceImpl<SysOssMapper, SysOssEntity> i
             new LambdaQueryWrapper<SysOssEntity>()
                 .orderByDesc(SysOssEntity::getCreateDate)
         );
-        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), SysOssRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), SysOssRsp.class), page.getTotal());
     }
 
     @Override
