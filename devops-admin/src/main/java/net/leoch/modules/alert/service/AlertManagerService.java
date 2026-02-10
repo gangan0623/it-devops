@@ -41,13 +41,20 @@ public class AlertManagerService {
     }
 
     public String createSilence(AlertRecordEntity record, int days, String message) {
+        log.info("[告警管理] 开始创建静默, alertName={}, instance={}, days={}",
+                 record != null ? record.getAlertName() : null,
+                 record != null ? record.getInstance() : null,
+                 days);
         if (record == null || days <= 0) {
+            log.warn("[告警管理] 创建静默参数无效, record={}, days={}", record, days);
             return null;
         }
         String baseUrl = resolveAlertmanagerBaseUrl();
         if (StrUtil.isBlank(baseUrl)) {
+            log.error("[告警管理] 无法解析Alertmanager地址");
             return null;
         }
+        log.info("[告警管理] 使用Alertmanager地址: {}", baseUrl);
         Instant now = Instant.now();
         Instant end = now.plus(days, ChronoUnit.DAYS);
         Map<String, Object> payload = new HashMap<>();
@@ -61,24 +68,35 @@ public class AlertManagerService {
         payload.put("comment", StrUtil.blankToDefault(message, "控制台抑制"));
         String result = postJson(baseUrl + "/api/v2/silences", JSONUtil.toJsonStr(payload));
         if (StrUtil.isBlank(result)) {
+            log.error("[告警管理] 创建静默失败, 响应为空");
             return null;
         }
         try {
             Map<String, Object> response = JSONUtil.toBean(result, Map.class);
             Object silenceId = response.get("silenceID");
-            return silenceId == null ? null : String.valueOf(silenceId);
+            if (silenceId == null) {
+                log.error("[告警管理] 创建静默失败, 响应中无silenceID, response={}", result);
+                return null;
+            }
+            log.info("[告警管理] 创建静默成功, silenceID={}", silenceId);
+            return String.valueOf(silenceId);
         } catch (Exception e) {
-            log.error("[告警管理] 解析silence响应失败", e);
+            log.error("[告警管理] 解析silence响应失败, response={}", result, e);
             return null;
         }
     }
 
     public void sendResolvedAlert(AlertRecordEntity record, String message) {
+        log.info("[告警管理] 开始发送恢复告警, alertName={}, instance={}",
+                 record != null ? record.getAlertName() : null,
+                 record != null ? record.getInstance() : null);
         if (record == null) {
+            log.warn("[告警管理] 发送恢复告警参数为空");
             return;
         }
         String baseUrl = resolveAlertmanagerBaseUrl();
         if (StrUtil.isBlank(baseUrl)) {
+            log.error("[告警管理] 无法解析Alertmanager地址");
             return;
         }
         Map<String, Object> labels = new HashMap<>();
@@ -99,7 +117,10 @@ public class AlertManagerService {
 
         List<Map<String, Object>> alerts = new ArrayList<>();
         alerts.add(alert);
-        postJson(baseUrl + "/api/v2/alerts", JSONUtil.toJsonStr(alerts));
+        String result = postJson(baseUrl + "/api/v2/alerts", JSONUtil.toJsonStr(alerts));
+        if (StrUtil.isNotBlank(result)) {
+            log.info("[告警管理] 发送恢复告警成功, alertName={}, instance={}", record.getAlertName(), record.getInstance());
+        }
     }
 
     private Map<String, Object> matcher(String name, String value) {
@@ -158,7 +179,9 @@ public class AlertManagerService {
 
     private String postJson(String target, String body) {
         HttpURLConnection connection = null;
+        long startTime = System.currentTimeMillis();
         try {
+            log.debug("[告警管理] 开始HTTP请求, url={}, body={}", target, body);
             connection = (HttpURLConnection) new URL(target).openConnection();
             connection.setRequestMethod("POST");
             connection.setConnectTimeout(5000);
@@ -170,14 +193,19 @@ public class AlertManagerService {
                 out.flush();
             }
             int code = connection.getResponseCode();
+            long elapsedTime = System.currentTimeMillis() - startTime;
             if (code >= 200 && code < 300) {
                 try (InputStream in = connection.getInputStream()) {
-                    return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+                    String response = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+                    log.info("[告警管理] HTTP请求成功, url={}, code={}, 耗时={}ms", target, code, elapsedTime);
+                    return response;
                 }
             }
+            log.warn("[告警管理] HTTP请求失败, url={}, code={}, 耗时={}ms", target, code, elapsedTime);
             return null;
         } catch (Exception e) {
-            log.error("[告警管理] 请求失败, url: {}", target, e);
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            log.error("[告警管理] HTTP请求异常, url={}, 耗时={}ms", target, elapsedTime, e);
             return null;
         } finally {
             if (connection != null) {
