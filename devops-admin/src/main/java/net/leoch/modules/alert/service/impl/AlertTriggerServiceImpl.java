@@ -32,7 +32,6 @@ import net.leoch.common.utils.alert.AlertPayloadUtils;
 import net.leoch.common.utils.alert.AlertTemplateRenderer;
 import net.leoch.modules.sys.mapper.SysUserMapper;
 import net.leoch.modules.sys.entity.SysUserEntity;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -128,7 +127,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
         normalizeReceiverIds(dto);
         AlertTriggerEntity entity = BeanUtil.copyProperties(dto, AlertTriggerEntity.class);
         this.save(entity);
-        BeanUtils.copyProperties(entity, dto);
+        BeanUtil.copyProperties(entity, dto);
     }
 
     @Override

@@ -48,7 +48,7 @@ public class DeviceBackupHistoryServiceImpl extends ServiceImpl<DeviceBackupHist
             wrapper.last("limit " + Math.min(limit, 200));
         }
         List<DeviceBackupHistoryEntity> list = this.list(wrapper);
-        return BeanUtil.copyProperties(list, DeviceBackupHistoryRsp.class);
+        return BeanUtil.copyToList(list, DeviceBackupHistoryRsp.class);
     }
 
     @Override

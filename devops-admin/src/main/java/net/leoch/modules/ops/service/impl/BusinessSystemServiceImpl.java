@@ -31,7 +31,6 @@ import net.leoch.modules.ops.service.IBusinessSystemService;
 import net.leoch.common.utils.ops.OpsQueryUtils;
 import net.leoch.common.integration.security.SecurityUser;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,7 +55,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
         applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
             List<BusinessSystemEntity> list = this.list(wrapper);
-            List<BusinessSystemRsp> dtoList = BeanUtil.copyProperties(list, BusinessSystemRsp.class);
+            List<BusinessSystemRsp> dtoList = BeanUtil.copyToList(list, BusinessSystemRsp.class);
             fillOnlineStatus(dtoList);
             OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), BusinessSystemRsp::getOnlineStatus);
             return OnlineStatusSupport.buildPageData(dtoList, request.getPage(), request.getLimit());
@@ -87,7 +86,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
         validateUnique(dto.getInstance(), dto.getName(), dto.getId());
         BusinessSystemEntity entity = BeanUtil.copyProperties(dto, BusinessSystemEntity.class);
         this.save(entity);
-        BeanUtils.copyProperties(entity, dto);
+        BeanUtil.copyProperties(entity, dto);
     }
 
     @Override
@@ -179,7 +178,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         List<BusinessSystemEntity> list = this.list(wrapper);
-        List<BusinessSystemRsp> dtoList = BeanUtil.copyProperties(list, BusinessSystemRsp.class);
+        List<BusinessSystemRsp> dtoList = BeanUtil.copyToList(list, BusinessSystemRsp.class);
         ExcelUtils.exportExcelToTarget(response, null, "业务系统表", dtoList, BusinessSystemExcel.class);
     }
 

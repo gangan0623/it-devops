@@ -73,7 +73,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
         //查询
         List<SysUserEntity> list = this.getBaseMapper().getList(params);
 
-        return new PageData<>(BeanUtil.copyProperties(list, SysUserRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyToList(list, SysUserRsp.class), page.getTotal());
     }
 
     @Override
@@ -188,7 +188,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
         UserDetail user = SecurityUser.getUser();
 
         //原密码不正确
-        if (PasswordUtils.matches(dto.getPassword(), user.getPassword())) {
+        if (!PasswordUtils.matches(dto.getPassword(), user.getPassword())) {
             log.warn("[用户密码] 原密码错误, userId={}", user.getId());
             throw new ServiceException(ErrorCode.PASSWORD_ERROR);
         }

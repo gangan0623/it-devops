@@ -31,7 +31,6 @@ import net.leoch.common.utils.ops.MetricsUtils;
 import net.leoch.common.utils.ops.OpsQueryUtils;
 import net.leoch.common.integration.security.SecurityUser;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,7 +55,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
         applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
             List<LinuxHostEntity> list = this.list(wrapper);
-            List<LinuxHostRsp> dtoList = BeanUtil.copyProperties(list, LinuxHostRsp.class);
+            List<LinuxHostRsp> dtoList = BeanUtil.copyToList(list, LinuxHostRsp.class);
             fillOnlineStatus(dtoList);
             OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), LinuxHostRsp::getOnlineStatus);
             return OnlineStatusSupport.buildPageData(dtoList, request.getPage(), request.getLimit());
@@ -87,7 +86,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
         validateUnique(dto.getInstance(), dto.getName(), dto.getId());
         LinuxHostEntity entity = BeanUtil.copyProperties(dto, LinuxHostEntity.class);
         this.save(entity);
-        BeanUtils.copyProperties(entity, dto);
+        BeanUtil.copyProperties(entity, dto);
     }
 
     @Override
@@ -214,7 +213,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
         LambdaQueryWrapper<LinuxHostEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         List<LinuxHostEntity> list = this.list(wrapper);
-        List<LinuxHostRsp> dtoList = BeanUtil.copyProperties(list, LinuxHostRsp.class);
+        List<LinuxHostRsp> dtoList = BeanUtil.copyToList(list, LinuxHostRsp.class);
         ExcelUtils.exportExcelToTarget(response, null, "Linux主机表", dtoList, LinuxHostExcel.class);
     }
 

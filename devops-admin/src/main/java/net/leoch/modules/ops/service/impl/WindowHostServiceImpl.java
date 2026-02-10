@@ -31,7 +31,6 @@ import net.leoch.common.utils.ops.MetricsUtils;
 import net.leoch.common.utils.ops.OpsQueryUtils;
 import net.leoch.common.integration.security.SecurityUser;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,7 +55,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
         applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
             List<WindowHostEntity> list = this.list(wrapper);
-            List<WindowHostRsp> dtoList = BeanUtil.copyProperties(list, WindowHostRsp.class);
+            List<WindowHostRsp> dtoList = BeanUtil.copyToList(list, WindowHostRsp.class);
             fillOnlineStatus(dtoList);
             OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), WindowHostRsp::getOnlineStatus);
             return OnlineStatusSupport.buildPageData(dtoList, request.getPage(), request.getLimit());
@@ -87,7 +86,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
         validateUnique(dto.getInstance(), dto.getName(), dto.getId());
         WindowHostEntity entity = BeanUtil.copyProperties(dto, WindowHostEntity.class);
         this.save(entity);
-        BeanUtils.copyProperties(entity, dto);
+        BeanUtil.copyProperties(entity, dto);
     }
 
     @Override
@@ -214,7 +213,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
         LambdaQueryWrapper<WindowHostEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         List<WindowHostEntity> list = this.list(wrapper);
-        List<WindowHostRsp> dtoList = BeanUtil.copyProperties(list, WindowHostRsp.class);
+        List<WindowHostRsp> dtoList = BeanUtil.copyToList(list, WindowHostRsp.class);
         ExcelUtils.exportExcelToTarget(response, null, "Windows主机表", dtoList, WindowHostExcel.class);
     }
 

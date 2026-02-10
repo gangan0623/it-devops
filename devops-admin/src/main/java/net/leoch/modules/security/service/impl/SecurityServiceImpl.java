@@ -118,7 +118,7 @@ public class SecurityServiceImpl implements ISecurityService {
             throw new ServiceException(ErrorCode.ACCOUNT_PASSWORD_ERROR);
         }
 
-        if (PasswordUtils.matches(login.getPassword(), user.getPassword())) {
+        if (!PasswordUtils.matches(login.getPassword(), user.getPassword())) {
             loginLog.setStatus(LoginStatusEnum.FAIL.value());
             loginLog.setCreator(user.getId());
             loginLog.setCreatorName(user.getUsername());

@@ -216,7 +216,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), DeviceBackupEntity::getStatus, request.getStatus());
         wrapper.eq(StrUtil.isNotBlank(request.getAgentId()), DeviceBackupEntity::getAgentId, request.getAgentId());
         List<DeviceBackupEntity> list = this.list(wrapper);
-        List<DeviceBackupRsp> dtoList = BeanUtil.copyProperties(list, DeviceBackupRsp.class);
+        List<DeviceBackupRsp> dtoList = BeanUtil.copyToList(list, DeviceBackupRsp.class);
         fillAgentNames(dtoList);
         maskPasswords(dtoList);
         ExcelUtils.exportExcelToTarget(response, null, "设备备份表", dtoList, DeviceBackupExcel.class);

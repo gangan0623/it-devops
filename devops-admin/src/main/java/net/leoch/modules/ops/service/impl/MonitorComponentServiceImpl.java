@@ -161,7 +161,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         LambdaQueryWrapper<MonitorComponentEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByDesc(MonitorComponentEntity::getUpdateDate);
         List<MonitorComponentEntity> list = this.list(wrapper);
-        return BeanUtil.copyProperties(list, MonitorComponentRsp.class);
+        return BeanUtil.copyToList(list, MonitorComponentRsp.class);
     }
 
     @Override

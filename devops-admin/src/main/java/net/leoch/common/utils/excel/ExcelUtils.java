@@ -2,12 +2,12 @@
 
 package net.leoch.common.utils.excel;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.converters.longconverter.LongStringConverter;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.BeanUtils;
 
 import cn.hutool.core.date.DateUtil;
 
@@ -58,13 +58,7 @@ public class ExcelUtils {
      */
     public static void exportExcelToTarget(HttpServletResponse response, String fileName, String sheetName, List<?> sourceList,
                                            Class<?> targetClass) throws Exception {
-        List targetList = new ArrayList<>(sourceList.size());
-        for (Object source : sourceList) {
-            Object target = targetClass.newInstance();
-            BeanUtils.copyProperties(source, target);
-            targetList.add(target);
-        }
-
+        List targetList = BeanUtil.copyToList(sourceList, targetClass);
         exportExcel(response, fileName, sheetName, targetList, targetClass);
     }
 

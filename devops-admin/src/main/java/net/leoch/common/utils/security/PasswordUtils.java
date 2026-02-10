@@ -31,10 +31,10 @@ public class PasswordUtils {
      *
      * @param str      明文密码
      * @param password 加密后密码
-     * @return true：成功    false：失败
+     * @return true：匹配成功    false：匹配失败
      */
     public static boolean matches(String str, String password) {
-        return !passwordEncoder.matches(str, password);
+        return passwordEncoder.matches(str, password);
     }
 
 

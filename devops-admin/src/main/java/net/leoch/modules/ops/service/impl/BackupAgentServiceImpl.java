@@ -206,7 +206,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
         wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), BackupAgentEntity::getAreaName, request.getAreaName());
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), BackupAgentEntity::getStatus, request.getStatus());
         List<BackupAgentEntity> list = this.list(wrapper);
-        List<BackupAgentRsp> dtoList = BeanUtil.copyProperties(list, BackupAgentRsp.class);
+        List<BackupAgentRsp> dtoList = BeanUtil.copyToList(list, BackupAgentRsp.class);
         maskTokens(dtoList);
         ExcelUtils.exportExcelToTarget(response, null, "备份节点表", dtoList, BackupAgentExcel.class);
     }

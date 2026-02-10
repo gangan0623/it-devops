@@ -18,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
 import net.leoch.modules.alert.service.AlertMailService;
 import net.leoch.modules.alert.service.IAlertMediaService;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -67,7 +66,7 @@ public class AlertMediaServiceImpl extends ServiceImpl<AlertMediaMapper, AlertMe
     public void save(AlertMediaReq dto) {
         AlertMediaEntity entity = BeanUtil.copyProperties(dto, AlertMediaEntity.class);
         this.save(entity);
-        BeanUtils.copyProperties(entity, dto);
+        BeanUtil.copyProperties(entity, dto);
     }
 
     @Override

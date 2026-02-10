@@ -20,7 +20,6 @@ import net.leoch.modules.alert.service.IAlertTemplateService;
 import net.leoch.common.utils.alert.AlertJsonUtils;
 import net.leoch.common.utils.alert.AlertPayloadUtils;
 import net.leoch.common.utils.alert.AlertTemplateRenderer;
-import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -67,7 +66,7 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
     public void save(AlertTemplateReq dto) {
         AlertTemplateEntity entity = BeanUtil.copyProperties(dto, AlertTemplateEntity.class);
         this.save(entity);
-        BeanUtils.copyProperties(entity, dto);
+        BeanUtil.copyProperties(entity, dto);
     }
 
     @Override
