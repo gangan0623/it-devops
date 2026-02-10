@@ -5,7 +5,7 @@ import cn.dev33.satoken.filter.SaServletFilter;
 import cn.dev33.satoken.router.SaRouter;
 import cn.dev33.satoken.stp.StpUtil;
 import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.utils.convert.JsonUtils;
+import cn.hutool.json.JSONUtil;
 import net.leoch.common.data.result.Result;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,6 +40,6 @@ public class SaTokenConfig {
                 }
                 SaRouter.match("/**", r -> StpUtil.checkLogin());
             })
-            .setError(e -> JsonUtils.toJsonString(new Result().error(ErrorCode.UNAUTHORIZED)));
+            .setError(e -> JSONUtil.toJsonStr(new Result().error(ErrorCode.UNAUTHORIZED)));
     }
 }

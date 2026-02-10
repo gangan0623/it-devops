@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
-import net.leoch.common.utils.IpUtils;
+import cn.hutool.extra.servlet.JakartaServletUtil;
 import net.leoch.common.data.result.Result;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.modules.log.entity.SysLogLoginEntity;
@@ -108,7 +108,7 @@ public class SecurityServiceImpl implements ISecurityService {
         SysLogLoginEntity loginLog = new SysLogLoginEntity();
         loginLog.setOperation(LoginOperationEnum.LOGIN.value());
         loginLog.setCreateDate(new Date());
-        loginLog.setIp(IpUtils.getIpAddr(request));
+        loginLog.setIp(JakartaServletUtil.getClientIP(request));
         loginLog.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
 
         if (user == null) {
@@ -149,7 +149,7 @@ public class SecurityServiceImpl implements ISecurityService {
 
         SysLogLoginEntity loginLog = new SysLogLoginEntity();
         loginLog.setOperation(LoginOperationEnum.LOGOUT.value());
-        loginLog.setIp(IpUtils.getIpAddr(request));
+        loginLog.setIp(JakartaServletUtil.getClientIP(request));
         loginLog.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
         loginLog.setStatus(LoginStatusEnum.SUCCESS.value());
         loginLog.setCreator(user.getId());

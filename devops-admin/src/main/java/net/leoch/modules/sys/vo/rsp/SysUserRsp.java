@@ -14,6 +14,7 @@ import net.leoch.common.data.validator.group.DefaultGroup;
 import net.leoch.common.data.validator.group.UpdateGroup;
 import org.hibernate.validator.constraints.Range;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;

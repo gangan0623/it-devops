@@ -2,10 +2,10 @@ package net.leoch.modules.ops.service;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.fasterxml.jackson.core.type.TypeReference;
-import net.leoch.common.utils.convert.JsonUtils;
-import net.leoch.modules.ops.config.ZabbixConfig;
+import cn.hutool.core.lang.TypeReference;
+import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
+import net.leoch.framework.config.zabbix.ZabbixConfig;
 import org.springframework.stereotype.Service;
 
 import java.io.OutputStream;
@@ -132,7 +132,7 @@ public class ZabbixClient {
             payload.put("method", method);
             payload.put("params", params);
             payload.put("id", 1);
-            String body = JsonUtils.toJsonString(payload);
+            String body = JSONUtil.toJsonStr(payload);
             try (OutputStream out = connection.getOutputStream()) {
                 out.write(body.getBytes(StandardCharsets.UTF_8));
             }
@@ -142,7 +142,7 @@ public class ZabbixClient {
                 return null;
             }
             byte[] bytes = connection.getInputStream().readAllBytes();
-            Map<String, Object> resp = JsonUtils.parseObject(new String(bytes, StandardCharsets.UTF_8), new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> resp = JSONUtil.toBean(new String(bytes, StandardCharsets.UTF_8), new TypeReference<Map<String, Object>>() {});
             if (resp == null) {
                 return null;
             }

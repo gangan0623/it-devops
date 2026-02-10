@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.modules.alert.mapper.AlertMediaMapper;
 import net.leoch.modules.alert.vo.rsp.AlertMediaRsp;
@@ -45,7 +45,7 @@ public class AlertMediaServiceImpl extends ServiceImpl<AlertMediaMapper, AlertMe
                 .like(StrUtil.isNotBlank(request.getName()), AlertMediaEntity::getName, request.getName())
                 .eq(StrUtil.isNotBlank(request.getStatus()), AlertMediaEntity::getStatus, request.getStatus())
         );
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), AlertMediaRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), AlertMediaRsp.class), page.getTotal());
     }
 
     @Override
@@ -55,24 +55,24 @@ public class AlertMediaServiceImpl extends ServiceImpl<AlertMediaMapper, AlertMe
                 .like(request != null && StrUtil.isNotBlank(request.getName()), AlertMediaEntity::getName, request != null ? request.getName() : null)
                 .eq(request != null && StrUtil.isNotBlank(request.getStatus()), AlertMediaEntity::getStatus, request != null ? request.getStatus() : null)
         );
-        return ConvertUtils.sourceToTarget(entityList, AlertMediaRsp.class);
+        return BeanUtil.copyToList(entityList, AlertMediaRsp.class);
     }
 
     @Override
     public AlertMediaRsp get(Long id) {
-        return ConvertUtils.sourceToTarget(this.getById(id), AlertMediaRsp.class);
+        return BeanUtil.copyProperties(this.getById(id), AlertMediaRsp.class);
     }
 
     @Override
     public void save(AlertMediaReq dto) {
-        AlertMediaEntity entity = ConvertUtils.sourceToTarget(dto, AlertMediaEntity.class);
+        AlertMediaEntity entity = BeanUtil.copyProperties(dto, AlertMediaEntity.class);
         this.save(entity);
         BeanUtils.copyProperties(entity, dto);
     }
 
     @Override
     public void update(AlertMediaReq dto) {
-        this.updateById(ConvertUtils.sourceToTarget(dto, AlertMediaEntity.class));
+        this.updateById(BeanUtil.copyProperties(dto, AlertMediaEntity.class));
     }
 
     @Override

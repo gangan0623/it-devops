@@ -9,6 +9,8 @@ import com.alibaba.excel.converters.longconverter.LongStringConverter;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.BeanUtils;
 
+import cn.hutool.core.date.DateUtil;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -35,7 +37,7 @@ public class ExcelUtils {
                                    Class<?> pojoClass) throws IOException {
         if (StrUtil.isBlank(fileName)) {
             //当前日期
-            fileName = DateUtils.format(new Date());
+            fileName = DateUtil.format(new Date());
         }
 
         response.setContentType("application/vnd.ms-excel");

@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.common.integration.storage.OSSFactory;
 import net.leoch.modules.oss.mapper.SysOssMapper;
@@ -33,7 +33,7 @@ public class SysOssServiceImpl extends ServiceImpl<SysOssMapper, SysOssEntity> i
             new LambdaQueryWrapper<SysOssEntity>()
                 .orderByDesc(SysOssEntity::getCreateDate)
         );
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysOssRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), SysOssRsp.class), page.getTotal());
     }
 
     @Override

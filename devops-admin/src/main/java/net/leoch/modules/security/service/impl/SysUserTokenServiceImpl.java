@@ -6,7 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.base.Constant;
 import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.data.result.Result;
 import net.leoch.modules.security.mapper.SysUserTokenMapper;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
@@ -44,7 +44,7 @@ public class SysUserTokenServiceImpl extends ServiceImpl<SysUserTokenMapper, Sys
 		String token = StpUtil.getTokenValue();
 		long timeout = StpUtil.getTokenTimeout();
 
-		UserDetail userDetail = ConvertUtils.sourceToTarget(user, UserDetail.class);
+		UserDetail userDetail = BeanUtil.copyProperties(user, UserDetail.class);
 		userDetail.setDeptIdList(securityService.getDataScopeList(userId));
 		StpUtil.getSession().set("user", userDetail);
 

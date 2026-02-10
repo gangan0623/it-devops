@@ -14,7 +14,7 @@ import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
 import net.leoch.common.utils.redis.RedisKeys;
 import net.leoch.common.utils.redis.RedisUtils;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.utils.excel.ExcelUtils;
 import net.leoch.common.utils.ops.PingUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
@@ -56,14 +56,14 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
         applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
             List<BusinessSystemEntity> list = this.list(wrapper);
-            List<BusinessSystemRsp> dtoList = ConvertUtils.sourceToTarget(list, BusinessSystemRsp.class);
+            List<BusinessSystemRsp> dtoList = BeanUtil.copyProperties(list, BusinessSystemRsp.class);
             fillOnlineStatus(dtoList);
             OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), BusinessSystemRsp::getOnlineStatus);
             return OnlineStatusSupport.buildPageData(dtoList, request.getPage(), request.getLimit());
         }
         Page<BusinessSystemEntity> page = request.buildPage();
         IPage<BusinessSystemEntity> result = this.page(page, wrapper);
-        List<BusinessSystemRsp> dtoList = ConvertUtils.sourceToTarget(result.getRecords(), BusinessSystemRsp.class);
+        List<BusinessSystemRsp> dtoList = BeanUtil.copyProperties(result.getRecords(), BusinessSystemRsp.class);
         fillOnlineStatus(dtoList);
         return new PageData<>(dtoList, result.getTotal());
     }
@@ -74,7 +74,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
             return null;
         }
         BusinessSystemEntity entity = this.getById(request.getId());
-        BusinessSystemRsp dto = ConvertUtils.sourceToTarget(entity, BusinessSystemRsp.class);
+        BusinessSystemRsp dto = BeanUtil.copyProperties(entity, BusinessSystemRsp.class);
         if (dto != null) {
             fillOnlineStatus(Collections.singletonList(dto));
         }
@@ -85,7 +85,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     public void save(BusinessSystemSaveReq dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         validateUnique(dto.getInstance(), dto.getName(), dto.getId());
-        BusinessSystemEntity entity = ConvertUtils.sourceToTarget(dto, BusinessSystemEntity.class);
+        BusinessSystemEntity entity = BeanUtil.copyProperties(dto, BusinessSystemEntity.class);
         this.save(entity);
         BeanUtils.copyProperties(entity, dto);
     }
@@ -94,7 +94,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     public void update(BusinessSystemUpdateReq dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         validateUnique(dto.getInstance(), dto.getName(), dto.getId());
-        BusinessSystemEntity entity = ConvertUtils.sourceToTarget(dto, BusinessSystemEntity.class);
+        BusinessSystemEntity entity = BeanUtil.copyProperties(dto, BusinessSystemEntity.class);
         this.updateById(entity);
     }
 
@@ -179,7 +179,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         List<BusinessSystemEntity> list = this.list(wrapper);
-        List<BusinessSystemRsp> dtoList = ConvertUtils.sourceToTarget(list, BusinessSystemRsp.class);
+        List<BusinessSystemRsp> dtoList = BeanUtil.copyProperties(list, BusinessSystemRsp.class);
         ExcelUtils.exportExcelToTarget(response, null, "业务系统表", dtoList, BusinessSystemExcel.class);
     }
 

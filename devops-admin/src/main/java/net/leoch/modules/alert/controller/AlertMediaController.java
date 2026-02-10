@@ -1,5 +1,6 @@
 package net.leoch.modules.alert.controller;
 
+import net.leoch.common.base.Constant;
 import static net.leoch.common.base.Constant.LIMIT;
 import static net.leoch.common.base.Constant.ORDER;
 import static net.leoch.common.base.Constant.ORDER_FIELD;

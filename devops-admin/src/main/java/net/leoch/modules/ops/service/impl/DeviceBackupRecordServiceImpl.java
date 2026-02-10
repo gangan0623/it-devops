@@ -9,7 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.modules.ops.mapper.DeviceBackupRecordMapper;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.*;
@@ -52,7 +52,7 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), DeviceBackupRecordEntity::getLastBackupStatus, request.getStatus());
         Page<DeviceBackupRecordEntity> page = request.buildPage();
         IPage<DeviceBackupRecordEntity> result = this.page(page, wrapper);
-        List<DeviceBackupRecordRsp> list = ConvertUtils.sourceToTarget(result.getRecords(), DeviceBackupRecordRsp.class);
+        List<DeviceBackupRecordRsp> list = BeanUtil.copyProperties(result.getRecords(), DeviceBackupRecordRsp.class);
         return new PageData<>(list, result.getTotal());
     }
 
@@ -62,7 +62,7 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
             return null;
         }
         DeviceBackupRecordEntity entity = this.getById(request.getId());
-        return ConvertUtils.sourceToTarget(entity, DeviceBackupRecordRsp.class);
+        return BeanUtil.copyProperties(entity, DeviceBackupRecordRsp.class);
     }
 
     @Override
@@ -216,7 +216,7 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
         LambdaQueryWrapper<DeviceBackupRecordEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(DeviceBackupRecordEntity::getIp, ip).last("limit 1");
         DeviceBackupRecordEntity existing = this.getOne(wrapper);
-        return ConvertUtils.sourceToTarget(existing, DeviceBackupRecordRsp.class);
+        return BeanUtil.copyProperties(existing, DeviceBackupRecordRsp.class);
     }
 
     private List<DeviceBackupDiffLineRsp> toDiffLines(List<Map<String, Object>> data) {

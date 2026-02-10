@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.base.Constant;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.modules.job.mapper.ScheduleJobMapper;
 import net.leoch.modules.job.vo.req.ScheduleJobPageReq;
 import net.leoch.modules.job.vo.req.ScheduleJobReq;
@@ -41,20 +41,20 @@ public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, Sched
                 .like(StrUtil.isNotBlank(request.getBeanName()), ScheduleJobEntity::getBeanName, request.getBeanName())
                 .orderByDesc(ScheduleJobEntity::getCreateDate)
         );
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), ScheduleJobRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), ScheduleJobRsp.class), page.getTotal());
     }
 
     @Override
     public ScheduleJobRsp get(Long id) {
         ScheduleJobEntity entity = this.getById(id);
-        return ConvertUtils.sourceToTarget(entity, ScheduleJobRsp.class);
+        return BeanUtil.copyProperties(entity, ScheduleJobRsp.class);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void save(ScheduleJobReq dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-        ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
+        ScheduleJobEntity entity = BeanUtil.copyProperties(dto, ScheduleJobEntity.class);
         entity.setStatus(Constant.ScheduleStatus.NORMAL.getValue());
         this.save(entity);
         scheduleManager.addJob(entity);
@@ -64,7 +64,7 @@ public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, Sched
     @Transactional(rollbackFor = Exception.class)
     public void update(ScheduleJobReq dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-        ScheduleJobEntity entity = ConvertUtils.sourceToTarget(dto, ScheduleJobEntity.class);
+        ScheduleJobEntity entity = BeanUtil.copyProperties(dto, ScheduleJobEntity.class);
         this.updateById(entity);
         scheduleManager.updateJob(entity);
     }

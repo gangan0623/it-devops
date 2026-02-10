@@ -8,8 +8,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.utils.context.HttpContextUtils;
-import net.leoch.common.utils.IpUtils;
-import net.leoch.common.utils.convert.JsonUtils;
+import cn.hutool.extra.servlet.JakartaServletUtil;
+import cn.hutool.json.JSONUtil;
 import net.leoch.common.data.result.Result;
 import net.leoch.modules.log.entity.SysLogErrorEntity;
 import net.leoch.modules.log.service.ISysLogErrorService;
@@ -79,13 +79,22 @@ public class ServiceExceptionHandler {
 
         //请求相关信息
         HttpServletRequest request = HttpContextUtils.getHttpServletRequest();
-        log.setIp(IpUtils.getIpAddr(request));
-        log.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
-        log.setRequestUri(request.getRequestURI());
-        log.setRequestMethod(request.getMethod());
-        Map<String, String> params = HttpContextUtils.getParameterMap(request);
+        log.setIp(JakartaServletUtil.getClientIP(request));
+        if (request != null) {
+            log.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
+        }
+        if (request != null) {
+            log.setRequestUri(request.getRequestURI());
+        }
+        if (request != null) {
+            log.setRequestMethod(request.getMethod());
+        }
+        Map<String, String> params = null;
+        if (request != null) {
+            params = HttpContextUtils.getParameterMap(request);
+        }
         if (MapUtil.isNotEmpty(params)) {
-            log.setRequestParams(JsonUtils.toJsonString(params));
+            log.setRequestParams(JSONUtil.toJsonStr(params));
         }
 
         //异常信息

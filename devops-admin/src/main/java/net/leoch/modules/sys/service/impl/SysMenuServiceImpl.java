@@ -6,7 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.base.Constant;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.utils.tree.TreeUtils;
 import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
@@ -38,7 +38,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
     public SysMenuRsp get(Long id) {
         SysMenuEntity entity = this.getBaseMapper().getById(id);
 
-        SysMenuRsp dto = ConvertUtils.sourceToTarget(entity, SysMenuRsp.class);
+        SysMenuRsp dto = BeanUtil.copyProperties(entity, SysMenuRsp.class);
 
         return dto;
     }
@@ -47,7 +47,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
     @Transactional(rollbackFor = Exception.class)
     public void save(SysMenuReq dto) {
         ValidatorUtils.validateEntity(dto, DefaultGroup.class);
-        SysMenuEntity entity = ConvertUtils.sourceToTarget(dto, SysMenuEntity.class);
+        SysMenuEntity entity = BeanUtil.copyProperties(dto, SysMenuEntity.class);
 
         //保存菜单
         this.save(entity);
@@ -57,7 +57,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
     @Transactional(rollbackFor = Exception.class)
     public void update(SysMenuReq dto) {
         ValidatorUtils.validateEntity(dto, DefaultGroup.class);
-        SysMenuEntity entity = ConvertUtils.sourceToTarget(dto, SysMenuEntity.class);
+        SysMenuEntity entity = BeanUtil.copyProperties(dto, SysMenuEntity.class);
 
         //上级菜单不能为自身
         if (entity.getId().equals(entity.getPid())) {
@@ -82,7 +82,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
     public List<SysMenuRsp> getAllMenuList(Integer menuType) {
         List<SysMenuEntity> menuList = this.getBaseMapper().getMenuList(menuType);
 
-        List<SysMenuRsp> dtoList = ConvertUtils.sourceToTarget(menuList, SysMenuRsp.class);
+        List<SysMenuRsp> dtoList = BeanUtil.copyToList(menuList, SysMenuRsp.class);
 
         return TreeUtils.build(dtoList, Constant.MENU_ROOT);
     }
@@ -98,7 +98,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
             menuList = this.getBaseMapper().getUserMenuList(user.getId(), menuType);
         }
 
-        List<SysMenuRsp> dtoList = ConvertUtils.sourceToTarget(menuList, SysMenuRsp.class);
+        List<SysMenuRsp> dtoList = BeanUtil.copyToList(menuList, SysMenuRsp.class);
 
         return TreeUtils.build(dtoList);
     }
@@ -107,7 +107,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenuEntity
     public List<SysMenuRsp> getListPid(Long pid) {
         List<SysMenuEntity> menuList = this.getBaseMapper().getListPid(pid);
 
-        return ConvertUtils.sourceToTarget(menuList, SysMenuRsp.class);
+        return BeanUtil.copyToList(menuList, SysMenuRsp.class);
     }
 
     @Override

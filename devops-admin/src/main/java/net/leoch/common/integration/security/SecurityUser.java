@@ -5,7 +5,7 @@ package net.leoch.common.integration.security;
 import cn.dev33.satoken.session.SaSession;
 import cn.dev33.satoken.stp.StpUtil;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.utils.context.SpringContextUtils;
 import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.sys.entity.SysUserEntity;
@@ -43,7 +43,7 @@ public class SecurityUser {
                 return new UserDetail();
             }
 
-            user = ConvertUtils.sourceToTarget(userEntity, UserDetail.class);
+            user = BeanUtil.copyProperties(userEntity, UserDetail.class);
             user.setDeptIdList(securityService.getDataScopeList(user.getId()));
             StpUtil.getSession().set("user", user);
             return user;

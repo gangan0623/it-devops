@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import net.leoch.common.exception.ServiceException;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.modules.ops.mapper.DeviceBackupHistoryMapper;
 import net.leoch.modules.ops.vo.rsp.DeviceBackupHistoryRsp;
 import net.leoch.modules.ops.entity.DeviceBackupHistoryEntity;
@@ -48,7 +48,7 @@ public class DeviceBackupHistoryServiceImpl extends ServiceImpl<DeviceBackupHist
             wrapper.last("limit " + Math.min(limit, 200));
         }
         List<DeviceBackupHistoryEntity> list = this.list(wrapper);
-        return ConvertUtils.sourceToTarget(list, DeviceBackupHistoryRsp.class);
+        return BeanUtil.copyProperties(list, DeviceBackupHistoryRsp.class);
     }
 
     @Override
@@ -57,7 +57,7 @@ public class DeviceBackupHistoryServiceImpl extends ServiceImpl<DeviceBackupHist
             return null;
         }
         DeviceBackupHistoryEntity entity = this.getById(id);
-        return ConvertUtils.sourceToTarget(entity, DeviceBackupHistoryRsp.class);
+        return BeanUtil.copyProperties(entity, DeviceBackupHistoryRsp.class);
     }
 
     @Override

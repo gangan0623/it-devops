@@ -3,6 +3,7 @@ package net.leoch.modules.ops.vo.rsp;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 

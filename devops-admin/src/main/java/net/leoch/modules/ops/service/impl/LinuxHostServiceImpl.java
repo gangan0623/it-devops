@@ -14,7 +14,7 @@ import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
 import net.leoch.common.utils.redis.RedisKeys;
 import net.leoch.common.utils.redis.RedisUtils;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.utils.excel.ExcelUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AddGroup;
@@ -56,14 +56,14 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
         applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
             List<LinuxHostEntity> list = this.list(wrapper);
-            List<LinuxHostRsp> dtoList = ConvertUtils.sourceToTarget(list, LinuxHostRsp.class);
+            List<LinuxHostRsp> dtoList = BeanUtil.copyProperties(list, LinuxHostRsp.class);
             fillOnlineStatus(dtoList);
             OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), LinuxHostRsp::getOnlineStatus);
             return OnlineStatusSupport.buildPageData(dtoList, request.getPage(), request.getLimit());
         }
         Page<LinuxHostEntity> page = request.buildPage();
         IPage<LinuxHostEntity> result = this.page(page, wrapper);
-        List<LinuxHostRsp> dtoList = ConvertUtils.sourceToTarget(result.getRecords(), LinuxHostRsp.class);
+        List<LinuxHostRsp> dtoList = BeanUtil.copyProperties(result.getRecords(), LinuxHostRsp.class);
         fillOnlineStatus(dtoList);
         return new PageData<>(dtoList, result.getTotal());
     }
@@ -74,7 +74,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
             return null;
         }
         LinuxHostEntity entity = this.getById(request.getId());
-        LinuxHostRsp dto = ConvertUtils.sourceToTarget(entity, LinuxHostRsp.class);
+        LinuxHostRsp dto = BeanUtil.copyProperties(entity, LinuxHostRsp.class);
         if (dto != null) {
             fillOnlineStatus(Collections.singletonList(dto));
         }
@@ -85,7 +85,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     public void save(LinuxHostSaveReq dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         validateUnique(dto.getInstance(), dto.getName(), dto.getId());
-        LinuxHostEntity entity = ConvertUtils.sourceToTarget(dto, LinuxHostEntity.class);
+        LinuxHostEntity entity = BeanUtil.copyProperties(dto, LinuxHostEntity.class);
         this.save(entity);
         BeanUtils.copyProperties(entity, dto);
     }
@@ -94,7 +94,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     public void update(LinuxHostUpdateReq dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         validateUnique(dto.getInstance(), dto.getName(), dto.getId());
-        LinuxHostEntity entity = ConvertUtils.sourceToTarget(dto, LinuxHostEntity.class);
+        LinuxHostEntity entity = BeanUtil.copyProperties(dto, LinuxHostEntity.class);
         this.updateById(entity);
     }
 
@@ -214,7 +214,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
         LambdaQueryWrapper<LinuxHostEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         List<LinuxHostEntity> list = this.list(wrapper);
-        List<LinuxHostRsp> dtoList = ConvertUtils.sourceToTarget(list, LinuxHostRsp.class);
+        List<LinuxHostRsp> dtoList = BeanUtil.copyProperties(list, LinuxHostRsp.class);
         ExcelUtils.exportExcelToTarget(response, null, "Linux主机表", dtoList, LinuxHostExcel.class);
     }
 

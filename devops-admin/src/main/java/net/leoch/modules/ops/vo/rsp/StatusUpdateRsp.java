@@ -2,6 +2,7 @@ package net.leoch.modules.ops.vo.rsp;
 
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**

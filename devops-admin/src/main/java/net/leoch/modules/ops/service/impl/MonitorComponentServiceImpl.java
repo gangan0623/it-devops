@@ -10,8 +10,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import net.leoch.common.base.Constant;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.convert.ConvertUtils;
-import net.leoch.common.utils.convert.JsonUtils;
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.json.JSONUtil;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AddGroup;
 import net.leoch.common.data.validator.group.DefaultGroup;
@@ -64,7 +64,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         wrapper.like(StrUtil.isNotBlank(request.getIp()), MonitorComponentEntity::getIp, request.getIp());
         Page<MonitorComponentEntity> page = buildPage(request);
         IPage<MonitorComponentEntity> result = this.page(page, wrapper);
-        return new PageData<>(ConvertUtils.sourceToTarget(result.getRecords(), MonitorComponentRsp.class), result.getTotal());
+        return new PageData<>(BeanUtil.copyProperties(result.getRecords(), MonitorComponentRsp.class), result.getTotal());
     }
 
     @Override
@@ -72,28 +72,28 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         if (request == null || request.getId() == null) {
             return null;
         }
-        return ConvertUtils.sourceToTarget(this.getById(request.getId()), MonitorComponentRsp.class);
+        return BeanUtil.copyProperties(this.getById(request.getId()), MonitorComponentRsp.class);
     }
 
     @Override
     public void save(MonitorComponentSaveReq request) {
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
-        validateUnique(request);
+        validateUnique(request.getId(), request.getIp(), request.getPort(), request.getName());
         if (request != null && request.getType() != null) {
             request.setType(normalizeType(request.getType()));
         }
-        MonitorComponentEntity entity = ConvertUtils.sourceToTarget(request, MonitorComponentEntity.class);
+        MonitorComponentEntity entity = BeanUtil.copyProperties(request, MonitorComponentEntity.class);
         this.save(entity);
     }
 
     @Override
     public void update(MonitorComponentUpdateReq request) {
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
-        validateUnique(request);
+        validateUnique(request.getId(), request.getIp(), request.getPort(), request.getName());
         if (request != null && request.getType() != null) {
             request.setType(normalizeType(request.getType()));
         }
-        MonitorComponentEntity entity = ConvertUtils.sourceToTarget(request, MonitorComponentEntity.class);
+        MonitorComponentEntity entity = BeanUtil.copyProperties(request, MonitorComponentEntity.class);
         this.updateById(entity);
     }
 
@@ -153,7 +153,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         update.setUpdateDate(new Date());
         this.update(update, wrapper);
         MonitorComponentEntity refreshed = this.getById(entity.getId());
-        return ConvertUtils.sourceToTarget(refreshed, MonitorComponentRsp.class);
+        return BeanUtil.copyProperties(refreshed, MonitorComponentRsp.class);
     }
 
     @Override
@@ -161,7 +161,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         LambdaQueryWrapper<MonitorComponentEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByDesc(MonitorComponentEntity::getUpdateDate);
         List<MonitorComponentEntity> list = this.list(wrapper);
-        return ConvertUtils.sourceToTarget(list, MonitorComponentRsp.class);
+        return BeanUtil.copyProperties(list, MonitorComponentRsp.class);
     }
 
     @Override
@@ -214,8 +214,8 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         return page;
     }
 
-    private void validateUnique(MonitorComponentRsp dto) {
-        if (dto != null && existsByIpPortOrName(dto.getIp(), dto.getPort(), dto.getName(), dto.getId())) {
+    private void validateUnique(Long id, String ip, Integer port, String name) {
+        if (existsByIpPortOrName(ip, port, name, id)) {
             throw new ServiceException("IP端口或名称已存在");
         }
     }
@@ -340,7 +340,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
             return null;
         }
         try {
-            Object current = JsonUtils.parseObject(json, Map.class);
+            Object current = JSONUtil.toBean(json, Map.class);
             for (String key : keys) {
                 if (!(current instanceof Map)) {
                     return null;

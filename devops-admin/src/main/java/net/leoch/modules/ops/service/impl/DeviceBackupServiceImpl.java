@@ -15,7 +15,7 @@ import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
 import net.leoch.common.utils.redis.RedisKeys;
 import net.leoch.common.utils.redis.RedisUtils;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.utils.excel.ExcelUtils;
 import net.leoch.common.utils.ops.PingUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
@@ -75,7 +75,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
         wrapper.eq(StrUtil.isNotBlank(request.getAgentId()), DeviceBackupEntity::getAgentId, request.getAgentId());
         Page<DeviceBackupEntity> page = buildPage(request);
         IPage<DeviceBackupEntity> result = this.page(page, wrapper);
-        List<DeviceBackupRsp> list = ConvertUtils.sourceToTarget(result.getRecords(), DeviceBackupRsp.class);
+        List<DeviceBackupRsp> list = BeanUtil.copyProperties(result.getRecords(), DeviceBackupRsp.class);
         fillOnlineStatus(list);
         fillAgentNames(list);
         maskPasswords(list);
@@ -88,7 +88,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
             return null;
         }
         DeviceBackupEntity entity = this.getById(request.getId());
-        DeviceBackupRsp dto = ConvertUtils.sourceToTarget(entity, DeviceBackupRsp.class);
+        DeviceBackupRsp dto = BeanUtil.copyProperties(entity, DeviceBackupRsp.class);
         if (dto != null) {
             fillOnlineStatus(Arrays.asList(dto));
             fillAgentNames(Arrays.asList(dto));
@@ -100,22 +100,22 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
     @Override
     public void save(DeviceBackupSaveReq request) {
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
-        validateUnique(request);
-        DeviceBackupEntity entity = ConvertUtils.sourceToTarget(request, DeviceBackupEntity.class);
+        validateUnique(request.getId(), request.getInstance(), request.getName());
+        DeviceBackupEntity entity = BeanUtil.copyProperties(request, DeviceBackupEntity.class);
         this.save(entity);
     }
 
     @Override
     public void update(DeviceBackupUpdateReq request) {
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
-        validateUnique(request);
+        validateUnique(request.getId(), request.getInstance(), request.getName());
         if (request != null && request.getId() != null && StrUtil.isBlank(request.getPassword())) {
             DeviceBackupEntity existing = this.getById(request.getId());
             if (existing != null) {
                 request.setPassword(existing.getPassword());
             }
         }
-        DeviceBackupEntity entity = ConvertUtils.sourceToTarget(request, DeviceBackupEntity.class);
+        DeviceBackupEntity entity = BeanUtil.copyProperties(request, DeviceBackupEntity.class);
         this.updateById(entity);
     }
 
@@ -216,7 +216,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), DeviceBackupEntity::getStatus, request.getStatus());
         wrapper.eq(StrUtil.isNotBlank(request.getAgentId()), DeviceBackupEntity::getAgentId, request.getAgentId());
         List<DeviceBackupEntity> list = this.list(wrapper);
-        List<DeviceBackupRsp> dtoList = ConvertUtils.sourceToTarget(list, DeviceBackupRsp.class);
+        List<DeviceBackupRsp> dtoList = BeanUtil.copyProperties(list, DeviceBackupRsp.class);
         fillAgentNames(dtoList);
         maskPasswords(dtoList);
         ExcelUtils.exportExcelToTarget(response, null, "设备备份表", dtoList, DeviceBackupExcel.class);
@@ -292,8 +292,8 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
         return page;
     }
 
-    private void validateUnique(DeviceBackupRsp dto) {
-        if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
+    private void validateUnique(Long id, String instance, String name) {
+        if (existsByInstanceOrName(instance, name, id)) {
             throw new ServiceException("地址或名称已存在");
         }
     }

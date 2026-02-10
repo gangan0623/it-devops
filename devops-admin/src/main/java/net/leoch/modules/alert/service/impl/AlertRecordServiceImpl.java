@@ -8,9 +8,9 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.data.validator.AssertUtils;
-import net.leoch.common.utils.convert.JsonUtils;
+import cn.hutool.json.JSONUtil;
 import net.leoch.modules.alert.mapper.AlertRecordMapper;
 import net.leoch.modules.alert.vo.rsp.AlertRecordActionRsp;
 import net.leoch.modules.alert.vo.rsp.AlertProblemRsp;
@@ -114,7 +114,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         wrapper.orderByDesc(AlertRecordEntity::getStartsAt);
 
         IPage<AlertRecordEntity> page = this.page(request.buildPage(), wrapper);
-        PageData<AlertRecordRsp> pageData = new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), AlertRecordRsp.class), page.getTotal());
+        PageData<AlertRecordRsp> pageData = new PageData<>(BeanUtil.copyProperties(page.getRecords(), AlertRecordRsp.class), page.getTotal());
 
         if (pageData.getList() == null || pageData.getList().isEmpty()) {
             return pageData;
@@ -131,7 +131,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
 
     @Override
     public AlertRecordRsp get(Long id) {
-        return ConvertUtils.sourceToTarget(this.getById(id), AlertRecordRsp.class);
+        return BeanUtil.copyProperties(this.getById(id), AlertRecordRsp.class);
     }
 
     @Override
@@ -409,7 +409,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         alerts.add(alert);
         payload.put("alerts", alerts);
 
-        alertTriggerService.notifyFromWebhook(payload, JsonUtils.toJsonString(payload), "recover");
+        alertTriggerService.notifyFromWebhook(payload, JSONUtil.toJsonStr(payload), "recover");
     }
 
     private AlertRecordEntity requireRecord(Long recordId) {

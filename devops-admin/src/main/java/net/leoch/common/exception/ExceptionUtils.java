@@ -30,14 +30,14 @@ public class ExceptionUtils {
                 if(pw != null) {
                     pw.close();
                 }
-            } catch (Exception e) {
+            } catch (Exception ignored) {
 
             }
             try {
                 if(sw != null) {
                     sw.close();
                 }
-            } catch (IOException e) {
+            } catch (IOException ignored) {
 
             }
         }

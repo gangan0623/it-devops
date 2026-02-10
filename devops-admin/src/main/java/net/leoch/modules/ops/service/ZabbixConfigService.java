@@ -2,7 +2,7 @@ package net.leoch.modules.ops.service;
 
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.base.Constant;
-import net.leoch.modules.ops.config.ZabbixConfig;
+import net.leoch.framework.config.zabbix.ZabbixConfig;
 import net.leoch.modules.sys.service.ISysParamsService;
 import org.springframework.stereotype.Service;
 

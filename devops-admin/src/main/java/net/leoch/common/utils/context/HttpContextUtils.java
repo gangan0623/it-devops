@@ -3,6 +3,7 @@
 package net.leoch.common.utils.context;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.servlet.JakartaServletUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.context.request.RequestAttributes;
@@ -29,20 +30,19 @@ public class HttpContextUtils {
 		return ((ServletRequestAttributes) requestAttributes).getRequest();
 	}
 
-	public static Map<String, String> getParameterMap(HttpServletRequest request) {
-		Enumeration<String> parameters = request.getParameterNames();
-
-		Map<String, String> params = new HashMap<>();
-		while (parameters.hasMoreElements()) {
-			String parameter = parameters.nextElement();
-			String value = request.getParameter(parameter);
-			if (StrUtil.isNotBlank(value)) {
-				params.put(parameter, value);
-			}
-		}
-
-		return params;
-	}
+    public static Map<String, String> getParameterMap(HttpServletRequest request) {
+        Map<String, String> params = JakartaServletUtil.getParamMap(request);
+        if (params == null || params.isEmpty()) {
+            return new HashMap<>();
+        }
+        Map<String, String> filtered = new HashMap<>(params.size());
+        for (Map.Entry<String, String> entry : params.entrySet()) {
+            if (StrUtil.isNotBlank(entry.getValue())) {
+                filtered.put(entry.getKey(), entry.getValue());
+            }
+        }
+        return filtered;
+    }
 
 	public static String getDomain(){
 		HttpServletRequest request = getHttpServletRequest();

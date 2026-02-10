@@ -9,8 +9,8 @@ import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.convert.ConvertUtils;
-import net.leoch.common.utils.convert.JsonUtils;
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.json.JSONUtil;
 import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AddGroup;
@@ -50,14 +50,14 @@ public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParams
                 getWrapper(request)
         );
 
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysParamsRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), SysParamsRsp.class), page.getTotal());
     }
 
     @Override
     public List<SysParamsRsp> list(SysParamsPageReq request) {
         List<SysParamsEntity> entityList = this.list(getWrapper(request));
 
-        return ConvertUtils.sourceToTarget(entityList, SysParamsRsp.class);
+        return BeanUtil.copyToList(entityList, SysParamsRsp.class);
     }
 
     private QueryWrapper<SysParamsEntity> getWrapper(SysParamsPageReq request) {
@@ -74,14 +74,14 @@ public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParams
     public SysParamsRsp get(Long id) {
         SysParamsEntity entity = this.getById(id);
 
-        return ConvertUtils.sourceToTarget(entity, SysParamsRsp.class);
+        return BeanUtil.copyProperties(entity, SysParamsRsp.class);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void save(SysParamsReq dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-        SysParamsEntity entity = ConvertUtils.sourceToTarget(dto, SysParamsEntity.class);
+        SysParamsEntity entity = BeanUtil.copyProperties(dto, SysParamsEntity.class);
         this.save(entity);
 
         sysParamsRedis.set(entity.getParamCode(), entity.getParamValue());
@@ -91,7 +91,7 @@ public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParams
     @Transactional(rollbackFor = Exception.class)
     public void update(SysParamsReq dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-        SysParamsEntity entity = ConvertUtils.sourceToTarget(dto, SysParamsEntity.class);
+        SysParamsEntity entity = BeanUtil.copyProperties(dto, SysParamsEntity.class);
         this.updateById(entity);
 
         sysParamsRedis.set(entity.getParamCode(), entity.getParamValue());
@@ -125,7 +125,7 @@ public class SysParamsServiceImpl extends ServiceImpl<SysParamsMapper, SysParams
     public <T> T getValueObject(String paramCode, Class<T> clazz) {
         String paramValue = getValue(paramCode);
         if (StrUtil.isNotBlank(paramValue)) {
-            return JsonUtils.parseObject(paramValue, clazz);
+            return JSONUtil.toBean(paramValue, clazz);
         }
 
         try {

@@ -8,7 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AddGroup;
@@ -73,7 +73,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
         //查询
         List<SysUserEntity> list = this.getBaseMapper().getList(params);
 
-        return new PageData<>(ConvertUtils.sourceToTarget(list, SysUserRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyProperties(list, SysUserRsp.class), page.getTotal());
     }
 
     @Override
@@ -95,14 +95,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
 
         List<SysUserEntity> entityList = this.getBaseMapper().getList(params);
 
-        return ConvertUtils.sourceToTarget(entityList, SysUserRsp.class);
+        return BeanUtil.copyToList(entityList, SysUserRsp.class);
     }
 
     @Override
     public SysUserRsp get(Long id) {
         SysUserEntity entity = this.getBaseMapper().getById(id);
 
-        return ConvertUtils.sourceToTarget(entity, SysUserRsp.class);
+        return BeanUtil.copyProperties(entity, SysUserRsp.class);
     }
 
     @Override
@@ -119,14 +119,14 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
     @Override
     public SysUserRsp getByUsername(String username) {
         SysUserEntity entity = this.getBaseMapper().getByUsername(username);
-        return ConvertUtils.sourceToTarget(entity, SysUserRsp.class);
+        return BeanUtil.copyProperties(entity, SysUserRsp.class);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void save(SysUserReq dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-        SysUserEntity entity = ConvertUtils.sourceToTarget(dto, SysUserEntity.class);
+        SysUserEntity entity = BeanUtil.copyProperties(dto, SysUserEntity.class);
 
         //密码加密
         String password = PasswordUtils.encode(entity.getPassword());
@@ -144,7 +144,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
     @Transactional(rollbackFor = Exception.class)
     public void update(SysUserReq dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-        SysUserEntity entity = ConvertUtils.sourceToTarget(dto, SysUserEntity.class);
+        SysUserEntity entity = BeanUtil.copyProperties(dto, SysUserEntity.class);
 
         //密码加密
         if (StrUtil.isBlank(dto.getPassword())) {
@@ -199,7 +199,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
 
     @Override
     public SysUserRsp getCurrentUserInfo() {
-        return ConvertUtils.sourceToTarget(SecurityUser.getUser(), SysUserRsp.class);
+        return BeanUtil.copyProperties(SecurityUser.getUser(), SysUserRsp.class);
     }
 
     @Override

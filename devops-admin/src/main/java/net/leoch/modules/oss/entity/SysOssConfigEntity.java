@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import net.leoch.common.base.BaseEntity;
 
+import java.io.Serial;
 import java.util.Date;
 
 /**

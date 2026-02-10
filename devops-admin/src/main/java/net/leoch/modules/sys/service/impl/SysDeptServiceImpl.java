@@ -7,7 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.base.Constant;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.utils.tree.TreeUtils;
 import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
@@ -49,7 +49,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity
         //查询部门列表
         List<SysDeptEntity> entityList = this.getBaseMapper().getList(params);
 
-        List<SysDeptRsp> dtoList = ConvertUtils.sourceToTarget(entityList, SysDeptRsp.class);
+        List<SysDeptRsp> dtoList = BeanUtil.copyToList(entityList, SysDeptRsp.class);
 
         return TreeUtils.build(dtoList);
     }
@@ -63,14 +63,14 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity
 
         SysDeptEntity entity = this.getBaseMapper().getById(id);
 
-        return ConvertUtils.sourceToTarget(entity, SysDeptRsp.class);
+        return BeanUtil.copyProperties(entity, SysDeptRsp.class);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void save(SysDeptReq dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-        SysDeptEntity entity = ConvertUtils.sourceToTarget(dto, SysDeptEntity.class);
+        SysDeptEntity entity = BeanUtil.copyProperties(dto, SysDeptEntity.class);
 
         entity.setPids(getPidList(entity.getPid()));
         this.save(entity);
@@ -80,7 +80,7 @@ public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity
     @Transactional(rollbackFor = Exception.class)
     public void update(SysDeptReq dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-        SysDeptEntity entity = ConvertUtils.sourceToTarget(dto, SysDeptEntity.class);
+        SysDeptEntity entity = BeanUtil.copyProperties(dto, SysDeptEntity.class);
 
         //上级部门不能为自身
         if (entity.getId().equals(entity.getPid())) {

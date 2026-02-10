@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.modules.alert.mapper.AlertTemplateMapper;
 import net.leoch.modules.alert.vo.req.AlertTemplatePageReq;
@@ -45,7 +45,7 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
                 .like(StrUtil.isNotBlank(request.getName()), AlertTemplateEntity::getName, request.getName())
                 .eq(StrUtil.isNotBlank(request.getStatus()), AlertTemplateEntity::getStatus, request.getStatus())
         );
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), AlertTemplateRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), AlertTemplateRsp.class), page.getTotal());
     }
 
     @Override
@@ -55,24 +55,24 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
                 .like(request != null && StrUtil.isNotBlank(request.getName()), AlertTemplateEntity::getName, request != null ? request.getName() : null)
                 .eq(request != null && StrUtil.isNotBlank(request.getStatus()), AlertTemplateEntity::getStatus, request != null ? request.getStatus() : null)
         );
-        return ConvertUtils.sourceToTarget(entityList, AlertTemplateRsp.class);
+        return BeanUtil.copyToList(entityList, AlertTemplateRsp.class);
     }
 
     @Override
     public AlertTemplateRsp get(Long id) {
-        return ConvertUtils.sourceToTarget(this.getById(id), AlertTemplateRsp.class);
+        return BeanUtil.copyProperties(this.getById(id), AlertTemplateRsp.class);
     }
 
     @Override
     public void save(AlertTemplateReq dto) {
-        AlertTemplateEntity entity = ConvertUtils.sourceToTarget(dto, AlertTemplateEntity.class);
+        AlertTemplateEntity entity = BeanUtil.copyProperties(dto, AlertTemplateEntity.class);
         this.save(entity);
         BeanUtils.copyProperties(entity, dto);
     }
 
     @Override
     public void update(AlertTemplateReq dto) {
-        this.updateById(ConvertUtils.sourceToTarget(dto, AlertTemplateEntity.class));
+        this.updateById(BeanUtil.copyProperties(dto, AlertTemplateEntity.class));
     }
 
     @Override

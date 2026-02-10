@@ -12,7 +12,7 @@ public enum UserStatusEnum {
     DISABLE(0),
     ENABLED(1);
 
-    private int value;
+    private final int value;
 
     UserStatusEnum(int value) {
         this.value = value;

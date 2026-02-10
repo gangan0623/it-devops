@@ -12,7 +12,7 @@ public enum SuperAdminEnum {
     YES(1),
     NO(0);
 
-    private int value;
+    private final int value;
 
     SuperAdminEnum(int value) {
         this.value = value;

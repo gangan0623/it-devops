@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.modules.log.mapper.SysLogOperationMapper;
 import net.leoch.modules.log.vo.rsp.SysLogOperationRsp;
 import net.leoch.modules.log.vo.req.SysLogOperationPageReq;
@@ -27,7 +27,7 @@ public class SysLogOperationServiceImpl extends ServiceImpl<SysLogOperationMappe
                 .eq(StrUtil.isNotBlank(request.getStatus()), SysLogOperationEntity::getStatus, request.getStatus())
                 .orderByDesc(SysLogOperationEntity::getCreateDate)
         );
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysLogOperationRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), SysLogOperationRsp.class), page.getTotal());
     }
 
     @Override
@@ -37,6 +37,6 @@ public class SysLogOperationServiceImpl extends ServiceImpl<SysLogOperationMappe
                 .eq(request != null && StrUtil.isNotBlank(request.getStatus()), SysLogOperationEntity::getStatus, request != null ? request.getStatus() : null)
                 .orderByDesc(SysLogOperationEntity::getCreateDate)
         );
-        return ConvertUtils.sourceToTarget(entityList, SysLogOperationRsp.class);
+        return BeanUtil.copyToList(entityList, SysLogOperationRsp.class);
     }
 }

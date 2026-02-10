@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.modules.log.mapper.SysLogLoginMapper;
 import net.leoch.modules.log.vo.rsp.SysLogLoginRsp;
 import net.leoch.modules.log.vo.req.SysLogLoginPageReq;
@@ -28,7 +28,7 @@ public class SysLogLoginServiceImpl extends ServiceImpl<SysLogLoginMapper, SysLo
                 .like(StrUtil.isNotBlank(request.getCreatorName()), SysLogLoginEntity::getCreatorName, request.getCreatorName())
                 .orderByDesc(SysLogLoginEntity::getCreateDate)
         );
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysLogLoginRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), SysLogLoginRsp.class), page.getTotal());
     }
 
     @Override
@@ -39,6 +39,6 @@ public class SysLogLoginServiceImpl extends ServiceImpl<SysLogLoginMapper, SysLo
                 .like(request != null && StrUtil.isNotBlank(request.getCreatorName()), SysLogLoginEntity::getCreatorName, request != null ? request.getCreatorName() : null)
                 .orderByDesc(SysLogLoginEntity::getCreateDate)
         );
-        return ConvertUtils.sourceToTarget(entityList, SysLogLoginRsp.class);
+        return BeanUtil.copyToList(entityList, SysLogLoginRsp.class);
     }
 }

@@ -2,7 +2,7 @@ package net.leoch.modules.alert.service;
 
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.utils.convert.JsonUtils;
+import cn.hutool.json.JSONUtil;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
 import net.leoch.modules.ops.mapper.MonitorComponentMapper;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
@@ -59,12 +59,12 @@ public class AlertManagerService {
         payload.put("endsAt", end.toString());
         payload.put("createdBy", resolveOperator());
         payload.put("comment", StrUtil.blankToDefault(message, "控制台抑制"));
-        String result = postJson(baseUrl + "/api/v2/silences", JsonUtils.toJsonString(payload));
+        String result = postJson(baseUrl + "/api/v2/silences", JSONUtil.toJsonStr(payload));
         if (StrUtil.isBlank(result)) {
             return null;
         }
         try {
-            Map<String, Object> response = JsonUtils.parseObject(result, Map.class);
+            Map<String, Object> response = JSONUtil.toBean(result, Map.class);
             Object silenceId = response.get("silenceID");
             return silenceId == null ? null : String.valueOf(silenceId);
         } catch (Exception e) {
@@ -99,7 +99,7 @@ public class AlertManagerService {
 
         List<Map<String, Object>> alerts = new ArrayList<>();
         alerts.add(alert);
-        postJson(baseUrl + "/api/v2/alerts", JsonUtils.toJsonString(alerts));
+        postJson(baseUrl + "/api/v2/alerts", JSONUtil.toJsonStr(alerts));
     }
 
     private Map<String, Object> matcher(String name, String value) {

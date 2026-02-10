@@ -14,7 +14,7 @@ import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
 import net.leoch.common.utils.redis.RedisKeys;
 import net.leoch.common.utils.redis.RedisUtils;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.utils.excel.ExcelUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AddGroup;
@@ -56,14 +56,14 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
         applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
             List<WindowHostEntity> list = this.list(wrapper);
-            List<WindowHostRsp> dtoList = ConvertUtils.sourceToTarget(list, WindowHostRsp.class);
+            List<WindowHostRsp> dtoList = BeanUtil.copyProperties(list, WindowHostRsp.class);
             fillOnlineStatus(dtoList);
             OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), WindowHostRsp::getOnlineStatus);
             return OnlineStatusSupport.buildPageData(dtoList, request.getPage(), request.getLimit());
         }
         Page<WindowHostEntity> page = request.buildPage();
         IPage<WindowHostEntity> result = this.page(page, wrapper);
-        List<WindowHostRsp> dtoList = ConvertUtils.sourceToTarget(result.getRecords(), WindowHostRsp.class);
+        List<WindowHostRsp> dtoList = BeanUtil.copyProperties(result.getRecords(), WindowHostRsp.class);
         fillOnlineStatus(dtoList);
         return new PageData<>(dtoList, result.getTotal());
     }
@@ -74,7 +74,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
             return null;
         }
         WindowHostEntity entity = this.getById(request.getId());
-        WindowHostRsp dto = ConvertUtils.sourceToTarget(entity, WindowHostRsp.class);
+        WindowHostRsp dto = BeanUtil.copyProperties(entity, WindowHostRsp.class);
         if (dto != null) {
             fillOnlineStatus(Collections.singletonList(dto));
         }
@@ -85,7 +85,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     public void save(WindowHostSaveReq dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         validateUnique(dto.getInstance(), dto.getName(), dto.getId());
-        WindowHostEntity entity = ConvertUtils.sourceToTarget(dto, WindowHostEntity.class);
+        WindowHostEntity entity = BeanUtil.copyProperties(dto, WindowHostEntity.class);
         this.save(entity);
         BeanUtils.copyProperties(entity, dto);
     }
@@ -94,7 +94,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     public void update(WindowHostUpdateReq dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         validateUnique(dto.getInstance(), dto.getName(), dto.getId());
-        WindowHostEntity entity = ConvertUtils.sourceToTarget(dto, WindowHostEntity.class);
+        WindowHostEntity entity = BeanUtil.copyProperties(dto, WindowHostEntity.class);
         this.updateById(entity);
     }
 
@@ -214,7 +214,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
         LambdaQueryWrapper<WindowHostEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         List<WindowHostEntity> list = this.list(wrapper);
-        List<WindowHostRsp> dtoList = ConvertUtils.sourceToTarget(list, WindowHostRsp.class);
+        List<WindowHostRsp> dtoList = BeanUtil.copyProperties(list, WindowHostRsp.class);
         ExcelUtils.exportExcelToTarget(response, null, "Windows主机表", dtoList, WindowHostExcel.class);
     }
 

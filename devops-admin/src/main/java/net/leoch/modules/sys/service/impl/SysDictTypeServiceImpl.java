@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.DefaultGroup;
@@ -49,7 +49,7 @@ public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDi
                 getWrapper(request)
         );
 
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysDictTypeRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), SysDictTypeRsp.class), page.getTotal());
     }
 
     private QueryWrapper<SysDictTypeEntity> getWrapper(SysDictTypePageReq request) {
@@ -67,14 +67,14 @@ public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDi
     public SysDictTypeRsp get(Long id) {
         SysDictTypeEntity entity = this.getById(id);
 
-        return ConvertUtils.sourceToTarget(entity, SysDictTypeRsp.class);
+        return BeanUtil.copyProperties(entity, SysDictTypeRsp.class);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void save(SysDictTypeReq dto) {
         ValidatorUtils.validateEntity(dto, DefaultGroup.class);
-        SysDictTypeEntity entity = ConvertUtils.sourceToTarget(dto, SysDictTypeEntity.class);
+        SysDictTypeEntity entity = BeanUtil.copyProperties(dto, SysDictTypeEntity.class);
 
         this.save(entity);
     }
@@ -83,7 +83,7 @@ public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDi
     @Transactional(rollbackFor = Exception.class)
     public void update(SysDictTypeReq dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-        SysDictTypeEntity entity = ConvertUtils.sourceToTarget(dto, SysDictTypeEntity.class);
+        SysDictTypeEntity entity = BeanUtil.copyProperties(dto, SysDictTypeEntity.class);
 
         this.updateById(entity);
     }

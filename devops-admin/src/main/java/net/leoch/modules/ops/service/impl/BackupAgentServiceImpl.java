@@ -15,7 +15,7 @@ import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
 import net.leoch.common.utils.redis.RedisKeys;
 import net.leoch.common.utils.redis.RedisUtils;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.utils.excel.ExcelUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AddGroup;
@@ -74,7 +74,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
                         .eq(StrUtil.isNotBlank(request.getAreaName()), BackupAgentEntity::getAreaName, request.getAreaName())
                         .eq(StrUtil.isNotBlank(request.getStatus()), BackupAgentEntity::getStatus, request.getStatus())
         );
-        List<BackupAgentRsp> list = ConvertUtils.sourceToTarget(result.getRecords(), BackupAgentRsp.class);
+        List<BackupAgentRsp> list = BeanUtil.copyProperties(result.getRecords(), BackupAgentRsp.class);
         fillOnlineStatus(list);
         maskTokens(list);
         return new PageData<>(list, result.getTotal());
@@ -86,7 +86,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
             return null;
         }
         BackupAgentEntity entity = this.getById(request.getId());
-        BackupAgentRsp dto = ConvertUtils.sourceToTarget(entity, BackupAgentRsp.class);
+        BackupAgentRsp dto = BeanUtil.copyProperties(entity, BackupAgentRsp.class);
         if (dto != null) {
             fillOnlineStatus(Collections.singletonList(dto));
         }
@@ -97,22 +97,22 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     @Override
     public void save(BackupAgentSaveReq request) {
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
-        validateUnique(request);
-        BackupAgentEntity entity = ConvertUtils.sourceToTarget(request, BackupAgentEntity.class);
+        validateUnique(request.getId(), request.getInstance(), request.getName());
+        BackupAgentEntity entity = BeanUtil.copyProperties(request, BackupAgentEntity.class);
         this.save(entity);
     }
 
     @Override
     public void update(BackupAgentUpdateReq request) {
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
-        validateUnique(request);
+        validateUnique(request.getId(), request.getInstance(), request.getName());
         if (request != null && request.getId() != null && StrUtil.isBlank(request.getToken())) {
             BackupAgentEntity existing = this.getById(request.getId());
             if (existing != null) {
                 request.setToken(existing.getToken());
             }
         }
-        BackupAgentEntity entity = ConvertUtils.sourceToTarget(request, BackupAgentEntity.class);
+        BackupAgentEntity entity = BeanUtil.copyProperties(request, BackupAgentEntity.class);
         this.updateById(entity);
     }
 
@@ -206,7 +206,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
         wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), BackupAgentEntity::getAreaName, request.getAreaName());
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), BackupAgentEntity::getStatus, request.getStatus());
         List<BackupAgentEntity> list = this.list(wrapper);
-        List<BackupAgentRsp> dtoList = ConvertUtils.sourceToTarget(list, BackupAgentRsp.class);
+        List<BackupAgentRsp> dtoList = BeanUtil.copyProperties(list, BackupAgentRsp.class);
         maskTokens(dtoList);
         ExcelUtils.exportExcelToTarget(response, null, "备份节点表", dtoList, BackupAgentExcel.class);
     }
@@ -288,8 +288,8 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
         return page;
     }
 
-    private void validateUnique(BackupAgentRsp dto) {
-        if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
+    private void validateUnique(Long id, String instance, String name) {
+        if (existsByInstanceOrName(instance, name, id)) {
             throw new ServiceException("地址或名称已存在");
         }
     }

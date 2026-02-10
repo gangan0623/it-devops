@@ -3,7 +3,7 @@ package net.leoch.modules.alert.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.modules.alert.mapper.AlertRecordActionMapper;
 import net.leoch.modules.alert.vo.rsp.AlertRecordActionRsp;
 import net.leoch.modules.alert.entity.AlertRecordActionEntity;
@@ -40,7 +40,7 @@ public class AlertRecordActionServiceImpl extends ServiceImpl<AlertRecordActionM
                 .eq(AlertRecordActionEntity::getRecordId, recordId)
                 .orderByDesc(AlertRecordActionEntity::getCreateDate)
         );
-        List<AlertRecordActionRsp> result = ConvertUtils.sourceToTarget(actions, AlertRecordActionRsp.class);
+        List<AlertRecordActionRsp> result = BeanUtil.copyProperties(actions, AlertRecordActionRsp.class);
         List<Long> userIds = result.stream()
             .map(AlertRecordActionRsp::getCreator)
             .filter(Objects::nonNull)

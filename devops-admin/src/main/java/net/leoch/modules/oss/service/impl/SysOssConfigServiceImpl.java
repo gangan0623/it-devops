@@ -4,7 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.base.Constant;
-import net.leoch.common.utils.convert.JsonUtils;
+import cn.hutool.json.JSONUtil;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AliyunGroup;
 import net.leoch.common.data.validator.group.MinioGroup;
@@ -37,7 +37,7 @@ public class SysOssConfigServiceImpl extends ServiceImpl<SysOssConfigMapper, Sys
             }
             return config;
         }
-        CloudStorageConfig config = JsonUtils.parseObject(entity.getConfigJson(), CloudStorageConfig.class);
+        CloudStorageConfig config = JSONUtil.toBean(entity.getConfigJson(), CloudStorageConfig.class);
         if (config.getType() == null) {
             config.setType(Constant.CloudService.MINIO.getValue());
         }
@@ -60,7 +60,7 @@ public class SysOssConfigServiceImpl extends ServiceImpl<SysOssConfigMapper, Sys
 
         SysOssConfigEntity entity = new SysOssConfigEntity();
         entity.setId(CONFIG_ID);
-        entity.setConfigJson(JsonUtils.toJsonString(config));
+        entity.setConfigJson(JSONUtil.toJsonStr(config));
 
         SysOssConfigEntity existing = this.getById(CONFIG_ID);
         if (existing == null) {

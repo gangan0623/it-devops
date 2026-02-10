@@ -13,6 +13,7 @@ import net.leoch.common.data.validator.group.AddGroup;
 import net.leoch.common.data.validator.group.DefaultGroup;
 import net.leoch.common.data.validator.group.UpdateGroup;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.Date;
 

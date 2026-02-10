@@ -3,7 +3,7 @@ package net.leoch.common.integration.schedule.service;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import net.leoch.common.utils.convert.JsonUtils;
+import cn.hutool.json.JSONUtil;
 import net.leoch.modules.ops.mapper.BackupAgentMapper;
 import net.leoch.modules.ops.mapper.DeviceBackupMapper;
 import net.leoch.modules.ops.vo.req.BackupCallbackItemReq;
@@ -134,7 +134,7 @@ public class DeviceBackupJobService {
             if (StrUtil.isNotBlank(agent.getToken())) {
                 connection.setRequestProperty("agent-token", agent.getToken());
             }
-            String body = JsonUtils.toJsonString(payload);
+            String body = JSONUtil.toJsonStr(payload);
             try (OutputStream out = connection.getOutputStream()) {
                 out.write(body.getBytes(StandardCharsets.UTF_8));
             }

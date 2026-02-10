@@ -9,12 +9,12 @@ import org.springframework.stereotype.Component;
 
 /**
  * Spring Context 工具类
- * 
+ *
  * @author Taohongqiang
  */
 @Component
 public class SpringContextUtils implements ApplicationContextAware {
-	public static ApplicationContext applicationContext; 
+	public static ApplicationContext applicationContext;
 
 	@Override
 	public void setApplicationContext(ApplicationContext applicationContext)

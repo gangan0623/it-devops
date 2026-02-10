@@ -7,11 +7,11 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.fasterxml.jackson.core.type.TypeReference;
+import cn.hutool.core.lang.TypeReference;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.data.validator.AssertUtils;
-import net.leoch.common.utils.convert.JsonUtils;
+import cn.hutool.json.JSONUtil;
 import net.leoch.modules.alert.mapper.AlertMediaMapper;
 import net.leoch.modules.alert.service.IAlertNotifyLogService;
 import net.leoch.modules.alert.mapper.AlertRecordMapper;
@@ -81,7 +81,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
             new LambdaQueryWrapper<AlertTriggerEntity>()
                 .like(StrUtil.isNotBlank(request.getName()), AlertTriggerEntity::getName, request.getName())
         );
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), AlertTriggerRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), AlertTriggerRsp.class), page.getTotal());
     }
 
     @Override
@@ -90,12 +90,12 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
             new LambdaQueryWrapper<AlertTriggerEntity>()
                 .like(request != null && StrUtil.isNotBlank(request.getName()), AlertTriggerEntity::getName, request != null ? request.getName() : null)
         );
-        return ConvertUtils.sourceToTarget(entityList, AlertTriggerRsp.class);
+        return BeanUtil.copyToList(entityList, AlertTriggerRsp.class);
     }
 
     @Override
     public AlertTriggerRsp get(Long id) {
-        return ConvertUtils.sourceToTarget(this.getById(id), AlertTriggerRsp.class);
+        return BeanUtil.copyProperties(this.getById(id), AlertTriggerRsp.class);
     }
 
     @Override
@@ -126,7 +126,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
     @Override
     public void save(AlertTriggerReq dto) {
         normalizeReceiverIds(dto);
-        AlertTriggerEntity entity = ConvertUtils.sourceToTarget(dto, AlertTriggerEntity.class);
+        AlertTriggerEntity entity = BeanUtil.copyProperties(dto, AlertTriggerEntity.class);
         this.save(entity);
         BeanUtils.copyProperties(entity, dto);
     }
@@ -134,7 +134,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
     @Override
     public void update(AlertTriggerReq dto) {
         normalizeReceiverIds(dto);
-        this.updateById(ConvertUtils.sourceToTarget(dto, AlertTriggerEntity.class));
+        this.updateById(BeanUtil.copyProperties(dto, AlertTriggerEntity.class));
     }
 
     @Override
@@ -351,7 +351,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
             return new HashMap<>();
         }
         try {
-            return JsonUtils.parseObject(matchLabels, new TypeReference<Map<String, Object>>() {});
+            return JSONUtil.toBean(matchLabels, new TypeReference<Map<String, Object>>() {});
         } catch (Exception ignore) {
             return new HashMap<>();
         }

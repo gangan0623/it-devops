@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.utils.context.HttpContextUtils;
-import net.leoch.common.utils.IpUtils;
-import net.leoch.common.utils.convert.JsonUtils;
+import cn.hutool.extra.servlet.JakartaServletUtil;
+import cn.hutool.json.JSONUtil;
 import net.leoch.modules.log.entity.SysLogOperationEntity;
 import net.leoch.common.enums.OperationStatusEnum;
 import net.leoch.modules.log.service.ISysLogOperationService;
@@ -86,7 +86,7 @@ public class LogOperationAspect {
 
         //请求相关信息
         HttpServletRequest request = HttpContextUtils.getHttpServletRequest();
-        log.setIp(IpUtils.getIpAddr(request));
+        log.setIp(JakartaServletUtil.getClientIP(request));
         log.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
         log.setRequestUri(request.getRequestURI());
         log.setRequestMethod(request.getMethod());
@@ -94,7 +94,7 @@ public class LogOperationAspect {
         //请求参数
         Object[] args = joinPoint.getArgs();
         try {
-            String params = JsonUtils.toJsonString(args[0]);
+            String params = JSONUtil.toJsonStr(args[0]);
             log.setRequestParams(params);
         } catch (Exception e) {
             LogOperationAspect.log.warn("[操作日志] 序列化请求参数失败", e);

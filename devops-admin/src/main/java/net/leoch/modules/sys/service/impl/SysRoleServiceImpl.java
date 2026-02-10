@@ -7,7 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.convert.ConvertUtils;
+import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AddGroup;
@@ -53,14 +53,14 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
                 getWrapper(request)
         );
 
-        return new PageData<>(ConvertUtils.sourceToTarget(page.getRecords(), SysRoleRsp.class), page.getTotal());
+        return new PageData<>(BeanUtil.copyProperties(page.getRecords(), SysRoleRsp.class), page.getTotal());
     }
 
     @Override
     public List<SysRoleRsp> list(SysRolePageReq request) {
         List<SysRoleEntity> entityList = this.list(getWrapper(request));
 
-        return ConvertUtils.sourceToTarget(entityList, SysRoleRsp.class);
+        return BeanUtil.copyToList(entityList, SysRoleRsp.class);
     }
 
     private QueryWrapper<SysRoleEntity> getWrapper(SysRolePageReq request) {
@@ -83,7 +83,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
     public SysRoleRsp get(Long id) {
         SysRoleEntity entity = this.getById(id);
 
-        return ConvertUtils.sourceToTarget(entity, SysRoleRsp.class);
+        return BeanUtil.copyProperties(entity, SysRoleRsp.class);
     }
 
     @Override
@@ -100,7 +100,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
     @Transactional(rollbackFor = Exception.class)
     public void save(SysRoleReq dto) {
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-        SysRoleEntity entity = ConvertUtils.sourceToTarget(dto, SysRoleEntity.class);
+        SysRoleEntity entity = BeanUtil.copyProperties(dto, SysRoleEntity.class);
 
         //保存角色
         this.save(entity);
@@ -116,7 +116,7 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
     @Transactional(rollbackFor = Exception.class)
     public void update(SysRoleReq dto) {
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-        SysRoleEntity entity = ConvertUtils.sourceToTarget(dto, SysRoleEntity.class);
+        SysRoleEntity entity = BeanUtil.copyProperties(dto, SysRoleEntity.class);
 
         //更新角色
         this.updateById(entity);
