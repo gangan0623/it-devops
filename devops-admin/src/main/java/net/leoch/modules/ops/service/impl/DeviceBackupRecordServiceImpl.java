@@ -246,7 +246,8 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
         }
         try {
             return Integer.parseInt(String.valueOf(value));
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.warn("[设备备份记录] 操作失败", e);
             return null;
         }
     }

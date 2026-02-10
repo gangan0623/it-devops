@@ -707,7 +707,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         }
         try {
             return Date.from(Instant.parse(value));
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.warn("[告警记录] 操作失败", e);
             return null;
         }
     }
@@ -715,7 +716,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
     private int parseInt(String value, int defaultValue) {
         try {
             return Integer.parseInt(value);
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.warn("[告警记录] 操作失败", e);
             return defaultValue;
         }
     }
@@ -916,7 +918,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         }
         try {
             return Date.from(Instant.parse(value));
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.warn("[告警记录] 操作失败", e);
             return null;
         }
     }

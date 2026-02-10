@@ -348,7 +348,8 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
                 current = ((Map<?, ?>) current).get(key);
             }
             return current == null ? null : String.valueOf(current);
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.warn("[监控组件] 操作失败", e);
             return null;
         }
     }
@@ -416,7 +417,8 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
     private int parseInt(String value) {
         try {
             return Integer.parseInt(value.replaceAll("\\D", ""));
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.warn("[监控组件] 操作失败", e);
             return 0;
         }
     }
@@ -429,7 +431,8 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
             connection.setConnectTimeout(3000);
             connection.setReadTimeout(3000);
             return connection.getResponseCode() == 200;
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.warn("[监控组件] 操作失败", e);
             return false;
         } finally {
             if (connection != null) {
@@ -456,7 +459,8 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
                 byte[] bytes = in.readAllBytes();
                 return new String(bytes, StandardCharsets.UTF_8);
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.warn("[监控组件] 操作失败", e);
             return null;
         } finally {
             if (connection != null) {

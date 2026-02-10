@@ -351,7 +351,8 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
         }
         try {
             return JSONUtil.toBean(matchLabels, new TypeReference<Map<String, Object>>() {});
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.warn("[告警触发] 操作失败", e);
             return new HashMap<>();
         }
     }
@@ -489,7 +490,8 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
         }
         try {
             return Date.from(Instant.parse(value));
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.warn("[告警触发] 操作失败", e);
             return null;
         }
     }
@@ -518,7 +520,8 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
         }
         try {
             return Long.parseLong(String.valueOf(value));
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.warn("[告警触发] 操作失败", e);
             return null;
         }
     }
