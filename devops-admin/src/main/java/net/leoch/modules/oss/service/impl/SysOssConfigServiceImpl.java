@@ -15,6 +15,7 @@ import net.leoch.modules.oss.mapper.SysOssConfigMapper;
 import net.leoch.modules.oss.entity.SysOssConfigEntity;
 import net.leoch.modules.oss.service.ISysOssConfigService;
 import org.springframework.stereotype.Service;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * @author Taohongqiang
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class SysOssConfigServiceImpl extends ServiceImpl<SysOssConfigMapper, SysOssConfigEntity> implements ISysOssConfigService {
