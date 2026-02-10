@@ -13,6 +13,7 @@ import net.leoch.common.data.validator.group.QiniuGroup;
 import org.hibernate.validator.constraints.Range;
 import org.hibernate.validator.constraints.URL;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**

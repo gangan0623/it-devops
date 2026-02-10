@@ -1,6 +1,6 @@
 package net.leoch.modules.ops.service;
 
-import net.leoch.common.support.utils.Result;
+import net.leoch.common.data.result.Result;
 import net.leoch.modules.ops.vo.req.BackupCallbackReq;
 
 /**

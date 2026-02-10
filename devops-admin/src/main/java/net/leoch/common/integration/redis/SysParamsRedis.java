@@ -3,8 +3,8 @@
 package net.leoch.common.integration.redis;
 
 import lombok.RequiredArgsConstructor;
-import net.leoch.common.integration.redis.RedisKeys;
-import net.leoch.common.integration.redis.RedisUtils;
+import net.leoch.common.utils.redis.RedisKeys;
+import net.leoch.common.utils.redis.RedisUtils;
 import org.springframework.stereotype.Component;
 
 /**

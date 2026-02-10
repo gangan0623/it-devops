@@ -5,25 +5,25 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.support.exception.ErrorCode;
-import net.leoch.common.support.exception.ServiceException;
+import net.leoch.common.exception.ErrorCode;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.support.utils.ConvertUtils;
+import net.leoch.common.utils.convert.ConvertUtils;
 import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AddGroup;
 import net.leoch.common.data.validator.group.DefaultGroup;
 import net.leoch.common.data.validator.group.UpdateGroup;
-import net.leoch.common.support.utils.PasswordUtils;
-import net.leoch.common.security.user.SecurityUser;
-import net.leoch.common.security.user.UserDetail;
+import net.leoch.common.utils.security.PasswordUtils;
+import net.leoch.common.integration.security.SecurityUser;
+import net.leoch.common.integration.security.UserDetail;
 import net.leoch.modules.sys.mapper.SysUserMapper;
 import net.leoch.modules.sys.vo.req.PasswordReq;
 import net.leoch.modules.sys.vo.req.SysUserPageReq;
 import net.leoch.modules.sys.vo.req.SysUserReq;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.entity.SysUserEntity;
-import net.leoch.common.core.enums.SuperAdminEnum;
+import net.leoch.common.enums.SuperAdminEnum;
 import net.leoch.modules.sys.service.ISysDeptService;
 import net.leoch.modules.sys.service.ISysRoleUserService;
 import net.leoch.modules.sys.service.ISysUserService;
@@ -188,7 +188,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
         UserDetail user = SecurityUser.getUser();
 
         //原密码不正确
-        if (!PasswordUtils.matches(dto.getPassword(), user.getPassword())) {
+        if (PasswordUtils.matches(dto.getPassword(), user.getPassword())) {
             log.warn("[用户密码] 原密码错误, userId={}", user.getId());
             throw new ServiceException(ErrorCode.PASSWORD_ERROR);
         }

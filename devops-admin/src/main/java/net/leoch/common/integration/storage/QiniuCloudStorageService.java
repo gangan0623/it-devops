@@ -8,8 +8,8 @@ import com.qiniu.storage.Region;
 import com.qiniu.storage.UploadManager;
 import com.qiniu.util.Auth;
 import com.qiniu.util.IOUtils;
-import net.leoch.common.support.exception.ErrorCode;
-import net.leoch.common.support.exception.ServiceException;
+import net.leoch.common.exception.ErrorCode;
+import net.leoch.common.exception.ServiceException;
 
 import java.io.IOException;
 import java.io.InputStream;

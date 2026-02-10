@@ -2,11 +2,11 @@ package net.leoch.modules.alert.service;
 
 import cn.hutool.core.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.support.utils.JsonUtils;
+import net.leoch.common.utils.convert.JsonUtils;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
 import net.leoch.modules.ops.mapper.MonitorComponentMapper;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
-import net.leoch.common.security.user.SecurityUser;
+import net.leoch.common.integration.security.SecurityUser;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 

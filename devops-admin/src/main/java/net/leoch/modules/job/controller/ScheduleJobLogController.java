@@ -5,7 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.support.utils.Result;
+import net.leoch.common.data.result.Result;
 import net.leoch.modules.job.vo.rsp.ScheduleJobLogRsp;
 import net.leoch.modules.job.vo.req.ScheduleJobLogPageReq;
 import net.leoch.modules.job.service.IScheduleJobLogService;

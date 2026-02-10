@@ -6,31 +6,31 @@ import cn.hutool.core.util.StrUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.support.exception.ErrorCode;
-import net.leoch.common.support.exception.ServiceException;
-import net.leoch.common.support.utils.IpUtils;
-import net.leoch.common.support.utils.Result;
+import net.leoch.common.exception.ErrorCode;
+import net.leoch.common.exception.ServiceException;
+import net.leoch.common.utils.IpUtils;
+import net.leoch.common.data.result.Result;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.modules.log.entity.SysLogLoginEntity;
-import net.leoch.common.core.enums.LoginOperationEnum;
-import net.leoch.common.core.enums.LoginStatusEnum;
+import net.leoch.common.enums.LoginOperationEnum;
+import net.leoch.common.enums.LoginStatusEnum;
 import net.leoch.modules.log.service.ISysLogLoginService;
 import net.leoch.modules.security.mapper.SysUserTokenMapper;
 import net.leoch.modules.security.vo.req.LoginReq;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
-import net.leoch.common.support.utils.PasswordUtils;
+import net.leoch.common.utils.security.PasswordUtils;
 import net.leoch.modules.security.service.ICaptchaService;
 import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.security.service.ISysUserTokenService;
-import net.leoch.common.security.user.SecurityUser;
-import net.leoch.common.security.user.UserDetail;
+import net.leoch.common.integration.security.SecurityUser;
+import net.leoch.common.integration.security.UserDetail;
 import net.leoch.modules.sys.mapper.SysMenuMapper;
 import net.leoch.modules.sys.mapper.SysRoleDataScopeMapper;
 import net.leoch.modules.sys.mapper.SysUserMapper;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.entity.SysUserEntity;
-import net.leoch.common.core.enums.SuperAdminEnum;
-import net.leoch.common.core.enums.UserStatusEnum;
+import net.leoch.common.enums.SuperAdminEnum;
+import net.leoch.common.enums.UserStatusEnum;
 import net.leoch.modules.sys.service.ISysUserService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -118,7 +118,7 @@ public class SecurityServiceImpl implements ISecurityService {
             throw new ServiceException(ErrorCode.ACCOUNT_PASSWORD_ERROR);
         }
 
-        if (!PasswordUtils.matches(login.getPassword(), user.getPassword())) {
+        if (PasswordUtils.matches(login.getPassword(), user.getPassword())) {
             loginLog.setStatus(LoginStatusEnum.FAIL.value());
             loginLog.setCreator(user.getId());
             loginLog.setCreatorName(user.getUsername());

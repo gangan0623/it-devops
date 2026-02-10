@@ -3,8 +3,8 @@
 package net.leoch.common.integration.storage;
 
 import com.aliyun.oss.OSSClient;
-import net.leoch.common.support.exception.ErrorCode;
-import net.leoch.common.support.exception.ServiceException;
+import net.leoch.common.exception.ErrorCode;
+import net.leoch.common.exception.ServiceException;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

@@ -2,7 +2,7 @@ package net.leoch.modules.alert.service;
 
 import cn.hutool.core.util.StrUtil;
 import jakarta.mail.internet.MimeMessage;
-import net.leoch.common.support.exception.ServiceException;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.modules.alert.entity.AlertMediaEntity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

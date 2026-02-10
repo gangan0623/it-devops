@@ -1,9 +1,9 @@
 package net.leoch.modules.alert.controller;
 
-import static net.leoch.common.core.base.Constant.LIMIT;
-import static net.leoch.common.core.base.Constant.ORDER;
-import static net.leoch.common.core.base.Constant.ORDER_FIELD;
-import static net.leoch.common.core.base.Constant.PAGE;
+import static net.leoch.common.base.Constant.LIMIT;
+import static net.leoch.common.base.Constant.ORDER;
+import static net.leoch.common.base.Constant.ORDER_FIELD;
+import static net.leoch.common.base.Constant.PAGE;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,9 +12,9 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import net.leoch.common.core.annotation.LogOperation;
+import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.support.utils.Result;
+import net.leoch.common.data.result.Result;
 import net.leoch.modules.alert.vo.rsp.AlertMediaRsp;
 import net.leoch.modules.alert.vo.req.AlertMediaPageReq;
 import net.leoch.modules.alert.vo.req.AlertMediaReq;

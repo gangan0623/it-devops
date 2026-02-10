@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import net.leoch.common.core.base.BaseEntity;
+import net.leoch.common.base.BaseEntity;
 
 import java.util.Date;
 

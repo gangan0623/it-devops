@@ -3,7 +3,7 @@ package net.leoch.modules.ops.service;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.fasterxml.jackson.core.type.TypeReference;
-import net.leoch.common.support.utils.JsonUtils;
+import net.leoch.common.utils.convert.JsonUtils;
 import net.leoch.modules.ops.config.ZabbixConfig;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

@@ -3,7 +3,7 @@ package net.leoch.modules.ops.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
-import net.leoch.common.support.utils.Result;
+import net.leoch.common.data.result.Result;
 import net.leoch.modules.ops.vo.rsp.DashboardSummaryRsp;
 import net.leoch.modules.ops.service.IDashboardService;
 import org.springframework.web.bind.annotation.GetMapping;

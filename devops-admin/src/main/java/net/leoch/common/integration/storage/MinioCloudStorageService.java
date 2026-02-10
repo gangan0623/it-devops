@@ -5,8 +5,8 @@ package net.leoch.common.integration.storage;
 import cn.hutool.core.util.StrUtil;
 import io.minio.MinioClient;
 import io.minio.PutObjectArgs;
-import net.leoch.common.support.exception.ErrorCode;
-import net.leoch.common.support.exception.ServiceException;
+import net.leoch.common.exception.ErrorCode;
+import net.leoch.common.exception.ServiceException;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
