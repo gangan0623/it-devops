@@ -82,6 +82,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
 
     @Override
     public void save(BusinessSystemSaveReq dto) {
+        log.info("[BusinessSystem] 开始保存, dto={}", dto);
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         validateUnique(dto.getInstance(), dto.getName(), dto.getId());
         BusinessSystemEntity entity = BeanUtil.copyProperties(dto, BusinessSystemEntity.class);
@@ -91,6 +92,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
 
     @Override
     public void update(BusinessSystemUpdateReq dto) {
+        log.info("[BusinessSystem] 开始更新, dto={}", dto);
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         validateUnique(dto.getInstance(), dto.getName(), dto.getId());
         BusinessSystemEntity entity = BeanUtil.copyProperties(dto, BusinessSystemEntity.class);

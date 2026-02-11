@@ -124,6 +124,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
 
     @Override
     public void save(AlertTriggerReq dto) {
+        log.info("[AlertTrigger] 开始保存, dto={}", dto);
         normalizeReceiverIds(dto);
         AlertTriggerEntity entity = BeanUtil.copyProperties(dto, AlertTriggerEntity.class);
         this.save(entity);
@@ -132,12 +133,14 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
 
     @Override
     public void update(AlertTriggerReq dto) {
+        log.info("[AlertTrigger] 开始更新, dto={}", dto);
         normalizeReceiverIds(dto);
         this.updateById(BeanUtil.copyProperties(dto, AlertTriggerEntity.class));
     }
 
     @Override
     public void delete(Long[] ids) {
+        log.info("[AlertTrigger] 开始删除, ids={}", Arrays.toString(ids));
         AssertUtils.isArrayEmpty(ids, "id");
         this.removeByIds(Arrays.asList(ids));
     }
@@ -194,27 +197,41 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
 
     @Override
     public void notifyFromWebhook(Map<String, Object> payload, String rawJson, String severity) {
+        log.info("[告警触发] 开始处理Webhook告警, severity={}, payloadSize={}", severity, rawJson != null ? rawJson.length() : 0);
         if (payload == null) {
+            log.warn("[告警触发] payload为空");
             return;
         }
         List<AlertTriggerEntity> triggers = this.list(new LambdaQueryWrapper<AlertTriggerEntity>().eq(AlertTriggerEntity::getStatus, 1));
         if (CollUtil.isEmpty(triggers)) {
+            log.warn("[告警触发] 无可用的触发器");
             return;
         }
+        log.info("[告警触发] 找到{}个可用触发器", triggers.size());
         List<Map<String, Object>> alerts = getAlerts(payload);
         if (CollUtil.isEmpty(alerts)) {
+            log.warn("[告警触发] payload中无告警数据");
             return;
         }
+        log.info("[告警触发] 解析到{}个告警", alerts.size());
+        int matchCount = 0;
+        int sendCount = 0;
         for (Map<String, Object> alert : alerts) {
             String severityForAlert = resolveSeverity(payload, alert, severity);
             Long recordId = findRecordId(payload, alert);
+            String alertName = String.valueOf(alert.getOrDefault("alertname", "unknown"));
             for (AlertTriggerEntity trigger : triggers) {
                 if (!matches(trigger, payload, alert, severityForAlert)) {
                     continue;
                 }
+                matchCount++;
+                log.info("[告警触发] 触发器匹配, triggerId={}, triggerName={}, alertName={}, severity={}",
+                         trigger.getId(), trigger.getName(), alertName, severityForAlert);
                 sendAlert(trigger, payload, alert, severityForAlert, recordId);
+                sendCount++;
             }
         }
+        log.info("[告警触发] 处理完成, 告警数={}, 匹配数={}, 发送数={}", alerts.size(), matchCount, sendCount);
     }
 
     @Override
@@ -241,15 +258,20 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
     }
 
     private void sendAlert(AlertTriggerEntity trigger, Map<String, Object> payload, Map<String, Object> alert, String severity, Long recordId) {
+        log.debug("[告警触发] 开始发送告警, triggerId={}, severity={}, recordId={}", trigger.getId(), severity, recordId);
         AlertTemplateEntity template = trigger.getTemplateId() == null ? null : alertTemplateMapper.selectById(trigger.getTemplateId());
         AlertMediaEntity media = trigger.getMediaId() == null ? null : alertMediaMapper.selectById(trigger.getMediaId());
         if (template == null || media == null) {
+            log.warn("[告警触发] 模板或媒介不存在, triggerId={}, templateId={}, mediaId={}",
+                     trigger.getId(), trigger.getTemplateId(), trigger.getMediaId());
             return;
         }
         if (template.getStatus() != null && template.getStatus() == 0) {
+            log.debug("[告警触发] 模板已禁用, templateId={}", template.getId());
             return;
         }
         if (media.getStatus() != null && media.getStatus() == 0) {
+            log.debug("[告警触发] 媒介已禁用, mediaId={}", media.getId());
             return;
         }
         Map<String, Object> context = buildContext(payload, alert, severity, recordId);
@@ -259,26 +281,36 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
     private void sendWithTemplate(AlertTemplateEntity template, AlertMediaEntity media, String receiverUserIds, Map<String, Object> context) {
         List<String> receivers = getReceiverEmails(receiverUserIds);
         if (CollUtil.isEmpty(receivers)) {
+            log.warn("[告警触发] 无接收人邮箱, receiverUserIds={}", receiverUserIds);
             return;
         }
+        log.info("[告警触发] 准备发送邮件, template={}, media={}, receivers={}",
+                 template.getName(), media.getName(), receivers.size());
         String subject = AlertTemplateRenderer.render(template.getEmailSubject(), context);
         String html = AlertTemplateRenderer.render(template.getEmailHtml(), context);
-        AlertNotifyLogEntity log = new AlertNotifyLogEntity();
-        log.setRecordId(context == null ? null : toLong(context.get("recordId")));
-        log.setAlertName(context == null ? null : toStr(context.get("alertname")));
-        log.setInstance(context == null ? null : toStr(context.get("instance")));
-        log.setSeverity(context == null ? null : toStr(context.get("severity")));
-        log.setMediaName(media.getName());
-        log.setReceivers(String.join(",", receivers));
-        log.setSendTime(new Date());
+        AlertNotifyLogEntity notifyLog = new AlertNotifyLogEntity();
+        notifyLog.setRecordId(context == null ? null : toLong(context.get("recordId")));
+        notifyLog.setAlertName(context == null ? null : toStr(context.get("alertname")));
+        notifyLog.setInstance(context == null ? null : toStr(context.get("instance")));
+        notifyLog.setSeverity(context == null ? null : toStr(context.get("severity")));
+        notifyLog.setMediaName(media.getName());
+        notifyLog.setReceivers(String.join(",", receivers));
+        notifyLog.setSendTime(new Date());
+        long startTime = System.currentTimeMillis();
         try {
             alertMailService.send(media, receivers, subject, null, html);
-            log.setSendStatus(1);
+            notifyLog.setSendStatus(1);
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            log.info("[告警触发] 邮件发送成功, alertName={}, instance={}, receivers={}, 耗时={}ms",
+                     notifyLog.getAlertName(), notifyLog.getInstance(), receivers.size(), elapsedTime);
         } catch (Exception e) {
-            log.setSendStatus(0);
-            log.setErrorMessage(StrUtil.sub(e.getMessage(), 0, 500));
+            notifyLog.setSendStatus(0);
+            notifyLog.setErrorMessage(StrUtil.sub(e.getMessage(), 0, 500));
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            log.error("[告警触发] 邮件发送失败, alertName={}, instance={}, 耗时={}ms",
+                      notifyLog.getAlertName(), notifyLog.getInstance(), elapsedTime, e);
         } finally {
-            alertNotifyLogService.save(log);
+            alertNotifyLogService.save(notifyLog);
         }
     }
 

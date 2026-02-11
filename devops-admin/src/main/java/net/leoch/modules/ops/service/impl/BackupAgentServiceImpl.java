@@ -96,6 +96,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
 
     @Override
     public void save(BackupAgentSaveReq request) {
+        log.info("[BackupAgent] 开始保存, request={}", request);
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
         validateUnique(request.getId(), request.getInstance(), request.getName());
         BackupAgentEntity entity = BeanUtil.copyProperties(request, BackupAgentEntity.class);
@@ -104,6 +105,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
 
     @Override
     public void update(BackupAgentUpdateReq request) {
+        log.info("[BackupAgent] 开始更新, request={}", request);
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
         validateUnique(request.getId(), request.getInstance(), request.getName());
         if (request != null && request.getId() != null && StrUtil.isBlank(request.getToken())) {

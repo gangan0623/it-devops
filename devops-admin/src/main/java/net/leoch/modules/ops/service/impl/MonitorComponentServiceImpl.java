@@ -77,6 +77,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
 
     @Override
     public void save(MonitorComponentSaveReq request) {
+        log.info("[MonitorComponent] 开始保存, request={}", request);
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
         validateUnique(request.getId(), request.getIp(), request.getPort(), request.getName());
         if (request != null && request.getType() != null) {
@@ -88,6 +89,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
 
     @Override
     public void update(MonitorComponentUpdateReq request) {
+        log.info("[MonitorComponent] 开始更新, request={}", request);
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
         validateUnique(request.getId(), request.getIp(), request.getPort(), request.getName());
         if (request != null && request.getType() != null) {

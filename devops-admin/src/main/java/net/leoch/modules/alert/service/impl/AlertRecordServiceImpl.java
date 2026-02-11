@@ -136,6 +136,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
 
     @Override
     public void delete(Long[] ids) {
+        log.info("[AlertRecord] 开始删除, ids={}", Arrays.toString(ids));
         AssertUtils.isArrayEmpty(ids, "id");
         this.removeByIds(Arrays.asList(ids));
     }

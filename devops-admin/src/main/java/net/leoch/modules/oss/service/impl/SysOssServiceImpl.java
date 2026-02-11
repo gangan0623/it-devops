@@ -56,6 +56,7 @@ public class SysOssServiceImpl extends ServiceImpl<SysOssMapper, SysOssEntity> i
 
     @Override
     public void delete(Long[] ids) {
+        log.info("[SysOss] 开始删除, ids={}", Arrays.toString(ids));
         AssertUtils.isArrayEmpty(ids, "id");
         this.removeByIds(Arrays.asList(ids));
     }

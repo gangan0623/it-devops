@@ -99,6 +99,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
 
     @Override
     public void save(DeviceBackupSaveReq request) {
+        log.info("[DeviceBackup] 开始保存, request={}", request);
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
         validateUnique(request.getId(), request.getInstance(), request.getName());
         DeviceBackupEntity entity = BeanUtil.copyProperties(request, DeviceBackupEntity.class);
@@ -107,6 +108,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
 
     @Override
     public void update(DeviceBackupUpdateReq request) {
+        log.info("[DeviceBackup] 开始更新, request={}", request);
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
         validateUnique(request.getId(), request.getInstance(), request.getName());
         if (request != null && request.getId() != null && StrUtil.isBlank(request.getPassword())) {

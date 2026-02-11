@@ -64,6 +64,7 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
 
     @Override
     public void save(AlertTemplateReq dto) {
+        log.info("[AlertTemplate] 开始保存, dto={}", dto);
         AlertTemplateEntity entity = BeanUtil.copyProperties(dto, AlertTemplateEntity.class);
         this.save(entity);
         BeanUtil.copyProperties(entity, dto);
@@ -71,11 +72,13 @@ public class AlertTemplateServiceImpl extends ServiceImpl<AlertTemplateMapper, A
 
     @Override
     public void update(AlertTemplateReq dto) {
+        log.info("[AlertTemplate] 开始更新, dto={}", dto);
         this.updateById(BeanUtil.copyProperties(dto, AlertTemplateEntity.class));
     }
 
     @Override
     public void delete(Long[] ids) {
+        log.info("[AlertTemplate] 开始删除, ids={}", Arrays.toString(ids));
         AssertUtils.isArrayEmpty(ids, "id");
         this.removeByIds(Arrays.asList(ids));
     }

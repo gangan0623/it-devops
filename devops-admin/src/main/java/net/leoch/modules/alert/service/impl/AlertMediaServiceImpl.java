@@ -64,6 +64,7 @@ public class AlertMediaServiceImpl extends ServiceImpl<AlertMediaMapper, AlertMe
 
     @Override
     public void save(AlertMediaReq dto) {
+        log.info("[AlertMedia] 开始保存, dto={}", dto);
         AlertMediaEntity entity = BeanUtil.copyProperties(dto, AlertMediaEntity.class);
         this.save(entity);
         BeanUtil.copyProperties(entity, dto);
@@ -71,11 +72,13 @@ public class AlertMediaServiceImpl extends ServiceImpl<AlertMediaMapper, AlertMe
 
     @Override
     public void update(AlertMediaReq dto) {
+        log.info("[AlertMedia] 开始更新, dto={}", dto);
         this.updateById(BeanUtil.copyProperties(dto, AlertMediaEntity.class));
     }
 
     @Override
     public void delete(Long[] ids) {
+        log.info("[AlertMedia] 开始删除, ids={}", Arrays.toString(ids));
         AssertUtils.isArrayEmpty(ids, "id");
         this.removeByIds(Arrays.asList(ids));
     }

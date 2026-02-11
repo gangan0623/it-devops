@@ -82,6 +82,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
 
     @Override
     public void save(LinuxHostSaveReq dto) {
+        log.info("[LinuxHost] 开始保存, dto={}", dto);
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         validateUnique(dto.getInstance(), dto.getName(), dto.getId());
         LinuxHostEntity entity = BeanUtil.copyProperties(dto, LinuxHostEntity.class);
@@ -91,6 +92,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
 
     @Override
     public void update(LinuxHostUpdateReq dto) {
+        log.info("[LinuxHost] 开始更新, dto={}", dto);
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         validateUnique(dto.getInstance(), dto.getName(), dto.getId());
         LinuxHostEntity entity = BeanUtil.copyProperties(dto, LinuxHostEntity.class);

@@ -82,6 +82,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
 
     @Override
     public void save(WindowHostSaveReq dto) {
+        log.info("[WindowHost] 开始保存, dto={}", dto);
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
         validateUnique(dto.getInstance(), dto.getName(), dto.getId());
         WindowHostEntity entity = BeanUtil.copyProperties(dto, WindowHostEntity.class);
@@ -91,6 +92,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
 
     @Override
     public void update(WindowHostUpdateReq dto) {
+        log.info("[WindowHost] 开始更新, dto={}", dto);
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
         validateUnique(dto.getInstance(), dto.getName(), dto.getId());
         WindowHostEntity entity = BeanUtil.copyProperties(dto, WindowHostEntity.class);
