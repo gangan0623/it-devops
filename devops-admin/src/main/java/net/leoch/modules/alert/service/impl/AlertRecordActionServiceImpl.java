@@ -40,7 +40,7 @@ public class AlertRecordActionServiceImpl extends ServiceImpl<AlertRecordActionM
                 .eq(AlertRecordActionEntity::getRecordId, recordId)
                 .orderByDesc(AlertRecordActionEntity::getCreateDate)
         );
-        List<AlertRecordActionRsp> result = BeanUtil.copyProperties(actions, AlertRecordActionRsp.class);
+        List<AlertRecordActionRsp> result = BeanUtil.copyToList(actions, AlertRecordActionRsp.class);
         List<Long> userIds = result.stream()
             .map(AlertRecordActionRsp::getCreator)
             .filter(Objects::nonNull)

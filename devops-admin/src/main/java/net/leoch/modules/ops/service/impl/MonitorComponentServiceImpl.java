@@ -45,7 +45,9 @@ import java.util.regex.Pattern;
 @Service
 public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMapper, MonitorComponentEntity> implements IMonitorComponentService {
 
-    /** 允许排序的数据库列名白名单 */
+    /**
+     * 允许排序的数据库列名白名单
+     */
     private static final Set<String> ALLOWED_ORDER_FIELDS = Set.of(
             "id", "name", "type", "ip", "port", "online_status",
             "version", "last_check_time", "create_date", "update_date");
@@ -69,10 +71,14 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
 
     @Override
     public MonitorComponentRsp get(MonitorComponentIdReq request) {
+        log.info("[监控组件] 查询详情开始, id={}", request != null ? request.getId() : null);
         if (request == null || request.getId() == null) {
+            log.warn("[监控组件] 查询参数为空");
             return null;
         }
-        return BeanUtil.copyProperties(this.getById(request.getId()), MonitorComponentRsp.class);
+        MonitorComponentRsp result = BeanUtil.copyProperties(this.getById(request.getId()), MonitorComponentRsp.class);
+        log.info("[监控组件] 查询详情完成, id={}, found={}", request.getId(), result != null);
+        return result;
     }
 
     @Override
@@ -80,7 +86,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         log.info("[MonitorComponent] 开始保存, request={}", request);
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
         validateUnique(request.getId(), request.getIp(), request.getPort(), request.getName());
-        if (request != null && request.getType() != null) {
+        if (request.getType() != null) {
             request.setType(normalizeType(request.getType()));
         }
         MonitorComponentEntity entity = BeanUtil.copyProperties(request, MonitorComponentEntity.class);
@@ -92,7 +98,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         log.info("[MonitorComponent] 开始更新, request={}", request);
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
         validateUnique(request.getId(), request.getIp(), request.getPort(), request.getName());
-        if (request != null && request.getType() != null) {
+        if (request.getType() != null) {
             request.setType(normalizeType(request.getType()));
         }
         MonitorComponentEntity entity = BeanUtil.copyProperties(request, MonitorComponentEntity.class);
@@ -109,37 +115,56 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
 
     @Override
     public boolean check(MonitorComponentCheckReq request) {
+        log.info("[监控组件] 唯一性检查开始, ip={}, port={}, name={}",
+                request != null ? request.getIp() : null,
+                request != null ? request.getPort() : null,
+                request != null ? request.getName() : null);
         if (request == null) {
+            log.warn("[监控组件] 检查参数为空");
             return false;
         }
-        return existsByIpPortOrName(request.getIp(), request.getPort(), request.getName(), request.getId());
+        boolean exists = existsByIpPortOrName(request.getIp(), request.getPort(), request.getName(), request.getId());
+        log.info("[监控组件] 唯一性检查完成, exists={}", exists);
+        return exists;
     }
 
     @Override
     public boolean probe(MonitorComponentProbeReq request) {
+        log.info("[监控组件] 探测开始, id={}", request != null ? request.getId() : null);
         if (request == null || request.getId() == null) {
+            log.warn("[监控组件] 探测参数为空");
             return false;
         }
         MonitorComponentEntity entity = this.getById(request.getId());
         if (entity == null) {
+            log.warn("[监控组件] 探测失败，组件不存在, id={}", request.getId());
             return false;
         }
         boolean ok = probeByType(entity);
+        log.info("[监控组件] 探测完成, id={}, name={}, type={}, result={}",
+                entity.getId(), entity.getName(), entity.getType(), ok);
         updateProbeResult(entity.getId(), ok);
         return ok;
     }
 
     @Override
     public MonitorComponentRsp versionCheck(MonitorComponentVersionReq request) {
+        log.info("[监控组件] 版本检查开始, id={}", request != null ? request.getId() : null);
         if (request == null || request.getId() == null) {
+            log.warn("[监控组件] 版本检查参数为空");
             return null;
         }
         MonitorComponentEntity entity = this.getById(request.getId());
         if (entity == null) {
+            log.warn("[监控组件] 版本检查失败，组件不存在, id={}", request.getId());
             return null;
         }
+        log.info("[监控组件] 获取当前版本, id={}, name={}, type={}",
+                entity.getId(), entity.getName(), entity.getType());
         String current = stripVersionPrefix(fetchVersion(entity));
         String latest = fetchLatestVersion(normalizeType(entity.getType()));
+        log.info("[监控组件] 版本信息获取完成, id={}, currentVersion={}, latestVersion={}",
+                entity.getId(), current, latest);
         Integer updateAvailable = null;
         if (StrUtil.isNotBlank(current) && StrUtil.isNotBlank(latest)) {
             updateAvailable = compareVersions(current, latest) < 0 ? 1 : 0;
@@ -155,6 +180,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         update.setUpdateDate(new Date());
         this.update(update, wrapper);
         MonitorComponentEntity refreshed = this.getById(entity.getId());
+        log.info("[监控组件] 版本检查完成, id={}, updateAvailable={}", entity.getId(), updateAvailable);
         return BeanUtil.copyProperties(refreshed, MonitorComponentRsp.class);
     }
 
@@ -206,8 +232,10 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         if (StrUtil.isNotBlank(request.getOrderField()) && StrUtil.isNotBlank(request.getOrder())) {
             String orderField = request.getOrderField();
             if (!ALLOWED_ORDER_FIELDS.contains(orderField)) {
-                log.warn("[监控组件] 非法排序字段: {}", orderField);
-            } else if (Constant.ASC.equalsIgnoreCase(request.getOrder())) {
+                log.warn("[监控组件] 非法排序字段: {}, 已忽略", orderField);
+                return page;
+            }
+            if (Constant.ASC.equalsIgnoreCase(request.getOrder())) {
                 page.addOrder(OrderItem.asc(orderField));
             } else {
                 page.addOrder(OrderItem.desc(orderField));
@@ -342,7 +370,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
             return null;
         }
         try {
-            Object current = JSONUtil.toBean(json, Map.class);
+            Object current = JSONUtil.parseObj(json);
             for (String key : keys) {
                 if (!(current instanceof Map)) {
                     return null;
@@ -351,7 +379,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
             }
             return current == null ? null : String.valueOf(current);
         } catch (Exception e) {
-            log.warn("[监控组件] 操作失败", e);
+            log.warn("[监控组件] 解析JSON版本失败, keys={}", String.join(".", keys), e);
             return null;
         }
     }
@@ -420,7 +448,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         try {
             return Integer.parseInt(value.replaceAll("\\D", ""));
         } catch (Exception e) {
-            log.warn("[监控组件] 操作失败", e);
+            log.warn("[监控组件] 解析整数失败, value={}", value, e);
             return 0;
         }
     }
@@ -434,7 +462,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
             connection.setReadTimeout(3000);
             return connection.getResponseCode() == 200;
         } catch (Exception e) {
-            log.warn("[监控组件] 操作失败", e);
+            log.warn("[监控组件] HTTP健康检查失败, url={}", url, e);
             return false;
         } finally {
             if (connection != null) {
@@ -462,7 +490,7 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
                 return new String(bytes, StandardCharsets.UTF_8);
             }
         } catch (Exception e) {
-            log.warn("[监控组件] 操作失败", e);
+            log.warn("[监控组件] HTTP GET请求失败, url={}", url, e);
             return null;
         } finally {
             if (connection != null) {
@@ -496,4 +524,4 @@ public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMap
         return value;
     }
 }
-}
+

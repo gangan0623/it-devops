@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import net.leoch.common.utils.redis.RedisKeys;
 import net.leoch.common.utils.redis.RedisUtils;
 import net.leoch.common.utils.ops.PingUtils;
+import net.leoch.framework.config.OnlineStatusProperties;
 import net.leoch.modules.ops.mapper.BusinessSystemMapper;
 import net.leoch.modules.ops.mapper.BackupAgentMapper;
 import net.leoch.modules.ops.mapper.DeviceBackupMapper;
@@ -42,19 +43,22 @@ public class OnlineStatusRefreshTask implements ITask {
     private final BackupAgentMapper backupAgentMapper;
     private final DeviceBackupMapper deviceBackupMapper;
     private final RedisUtils redisUtils;
+    private final OnlineStatusProperties properties;
 
     public OnlineStatusRefreshTask(LinuxHostMapper linuxHostMapper,
                                    WindowHostMapper windowHostMapper,
                                    BusinessSystemMapper businessSystemMapper,
                                    BackupAgentMapper backupAgentMapper,
                                    DeviceBackupMapper deviceBackupMapper,
-                                   RedisUtils redisUtils) {
+                                   RedisUtils redisUtils,
+                                   OnlineStatusProperties properties) {
         this.linuxHostMapper = linuxHostMapper;
         this.windowHostMapper = windowHostMapper;
         this.businessSystemMapper = businessSystemMapper;
         this.backupAgentMapper = backupAgentMapper;
         this.deviceBackupMapper = deviceBackupMapper;
         this.redisUtils = redisUtils;
+        this.properties = properties;
     }
 
     @Override
@@ -65,14 +69,14 @@ public class OnlineStatusRefreshTask implements ITask {
         refreshBusinessSystems();
         refreshBackupAgents();
         refreshDeviceBackups();
-        logger.info("OnlineStatusRefreshTask finished in {} ms", System.currentTimeMillis() - start);
+        logger.info("[在线状态刷新] 完成, 耗时={}ms", System.currentTimeMillis() - start);
     }
 
     private void refreshLinux() {
         List<LinuxHostEntity> list = linuxHostMapper.selectList(new LambdaQueryWrapper<LinuxHostEntity>()
                 .select(LinuxHostEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, LinuxHostEntity::getInstance,
-                instance -> MetricsUtils.metricsOk(instance, 3000));
+                instance -> MetricsUtils.metricsOk(instance, properties.getTimeout().getMetrics()));
         refreshCache(RedisKeys.getLinuxHostOnlineKey(), statusMap);
     }
 
@@ -80,7 +84,7 @@ public class OnlineStatusRefreshTask implements ITask {
         List<WindowHostEntity> list = windowHostMapper.selectList(new LambdaQueryWrapper<WindowHostEntity>()
                 .select(WindowHostEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, WindowHostEntity::getInstance,
-                instance -> MetricsUtils.metricsOk(instance, 3000));
+                instance -> MetricsUtils.metricsOk(instance, properties.getTimeout().getMetrics()));
         refreshCache(RedisKeys.getWindowHostOnlineKey(), statusMap);
     }
 
@@ -88,7 +92,7 @@ public class OnlineStatusRefreshTask implements ITask {
         List<BusinessSystemEntity> list = businessSystemMapper.selectList(new LambdaQueryWrapper<BusinessSystemEntity>()
                 .select(BusinessSystemEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, BusinessSystemEntity::getInstance,
-                instance -> PingUtils.isReachable(instance, 2000));
+                instance -> PingUtils.isReachable(instance, properties.getTimeout().getPing()));
         refreshCache(RedisKeys.getBusinessSystemOnlineKey(), statusMap);
     }
 
@@ -103,7 +107,7 @@ public class OnlineStatusRefreshTask implements ITask {
         List<DeviceBackupEntity> list = deviceBackupMapper.selectList(new LambdaQueryWrapper<DeviceBackupEntity>()
                 .select(DeviceBackupEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, DeviceBackupEntity::getInstance,
-                instance -> PingUtils.isReachable(instance, 2000));
+                instance -> PingUtils.isReachable(instance, properties.getTimeout().getDevice()));
         refreshCache(RedisKeys.getDeviceBackupOnlineKey(), statusMap);
     }
 
@@ -121,7 +125,8 @@ public class OnlineStatusRefreshTask implements ITask {
         if (list == null || list.isEmpty()) {
             return statusMap;
         }
-        int poolSize = Math.min(50, Math.max(4, list.size()));
+        int poolSize = Math.min(properties.getThreadPool().getMaxSize(),
+                Math.max(properties.getThreadPool().getCoreSize(), list.size()));
         ExecutorService executor = Executors.newFixedThreadPool(poolSize);
         try {
             List<Future<Map.Entry<String, Boolean>>> futures = list.stream()
@@ -136,14 +141,17 @@ public class OnlineStatusRefreshTask implements ITask {
                     .map(executor::submit)
                     .toList();
 
+            int futureTimeout = properties.getTimeout().getFuture();
             for (Future<Map.Entry<String, Boolean>> future : futures) {
                 try {
-                    Map.Entry<String, Boolean> entry = future.get(2, TimeUnit.SECONDS);
+                    Map.Entry<String, Boolean> entry = future.get(futureTimeout, TimeUnit.MILLISECONDS);
                     if (entry != null) {
                         statusMap.put(entry.getKey(), entry.getValue());
                     }
-                } catch (Exception ignore) {
-                    // skip failed probe
+                } catch (TimeoutException e) {
+                    logger.debug("[在线状态刷新] 探测超时, timeout={}ms", futureTimeout);
+                } catch (Exception e) {
+                    logger.debug("[在线状态刷新] 探测异常", e);
                 }
             }
         } finally {
@@ -161,11 +169,12 @@ public class OnlineStatusRefreshTask implements ITask {
             base = "http://" + base;
         }
         String url = base.endsWith("/") ? (base + "health") : (base + "/health");
+        int timeout = properties.getTimeout().getAgent();
         try {
             java.net.HttpURLConnection conn = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
             conn.setRequestMethod("GET");
-            conn.setConnectTimeout(2000);
-            conn.setReadTimeout(2000);
+            conn.setConnectTimeout(timeout);
+            conn.setReadTimeout(timeout);
             conn.connect();
             if (conn.getResponseCode() != 200) {
                 return false;
@@ -174,7 +183,8 @@ public class OnlineStatusRefreshTask implements ITask {
                 String body = new String(in.readAllBytes());
                 return body.contains("\"status\":\"ok\"") || body.contains("\"status\" : \"ok\"") || body.contains("\"status\": \"ok\"");
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            logger.debug("[备份代理健康检查] 检查失败, url={}, timeout={}ms", url, timeout);
             return false;
         }
     }

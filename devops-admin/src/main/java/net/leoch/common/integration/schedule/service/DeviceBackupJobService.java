@@ -11,6 +11,7 @@ import net.leoch.modules.ops.entity.BackupAgentEntity;
 import net.leoch.modules.ops.entity.DeviceBackupEntity;
 import net.leoch.modules.ops.service.IDeviceBackupHistoryService;
 import net.leoch.modules.ops.service.IDeviceBackupRecordService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -27,18 +28,12 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service("deviceBackupJobService")
+@RequiredArgsConstructor
 public class DeviceBackupJobService {
     private final DeviceBackupMapper deviceBackupMapper;
     private final BackupAgentMapper backupAgentMapper;
     private final IDeviceBackupRecordService deviceBackupRecordService;
     private final IDeviceBackupHistoryService deviceBackupHistoryService;
-
-    public DeviceBackupJobService(DeviceBackupMapper deviceBackupMapper, BackupAgentMapper backupAgentMapper, IDeviceBackupRecordService deviceBackupRecordService, IDeviceBackupHistoryService deviceBackupHistoryService) {
-        this.deviceBackupMapper = deviceBackupMapper;
-        this.backupAgentMapper = backupAgentMapper;
-        this.deviceBackupRecordService = deviceBackupRecordService;
-        this.deviceBackupHistoryService = deviceBackupHistoryService;
-    }
 
     public void backup(String params) {
         log.info("[设备备份] 开始执行设备备份任务, params={}", params);
@@ -140,7 +135,10 @@ public class DeviceBackupJobService {
 
     private void triggerAgentBackup(BackupAgentEntity agent, List<Map<String, Object>> payload) {
         if (agent == null || CollUtil.isEmpty(payload)) {
-            log.warn("[设备备份] 触发参数无效, agent={}, payloadSize={}", agent, payload != null ? payload.size() : 0);
+            log.warn("[设备备份] 触发参数无效, agentId={}, agentName={}, payloadSize={}",
+                    agent != null ? agent.getId() : null,
+                    agent != null ? agent.getName() : null,
+                    payload != null ? payload.size() : 0);
             return;
         }
         String url = buildBackupUrl(agent.getInstance());
@@ -185,48 +183,89 @@ public class DeviceBackupJobService {
         }
         String trimmed = instance.trim();
         try {
-            String candidate = trimmed;
-            if (!candidate.startsWith("http://") && !candidate.startsWith("https://")) {
-                candidate = "http://" + candidate;
-            }
+            String candidate = ensureScheme(trimmed);
             URI uri = new URI(candidate);
             String scheme = uri.getScheme() == null ? "http" : uri.getScheme();
             String host = uri.getHost();
             int port = uri.getPort();
             String path = uri.getPath();
-            if (host == null && candidate.startsWith("http://")) {
-                String raw = candidate.substring("http://".length());
-                int slash = raw.indexOf('/');
-                String hostPort = slash > -1 ? raw.substring(0, slash) : raw;
-                String[] parts = hostPort.split(":");
-                host = parts[0];
-                if (parts.length > 1) {
-                    try {
-                        port = Integer.parseInt(parts[1]);
-                    } catch (Exception ignore) {
-                        port = -1;
-                    }
-                }
-                path = slash > -1 ? raw.substring(slash) : "";
+
+            if (host == null) {
+                UrlComponents components = parseHostPortPath(candidate);
+                host = components.host;
+                port = components.port;
+                path = components.path;
             }
-            if (port == -1) {
-                port = 8120;
-            }
-            if (path == null || path.isEmpty() || "/".equals(path)) {
-                path = "/backup";
-            } else if (!path.endsWith("/backup")) {
-                if (path.endsWith("/")) {
-                    path = path + "backup";
-                } else {
-                    path = path + "/backup";
-                }
-            }
+
+            port = normalizePort(port);
+            path = normalizePath(path);
+
             return new URI(scheme, null, host, port, path, null, null).toString();
-        } catch (Exception ignore) {
-            if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-                return trimmed.endsWith("/backup") ? trimmed : trimmed + (trimmed.endsWith("/") ? "backup" : "/backup");
+        } catch (Exception e) {
+            log.warn("[设备备份] 构建URL失败, instance={}", instance, e);
+            return buildFallbackUrl(trimmed);
+        }
+    }
+
+    private String ensureScheme(String url) {
+        if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            return "http://" + url;
+        }
+        return url;
+    }
+
+    private UrlComponents parseHostPortPath(String candidate) {
+        String raw = candidate.startsWith("http://")
+                ? candidate.substring("http://".length())
+                : candidate;
+        int slash = raw.indexOf('/');
+        String hostPort = slash > -1 ? raw.substring(0, slash) : raw;
+        String[] parts = hostPort.split(":");
+
+        String host = parts[0];
+        int port = -1;
+        if (parts.length > 1) {
+            try {
+                port = Integer.parseInt(parts[1]);
+            } catch (Exception e) {
+                log.warn("[设备备份] 解析端口失败, portStr={}", parts[1], e);
             }
-            return "http://" + trimmed + ":8120/backup";
+        }
+        String path = slash > -1 ? raw.substring(slash) : "";
+
+        return new UrlComponents(host, port, path);
+    }
+
+    private int normalizePort(int port) {
+        return port == -1 ? 8120 : port;
+    }
+
+    private String normalizePath(String path) {
+        if (path == null || path.isEmpty() || "/".equals(path)) {
+            return "/backup";
+        }
+        if (!path.endsWith("/backup")) {
+            return path.endsWith("/") ? path + "backup" : path + "/backup";
+        }
+        return path;
+    }
+
+    private String buildFallbackUrl(String trimmed) {
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            return trimmed.endsWith("/backup") ? trimmed : trimmed + (trimmed.endsWith("/") ? "backup" : "/backup");
+        }
+        return "http://" + trimmed + ":8120/backup";
+    }
+
+    private static class UrlComponents {
+        final String host;
+        final int port;
+        final String path;
+
+        UrlComponents(String host, int port, String path) {
+            this.host = host;
+            this.port = port;
+            this.path = path;
         }
     }
 }

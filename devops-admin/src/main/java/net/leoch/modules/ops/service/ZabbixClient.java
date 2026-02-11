@@ -131,7 +131,12 @@ public class ZabbixClient {
         HttpURLConnection connection = null;
         long startTime = System.currentTimeMillis();
         try {
-            log.debug("[Zabbix] 开始调用接口, method={}, params={}", method, JSONUtil.toJsonStr(params));
+            // 脱敏处理：避免在日志中泄露敏感信息
+            Map<String, Object> safeParams = new HashMap<>(params);
+            if (safeParams.containsKey("password")) {
+                safeParams.put("password", "******");
+            }
+            log.debug("[Zabbix] 开始调用接口, method={}, params={}", method, JSONUtil.toJsonStr(safeParams));
             URL url = new URL(config.getUrl());
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
@@ -157,7 +162,8 @@ public class ZabbixClient {
                 return null;
             }
             byte[] bytes = connection.getInputStream().readAllBytes();
-            Map<String, Object> resp = JSONUtil.toBean(new String(bytes, StandardCharsets.UTF_8), new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> resp = JSONUtil.toBean(new String(bytes, StandardCharsets.UTF_8), new TypeReference<>() {
+            }, false);
             if (resp == null) {
                 log.warn("[Zabbix] 接口响应为空, method={}", method);
                 return null;

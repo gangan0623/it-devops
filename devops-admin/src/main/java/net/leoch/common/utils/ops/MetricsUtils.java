@@ -1,10 +1,12 @@
 package net.leoch.common.utils.ops;
 
 import cn.hutool.core.util.StrUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+@Slf4j
 public final class MetricsUtils {
     private MetricsUtils() {}
 
@@ -20,7 +22,8 @@ public final class MetricsUtils {
             connection.setConnectTimeout(timeoutMs);
             connection.setReadTimeout(timeoutMs);
             return connection.getResponseCode() == 200;
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.debug("[Metrics检查] 探测失败, url={}", url, e);
             return false;
         } finally {
             if (connection != null) {

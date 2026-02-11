@@ -37,7 +37,7 @@ public class ExcelUtils {
                                    Class<?> pojoClass) throws IOException {
         if (StrUtil.isBlank(fileName)) {
             //当前日期
-            fileName = DateUtil.format(new Date());
+            fileName = DateUtil.format(new Date(), "yyyyMMddHHmmss");
         }
 
         response.setContentType("application/vnd.ms-excel");

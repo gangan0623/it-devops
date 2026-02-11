@@ -31,7 +31,7 @@ public class AlertWebhookService {
             throw new ServiceException("payload不能为空");
         }
         try {
-            Map<String, Object> payload = JSONUtil.toBean(rawJson, new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> payload = JSONUtil.toBean(rawJson, new TypeReference<Map<String, Object>>() {}, false);
             String actualSeverity = severityFromPayload(payload, severity);
             log.info("[告警Webhook] 解析完成, actualSeverity={}, status={}", actualSeverity, payload.get("status"));
             alertRecordService.saveFromWebhook(payload, rawJson, actualSeverity);

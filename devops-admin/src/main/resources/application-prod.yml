@@ -5,23 +5,29 @@ spring:
     username: root
     password: Leoch@@20260101
     hikari:
-      minimum-idle: 10
-      maximum-pool-size: 100
-      connection-timeout: 6000
-      idle-timeout: 300000
-      max-lifetime: 600000
+      minimum-idle: 10                   # 最小空闲连接
+      maximum-pool-size: 100             # 最大连接数
+      connection-timeout: 10000          # 连接超时10s
+      idle-timeout: 600000               # 空闲连接存活时间10min
+      max-lifetime: 1800000              # 连接最大存活时间30min
+      connection-test-query: SELECT 1    # 连接测试查询
+      validation-timeout: 3000           # 验证超时3s
+      leak-detection-threshold: 60000    # 连接泄露检测阈值1min（生产环境启用）
   data:
     redis:
       database: 0
       host: 192.168.159.121
       port: 6379
       password: Leoch@@2024
-      timeout: 6000ms
+      timeout: 10000ms                   # 命令超时10s
+      connect-timeout: 5000ms            # 连接超时5s
       lettuce:
         pool:
-          max-active: 1000  # 连接池最大连接数（使用负值表示没有限制）
-          max-wait: -1ms      # 连接池最大阻塞等待时间（使用负值表示没有限制）
-          max-idle: 10      # 连接池中的最大空闲连接
-          min-idle: 5       # 连接池中的最小空闲连接
+          max-active: 200                # 最大连接数（生产环境提高）
+          max-wait: 3000ms               # 最大等待时间3s
+          max-idle: 50                   # 最大空闲连接
+          min-idle: 10                   # 最小空闲连接
+          time-between-eviction-runs: 60000ms  # 空闲连接检测间隔1min
+        shutdown-timeout: 5000ms         # 关闭超时5s
 knife4j:
   production: true

@@ -1,6 +1,7 @@
 package net.leoch.modules.ops.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.data.page.PageData;
 
 import java.util.Collections;
@@ -8,6 +9,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
+@Slf4j
 final class OnlineStatusSupport {
     private OnlineStatusSupport() {}
 
@@ -68,7 +70,8 @@ final class OnlineStatusSupport {
     private static int parseInt(String value, int defaultValue) {
         try {
             return Integer.parseInt(value);
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.debug("[在线状态] 解析整数失败, value={}, 使用默认值={}", value, defaultValue, e);
             return defaultValue;
         }
     }

@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -51,6 +52,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, AlertTriggerEntity> implements IAlertTriggerService {
 
     private final AlertTemplateMapper alertTemplateMapper;
@@ -59,20 +61,6 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
     private final AlertMailService alertMailService;
     private final IAlertNotifyLogService alertNotifyLogService;
     private final AlertRecordMapper alertRecordMapper;
-
-    public AlertTriggerServiceImpl(AlertTemplateMapper alertTemplateMapper,
-                                   AlertMediaMapper alertMediaMapper,
-                                   SysUserMapper sysUserMapper,
-                                   AlertMailService alertMailService,
-                                   IAlertNotifyLogService alertNotifyLogService,
-                                   AlertRecordMapper alertRecordMapper) {
-        this.alertTemplateMapper = alertTemplateMapper;
-        this.alertMediaMapper = alertMediaMapper;
-        this.sysUserMapper = sysUserMapper;
-        this.alertMailService = alertMailService;
-        this.alertNotifyLogService = alertNotifyLogService;
-        this.alertRecordMapper = alertRecordMapper;
-    }
 
     @Override
     public PageData<AlertTriggerRsp> page(AlertTriggerPageReq request) {
@@ -382,9 +370,9 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
             return new HashMap<>();
         }
         try {
-            return JSONUtil.toBean(matchLabels, new TypeReference<Map<String, Object>>() {});
+            return JSONUtil.toBean(matchLabels, new TypeReference<Map<String, Object>>() {}, false);
         } catch (Exception e) {
-            log.warn("[告警触发] 操作失败", e);
+            log.warn("[告警触发] 解析匹配标签失败, matchLabels={}", matchLabels, e);
             return new HashMap<>();
         }
     }
@@ -523,7 +511,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
         try {
             return Date.from(Instant.parse(value));
         } catch (Exception e) {
-            log.warn("[告警触发] 操作失败", e);
+            log.warn("[告警触发] 解析日期失败, value={}", value, e);
             return null;
         }
     }
@@ -553,7 +541,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
         try {
             return Long.parseLong(String.valueOf(value));
         } catch (Exception e) {
-            log.warn("[告警触发] 操作失败", e);
+            log.warn("[告警触发] 转换Long失败, value={}", value, e);
             return null;
         }
     }

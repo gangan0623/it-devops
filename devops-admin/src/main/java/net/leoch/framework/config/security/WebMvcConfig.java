@@ -55,7 +55,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
         //允许JSON字符串包含未转义的换行等控制字符
         mapper.configure(JsonReadFeature.ALLOW_UNESCAPED_CONTROL_CHARS.mappedFeature(), true);
         mapper.configure(JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER.mappedFeature(), true);
-        mapper.setDateFormat(new SimpleDateFormat(DateUtil.DATE_TIME_PATTERN));
+        mapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
         mapper.setTimeZone(TimeZone.getTimeZone("GMT+8"));
 
         //Long类型转String类型

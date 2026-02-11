@@ -10,9 +10,9 @@ import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.data.result.Result;
 import net.leoch.modules.security.mapper.SysUserTokenMapper;
 import net.leoch.modules.security.entity.SysUserTokenEntity;
-import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.security.service.ISysUserTokenService;
 import net.leoch.common.integration.security.UserDetail;
+import net.leoch.modules.sys.mapper.SysRoleDataScopeMapper;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.service.ISysUserService;
 import org.springframework.stereotype.Service;
@@ -23,11 +23,12 @@ import java.util.Map;
 import java.util.UUID;
 
 @Slf4j
-@RequiredArgsConstructor
 @Service
+@RequiredArgsConstructor
 public class SysUserTokenServiceImpl extends ServiceImpl<SysUserTokenMapper, SysUserTokenEntity> implements ISysUserTokenService {
 	private final ISysUserService sysUserService;
-	private final ISecurityService securityService;
+	private final SysRoleDataScopeMapper sysRoleDataScopeMapper;
+
 	/**
 	 * 12小时后过期
 	 */
@@ -45,7 +46,7 @@ public class SysUserTokenServiceImpl extends ServiceImpl<SysUserTokenMapper, Sys
 		long timeout = StpUtil.getTokenTimeout();
 
 		UserDetail userDetail = BeanUtil.copyProperties(user, UserDetail.class);
-		userDetail.setDeptIdList(securityService.getDataScopeList(userId));
+		userDetail.setDeptIdList(sysRoleDataScopeMapper.getDataScopeList(userId));
 		StpUtil.getSession().set("user", userDetail);
 
 		Date now = new Date();
