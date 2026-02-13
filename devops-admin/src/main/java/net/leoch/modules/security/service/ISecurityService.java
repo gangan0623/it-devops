@@ -4,9 +4,8 @@ package net.leoch.modules.security.service;
 
 import jakarta.servlet.http.HttpServletRequest;
 import net.leoch.common.data.result.Result;
-import net.leoch.modules.security.vo.req.LoginReq;
-import net.leoch.modules.security.entity.SysUserTokenEntity;
 import net.leoch.common.integration.security.UserDetail;
+import net.leoch.modules.security.vo.req.LoginReq;
 import net.leoch.modules.sys.entity.SysUserEntity;
 
 import java.util.List;
@@ -23,11 +22,9 @@ public interface ISecurityService {
      */
     Set<String> getUserPermissions(UserDetail user);
 
-    SysUserTokenEntity getByToken(String token);
-
     /**
      * 根据用户ID，查询用户
-     * @param userId
+     * @param userId 用户ID
      */
     SysUserEntity getUser(Long userId);
 

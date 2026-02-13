@@ -1,27 +1,24 @@
 package net.leoch.modules.alert.controller;
 
-import net.leoch.common.base.Constant;
-import static net.leoch.common.base.Constant.LIMIT;
-import static net.leoch.common.base.Constant.ORDER;
-import static net.leoch.common.base.Constant.ORDER_FIELD;
-import static net.leoch.common.base.Constant.PAGE;
-
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.data.page.PageData;
 import net.leoch.common.data.result.Result;
-import net.leoch.modules.alert.vo.rsp.AlertMediaRsp;
+import net.leoch.modules.alert.service.IAlertMediaService;
 import net.leoch.modules.alert.vo.req.AlertMediaPageReq;
 import net.leoch.modules.alert.vo.req.AlertMediaReq;
 import net.leoch.modules.alert.vo.req.AlertMediaTestReq;
-import net.leoch.modules.alert.service.IAlertMediaService;
+import net.leoch.modules.alert.vo.rsp.AlertMediaRsp;
 import org.springframework.web.bind.annotation.*;
+
+import static net.leoch.common.base.Constant.*;
 
 /**
  * 告警媒介
@@ -46,7 +43,7 @@ public class AlertMediaController {
         @Parameter(name = ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("alert:media:page")
-    public Result<PageData<AlertMediaRsp>> page(AlertMediaPageReq request){
+    public Result<PageData<AlertMediaRsp>> page(@Valid AlertMediaPageReq request){
         return new Result<PageData<AlertMediaRsp>>().ok(alertMediaService.page(request));
     }
 
@@ -61,7 +58,7 @@ public class AlertMediaController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("alert:media:save")
-    public Result<Object> save(@RequestBody AlertMediaReq dto){
+    public Result<Object> save(@Valid @RequestBody AlertMediaReq dto){
         alertMediaService.save(dto);
         return new Result<>();
     }
@@ -70,7 +67,7 @@ public class AlertMediaController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("alert:media:update")
-    public Result<Object> update(@RequestBody AlertMediaReq dto){
+    public Result<Object> update(@Valid @RequestBody AlertMediaReq dto){
         alertMediaService.update(dto);
         return new Result<>();
     }
@@ -87,7 +84,7 @@ public class AlertMediaController {
     @PostMapping("test")
     @Operation(summary = "媒介测试")
     @SaCheckPermission("alert:media:test")
-    public Result<Object> test(@RequestBody AlertMediaTestReq request) {
+    public Result<Object> test(@Valid @RequestBody AlertMediaTestReq request) {
         alertMediaService.testMedia(request);
         return new Result<>();
     }

@@ -2,10 +2,10 @@ package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.data.page.PageData;
+import net.leoch.modules.sys.entity.SysUserEntity;
 import net.leoch.modules.sys.vo.req.SysUserPageReq;
 import net.leoch.modules.sys.vo.req.SysUserReq;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
-import net.leoch.modules.sys.entity.SysUserEntity;
 
 import java.util.List;
 
@@ -66,5 +66,11 @@ public interface ISysUserService extends IService<SysUserEntity> {
 	 * 根据部门ID,查询用户Id列表
 	 */
 	List<Long> getUserIdListByDeptId(List<Long> deptIdList);
+
+	/**
+	 * 强制用户下线
+	 * @param ids 用户ID数组
+	 */
+	void kickout(Long[] ids);
 
 }

@@ -2,9 +2,9 @@ package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.integration.security.UserDetail;
+import net.leoch.modules.sys.entity.SysMenuEntity;
 import net.leoch.modules.sys.vo.req.SysMenuReq;
 import net.leoch.modules.sys.vo.rsp.SysMenuRsp;
-import net.leoch.modules.sys.entity.SysMenuEntity;
 
 import java.util.List;
 import java.util.Set;

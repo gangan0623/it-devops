@@ -82,6 +82,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void save(WindowHostSaveReq dto) {
         log.info("[WindowHost] 开始保存, dto={}", dto);
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
@@ -92,6 +93,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(WindowHostUpdateReq dto) {
         log.info("[WindowHost] 开始更新, dto={}", dto);
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
@@ -234,6 +236,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(WindowHostDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;

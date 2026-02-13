@@ -3,17 +3,15 @@
 package net.leoch.common.utils.excel;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
 import com.alibaba.excel.EasyExcel;
 import com.alibaba.excel.converters.longconverter.LongStringConverter;
 import jakarta.servlet.http.HttpServletResponse;
 
-import cn.hutool.core.date.DateUtil;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -58,7 +56,7 @@ public class ExcelUtils {
      */
     public static void exportExcelToTarget(HttpServletResponse response, String fileName, String sheetName, List<?> sourceList,
                                            Class<?> targetClass) throws Exception {
-        List targetList = BeanUtil.copyToList(sourceList, targetClass);
+        List<?> targetList = BeanUtil.copyToList(sourceList, targetClass);
         exportExcel(response, fileName, sheetName, targetList, targetClass);
     }
 

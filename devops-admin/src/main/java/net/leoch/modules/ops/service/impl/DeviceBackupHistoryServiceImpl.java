@@ -1,16 +1,17 @@
 package net.leoch.modules.ops.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import net.leoch.common.exception.ServiceException;
-import cn.hutool.core.bean.BeanUtil;
-import net.leoch.modules.ops.mapper.DeviceBackupHistoryMapper;
-import net.leoch.modules.ops.vo.rsp.DeviceBackupHistoryRsp;
-import net.leoch.modules.ops.entity.DeviceBackupHistoryEntity;
-import net.leoch.modules.ops.service.IDeviceBackupHistoryService;
 import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.exception.ServiceException;
+import net.leoch.modules.ops.entity.DeviceBackupHistoryEntity;
+import net.leoch.modules.ops.mapper.DeviceBackupHistoryMapper;
+import net.leoch.modules.ops.service.IDeviceBackupHistoryService;
+import net.leoch.modules.ops.vo.rsp.DeviceBackupHistoryRsp;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -25,6 +26,7 @@ import java.util.*;
 @Service
 public class DeviceBackupHistoryServiceImpl extends ServiceImpl<DeviceBackupHistoryMapper, DeviceBackupHistoryEntity> implements IDeviceBackupHistoryService {
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void saveHistory(String name, String ip, String url, Integer status) {
         if (StrUtil.isBlank(ip)) {

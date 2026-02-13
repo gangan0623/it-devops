@@ -1,5 +1,6 @@
 package net.leoch.modules.sys.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -7,25 +8,20 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.data.page.PageData;
-import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AddGroup;
 import net.leoch.common.data.validator.group.DefaultGroup;
 import net.leoch.common.data.validator.group.UpdateGroup;
+import net.leoch.common.enums.SuperAdminEnum;
 import net.leoch.common.integration.security.SecurityUser;
 import net.leoch.common.integration.security.UserDetail;
+import net.leoch.modules.sys.entity.SysRoleEntity;
 import net.leoch.modules.sys.mapper.SysRoleMapper;
+import net.leoch.modules.sys.service.*;
 import net.leoch.modules.sys.vo.req.SysRolePageReq;
 import net.leoch.modules.sys.vo.req.SysRoleReq;
 import net.leoch.modules.sys.vo.rsp.SysRoleRsp;
-import net.leoch.modules.sys.entity.SysRoleEntity;
-import net.leoch.common.enums.SuperAdminEnum;
-import net.leoch.modules.sys.service.ISysDeptService;
-import net.leoch.modules.sys.service.ISysRoleDataScopeService;
-import net.leoch.modules.sys.service.ISysRoleMenuService;
-import net.leoch.modules.sys.service.ISysRoleService;
-import net.leoch.modules.sys.service.ISysRoleUserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

@@ -1,6 +1,6 @@
 
 
-package net.leoch.framework.filter.xss;
+package net.leoch.framework.xss;
 
 import jakarta.servlet.*;
 import jakarta.servlet.http.HttpServletRequest;

@@ -1,25 +1,26 @@
 package net.leoch.modules.alert.controller;
 
 
-import net.leoch.common.base.Constant;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
+import net.leoch.common.base.Constant;
 import net.leoch.common.data.page.PageData;
 import net.leoch.common.data.result.Result;
-import net.leoch.modules.alert.vo.rsp.AlertRecordActionRsp;
-import net.leoch.modules.alert.vo.req.AlertProblemPageReq;
-import net.leoch.modules.alert.vo.req.AlertRecordActionReq;
-import net.leoch.modules.alert.vo.rsp.AlertProblemRsp;
-import net.leoch.modules.alert.vo.rsp.AlertRecordRsp;
-import net.leoch.modules.alert.vo.req.AlertRecordPageReq;
 import net.leoch.modules.alert.service.IAlertRecordService;
 import net.leoch.modules.alert.service.IAlertSseService;
+import net.leoch.modules.alert.vo.req.AlertProblemPageReq;
+import net.leoch.modules.alert.vo.req.AlertRecordActionReq;
+import net.leoch.modules.alert.vo.req.AlertRecordPageReq;
+import net.leoch.modules.alert.vo.rsp.AlertProblemRsp;
+import net.leoch.modules.alert.vo.rsp.AlertRecordActionRsp;
+import net.leoch.modules.alert.vo.rsp.AlertRecordRsp;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -49,7 +50,7 @@ public class AlertRecordController {
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("alert:record:page")
-    public Result<PageData<AlertRecordRsp>> page(AlertRecordPageReq request){
+    public Result<PageData<AlertRecordRsp>> page(@Valid AlertRecordPageReq request){
         return new Result<PageData<AlertRecordRsp>>().ok(alertRecordService.page(request));
     }
 
@@ -63,7 +64,7 @@ public class AlertRecordController {
     @GetMapping("problem/page")
     @Operation(summary = "问题分页")
     @SaCheckPermission("alert:problem:page")
-    public Result<PageData<AlertProblemRsp>> problemPage(AlertProblemPageReq request) {
+    public Result<PageData<AlertProblemRsp>> problemPage(@Valid AlertProblemPageReq request) {
         return new Result<PageData<AlertProblemRsp>>().ok(alertRecordService.problemPage(request));
     }
 

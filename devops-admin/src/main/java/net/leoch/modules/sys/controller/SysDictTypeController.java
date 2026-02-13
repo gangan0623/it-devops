@@ -7,11 +7,11 @@ import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.data.page.PageData;
 import net.leoch.common.data.result.Result;
-import net.leoch.modules.sys.vo.rsp.SysDictTypeRsp;
+import net.leoch.modules.sys.service.ISysDictTypeService;
 import net.leoch.modules.sys.vo.req.SysDictTypePageReq;
 import net.leoch.modules.sys.vo.req.SysDictTypeReq;
 import net.leoch.modules.sys.vo.rsp.DictTypeRsp;
-import net.leoch.modules.sys.service.ISysDictTypeService;
+import net.leoch.modules.sys.vo.rsp.SysDictTypeRsp;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

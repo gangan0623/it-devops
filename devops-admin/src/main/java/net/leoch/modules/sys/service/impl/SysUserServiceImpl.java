@@ -1,32 +1,34 @@
 package net.leoch.modules.sys.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
-import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AddGroup;
 import net.leoch.common.data.validator.group.DefaultGroup;
 import net.leoch.common.data.validator.group.UpdateGroup;
-import net.leoch.common.utils.security.PasswordUtils;
+import net.leoch.common.enums.SuperAdminEnum;
+import net.leoch.common.enums.UserStatusEnum;
+import net.leoch.common.exception.ErrorCode;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.integration.security.SecurityUser;
 import net.leoch.common.integration.security.UserDetail;
+import net.leoch.common.utils.security.PasswordUtils;
+import net.leoch.modules.sys.entity.SysUserEntity;
 import net.leoch.modules.sys.mapper.SysUserMapper;
+import net.leoch.modules.sys.service.ISysDeptService;
+import net.leoch.modules.sys.service.ISysRoleUserService;
+import net.leoch.modules.sys.service.ISysUserService;
 import net.leoch.modules.sys.vo.req.PasswordReq;
 import net.leoch.modules.sys.vo.req.SysUserPageReq;
 import net.leoch.modules.sys.vo.req.SysUserReq;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
-import net.leoch.modules.sys.entity.SysUserEntity;
-import net.leoch.common.enums.SuperAdminEnum;
-import net.leoch.modules.sys.service.ISysDeptService;
-import net.leoch.modules.sys.service.ISysRoleUserService;
-import net.leoch.modules.sys.service.ISysUserService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -159,17 +161,41 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
 
         //更新角色用户关系
         sysRoleUserService.saveOrUpdate(entity.getId(), dto.getRoleIdList());
+
+        //用户被禁用时，强制下线
+        if (dto.getStatus() != null && dto.getStatus() == UserStatusEnum.DISABLE.value()) {
+            kickout(new Long[]{entity.getId()});
+        }
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long[] ids) {
         AssertUtils.isArrayEmpty(ids, "id");
+
+        //强制下线被删除的用户
+        kickout(ids);
+
         //删除用户
         this.removeByIds(Arrays.asList(ids));
 
         //删除角色用户关系
         sysRoleUserService.deleteByUserIds(ids);
+    }
+
+    @Override
+    public void kickout(Long[] ids) {
+        if (ids == null || ids.length == 0) {
+            return;
+        }
+        for (Long userId : ids) {
+            try {
+                StpUtil.kickout(userId);
+                log.info("[用户管理] 强制下线, userId={}", userId);
+            } catch (Exception e) {
+                log.warn("[用户管理] 强制下线失败, userId={}", userId, e);
+            }
+        }
     }
 
     @Override

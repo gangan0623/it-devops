@@ -1,20 +1,21 @@
 package net.leoch.modules.ops.controller;
 
 
-import net.leoch.common.base.Constant;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
+import net.leoch.common.base.Constant;
 import net.leoch.common.data.page.PageData;
 import net.leoch.common.data.result.Result;
-import net.leoch.modules.ops.vo.req.*;
-import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.service.IMonitorComponentService;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.MonitorComponentRsp;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -38,14 +39,14 @@ public class MonitorComponentController {
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("ops:monitorcomponent:page")
-    public Result<PageData<MonitorComponentRsp>> page(@Parameter(hidden = true) MonitorComponentPageReq request) {
+    public Result<PageData<MonitorComponentRsp>> page(@Parameter(hidden = true) @Valid MonitorComponentPageReq request) {
         return new Result<PageData<MonitorComponentRsp>>().ok(monitorComponentService.page(request));
     }
 
     @GetMapping("list")
     @Operation(summary = "列表")
     @SaCheckPermission("ops:monitorcomponent:page")
-    public Result<List<MonitorComponentRsp>> list(MonitorComponentListReq request) {
+    public Result<List<MonitorComponentRsp>> list(@Valid MonitorComponentListReq request) {
         return new Result<List<MonitorComponentRsp>>().ok(monitorComponentService.list(request));
     }
 
@@ -60,7 +61,7 @@ public class MonitorComponentController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("ops:monitorcomponent:save")
-    public Result<Object> save(@RequestBody MonitorComponentSaveReq request) {
+    public Result<Object> save(@Valid @RequestBody MonitorComponentSaveReq request) {
         monitorComponentService.save(request);
         return new Result<>();
     }
@@ -69,7 +70,7 @@ public class MonitorComponentController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("ops:monitorcomponent:update")
-    public Result<Object> update(@RequestBody MonitorComponentUpdateReq request) {
+    public Result<Object> update(@Valid @RequestBody MonitorComponentUpdateReq request) {
         monitorComponentService.update(request);
         return new Result<>();
     }
@@ -86,21 +87,21 @@ public class MonitorComponentController {
     @GetMapping("check")
     @Operation(summary = "唯一校验")
     @SaCheckPermission("ops:monitorcomponent:page")
-    public Result<Boolean> check(MonitorComponentCheckReq request) {
+    public Result<Boolean> check(@Valid MonitorComponentCheckReq request) {
         return new Result<Boolean>().ok(monitorComponentService.check(request));
     }
 
     @GetMapping("probe")
     @Operation(summary = "探测")
     @SaCheckPermission("ops:monitorcomponent:probe")
-    public Result<Boolean> probe(MonitorComponentProbeReq request) {
+    public Result<Boolean> probe(@Valid MonitorComponentProbeReq request) {
         return new Result<Boolean>().ok(monitorComponentService.probe(request));
     }
 
     @GetMapping("version")
     @Operation(summary = "版本检测")
     @SaCheckPermission("ops:monitorcomponent:version")
-    public Result<MonitorComponentRsp> version(MonitorComponentVersionReq request) {
+    public Result<MonitorComponentRsp> version(@Valid MonitorComponentVersionReq request) {
         return new Result<MonitorComponentRsp>().ok(monitorComponentService.versionCheck(request));
     }
 

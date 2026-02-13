@@ -1,11 +1,12 @@
 package net.leoch.modules.ops.service;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.lang.TypeReference;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.framework.config.zabbix.ZabbixConfig;
+import net.leoch.framework.config.ops.HttpTimeoutConfig;
+import net.leoch.framework.config.ops.ZabbixConfig;
 import org.springframework.stereotype.Service;
 
 import java.io.OutputStream;
@@ -24,9 +25,11 @@ import java.util.Map;
 @Service
 public class ZabbixClient {
     private final ZabbixConfigService configService;
+    private final HttpTimeoutConfig httpTimeoutConfig;
 
-    public ZabbixClient(ZabbixConfigService configService) {
+    public ZabbixClient(ZabbixConfigService configService, HttpTimeoutConfig httpTimeoutConfig) {
         this.configService = configService;
+        this.httpTimeoutConfig = httpTimeoutConfig;
     }
 
     public List<Map<String, String>> getHostsByTemplates() {
@@ -34,26 +37,25 @@ public class ZabbixClient {
         ZabbixConfig config = configService.getConfig();
         if (config == null || StrUtil.isBlank(config.getUrl())) {
             log.warn("[Zabbix] 配置为空或URL未配置");
-            return new ArrayList<>();
+            return List.of();
         }
         String auth = login(config);
         if (StrUtil.isBlank(auth)) {
             log.warn("[Zabbix] 登录失败");
-            return new ArrayList<>();
+            return List.of();
         }
         List<String> templateIds = getTemplateIds(config, auth);
         if (CollUtil.isEmpty(templateIds)) {
             log.warn("[Zabbix] 未找到匹配的模板, templates={}", config.getTemplates());
-            return new ArrayList<>();
+            return List.of();
         }
-        log.info("[Zabbix] 找到模板数量={}, ids={}", templateIds.size(), templateIds);
         List<Map<String, String>> hosts = getHosts(config, auth, templateIds);
         log.info("[Zabbix] 获取主机列表完成, 数量={}", hosts.size());
         return hosts;
     }
 
     private String login(ZabbixConfig config) {
-        log.info("[Zabbix] 开始登录, url={}, username={}", config.getUrl(), config.getUsername());
+        log.debug("[Zabbix] 开始登录, url={}, username={}", config.getUrl(), config.getUsername());
         Map<String, Object> params = new HashMap<>();
         params.put("username", config.getUsername());
         params.put("password", config.getPassword());
@@ -62,13 +64,12 @@ public class ZabbixClient {
             log.error("[Zabbix] 登录失败, url={}, username={}", config.getUrl(), config.getUsername());
             return null;
         }
-        log.info("[Zabbix] 登录成功");
         return String.valueOf(result);
     }
 
     private List<String> getTemplateIds(ZabbixConfig config, String auth) {
         if (CollUtil.isEmpty(config.getTemplates())) {
-            return new ArrayList<>();
+            return List.of();
         }
         Map<String, Object> params = new HashMap<>();
         params.put("output", List.of("templateid", "name"));
@@ -140,8 +141,8 @@ public class ZabbixClient {
             URL url = new URL(config.getUrl());
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(10000);
+            connection.setConnectTimeout(httpTimeoutConfig.getConnectTimeout());
+            connection.setReadTimeout(httpTimeoutConfig.getReadTimeout());
             connection.setDoOutput(true);
             connection.setRequestProperty("Content-Type", "application/json");
             if (StrUtil.isNotBlank(bearer)) {

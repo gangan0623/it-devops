@@ -2,10 +2,10 @@ package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.data.page.PageData;
+import net.leoch.modules.sys.entity.SysDictDataEntity;
 import net.leoch.modules.sys.vo.req.SysDictDataPageReq;
 import net.leoch.modules.sys.vo.req.SysDictDataReq;
 import net.leoch.modules.sys.vo.rsp.SysDictDataRsp;
-import net.leoch.modules.sys.entity.SysDictDataEntity;
 
 /**
  * 数据字典

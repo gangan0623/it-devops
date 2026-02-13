@@ -24,6 +24,9 @@
         <el-button v-if="state.hasPermission('sys:user:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
       </el-form-item>
       <el-form-item>
+        <el-button v-if="state.hasPermission('sys:user:kickout')" type="warning" @click="kickoutHandle()">强制下线</el-button>
+      </el-form-item>
+      <el-form-item>
         <el-button v-if="state.hasPermission('sys:user:export')" type="info" @click="state.exportHandle()">导出</el-button>
       </el-form-item>
     </el-form>
@@ -47,9 +50,10 @@
         </template>
       </el-table-column>
       <el-table-column prop="createDate" label="创建时间" sortable="custom" header-align="center" align="center" width="180"></el-table-column>
-      <el-table-column label="操作" fixed="right" header-align="center" align="center" width="200">
+      <el-table-column label="操作" fixed="right" header-align="center" align="center" width="250">
         <template v-slot="scope">
           <el-button v-if="state.hasPermission('sys:user:update')" type="primary" link @click="addOrUpdateHandle(scope.row.id)">修改</el-button>
+          <el-button v-if="state.hasPermission('sys:user:kickout')" type="warning" link @click="kickoutHandle(scope.row.id)">下线</el-button>
           <el-button v-if="state.hasPermission('sys:user:delete')" type="primary" link @click="state.deleteHandle(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
@@ -64,6 +68,8 @@
 import useView from "@/hooks/useView";
 import {reactive, ref, toRefs} from "vue";
 import AddOrUpdate from "./user-add-or-update.vue";
+import baseService from "@/service/baseService";
+import {ElMessage, ElMessageBox} from "element-plus";
 
 const view = reactive({
   getDataListURL: "/sys/user/page",
@@ -84,6 +90,25 @@ const state = reactive({ ...useView(view), ...toRefs(view) });
 const addOrUpdateRef = ref();
 const addOrUpdateHandle = (id?: number) => {
   addOrUpdateRef.value.init(id);
+};
+
+const kickoutHandle = (id?: number) => {
+  const ids = id ? [id] : state.dataListSelections?.map((item: any) => item.id);
+  if (!ids || ids.length === 0) {
+    ElMessage.warning("请选择要下线的用户");
+    return;
+  }
+  ElMessageBox.confirm("确定要强制下线选中的用户吗？", "提示", {
+    confirmButtonText: "确定",
+    cancelButtonText: "取消",
+    type: "warning"
+  }).then(() => {
+    baseService.post("/sys/user/kickout", ids).then((res) => {
+      if (res.code === 0) {
+        ElMessage.success("操作成功");
+      }
+    });
+  }).catch(() => {});
 };
 </script>
 

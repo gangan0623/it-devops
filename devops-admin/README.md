@@ -5,7 +5,7 @@
 ## 系统架构（概览）
 - 接口层：REST API（统一入口 `/api`），Controller -> Service -> DAO（MyBatis-Plus + XML Mapper）
 - 数据层：MySQL（业务数据）、Redis（参数缓存/可选）
-- 安全层：Shiro + Token（OAuth2 风格），支持验证码登录与权限控制
+- 安全层：SA-Token（Redis Session 共享），支持验证码登录与权限控制
 - 可观测：操作/登录/异常日志，仪表盘汇总
 - 生态集成：
   - 备份代理：`devops-backup-agent` 通过回调上报备份结果
@@ -28,7 +28,7 @@ devops-backup-agent --(callback)--> devops-admin
   - 用户状态与菜单类型枚举、参数缓存（Redis 可选）
 - `security`（认证授权）
   - 登录、验证码、Token 生成与校验
-  - Shiro 过滤链、用户上下文、密码加密
+  - SA-Token 认证配置、用户上下文、密码加密
 - `log`（审计日志）
   - 登录日志、操作日志、异常日志的记录/查询/导出
 - `oss`（对象存储）

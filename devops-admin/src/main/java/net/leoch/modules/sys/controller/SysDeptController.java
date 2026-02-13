@@ -8,9 +8,9 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.data.result.Result;
-import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
-import net.leoch.modules.sys.vo.req.SysDeptReq;
 import net.leoch.modules.sys.service.ISysDeptService;
+import net.leoch.modules.sys.vo.req.SysDeptReq;
+import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;

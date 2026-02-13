@@ -1,4 +1,4 @@
-package net.leoch.framework.config.zabbix;
+package net.leoch.framework.config.ops;
 
 import lombok.Getter;
 import lombok.Setter;

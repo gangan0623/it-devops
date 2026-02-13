@@ -102,6 +102,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void save(DeviceBackupSaveReq request) {
         log.info("[DeviceBackup] 开始保存, instance={}", request != null ? request.getInstance() : null);
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
@@ -111,6 +112,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(DeviceBackupUpdateReq request) {
         log.info("[DeviceBackup] 开始更新, id={}", request != null ? request.getId() : null);
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
@@ -126,6 +128,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(DeviceBackupStatusUpdateReq request) {
         if (request == null) {
             return;
@@ -243,6 +246,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(DeviceBackupDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
@@ -271,6 +275,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long[] ids, Integer status) {
         if (ids == null || ids.length == 0) {
             return;

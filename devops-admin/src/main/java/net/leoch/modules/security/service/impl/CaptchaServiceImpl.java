@@ -7,14 +7,15 @@ import com.wf.captcha.base.Captcha;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.utils.redis.RedisKeys;
 import net.leoch.common.utils.redis.RedisUtils;
-import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.modules.security.service.ICaptchaService;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.Duration;
 
 /**
  * 验证码
@@ -56,12 +57,12 @@ public class CaptchaServiceImpl implements ICaptchaService {
 
     private void setCache(String key, String value) {
         key = RedisKeys.getCaptchaKey(key);
-        redisUtils.set(key, value, 300);
+        redisUtils.set(key, value, Duration.ofSeconds(300));
     }
 
     private String getCache(String key) {
         key = RedisKeys.getCaptchaKey(key);
-        String captcha = (String) redisUtils.get(key);
+        String captcha = redisUtils.get(key);
         //删除验证码
         if (captcha != null) {
             redisUtils.delete(key);

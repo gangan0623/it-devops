@@ -10,10 +10,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import net.leoch.common.utils.tree.TreeNode;
 import net.leoch.common.data.validator.group.AddGroup;
 import net.leoch.common.data.validator.group.DefaultGroup;
 import net.leoch.common.data.validator.group.UpdateGroup;
+import net.leoch.common.utils.tree.TreeNode;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -28,7 +28,7 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @Schema(title = "部门管理")
-public class SysDeptRsp extends TreeNode implements Serializable  {
+public class SysDeptRsp extends TreeNode<SysDeptRsp> implements Serializable  {
     @Serial
     private static final long serialVersionUID = 1L;
 

@@ -2,8 +2,8 @@ package net.leoch.framework.config.security;
 
 import cn.dev33.satoken.stp.StpInterface;
 import lombok.RequiredArgsConstructor;
-import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.common.integration.security.UserDetail;
+import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.sys.entity.SysUserEntity;
 import org.springframework.stereotype.Component;
 

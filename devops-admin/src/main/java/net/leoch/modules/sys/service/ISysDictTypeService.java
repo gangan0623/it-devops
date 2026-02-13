@@ -2,11 +2,11 @@ package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.data.page.PageData;
+import net.leoch.modules.sys.entity.SysDictTypeEntity;
 import net.leoch.modules.sys.vo.req.SysDictTypePageReq;
 import net.leoch.modules.sys.vo.req.SysDictTypeReq;
-import net.leoch.modules.sys.vo.rsp.SysDictTypeRsp;
 import net.leoch.modules.sys.vo.rsp.DictTypeRsp;
-import net.leoch.modules.sys.entity.SysDictTypeEntity;
+import net.leoch.modules.sys.vo.rsp.SysDictTypeRsp;
 
 import java.util.List;
 

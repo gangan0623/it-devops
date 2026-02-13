@@ -10,10 +10,10 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Null;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import net.leoch.common.utils.tree.TreeNode;
 import net.leoch.common.data.validator.group.AddGroup;
 import net.leoch.common.data.validator.group.DefaultGroup;
 import net.leoch.common.data.validator.group.UpdateGroup;
+import net.leoch.common.utils.tree.TreeNode;
 import org.hibernate.validator.constraints.Range;
 
 import java.io.Serial;

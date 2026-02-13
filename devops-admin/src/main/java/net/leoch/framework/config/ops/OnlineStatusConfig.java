@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Data
 @Component
 @ConfigurationProperties(prefix = "devops")
-public class OnlineStatusProperties {
+public class OnlineStatusConfig {
 
     /**
      * 在线状态探测配置

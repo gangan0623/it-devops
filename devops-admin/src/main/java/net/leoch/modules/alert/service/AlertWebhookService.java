@@ -1,10 +1,10 @@
 package net.leoch.modules.alert.service;
 
-import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.lang.TypeReference;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ServiceException;
-import cn.hutool.json.JSONUtil;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
@@ -33,13 +33,12 @@ public class AlertWebhookService {
         try {
             Map<String, Object> payload = JSONUtil.toBean(rawJson, new TypeReference<Map<String, Object>>() {}, false);
             String actualSeverity = severityFromPayload(payload, severity);
-            log.info("[告警Webhook] 解析完成, actualSeverity={}, status={}", actualSeverity, payload.get("status"));
+            log.debug("[告警Webhook] 解析完成, actualSeverity={}, status={}", actualSeverity, payload.get("status"));
             alertRecordService.saveFromWebhook(payload, rawJson, actualSeverity);
-            log.info("[告警Webhook] 告警记录保存完成");
             alertTriggerService.notifyFromWebhook(payload, rawJson, actualSeverity);
-            log.info("[告警Webhook] 告警通知触发完成");
+            log.info("[告警Webhook] 处理完成, actualSeverity={}", actualSeverity);
         } catch (Exception e) {
-            log.error("[告警Webhook] 处理失败, severity={}, rawJson={}", severity, rawJson, e);
+            log.error("[告警Webhook] 处理失败, severity={}", severity, e);
             throw e;
         }
     }

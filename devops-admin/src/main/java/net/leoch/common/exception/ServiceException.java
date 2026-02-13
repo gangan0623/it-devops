@@ -5,7 +5,7 @@ package net.leoch.common.exception;
 
 import lombok.Getter;
 import lombok.Setter;
-import net.leoch.common.utils.MessageUtils;
+import net.leoch.common.utils.context.MessageUtils;
 
 import java.io.Serial;
 

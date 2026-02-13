@@ -4,17 +4,18 @@ import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.excel.ExcelUtils;
 import net.leoch.common.data.result.Result;
+import net.leoch.common.integration.excel.SysUserExcel;
+import net.leoch.common.utils.excel.ExcelUtils;
+import net.leoch.modules.sys.service.ISysUserService;
 import net.leoch.modules.sys.vo.req.PasswordReq;
-import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import net.leoch.modules.sys.vo.req.SysUserPageReq;
 import net.leoch.modules.sys.vo.req.SysUserReq;
-import net.leoch.common.integration.excel.SysUserExcel;
-import net.leoch.modules.sys.service.ISysUserService;
+import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -52,7 +53,7 @@ public class SysUserController {
     @PutMapping("password")
     @Operation(summary = "修改密码")
     @LogOperation("修改密码")
-    public Result<Object> password(@RequestBody PasswordReq dto) {
+    public Result<Object> password(@Valid @RequestBody PasswordReq dto) {
         sysUserService.changePassword(dto);
         return new Result<>();
     }
@@ -61,7 +62,7 @@ public class SysUserController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:user:save")
-    public Result<Object> save(@RequestBody SysUserReq dto) {
+    public Result<Object> save(@Valid @RequestBody SysUserReq dto) {
         sysUserService.save(dto);
         return new Result<>();
     }
@@ -70,7 +71,7 @@ public class SysUserController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:user:update")
-    public Result<Object> update(@RequestBody SysUserReq dto) {
+    public Result<Object> update(@Valid @RequestBody SysUserReq dto) {
         sysUserService.update(dto);
         return new Result<>();
     }
@@ -81,6 +82,15 @@ public class SysUserController {
     @SaCheckPermission("sys:user:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
         sysUserService.delete(ids);
+        return new Result<>();
+    }
+
+    @PostMapping("kickout")
+    @Operation(summary = "强制下线")
+    @LogOperation("强制下线")
+    @SaCheckPermission("sys:user:kickout")
+    public Result<Object> kickout(@RequestBody Long[] ids) {
+        sysUserService.kickout(ids);
         return new Result<>();
     }
 

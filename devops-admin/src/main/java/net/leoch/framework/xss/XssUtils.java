@@ -1,6 +1,6 @@
 
 
-package net.leoch.framework.filter.xss;
+package net.leoch.framework.xss;
 
 import org.jsoup.Jsoup;
 import org.jsoup.safety.Safelist;

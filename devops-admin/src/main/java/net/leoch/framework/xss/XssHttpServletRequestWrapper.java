@@ -1,6 +1,6 @@
 
 
-package net.leoch.framework.filter.xss;
+package net.leoch.framework.xss;
 
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.StrUtil;

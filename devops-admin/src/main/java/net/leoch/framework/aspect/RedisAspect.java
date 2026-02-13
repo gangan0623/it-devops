@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RedisAspect {
 
-    @Around("execution(* net.leoch.common.redis.RedisUtils.*(..))")
+    @Around("execution(* net.leoch.common.utils.redis.RedisUtils.*(..))")
     public Object around(ProceedingJoinPoint point) throws Throwable {
         Object result;
         try {

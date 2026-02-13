@@ -82,6 +82,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void save(BusinessSystemSaveReq dto) {
         log.info("[BusinessSystem] 开始保存, instance={}", dto != null ? dto.getInstance() : null);
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
@@ -92,6 +93,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(BusinessSystemUpdateReq dto) {
         log.info("[BusinessSystem] 开始更新, id={}", dto != null ? dto.getId() : null);
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
@@ -101,6 +103,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(BusinessSystemStatusUpdateReq request) {
         if (request == null) {
             return;
@@ -199,6 +202,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(BusinessSystemDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
@@ -207,6 +211,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long[] ids, Integer status) {
         if (ids == null || ids.length == 0) {
             return;

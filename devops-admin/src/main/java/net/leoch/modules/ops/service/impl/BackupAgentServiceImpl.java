@@ -107,6 +107,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void save(BackupAgentSaveReq request) {
         log.info("[BackupAgent] 开始保存, request={}", request);
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
@@ -116,6 +117,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(BackupAgentUpdateReq request) {
         log.info("[BackupAgent] 开始更新, request={}", request);
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
@@ -131,6 +133,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(BackupAgentStatusUpdateReq request) {
         if (request == null) {
             return;
@@ -239,6 +242,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(BackupAgentDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
@@ -274,6 +278,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long[] ids, Integer status) {
         if (ids == null || ids.length == 0) {
             return;

@@ -1,9 +1,9 @@
 package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import net.leoch.modules.sys.entity.SysDeptEntity;
 import net.leoch.modules.sys.vo.req.SysDeptReq;
 import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
-import net.leoch.modules.sys.entity.SysDeptEntity;
 
 import java.util.List;
 import java.util.Map;

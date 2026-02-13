@@ -2,10 +2,10 @@ package net.leoch.modules.sys.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import net.leoch.common.data.page.PageData;
+import net.leoch.modules.sys.entity.SysRoleEntity;
 import net.leoch.modules.sys.vo.req.SysRolePageReq;
 import net.leoch.modules.sys.vo.req.SysRoleReq;
 import net.leoch.modules.sys.vo.rsp.SysRoleRsp;
-import net.leoch.modules.sys.entity.SysRoleEntity;
 
 import java.util.List;
 

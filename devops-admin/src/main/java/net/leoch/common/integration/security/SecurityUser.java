@@ -4,8 +4,8 @@ package net.leoch.common.integration.security;
 
 import cn.dev33.satoken.session.SaSession;
 import cn.dev33.satoken.stp.StpUtil;
-import lombok.extern.slf4j.Slf4j;
 import cn.hutool.core.bean.BeanUtil;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.utils.context.SpringContextUtils;
 import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.sys.entity.SysUserEntity;

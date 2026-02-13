@@ -1,7 +1,6 @@
 package net.leoch.modules.ops.controller;
 
 
-import net.leoch.common.base.Constant;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -9,13 +8,16 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
+import net.leoch.common.base.Constant;
 import net.leoch.common.data.page.PageData;
 import net.leoch.common.data.result.Result;
-import net.leoch.modules.ops.vo.req.*;
-import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.service.IBackupAgentService;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.BackupAgentRsp;
+import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -41,14 +43,14 @@ public class BackupAgentController {
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("ops:backupagent:page")
-    public Result<PageData<BackupAgentRsp>> page(@Parameter(hidden = true) BackupAgentPageReq request){
+    public Result<PageData<BackupAgentRsp>> page(@Parameter(hidden = true) @Valid BackupAgentPageReq request){
         return new Result<PageData<BackupAgentRsp>>().ok(backupAgentService.page(request));
     }
 
     @GetMapping("summary")
     @Operation(summary = "状态汇总")
     @SaCheckPermission("ops:backupagent:page")
-    public Result<OpsHostStatusSummaryRsp> summary(@Parameter(hidden = true) BackupAgentPageReq request){
+    public Result<OpsHostStatusSummaryRsp> summary(@Parameter(hidden = true) @Valid BackupAgentPageReq request){
         return new Result<OpsHostStatusSummaryRsp>().ok(backupAgentService.summary(request));
     }
 
@@ -63,7 +65,7 @@ public class BackupAgentController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("ops:backupagent:save")
-    public Result<Object> save(@RequestBody BackupAgentSaveReq request){
+    public Result<Object> save(@Valid @RequestBody BackupAgentSaveReq request){
         backupAgentService.save(request);
         return new Result<>();
     }
@@ -72,7 +74,7 @@ public class BackupAgentController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("ops:backupagent:update")
-    public Result<Object> update(@RequestBody BackupAgentUpdateReq request){
+    public Result<Object> update(@Valid @RequestBody BackupAgentUpdateReq request){
         backupAgentService.update(request);
         return new Result<>();
     }
@@ -81,7 +83,7 @@ public class BackupAgentController {
     @Operation(summary = "批量状态更新")
     @LogOperation("批量状态更新")
     @SaCheckPermission("ops:backupagent:update")
-    public Result<Object> updateStatus(@RequestBody BackupAgentStatusUpdateReq request){
+    public Result<Object> updateStatus(@Valid @RequestBody BackupAgentStatusUpdateReq request){
         backupAgentService.updateStatus(request);
         return new Result<>();
     }
@@ -90,7 +92,7 @@ public class BackupAgentController {
     @Operation(summary = "导入")
     @LogOperation("导入")
     @SaCheckPermission("ops:backupagent:import")
-    public Result<Object> importExcel(@ModelAttribute BackupAgentImportReq request) throws Exception {
+    public Result<Object> importExcel(@Valid @ModelAttribute BackupAgentImportReq request) throws Exception {
         backupAgentService.importExcel(request);
         return new Result<>();
     }
@@ -106,14 +108,14 @@ public class BackupAgentController {
     @GetMapping("online")
     @Operation(summary = "在线状态")
     @SaCheckPermission("ops:backupagent:page")
-    public Result<Boolean> online(BackupAgentOnlineReq request){
+    public Result<Boolean> online(@Valid BackupAgentOnlineReq request){
         return new Result<Boolean>().ok(backupAgentService.online(request));
     }
 
     @GetMapping("check")
     @Operation(summary = "唯一校验")
     @SaCheckPermission("ops:backupagent:page")
-    public Result<Boolean> check(BackupAgentCheckReq request){
+    public Result<Boolean> check(@Valid BackupAgentCheckReq request){
         return new Result<Boolean>().ok(backupAgentService.check(request));
     }
 
@@ -130,7 +132,7 @@ public class BackupAgentController {
     @Operation(summary = "导出")
     @LogOperation("导出")
     @SaCheckPermission("ops:backupagent:export")
-    public void export(@Parameter(hidden = true) @ModelAttribute BackupAgentPageReq request, HttpServletResponse response) throws Exception {
+    public void export(@Parameter(hidden = true) @Valid @ModelAttribute BackupAgentPageReq request, HttpServletResponse response) throws Exception {
         backupAgentService.export(request, response);
     }
 

@@ -33,7 +33,7 @@ public class SysParamsRedis {
 
     public String get(String paramCode) {
         String key = RedisKeys.getSysParamsKey();
-        return (String) redisUtils.hGet(key, paramCode);
+        return redisUtils.hGet(key, paramCode);
     }
 
 }

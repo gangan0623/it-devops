@@ -82,6 +82,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void save(LinuxHostSaveReq dto) {
         log.info("[LinuxHost] 开始保存, instance={}", dto != null ? dto.getInstance() : null);
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
@@ -92,6 +93,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(LinuxHostUpdateReq dto) {
         log.info("[LinuxHost] 开始更新, id={}", dto != null ? dto.getId() : null);
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
@@ -101,6 +103,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(LinuxHostStatusUpdateReq request) {
         if (request == null) {
             return;
@@ -234,6 +237,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(LinuxHostDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
@@ -255,6 +259,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long[] ids, Integer status) {
         if (ids == null || ids.length == 0) {
             return;

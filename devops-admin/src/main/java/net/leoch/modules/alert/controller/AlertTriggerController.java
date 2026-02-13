@@ -1,21 +1,22 @@
 package net.leoch.modules.alert.controller;
 
 
-import net.leoch.common.base.Constant;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
+import net.leoch.common.base.Constant;
 import net.leoch.common.data.page.PageData;
 import net.leoch.common.data.result.Result;
-import net.leoch.modules.alert.vo.req.AlertTriggerPageReq;
-import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;
-import net.leoch.modules.alert.vo.req.AlertTriggerReq;
 import net.leoch.modules.alert.service.IAlertTriggerService;
+import net.leoch.modules.alert.vo.req.AlertTriggerPageReq;
+import net.leoch.modules.alert.vo.req.AlertTriggerReq;
+import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -59,7 +60,7 @@ public class AlertTriggerController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("alert:trigger:save")
-    public Result<Object> save(@RequestBody AlertTriggerReq dto){
+    public Result<Object> save(@Valid @RequestBody AlertTriggerReq dto){
         alertTriggerService.save(dto);
         return new Result<>();
     }
@@ -68,7 +69,7 @@ public class AlertTriggerController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("alert:trigger:update")
-    public Result<Object> update(@RequestBody AlertTriggerReq dto){
+    public Result<Object> update(@Valid @RequestBody AlertTriggerReq dto){
         alertTriggerService.update(dto);
         return new Result<>();
     }

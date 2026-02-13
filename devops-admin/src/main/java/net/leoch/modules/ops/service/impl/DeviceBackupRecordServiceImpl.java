@@ -1,5 +1,6 @@
 package net.leoch.modules.ops.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -7,16 +8,19 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
-import cn.hutool.core.bean.BeanUtil;
-import net.leoch.modules.ops.mapper.DeviceBackupRecordMapper;
-import net.leoch.modules.ops.vo.req.*;
-import net.leoch.modules.ops.vo.rsp.*;
+import net.leoch.common.exception.ServiceException;
+import net.leoch.framework.config.ops.OnlineStatusConfig;
 import net.leoch.modules.ops.entity.DeviceBackupRecordEntity;
+import net.leoch.modules.ops.mapper.DeviceBackupRecordMapper;
 import net.leoch.modules.ops.service.IDeviceBackupHistoryService;
 import net.leoch.modules.ops.service.IDeviceBackupRecordService;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.DeviceBackupDiffLineRsp;
+import net.leoch.modules.ops.vo.rsp.DeviceBackupHistoryRsp;
+import net.leoch.modules.ops.vo.rsp.DeviceBackupRecordRsp;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -39,9 +43,12 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
     private static final Set<String> ALLOWED_DOWNLOAD_HOSTS = new HashSet<>();
 
     private final IDeviceBackupHistoryService deviceBackupHistoryService;
+    private final OnlineStatusConfig properties;
 
-    public DeviceBackupRecordServiceImpl(IDeviceBackupHistoryService deviceBackupHistoryService) {
+    public DeviceBackupRecordServiceImpl(IDeviceBackupHistoryService deviceBackupHistoryService,
+                                         OnlineStatusConfig properties) {
         this.deviceBackupHistoryService = deviceBackupHistoryService;
+        this.properties = properties;
     }
 
     @Override
@@ -65,6 +72,7 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
         return BeanUtil.copyProperties(entity, DeviceBackupRecordRsp.class);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void delete(DeviceBackupRecordDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
@@ -118,18 +126,21 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
     @Override
     public void download(DeviceBackupRecordDownloadReq request, HttpServletResponse response) {
         if (request == null || request.getUrl() == null || request.getUrl().isBlank()) {
+            log.warn("[备份下载] 请求参数无效, request={}", request);
             response.setStatus(400);
             return;
         }
+        log.info("[备份下载] 开始下载, url={}", request.getUrl());
         validateDownloadUrl(request.getUrl());
         HttpURLConnection connection = null;
         try {
             connection = (HttpURLConnection) new URL(request.getUrl()).openConnection();
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(15000);
+            connection.setConnectTimeout(properties.getBackup().getDownloadConnectTimeout());
+            connection.setReadTimeout(properties.getBackup().getDownloadReadTimeout());
             int code = connection.getResponseCode();
             if (code != 200) {
+                log.warn("[备份下载] HTTP响应异常, url={}, code={}", request.getUrl(), code);
                 response.setStatus(code);
                 return;
             }
@@ -144,10 +155,11 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
             try (InputStream in = connection.getInputStream()) {
                 in.transferTo(response.getOutputStream());
             }
+            log.info("[备份下载] 下载成功, fileName={}", fileName);
         } catch (ServiceException e) {
             throw e;
         } catch (Exception e) {
-            log.error("[备份下载] 下载失败, url: {}", request.getUrl(), e);
+            log.error("[备份下载] 下载失败, url={}", request.getUrl(), e);
             response.setStatus(500);
         } finally {
             if (connection != null) {
@@ -173,15 +185,17 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
         } catch (ServiceException e) {
             throw e;
         } catch (Exception e) {
-            throw new ServiceException("下载URL格式无效");
+            throw new ServiceException("下载URL格式无效", e);
         }
     }
 
     @Override
     public void upsertRecord(String name, String ip, String url, boolean success) {
         if (StrUtil.isBlank(ip)) {
+            log.warn("[备份记录] upsert失败, ip为空");
             return;
         }
+        log.debug("[备份记录] upsert备份记录, ip={}, success={}", ip, success);
         LambdaQueryWrapper<DeviceBackupRecordEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(DeviceBackupRecordEntity::getIp, ip);
         DeviceBackupRecordEntity existing = this.getOne(wrapper);
@@ -195,6 +209,7 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
             entity.setLastBackupStatus(success ? 1 : 0);
             entity.setBackupNum(1);
             this.getBaseMapper().insert(entity);
+            log.info("[备份记录] 新建备份记录, ip={}, name={}", ip, name);
             return;
         }
         existing.setName(name);
@@ -206,6 +221,7 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
         Integer num = existing.getBackupNum() == null ? 0 : existing.getBackupNum();
         existing.setBackupNum(num + 1);
         this.updateById(existing);
+        log.debug("[备份记录] 更新备份记录, ip={}, backupNum={}", ip, existing.getBackupNum());
     }
 
     @Override
@@ -220,10 +236,10 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
     }
 
     private List<DeviceBackupDiffLineRsp> toDiffLines(List<Map<String, Object>> data) {
-        List<DeviceBackupDiffLineRsp> list = new ArrayList<>();
         if (data == null || data.isEmpty()) {
-            return list;
+            return new ArrayList<>();
         }
+        List<DeviceBackupDiffLineRsp> list = new ArrayList<>(data.size());
         for (Map<String, Object> item : data) {
             DeviceBackupDiffLineRsp line = new DeviceBackupDiffLineRsp();
             Object type = item.get("type");
@@ -247,7 +263,7 @@ public class DeviceBackupRecordServiceImpl extends ServiceImpl<DeviceBackupRecor
         try {
             return Integer.parseInt(String.valueOf(value));
         } catch (Exception e) {
-            log.warn("[设备备份记录] 操作失败", e);
+            log.warn("[设备备份记录] 整数解析失败, value={}", value, e);
             return null;
         }
     }

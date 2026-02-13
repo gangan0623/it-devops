@@ -2,25 +2,18 @@ package net.leoch.common.integration.schedule.task;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import net.leoch.common.utils.ops.MetricsUtils;
+import net.leoch.common.utils.ops.PingUtils;
 import net.leoch.common.utils.redis.RedisKeys;
 import net.leoch.common.utils.redis.RedisUtils;
-import net.leoch.common.utils.ops.PingUtils;
-import net.leoch.framework.config.OnlineStatusProperties;
-import net.leoch.modules.ops.mapper.BusinessSystemMapper;
-import net.leoch.modules.ops.mapper.BackupAgentMapper;
-import net.leoch.modules.ops.mapper.DeviceBackupMapper;
-import net.leoch.modules.ops.mapper.LinuxHostMapper;
-import net.leoch.modules.ops.mapper.WindowHostMapper;
-import net.leoch.modules.ops.entity.BackupAgentEntity;
-import net.leoch.modules.ops.entity.BusinessSystemEntity;
-import net.leoch.modules.ops.entity.DeviceBackupEntity;
-import net.leoch.modules.ops.entity.LinuxHostEntity;
-import net.leoch.modules.ops.entity.WindowHostEntity;
-import net.leoch.common.utils.ops.MetricsUtils;
+import net.leoch.framework.config.ops.OnlineStatusConfig;
+import net.leoch.modules.ops.entity.*;
+import net.leoch.modules.ops.mapper.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -35,7 +28,6 @@ import java.util.function.Function;
 @Component("onlineStatusRefreshTask")
 public class OnlineStatusRefreshTask implements ITask {
     private static final Logger logger = LoggerFactory.getLogger(OnlineStatusRefreshTask.class);
-    private static final long CACHE_EXPIRE_SECONDS = 600;
 
     private final LinuxHostMapper linuxHostMapper;
     private final WindowHostMapper windowHostMapper;
@@ -43,7 +35,7 @@ public class OnlineStatusRefreshTask implements ITask {
     private final BackupAgentMapper backupAgentMapper;
     private final DeviceBackupMapper deviceBackupMapper;
     private final RedisUtils redisUtils;
-    private final OnlineStatusProperties properties;
+    private final OnlineStatusConfig properties;
 
     public OnlineStatusRefreshTask(LinuxHostMapper linuxHostMapper,
                                    WindowHostMapper windowHostMapper,
@@ -51,7 +43,7 @@ public class OnlineStatusRefreshTask implements ITask {
                                    BackupAgentMapper backupAgentMapper,
                                    DeviceBackupMapper deviceBackupMapper,
                                    RedisUtils redisUtils,
-                                   OnlineStatusProperties properties) {
+                                   OnlineStatusConfig properties) {
         this.linuxHostMapper = linuxHostMapper;
         this.windowHostMapper = windowHostMapper;
         this.businessSystemMapper = businessSystemMapper;
@@ -76,7 +68,7 @@ public class OnlineStatusRefreshTask implements ITask {
         List<LinuxHostEntity> list = linuxHostMapper.selectList(new LambdaQueryWrapper<LinuxHostEntity>()
                 .select(LinuxHostEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, LinuxHostEntity::getInstance,
-                instance -> MetricsUtils.metricsOk(instance, properties.getTimeout().getMetrics()));
+                instance -> MetricsUtils.metricsOk(instance, properties.getOnlineStatus().getTimeout().getMetrics()));
         refreshCache(RedisKeys.getLinuxHostOnlineKey(), statusMap);
     }
 
@@ -84,7 +76,7 @@ public class OnlineStatusRefreshTask implements ITask {
         List<WindowHostEntity> list = windowHostMapper.selectList(new LambdaQueryWrapper<WindowHostEntity>()
                 .select(WindowHostEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, WindowHostEntity::getInstance,
-                instance -> MetricsUtils.metricsOk(instance, properties.getTimeout().getMetrics()));
+                instance -> MetricsUtils.metricsOk(instance, properties.getOnlineStatus().getTimeout().getMetrics()));
         refreshCache(RedisKeys.getWindowHostOnlineKey(), statusMap);
     }
 
@@ -92,7 +84,7 @@ public class OnlineStatusRefreshTask implements ITask {
         List<BusinessSystemEntity> list = businessSystemMapper.selectList(new LambdaQueryWrapper<BusinessSystemEntity>()
                 .select(BusinessSystemEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, BusinessSystemEntity::getInstance,
-                instance -> PingUtils.isReachable(instance, properties.getTimeout().getPing()));
+                instance -> PingUtils.isReachable(instance, properties.getOnlineStatus().getTimeout().getPing()));
         refreshCache(RedisKeys.getBusinessSystemOnlineKey(), statusMap);
     }
 
@@ -107,14 +99,14 @@ public class OnlineStatusRefreshTask implements ITask {
         List<DeviceBackupEntity> list = deviceBackupMapper.selectList(new LambdaQueryWrapper<DeviceBackupEntity>()
                 .select(DeviceBackupEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, DeviceBackupEntity::getInstance,
-                instance -> PingUtils.isReachable(instance, properties.getTimeout().getDevice()));
+                instance -> PingUtils.isReachable(instance, properties.getOnlineStatus().getTimeout().getDevice()));
         refreshCache(RedisKeys.getDeviceBackupOnlineKey(), statusMap);
     }
 
     private void refreshCache(String key, Map<String, Object> statusMap) {
         redisUtils.delete(key);
         if (!statusMap.isEmpty()) {
-            redisUtils.hMSet(key, statusMap, CACHE_EXPIRE_SECONDS);
+            redisUtils.hPutAll(key, statusMap, Duration.ofSeconds(properties.getCache().getOnlineStatusTtl()));
         }
     }
 
@@ -125,8 +117,8 @@ public class OnlineStatusRefreshTask implements ITask {
         if (list == null || list.isEmpty()) {
             return statusMap;
         }
-        int poolSize = Math.min(properties.getThreadPool().getMaxSize(),
-                Math.max(properties.getThreadPool().getCoreSize(), list.size()));
+        int poolSize = Math.min(properties.getOnlineStatus().getThreadPool().getMaxSize(),
+                Math.max(properties.getOnlineStatus().getThreadPool().getCoreSize(), list.size()));
         ExecutorService executor = Executors.newFixedThreadPool(poolSize);
         try {
             List<Future<Map.Entry<String, Boolean>>> futures = list.stream()
@@ -141,7 +133,7 @@ public class OnlineStatusRefreshTask implements ITask {
                     .map(executor::submit)
                     .toList();
 
-            int futureTimeout = properties.getTimeout().getFuture();
+            int futureTimeout = properties.getOnlineStatus().getTimeout().getFuture();
             for (Future<Map.Entry<String, Boolean>> future : futures) {
                 try {
                     Map.Entry<String, Boolean> entry = future.get(futureTimeout, TimeUnit.MILLISECONDS);
@@ -169,7 +161,7 @@ public class OnlineStatusRefreshTask implements ITask {
             base = "http://" + base;
         }
         String url = base.endsWith("/") ? (base + "health") : (base + "/health");
-        int timeout = properties.getTimeout().getAgent();
+        int timeout = properties.getOnlineStatus().getTimeout().getAgent();
         try {
             java.net.HttpURLConnection conn = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();
             conn.setRequestMethod("GET");

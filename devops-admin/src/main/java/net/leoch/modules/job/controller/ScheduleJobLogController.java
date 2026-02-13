@@ -6,10 +6,13 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.data.page.PageData;
 import net.leoch.common.data.result.Result;
-import net.leoch.modules.job.vo.rsp.ScheduleJobLogRsp;
-import net.leoch.modules.job.vo.req.ScheduleJobLogPageReq;
 import net.leoch.modules.job.service.IScheduleJobLogService;
-import org.springframework.web.bind.annotation.*;
+import net.leoch.modules.job.vo.req.ScheduleJobLogPageReq;
+import net.leoch.modules.job.vo.rsp.ScheduleJobLogRsp;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 定时任务日志

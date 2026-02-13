@@ -3,8 +3,8 @@
 package net.leoch.modules.sys.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import net.leoch.modules.sys.vo.rsp.DictDataRsp;
 import net.leoch.modules.sys.entity.SysDictDataEntity;
+import net.leoch.modules.sys.vo.rsp.DictDataRsp;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

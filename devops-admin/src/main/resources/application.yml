@@ -27,6 +27,8 @@ sa-token:
   is-share: true
   token-style: random-32
   is-log: false
+  is-print: false
+  max-login-count: 5
 
 #mybatis
 mybatis-plus:
@@ -60,4 +62,27 @@ devops:
       core-size: 4       # 核心线程数（默认）
       max-size: 50       # 最大线程数（默认）
       queue-capacity: 100  # 任务队列容量
+  # HTTP超时配置（单位：毫秒）
+  http:
+    timeout:
+      monitor-health-check-connect: 3000  # 监控组件健康检查连接超时
+      monitor-health-check-read: 3000     # 监控组件健康检查读取超时
+      monitor-version-fetch-connect: 5000 # 监控组件版本获取连接超时
+      monitor-version-fetch-read: 8000    # 监控组件版本获取读取超时
+      backup-agent-health-connect: 2000   # 备份代理健康检查连接超时
+      backup-agent-health-read: 2000      # 备份代理健康检查读取超时
+      backup-trigger-connect: 5000        # 触发备份任务连接超时
+      backup-trigger-read: 10000          # 触发备份任务读取超时
+  # 备份配置
+  backup:
+    agent-default-port: 8120              # 备份代理默认端口
+    download-connect-timeout: 5000        # 备份文件下载连接超时（毫秒）
+    download-read-timeout: 15000          # 备份文件下载读取超时（毫秒）
+  # 缓存配置
+  cache:
+    online-status-ttl: 600                # 在线状态缓存过期时间（秒）
+  # SSE配置
+  sse:
+    emitter-timeout: 0                    # SSE连接超时（0表示无限制，单位：毫秒）
+    batch-size-limit: 50                  # SSE批量推送上限（防止单次推送过多数据）
 

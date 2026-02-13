@@ -2,44 +2,40 @@
 
 package net.leoch.modules.security.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.extra.servlet.JakartaServletUtil;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.ServiceException;
-import cn.hutool.extra.servlet.JakartaServletUtil;
+import net.leoch.common.base.Constant;
 import net.leoch.common.data.result.Result;
 import net.leoch.common.data.validator.ValidatorUtils;
-import net.leoch.modules.log.entity.SysLogLoginEntity;
 import net.leoch.common.enums.LoginOperationEnum;
 import net.leoch.common.enums.LoginStatusEnum;
-import net.leoch.modules.log.service.ISysLogLoginService;
-import net.leoch.modules.security.mapper.SysUserTokenMapper;
-import net.leoch.modules.security.vo.req.LoginReq;
-import net.leoch.modules.security.entity.SysUserTokenEntity;
-import net.leoch.common.utils.security.PasswordUtils;
-import net.leoch.modules.security.service.ICaptchaService;
-import net.leoch.modules.security.service.ISecurityService;
-import net.leoch.modules.security.service.ISysUserTokenService;
+import net.leoch.common.enums.SuperAdminEnum;
+import net.leoch.common.enums.UserStatusEnum;
+import net.leoch.common.exception.ErrorCode;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.integration.security.SecurityUser;
 import net.leoch.common.integration.security.UserDetail;
+import net.leoch.common.utils.security.PasswordUtils;
+import net.leoch.modules.log.entity.SysLogLoginEntity;
+import net.leoch.modules.log.service.ISysLogLoginService;
+import net.leoch.modules.security.service.ICaptchaService;
+import net.leoch.modules.security.service.ISecurityService;
+import net.leoch.modules.security.vo.req.LoginReq;
+import net.leoch.modules.sys.entity.SysUserEntity;
 import net.leoch.modules.sys.mapper.SysMenuMapper;
 import net.leoch.modules.sys.mapper.SysRoleDataScopeMapper;
 import net.leoch.modules.sys.mapper.SysUserMapper;
-import net.leoch.modules.sys.vo.rsp.SysUserRsp;
-import net.leoch.modules.sys.entity.SysUserEntity;
-import net.leoch.common.enums.SuperAdminEnum;
-import net.leoch.common.enums.UserStatusEnum;
 import net.leoch.modules.sys.service.ISysUserService;
+import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -47,10 +43,8 @@ import java.util.Set;
 public class SecurityServiceImpl implements ISecurityService {
     private final SysMenuMapper sysMenuMapper;
     private final SysUserMapper sysUserMapper;
-    private final SysUserTokenMapper sysUserTokenMapper;
     private final SysRoleDataScopeMapper sysRoleDataScopeMapper;
     private final ISysUserService sysUserService;
-    private final ISysUserTokenService sysUserTokenService;
     private final ICaptchaService captchaService;
     private final ISysLogLoginService sysLogLoginService;
 
@@ -77,11 +71,6 @@ public class SecurityServiceImpl implements ISecurityService {
         }
 
         return permsSet;
-    }
-
-    @Override
-    public SysUserTokenEntity getByToken(String token) {
-        return sysUserTokenMapper.getByToken(token);
     }
 
     @Override
@@ -139,13 +128,26 @@ public class SecurityServiceImpl implements ISecurityService {
         loginLog.setCreatorName(user.getUsername());
         sysLogLoginService.save(loginLog);
 
-        return sysUserTokenService.createToken(user.getId());
+        // sa-token 登录
+        StpUtil.login(user.getId());
+        String token = StpUtil.getTokenValue();
+        long timeout = StpUtil.getTokenTimeout();
+
+        // 存储用户信息到 session
+        UserDetail userDetail = BeanUtil.copyProperties(user, UserDetail.class);
+        userDetail.setDeptIdList(sysRoleDataScopeMapper.getDataScopeList(user.getId()));
+        StpUtil.getSession().set("user", userDetail);
+
+        Map<String, Object> map = new HashMap<>(2);
+        map.put(Constant.TOKEN_HEADER, token);
+        map.put("expire", timeout > 0 ? timeout : 43200);
+        return new Result<>().ok(map);
     }
 
     @Override
     public void recordLogout(HttpServletRequest request) {
         UserDetail user = SecurityUser.getUser();
-        sysUserTokenService.logout(user.getId());
+        StpUtil.logout(user.getId());
 
         SysLogLoginEntity loginLog = new SysLogLoginEntity();
         loginLog.setOperation(LoginOperationEnum.LOGOUT.value());

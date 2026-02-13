@@ -52,8 +52,8 @@ public class DataFilterInterceptor implements InnerInterceptor {
 
         // 判断参数里是否有DataScope对象
         if (parameter instanceof Map<?, ?> parameterMap) {
-            for (Map.Entry entry : parameterMap.entrySet()) {
-                if (entry.getValue() != null && entry.getValue() instanceof DataScope) {
+            for (Map.Entry<?, ?> entry : parameterMap.entrySet()) {
+                if (entry.getValue() instanceof DataScope) {
                     return (DataScope) entry.getValue();
                 }
             }
@@ -67,7 +67,7 @@ public class DataFilterInterceptor implements InnerInterceptor {
     private String getSelect(String buildSql, DataScope scope){
         try {
             Select select = (Select) CCJSqlParserUtil.parse(buildSql);
-            PlainSelect plainSelect = (PlainSelect) select.getSelectBody();
+            PlainSelect plainSelect = select.getPlainSelect();
 
             Expression expression = plainSelect.getWhere();
             if(expression == null){

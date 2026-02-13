@@ -8,12 +8,12 @@ import com.qiniu.util.StringUtils;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.annotation.DataFilter;
 import net.leoch.common.base.Constant;
+import net.leoch.common.enums.SuperAdminEnum;
 import net.leoch.common.exception.ErrorCode;
 import net.leoch.common.exception.ServiceException;
-import net.leoch.framework.interceptor.DataScope;
 import net.leoch.common.integration.security.SecurityUser;
 import net.leoch.common.integration.security.UserDetail;
-import net.leoch.common.enums.SuperAdminEnum;
+import net.leoch.framework.interceptor.DataScope;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Before;
@@ -43,7 +43,10 @@ public class DataFilterAspect {
     @Before("dataFilterCut()")
     public void dataFilter(JoinPoint point) {
         Object params = point.getArgs()[0];
-        if (params instanceof Map map) {
+        if (params instanceof Map<?, ?>) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> map = (Map<String, Object>) params;
+
             UserDetail user = SecurityUser.getUser();
 
             //如果是超级管理员，则不进行数据过滤

@@ -1,24 +1,25 @@
 package net.leoch.modules.alert.controller;
 
 
-import net.leoch.common.base.Constant;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
+import net.leoch.common.base.Constant;
 import net.leoch.common.data.page.PageData;
 import net.leoch.common.data.result.Result;
-import net.leoch.modules.alert.vo.rsp.AlertTemplateRsp;
-import net.leoch.modules.alert.vo.req.AlertTemplatePageReq;
-import net.leoch.modules.alert.vo.req.AlertTemplateReq;
-import net.leoch.modules.alert.vo.req.AlertTemplatePreviewReq;
-import net.leoch.modules.alert.vo.req.AlertTemplateSendTestReq;
 import net.leoch.modules.alert.service.IAlertTemplateService;
 import net.leoch.modules.alert.service.IAlertTriggerService;
+import net.leoch.modules.alert.vo.req.AlertTemplatePageReq;
+import net.leoch.modules.alert.vo.req.AlertTemplatePreviewReq;
+import net.leoch.modules.alert.vo.req.AlertTemplateReq;
+import net.leoch.modules.alert.vo.req.AlertTemplateSendTestReq;
+import net.leoch.modules.alert.vo.rsp.AlertTemplateRsp;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,7 +49,7 @@ public class AlertTemplateController {
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("alert:template:page")
-    public Result<PageData<AlertTemplateRsp>> page(AlertTemplatePageReq request){
+    public Result<PageData<AlertTemplateRsp>> page(@Valid AlertTemplatePageReq request){
         return new Result<PageData<AlertTemplateRsp>>().ok(alertTemplateService.page(request));
     }
 
@@ -63,7 +64,7 @@ public class AlertTemplateController {
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("alert:template:save")
-    public Result<Object> save(@RequestBody AlertTemplateReq dto){
+    public Result<Object> save(@Valid @RequestBody AlertTemplateReq dto){
         alertTemplateService.save(dto);
         return new Result<>();
     }
@@ -72,7 +73,7 @@ public class AlertTemplateController {
     @Operation(summary = "保存(表单)")
     @LogOperation("保存")
     @SaCheckPermission("alert:template:save")
-    public Result<Object> saveForm(AlertTemplateReq dto){
+    public Result<Object> saveForm(@Valid AlertTemplateReq dto){
         alertTemplateService.save(dto);
         return new Result<>();
     }
@@ -81,7 +82,7 @@ public class AlertTemplateController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("alert:template:update")
-    public Result<Object> update(@RequestBody AlertTemplateReq dto){
+    public Result<Object> update(@Valid @RequestBody AlertTemplateReq dto){
         alertTemplateService.update(dto);
         return new Result<>();
     }
@@ -90,7 +91,7 @@ public class AlertTemplateController {
     @Operation(summary = "修改(表单)")
     @LogOperation("修改")
     @SaCheckPermission("alert:template:update")
-    public Result<Object> updateForm(AlertTemplateReq dto){
+    public Result<Object> updateForm(@Valid AlertTemplateReq dto){
         alertTemplateService.update(dto);
         return new Result<>();
     }
@@ -107,14 +108,14 @@ public class AlertTemplateController {
     @PostMapping("preview")
     @Operation(summary = "模板预览")
     @SaCheckPermission("alert:template:test")
-    public Result<Map<String, Object>> preview(@RequestBody AlertTemplatePreviewReq dto) {
+    public Result<Map<String, Object>> preview(@Valid @RequestBody AlertTemplatePreviewReq dto) {
         return new Result<Map<String, Object>>().ok(alertTemplateService.preview(dto));
     }
 
     @PostMapping("test-send")
     @Operation(summary = "模板发送测试")
     @SaCheckPermission("alert:template:test")
-    public Result<Object> testSend(@RequestBody AlertTemplateSendTestReq dto) {
+    public Result<Object> testSend(@Valid @RequestBody AlertTemplateSendTestReq dto) {
         alertTriggerService.sendTest(dto.getTemplateId(), dto.getTriggerId(), dto.getRawJson());
         return new Result<>();
     }

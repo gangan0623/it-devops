@@ -131,6 +131,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         return BeanUtil.copyProperties(this.getById(id), AlertRecordRsp.class);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void delete(Long[] ids) {
         log.info("[AlertRecord] 开始删除, ids={}", Arrays.toString(ids));
@@ -241,6 +242,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         saveAction(recordId, "确定", message, null);
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void close(Long recordId, String message) {
         AlertRecordEntity record = requireRecord(recordId);

@@ -6,7 +6,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.utils.MessageUtils;
+import net.leoch.common.utils.context.MessageUtils;
 
 import java.io.Serial;
 import java.io.Serializable;

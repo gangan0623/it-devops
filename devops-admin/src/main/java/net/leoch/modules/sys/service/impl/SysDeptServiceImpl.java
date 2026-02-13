@@ -1,28 +1,28 @@
 package net.leoch.modules.sys.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qiniu.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.base.Constant;
-import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.ServiceException;
-import cn.hutool.core.bean.BeanUtil;
-import net.leoch.common.utils.tree.TreeUtils;
 import net.leoch.common.data.validator.AssertUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AddGroup;
 import net.leoch.common.data.validator.group.DefaultGroup;
 import net.leoch.common.data.validator.group.UpdateGroup;
+import net.leoch.common.enums.SuperAdminEnum;
+import net.leoch.common.exception.ErrorCode;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.integration.security.SecurityUser;
 import net.leoch.common.integration.security.UserDetail;
+import net.leoch.common.utils.tree.TreeUtils;
+import net.leoch.modules.sys.entity.SysDeptEntity;
 import net.leoch.modules.sys.mapper.SysDeptMapper;
 import net.leoch.modules.sys.mapper.SysUserMapper;
+import net.leoch.modules.sys.service.ISysDeptService;
 import net.leoch.modules.sys.vo.req.SysDeptReq;
 import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
-import net.leoch.modules.sys.entity.SysDeptEntity;
-import net.leoch.common.enums.SuperAdminEnum;
-import net.leoch.modules.sys.service.ISysDeptService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
