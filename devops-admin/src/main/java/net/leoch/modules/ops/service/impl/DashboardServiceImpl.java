@@ -2,24 +2,19 @@ package net.leoch.modules.ops.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import net.leoch.modules.alert.mapper.AlertRecordMapper;
-import net.leoch.modules.alert.entity.AlertRecordEntity;
-import net.leoch.modules.ops.mapper.*;
-import net.leoch.modules.ops.vo.req.*;
-import net.leoch.modules.ops.vo.rsp.*;
-import net.leoch.modules.ops.entity.BusinessSystemEntity;
-import net.leoch.modules.ops.entity.DeviceBackupEntity;
-import net.leoch.modules.ops.entity.DeviceBackupRecordEntity;
-import net.leoch.modules.ops.entity.LinuxHostEntity;
-import net.leoch.modules.ops.entity.MonitorComponentEntity;
-import net.leoch.modules.ops.entity.WindowHostEntity;
-import net.leoch.modules.ops.service.IDashboardService;
-import net.leoch.modules.ops.service.ZabbixClient;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import net.leoch.modules.alert.entity.AlertRecordEntity;
+import net.leoch.modules.alert.mapper.AlertRecordMapper;
+import net.leoch.modules.ops.entity.*;
+import net.leoch.modules.ops.mapper.*;
+import net.leoch.modules.ops.service.IDashboardService;
+import net.leoch.modules.ops.service.ZabbixClient;
+import net.leoch.modules.ops.vo.rsp.*;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 工作台统计
@@ -58,32 +53,10 @@ public class DashboardServiceImpl implements IDashboardService {
     }
 
     private DashboardBackupStatsRsp buildBackupStats() {
-        DashboardBackupStatsRsp backupStats = new DashboardBackupStatsRsp();
-        long total = deviceBackupRecordMapper.selectCount(new LambdaQueryWrapper<>());
-        long success = deviceBackupRecordMapper.selectCount(
-                new LambdaQueryWrapper<DeviceBackupRecordEntity>().eq(DeviceBackupRecordEntity::getLastBackupStatus, 1)
-        );
-        long fail = deviceBackupRecordMapper.selectCount(
-                new LambdaQueryWrapper<DeviceBackupRecordEntity>().eq(DeviceBackupRecordEntity::getLastBackupStatus, 0)
-        );
-        DeviceBackupRecordEntity maxBackup = deviceBackupRecordMapper.selectOne(
-                new LambdaQueryWrapper<DeviceBackupRecordEntity>()
-                        .select(DeviceBackupRecordEntity::getBackupNum)
-                        .orderByDesc(DeviceBackupRecordEntity::getBackupNum)
-                        .last("limit 1")
-        );
-        Integer round = maxBackup == null ? 0 : maxBackup.getBackupNum();
-        DeviceBackupRecordEntity lastBackup = deviceBackupRecordMapper.selectOne(
-                new LambdaQueryWrapper<DeviceBackupRecordEntity>()
-                        .select(DeviceBackupRecordEntity::getLastBackupTime)
-                        .orderByDesc(DeviceBackupRecordEntity::getLastBackupTime)
-                        .last("limit 1")
-        );
-        backupStats.setRound(round == null ? 0 : round);
-        backupStats.setTotal(total);
-        backupStats.setSuccess(success);
-        backupStats.setFail(fail);
-        backupStats.setLastTime(lastBackup == null ? null : lastBackup.getLastBackupTime());
+        // 使用聚合查询一次性获取所有统计信息，替代5次独立查询
+        DashboardBackupStatsRsp backupStats = deviceBackupRecordMapper.getBackupStats();
+        log.debug("[看板] 备份统计, total={}, success={}, fail={}, round={}",
+                backupStats.getTotal(), backupStats.getSuccess(), backupStats.getFail(), backupStats.getRound());
         return backupStats;
     }
 
@@ -93,43 +66,44 @@ public class DashboardServiceImpl implements IDashboardService {
                 new LambdaQueryWrapper<DeviceBackupEntity>()
                         .select(DeviceBackupEntity::getInstance, DeviceBackupEntity::getName)
         );
-        Set<String> zabbixIps = new HashSet<>();
-        for (Map<String, String> host : zabbixHosts) {
-            String ip = host.get("ip");
-            if (StrUtil.isNotBlank(ip)) {
-                zabbixIps.add(ip);
-            }
-        }
-        Set<String> backupIps = new HashSet<>();
-        for (DeviceBackupEntity device : backupDevices) {
-            if (device != null && StrUtil.isNotBlank(device.getInstance())) {
-                backupIps.add(device.getInstance());
-            }
-        }
-        List<DashboardDeviceDiffItemRsp> zabbixOnly = new ArrayList<>();
-        for (Map<String, String> host : zabbixHosts) {
-            String ip = host.get("ip");
-            if (StrUtil.isBlank(ip) || backupIps.contains(ip)) {
-                continue;
-            }
-            DashboardDeviceDiffItemRsp item = new DashboardDeviceDiffItemRsp();
-            item.setIp(ip);
-            item.setName(host.get("name"));
-            zabbixOnly.add(item);
-        }
-        List<DashboardDeviceDiffItemRsp> backupOnly = new ArrayList<>();
-        for (DeviceBackupEntity device : backupDevices) {
-            if (device == null || StrUtil.isBlank(device.getInstance())) {
-                continue;
-            }
-            if (zabbixIps.contains(device.getInstance())) {
-                continue;
-            }
-            DashboardDeviceDiffItemRsp item = new DashboardDeviceDiffItemRsp();
-            item.setIp(device.getInstance());
-            item.setName(device.getName());
-            backupOnly.add(item);
-        }
+
+        // 使用 Stream API 构建 IP 集合，提升代码可读性
+        Set<String> zabbixIps = zabbixHosts.stream()
+                .map(host -> host.get("ip"))
+                .filter(StrUtil::isNotBlank)
+                .collect(Collectors.toSet());
+
+        Set<String> backupIps = backupDevices.stream()
+                .filter(device -> device != null && StrUtil.isNotBlank(device.getInstance()))
+                .map(DeviceBackupEntity::getInstance)
+                .collect(Collectors.toSet());
+
+        // 找出只在 Zabbix 中的设备（差集运算 O(n)）
+        List<DashboardDeviceDiffItemRsp> zabbixOnly = zabbixHosts.stream()
+                .filter(host -> StrUtil.isNotBlank(host.get("ip")) && !backupIps.contains(host.get("ip")))
+                .map(host -> {
+                    DashboardDeviceDiffItemRsp item = new DashboardDeviceDiffItemRsp();
+                    item.setIp(host.get("ip"));
+                    item.setName(host.get("name"));
+                    return item;
+                })
+                .collect(Collectors.toList());
+
+        // 找出只在备份中的设备（差集运算 O(n)）
+        List<DashboardDeviceDiffItemRsp> backupOnly = backupDevices.stream()
+                .filter(device -> device != null && StrUtil.isNotBlank(device.getInstance()))
+                .filter(device -> !zabbixIps.contains(device.getInstance()))
+                .map(device -> {
+                    DashboardDeviceDiffItemRsp item = new DashboardDeviceDiffItemRsp();
+                    item.setIp(device.getInstance());
+                    item.setName(device.getName());
+                    return item;
+                })
+                .collect(Collectors.toList());
+
+        log.debug("[看板] 设备差异分析, zabbix={}, backup={}, zabbixOnly={}, backupOnly={}",
+                zabbixHosts.size(), backupDevices.size(), zabbixOnly.size(), backupOnly.size());
+
         DashboardDeviceDiffRsp diff = new DashboardDeviceDiffRsp();
         diff.setZabbixOnly(zabbixOnly);
         diff.setBackupOnly(backupOnly);

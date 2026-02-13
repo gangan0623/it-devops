@@ -1,47 +1,39 @@
 package net.leoch.modules.alert.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import cn.hutool.core.lang.TypeReference;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.data.page.PageData;
-import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.data.validator.AssertUtils;
-import cn.hutool.json.JSONUtil;
+import net.leoch.common.utils.common.ParseUtils;
+import net.leoch.common.utils.common.TimeUtils;
+import net.leoch.common.utils.ops.AlertJsonUtils;
+import net.leoch.common.utils.ops.AlertPayloadUtils;
+import net.leoch.common.utils.ops.AlertTemplateRenderer;
+import net.leoch.modules.alert.entity.*;
 import net.leoch.modules.alert.mapper.AlertMediaMapper;
-import net.leoch.modules.alert.service.IAlertNotifyLogService;
 import net.leoch.modules.alert.mapper.AlertRecordMapper;
 import net.leoch.modules.alert.mapper.AlertTemplateMapper;
 import net.leoch.modules.alert.mapper.AlertTriggerMapper;
+import net.leoch.modules.alert.service.AlertMailService;
+import net.leoch.modules.alert.service.IAlertNotifyLogService;
+import net.leoch.modules.alert.service.IAlertTriggerService;
 import net.leoch.modules.alert.vo.req.AlertTriggerPageReq;
 import net.leoch.modules.alert.vo.req.AlertTriggerReq;
 import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;
-import net.leoch.modules.alert.entity.AlertMediaEntity;
-import net.leoch.modules.alert.entity.AlertNotifyLogEntity;
-import net.leoch.modules.alert.entity.AlertRecordEntity;
-import net.leoch.modules.alert.entity.AlertTemplateEntity;
-import net.leoch.modules.alert.entity.AlertTriggerEntity;
-import net.leoch.modules.alert.service.AlertMailService;
-import net.leoch.modules.alert.service.IAlertTriggerService;
-import net.leoch.common.utils.alert.AlertJsonUtils;
-import net.leoch.common.utils.alert.AlertPayloadUtils;
-import net.leoch.common.utils.alert.AlertTemplateRenderer;
-import net.leoch.modules.sys.mapper.SysUserMapper;
 import net.leoch.modules.sys.entity.SysUserEntity;
+import net.leoch.modules.sys.mapper.SysUserMapper;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -101,7 +93,12 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
 
     @Override
     public List<Map<String, Object>> options() {
-        List<AlertTriggerEntity> list = this.list();
+        // 只查询必要字段
+        List<AlertTriggerEntity> list = this.list(
+            new LambdaQueryWrapper<AlertTriggerEntity>()
+                .select(AlertTriggerEntity::getId, AlertTriggerEntity::getName)
+                .last("LIMIT 1000")
+        );
         return list.stream().map(item -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", item.getId());
@@ -136,13 +133,27 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
     @Override
     public Map<String, Object> resources() {
         Map<String, Object> result = new HashMap<>();
-        List<AlertTemplateEntity> templates = alertTemplateMapper.selectList(null);
-        List<AlertMediaEntity> medias = alertMediaMapper.selectList(null);
+
+        // 只查询必要字段，过滤启用状态
+        List<AlertTemplateEntity> templates = alertTemplateMapper.selectList(
+            new LambdaQueryWrapper<AlertTemplateEntity>()
+                .eq(AlertTemplateEntity::getStatus, 1)
+                .select(AlertTemplateEntity::getId, AlertTemplateEntity::getName)
+                .last("LIMIT 1000")
+        );
+        List<AlertMediaEntity> medias = alertMediaMapper.selectList(
+            new LambdaQueryWrapper<AlertMediaEntity>()
+                .eq(AlertMediaEntity::getStatus, 1)
+                .select(AlertMediaEntity::getId, AlertMediaEntity::getName)
+                .last("LIMIT 1000")
+        );
         List<SysUserEntity> users = sysUserMapper.selectList(
             new QueryWrapper<SysUserEntity>()
                 .select("id", "username", "email")
                 .isNotNull("email")
+                .last("LIMIT 1000")
         );
+
         result.put("templates", templates.stream().map(item -> {
             Map<String, Object> map = new HashMap<>();
             map.put("id", item.getId());
@@ -162,6 +173,9 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
             map.put("email", item.getEmail());
             return map;
         }).collect(Collectors.toList()));
+
+        log.debug("[告警触发规则] 加载资源, templates={}, medias={}, users={}",
+            templates.size(), medias.size(), users.size());
         return result;
     }
 
@@ -277,10 +291,10 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
         String subject = AlertTemplateRenderer.render(template.getEmailSubject(), context);
         String html = AlertTemplateRenderer.render(template.getEmailHtml(), context);
         AlertNotifyLogEntity notifyLog = new AlertNotifyLogEntity();
-        notifyLog.setRecordId(context == null ? null : toLong(context.get("recordId")));
-        notifyLog.setAlertName(context == null ? null : toStr(context.get("alertname")));
-        notifyLog.setInstance(context == null ? null : toStr(context.get("instance")));
-        notifyLog.setSeverity(context == null ? null : toStr(context.get("severity")));
+        notifyLog.setRecordId(context == null ? null : ParseUtils.toLong(context.get("recordId")));
+        notifyLog.setAlertName(context == null ? null : ParseUtils.toStr(context.get("alertname")));
+        notifyLog.setInstance(context == null ? null : ParseUtils.toStr(context.get("instance")));
+        notifyLog.setSeverity(context == null ? null : ParseUtils.toStr(context.get("severity")));
         notifyLog.setMediaName(media.getName());
         notifyLog.setReceivers(String.join(",", receivers));
         notifyLog.setSendTime(new Date());
@@ -343,7 +357,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
         context.put("description", getLabelValue(annotations, toMap(payload.get("commonAnnotations")), "description"));
         context.put("startsAt", alert.get("startsAt"));
         context.put("endsAt", alert.get("endsAt"));
-        context.put("duration", formatDuration(parseDate(toStr(alert.get("startsAt"))), parseDate(toStr(alert.get("endsAt")))));
+        context.put("duration", TimeUtils.formatDurationZh(TimeUtils.parseDate(ParseUtils.toStr(alert.get("startsAt"))), TimeUtils.parseDate(ParseUtils.toStr(alert.get("endsAt")))));
         context.put("recordId", recordId);
         return context;
     }
@@ -419,7 +433,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
         String alertName = getLabelValue(labels, toMap(payload.get("commonLabels")), "alertname");
         String instance = getLabelValue(labels, toMap(payload.get("commonLabels")), "instance", getLabelValue(labels, toMap(payload.get("commonLabels")), "service"));
         String startsAt = alert == null ? null : String.valueOf(alert.get("startsAt"));
-        Date startsAtDate = parseDate(startsAt);
+        Date startsAtDate = TimeUtils.parseDate(startsAt);
         AlertRecordEntity record = alertRecordMapper.selectOne(
             new QueryWrapper<AlertRecordEntity>()
                 .eq(StrUtil.isNotBlank(alertName), "alert_name", alertName)
@@ -502,51 +516,5 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
             .filter(StrUtil::isNotBlank)
             .distinct()
             .collect(Collectors.toList());
-    }
-
-    private Date parseDate(String value) {
-        if (StrUtil.isBlank(value)) {
-            return null;
-        }
-        try {
-            return Date.from(Instant.parse(value));
-        } catch (Exception e) {
-            log.warn("[告警触发] 解析日期失败, value={}", value, e);
-            return null;
-        }
-    }
-
-    private String formatDuration(Date startsAt, Date endsAt) {
-        if (startsAt == null) {
-            return "-";
-        }
-        long end = endsAt == null ? System.currentTimeMillis() : endsAt.getTime();
-        long seconds = Math.max(0, (end - startsAt.getTime()) / 1000);
-        long days = seconds / 86400;
-        long hours = (seconds % 86400) / 3600;
-        long minutes = (seconds % 3600) / 60;
-        if (days > 0) {
-            return days + "天" + hours + "小时";
-        }
-        if (hours > 0) {
-            return hours + "小时" + minutes + "分钟";
-        }
-        return minutes + "分钟";
-    }
-
-    private Long toLong(Object value) {
-        if (value == null) {
-            return null;
-        }
-        try {
-            return Long.parseLong(String.valueOf(value));
-        } catch (Exception e) {
-            log.warn("[告警触发] 转换Long失败, value={}", value, e);
-            return null;
-        }
-    }
-
-    private String toStr(Object value) {
-        return value == null ? null : String.valueOf(value);
     }
 }

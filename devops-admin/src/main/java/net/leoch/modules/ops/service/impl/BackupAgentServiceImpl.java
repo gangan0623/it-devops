@@ -1,5 +1,6 @@
 package net.leoch.modules.ops.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.EasyExcel;
@@ -10,28 +11,29 @@ import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.base.Constant;
-import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.redis.RedisKeys;
-import net.leoch.common.utils.redis.RedisUtils;
-import cn.hutool.core.bean.BeanUtil;
-import net.leoch.common.utils.excel.ExcelUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AddGroup;
 import net.leoch.common.data.validator.group.DefaultGroup;
 import net.leoch.common.data.validator.group.UpdateGroup;
-import net.leoch.modules.ops.mapper.BackupAgentMapper;
-import net.leoch.modules.ops.mapper.DeviceBackupMapper;
-import net.leoch.modules.ops.vo.req.*;
-import net.leoch.modules.ops.vo.rsp.*;
-import net.leoch.modules.ops.entity.BackupAgentEntity;
-import net.leoch.modules.ops.entity.DeviceBackupEntity;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.integration.excel.BackupAgentExcel;
 import net.leoch.common.integration.excel.template.BackupAgentImportExcel;
-import net.leoch.modules.ops.service.IBackupAgentService;
 import net.leoch.common.integration.security.SecurityUser;
-import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.utils.excel.ExcelUtils;
+import net.leoch.common.utils.redis.RedisKeys;
+import net.leoch.common.utils.redis.RedisUtils;
+import net.leoch.framework.config.ops.OnlineStatusConfig;
+import net.leoch.modules.ops.entity.BackupAgentEntity;
+import net.leoch.modules.ops.entity.DeviceBackupEntity;
+import net.leoch.modules.ops.mapper.BackupAgentMapper;
+import net.leoch.modules.ops.mapper.DeviceBackupMapper;
+import net.leoch.modules.ops.service.IBackupAgentService;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.BackupAgentRsp;
+import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +42,6 @@ import java.net.HttpURLConnection;
 import java.net.URI;
 import java.net.URL;
 import java.util.*;
-import java.util.Set;
 
 /**
  * 备份节点表
@@ -56,12 +57,23 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     private static final Set<String> ALLOWED_ORDER_FIELDS = Set.of(
             "id", "instance", "name", "area_name", "status", "create_date", "update_date");
 
+    /** 健康检查响应模式 */
+    private static final String[] HEALTH_OK_PATTERNS = {
+            "\"status\":\"ok\"",
+            "\"status\" : \"ok\"",
+            "\"status\": \"ok\""
+    };
+
     private final DeviceBackupMapper deviceBackupMapper;
     private final RedisUtils redisUtils;
+    private final OnlineStatusConfig properties;
 
-    public BackupAgentServiceImpl(DeviceBackupMapper deviceBackupMapper, RedisUtils redisUtils) {
+    public BackupAgentServiceImpl(DeviceBackupMapper deviceBackupMapper,
+                                  RedisUtils redisUtils,
+                                  OnlineStatusConfig properties) {
         this.deviceBackupMapper = deviceBackupMapper;
         this.redisUtils = redisUtils;
+        this.properties = properties;
     }
 
     @Override
@@ -192,7 +204,20 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
             entity.setStatus(item.getStatus());
             entityList.add(entity);
         }
-        this.saveBatch(entityList);
+
+        // 分批处理，避免大批量数据导致 SQL 超时或 OOM
+        final int BATCH_SIZE = 1000;
+        if (entityList.size() > BATCH_SIZE) {
+            log.info("[备份节点] Excel 导入分批处理, 总数={}, 批次大小={}", entityList.size(), BATCH_SIZE);
+            List<List<BackupAgentEntity>> batches = CollUtil.split(entityList, BATCH_SIZE);
+            for (int i = 0; i < batches.size(); i++) {
+                log.debug("[备份节点] 处理第 {}/{} 批, 数量={}", i + 1, batches.size(), batches.get(i).size());
+                this.saveBatch(batches.get(i));
+            }
+        } else {
+            this.saveBatch(entityList);
+        }
+        log.info("[备份节点] Excel 导入完成, 总数={}", entityList.size());
     }
 
     @Override
@@ -332,8 +357,8 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
             URL target = new URL(url);
             connection = (HttpURLConnection) target.openConnection();
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(2000);
-            connection.setReadTimeout(2000);
+            connection.setConnectTimeout(properties.getHttp().getTimeout().getBackupAgentHealthConnect());
+            connection.setReadTimeout(properties.getHttp().getTimeout().getBackupAgentHealthRead());
             connection.connect();
             int code = connection.getResponseCode();
             if (code != 200) {
@@ -342,7 +367,12 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
             try (InputStream in = connection.getInputStream()) {
                 byte[] bytes = in.readAllBytes();
                 String body = new String(bytes);
-                return body.contains("\"status\":\"ok\"") || body.contains("\"status\" : \"ok\"") || body.contains("\"status\": \"ok\"");
+                for (String pattern : HEALTH_OK_PATTERNS) {
+                    if (body.contains(pattern)) {
+                        return true;
+                    }
+                }
+                return false;
             }
         } catch (Exception e) {
             log.debug("[备份节点] 健康检查失败, instance: {}", instance, e);
@@ -383,7 +413,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
                 path = slash > -1 ? raw.substring(slash) : "";
             }
             if (port == -1) {
-                port = 8120;
+                port = properties.getBackup().getAgentDefaultPort();
             }
             if (path == null || path.isEmpty() || "/".equals(path)) {
                 path = "/healthz";
@@ -400,7 +430,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
             if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
                 return trimmed.endsWith("/healthz") ? trimmed : trimmed + (trimmed.endsWith("/") ? "healthz" : "/healthz");
             }
-            return "http://" + trimmed + ":8120/healthz";
+            return "http://" + trimmed + ":" + properties.getBackup().getAgentDefaultPort() + "/healthz";
         }
     }
 }

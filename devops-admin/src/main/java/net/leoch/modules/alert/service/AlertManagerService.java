@@ -1,12 +1,15 @@
 package net.leoch.modules.alert.service;
 
+import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.util.StrUtil;
-import lombok.extern.slf4j.Slf4j;
 import cn.hutool.json.JSONUtil;
-import net.leoch.modules.alert.entity.AlertRecordEntity;
-import net.leoch.modules.ops.mapper.MonitorComponentMapper;
-import net.leoch.modules.ops.entity.MonitorComponentEntity;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.integration.security.SecurityUser;
+import net.leoch.framework.config.ops.HttpTimeoutConfig;
+import net.leoch.modules.alert.entity.AlertRecordEntity;
+import net.leoch.modules.ops.entity.MonitorComponentEntity;
+import net.leoch.modules.ops.mapper.MonitorComponentMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -35,13 +38,15 @@ public class AlertManagerService {
     private String defaultAlertmanagerUrl;
 
     private final MonitorComponentMapper monitorComponentMapper;
+    private final HttpTimeoutConfig httpTimeoutConfig;
 
-    public AlertManagerService(MonitorComponentMapper monitorComponentMapper) {
+    public AlertManagerService(MonitorComponentMapper monitorComponentMapper, HttpTimeoutConfig httpTimeoutConfig) {
         this.monitorComponentMapper = monitorComponentMapper;
+        this.httpTimeoutConfig = httpTimeoutConfig;
     }
 
     public String createSilence(AlertRecordEntity record, int days, String message) {
-        log.info("[告警管理] 开始创建静默, alertName={}, instance={}, days={}",
+        log.info("[告警管理] 创建静默, alertName={}, instance={}, days={}",
                  record != null ? record.getAlertName() : null,
                  record != null ? record.getInstance() : null,
                  days);
@@ -54,7 +59,6 @@ public class AlertManagerService {
             log.error("[告警管理] 无法解析Alertmanager地址");
             return null;
         }
-        log.info("[告警管理] 使用Alertmanager地址: {}", baseUrl);
         Instant now = Instant.now();
         Instant end = now.plus(days, ChronoUnit.DAYS);
         Map<String, Object> payload = new HashMap<>();
@@ -72,7 +76,7 @@ public class AlertManagerService {
             return null;
         }
         try {
-            Map<String, Object> response = JSONUtil.toBean(result, Map.class);
+            Map<String, Object> response = JSONUtil.toBean(result, new TypeReference<Map<String, Object>>() {}, false);
             Object silenceId = response.get("silenceID");
             if (silenceId == null) {
                 log.error("[告警管理] 创建静默失败, 响应中无silenceID, response={}", result);
@@ -87,7 +91,7 @@ public class AlertManagerService {
     }
 
     public void sendResolvedAlert(AlertRecordEntity record, String message) {
-        log.info("[告警管理] 开始发送恢复告警, alertName={}, instance={}",
+        log.info("[告警管理] 发送恢复告警, alertName={}, instance={}",
                  record != null ? record.getAlertName() : null,
                  record != null ? record.getInstance() : null);
         if (record == null) {
@@ -119,7 +123,7 @@ public class AlertManagerService {
         alerts.add(alert);
         String result = postJson(baseUrl + "/api/v2/alerts", JSONUtil.toJsonStr(alerts));
         if (StrUtil.isNotBlank(result)) {
-            log.info("[告警管理] 发送恢复告警成功, alertName={}, instance={}", record.getAlertName(), record.getInstance());
+            log.info("[告警管理] 发送恢复告警成功");
         }
     }
 
@@ -133,12 +137,15 @@ public class AlertManagerService {
     }
 
     private String resolveAlertmanagerBaseUrl() {
-        List<MonitorComponentEntity> list = monitorComponentMapper.selectList(null);
+        List<MonitorComponentEntity> list = monitorComponentMapper.selectList(
+            new LambdaQueryWrapper<MonitorComponentEntity>()
+                .eq(MonitorComponentEntity::getType, TYPE_ALERTMANAGER)
+                .select(MonitorComponentEntity::getWebUrl, MonitorComponentEntity::getIp,
+                    MonitorComponentEntity::getPort, MonitorComponentEntity::getType)
+                .last("LIMIT 10")
+        );
         if (list != null) {
             for (MonitorComponentEntity component : list) {
-                if (!TYPE_ALERTMANAGER.equalsIgnoreCase(component.getType())) {
-                    continue;
-                }
                 String base = buildBaseUrl(component);
                 if (StrUtil.isNotBlank(base)) {
                     return base;
@@ -181,11 +188,11 @@ public class AlertManagerService {
         HttpURLConnection connection = null;
         long startTime = System.currentTimeMillis();
         try {
-            log.debug("[告警管理] 开始HTTP请求, url={}, body={}", target, body);
+            log.debug("[告警管理] HTTP请求, url={}", target);
             connection = (HttpURLConnection) new URL(target).openConnection();
             connection.setRequestMethod("POST");
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(10000);
+            connection.setConnectTimeout(httpTimeoutConfig.getConnectTimeout());
+            connection.setReadTimeout(httpTimeoutConfig.getReadTimeout());
             connection.setDoOutput(true);
             connection.setRequestProperty("Content-Type", "application/json");
             try (OutputStream out = connection.getOutputStream()) {
@@ -197,15 +204,15 @@ public class AlertManagerService {
             if (code >= 200 && code < 300) {
                 try (InputStream in = connection.getInputStream()) {
                     String response = new String(in.readAllBytes(), StandardCharsets.UTF_8);
-                    log.info("[告警管理] HTTP请求成功, url={}, code={}, 耗时={}ms", target, code, elapsedTime);
+                    log.info("[告警管理] HTTP请求成功, code={}, 耗时={}ms", code, elapsedTime);
                     return response;
                 }
             }
-            log.warn("[告警管理] HTTP请求失败, url={}, code={}, 耗时={}ms", target, code, elapsedTime);
+            log.warn("[告警管理] HTTP请求失败, code={}, 耗时={}ms", code, elapsedTime);
             return null;
         } catch (Exception e) {
             long elapsedTime = System.currentTimeMillis() - startTime;
-            log.error("[告警管理] HTTP请求异常, url={}, 耗时={}ms", target, elapsedTime, e);
+            log.error("[告警管理] HTTP请求异常, 耗时={}ms", elapsedTime, e);
             return null;
         } finally {
             if (connection != null) {

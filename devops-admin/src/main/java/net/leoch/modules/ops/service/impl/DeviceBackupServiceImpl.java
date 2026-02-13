@@ -1,5 +1,6 @@
 package net.leoch.modules.ops.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.EasyExcel;
@@ -10,34 +11,34 @@ import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.base.Constant;
-import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.redis.RedisKeys;
-import net.leoch.common.utils.redis.RedisUtils;
-import cn.hutool.core.bean.BeanUtil;
-import net.leoch.common.utils.excel.ExcelUtils;
-import net.leoch.common.utils.ops.PingUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AddGroup;
 import net.leoch.common.data.validator.group.DefaultGroup;
 import net.leoch.common.data.validator.group.UpdateGroup;
-import net.leoch.modules.ops.mapper.BackupAgentMapper;
-import net.leoch.modules.ops.mapper.DeviceBackupMapper;
-import net.leoch.modules.ops.vo.req.*;
-import net.leoch.modules.ops.vo.rsp.*;
-import net.leoch.modules.ops.entity.BackupAgentEntity;
-import net.leoch.modules.ops.entity.DeviceBackupEntity;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.integration.excel.DeviceBackupExcel;
 import net.leoch.common.integration.excel.template.DeviceBackupImportExcel;
-import net.leoch.modules.ops.service.IDeviceBackupService;
 import net.leoch.common.integration.security.SecurityUser;
-import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.utils.excel.ExcelUtils;
+import net.leoch.common.utils.ops.PingUtils;
+import net.leoch.common.utils.redis.RedisKeys;
+import net.leoch.common.utils.redis.RedisUtils;
+import net.leoch.framework.config.ops.OnlineStatusConfig;
+import net.leoch.modules.ops.entity.BackupAgentEntity;
+import net.leoch.modules.ops.entity.DeviceBackupEntity;
+import net.leoch.modules.ops.mapper.BackupAgentMapper;
+import net.leoch.modules.ops.mapper.DeviceBackupMapper;
+import net.leoch.modules.ops.service.IDeviceBackupService;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.DeviceBackupRsp;
+import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -57,10 +58,13 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
 
     private final BackupAgentMapper backupAgentMapper;
     private final RedisUtils redisUtils;
+    private final OnlineStatusConfig properties;
 
-    public DeviceBackupServiceImpl(BackupAgentMapper backupAgentMapper, RedisUtils redisUtils) {
+    public DeviceBackupServiceImpl(BackupAgentMapper backupAgentMapper, RedisUtils redisUtils,
+                                   OnlineStatusConfig properties) {
         this.backupAgentMapper = backupAgentMapper;
         this.redisUtils = redisUtils;
+        this.properties = properties;
     }
 
     @Override
@@ -99,7 +103,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
 
     @Override
     public void save(DeviceBackupSaveReq request) {
-        log.info("[DeviceBackup] 开始保存, request={}", request);
+        log.info("[DeviceBackup] 开始保存, instance={}", request != null ? request.getInstance() : null);
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
         validateUnique(request.getId(), request.getInstance(), request.getName());
         DeviceBackupEntity entity = BeanUtil.copyProperties(request, DeviceBackupEntity.class);
@@ -108,12 +112,12 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
 
     @Override
     public void update(DeviceBackupUpdateReq request) {
-        log.info("[DeviceBackup] 开始更新, request={}", request);
+        log.info("[DeviceBackup] 开始更新, id={}", request != null ? request.getId() : null);
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
         validateUnique(request.getId(), request.getInstance(), request.getName());
         if (request != null && request.getId() != null && StrUtil.isBlank(request.getPassword())) {
             DeviceBackupEntity existing = this.getById(request.getId());
-            if (existing != null) {
+            if (existing != null && StrUtil.isNotBlank(existing.getPassword())) {
                 request.setPassword(existing.getPassword());
             }
         }
@@ -134,7 +138,8 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
         if (request == null || StrUtil.isBlank(request.getInstance())) {
             return false;
         }
-        return PingUtils.isReachable(request.getInstance(), 2000);
+        int timeout = properties.getOnlineStatus().getTimeout().getDevice();
+        return PingUtils.isReachable(request.getInstance(), timeout);
     }
 
     @Override
@@ -199,7 +204,20 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
             entity.setAgentId(item.getAgentId());
             entityList.add(entity);
         }
-        this.saveBatch(entityList);
+
+        // 分批处理，避免大批量数据导致 SQL 超时或 OOM
+        final int BATCH_SIZE = 1000;
+        if (entityList.size() > BATCH_SIZE) {
+            log.info("[设备备份] Excel 导入分批处理, 总数={}, 批次大小={}", entityList.size(), BATCH_SIZE);
+            List<List<DeviceBackupEntity>> batches = CollUtil.split(entityList, BATCH_SIZE);
+            for (int i = 0; i < batches.size(); i++) {
+                log.debug("[设备备份] 处理第 {}/{} 批, 数量={}", i + 1, batches.size(), batches.get(i).size());
+                this.saveBatch(batches.get(i));
+            }
+        } else {
+            this.saveBatch(entityList);
+        }
+        log.info("[设备备份] Excel 导入完成, 总数={}", entityList.size());
     }
 
     @Override
@@ -316,12 +334,17 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
         wrapper.select(BackupAgentEntity::getId, BackupAgentEntity::getName);
         wrapper.in(BackupAgentEntity::getId, agentIds);
         List<BackupAgentEntity> agents = backupAgentMapper.selectList(wrapper);
-        Map<Long, String> agentNameMap = new HashMap<>();
+        if (agents == null || agents.isEmpty()) {
+            return;
+        }
+        Map<Long, String> agentNameMap = new HashMap<>((int) (agents.size() / 0.75) + 1);
         for (BackupAgentEntity agent : agents) {
-            agentNameMap.put(agent.getId(), agent.getName());
+            if (agent != null && agent.getId() != null) {
+                agentNameMap.put(agent.getId(), agent.getName());
+            }
         }
         for (DeviceBackupRsp dto : list) {
-            if (dto.getAgentId() != null) {
+            if (dto != null && dto.getAgentId() != null) {
                 dto.setAgentName(agentNameMap.get(dto.getAgentId()));
             }
         }

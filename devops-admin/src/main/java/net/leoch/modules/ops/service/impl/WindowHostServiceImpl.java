@@ -1,5 +1,6 @@
 package net.leoch.modules.ops.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.EasyExcel;
@@ -10,27 +11,27 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import net.leoch.common.exception.ServiceException;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.data.page.PageData;
-import net.leoch.common.utils.redis.RedisKeys;
-import net.leoch.common.utils.redis.RedisUtils;
-import cn.hutool.core.bean.BeanUtil;
-import net.leoch.common.utils.excel.ExcelUtils;
 import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AddGroup;
 import net.leoch.common.data.validator.group.DefaultGroup;
 import net.leoch.common.data.validator.group.UpdateGroup;
-import net.leoch.modules.ops.mapper.WindowHostMapper;
-import net.leoch.modules.ops.vo.req.*;
-import net.leoch.modules.ops.vo.rsp.*;
-import net.leoch.modules.ops.entity.WindowHostEntity;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.common.integration.excel.WindowHostExcel;
 import net.leoch.common.integration.excel.template.WindowHostImportExcel;
-import net.leoch.modules.ops.service.IWindowHostService;
+import net.leoch.common.integration.security.SecurityUser;
+import net.leoch.common.utils.excel.ExcelUtils;
 import net.leoch.common.utils.ops.MetricsUtils;
 import net.leoch.common.utils.ops.OpsQueryUtils;
-import net.leoch.common.integration.security.SecurityUser;
-import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.utils.redis.RedisKeys;
+import net.leoch.common.utils.redis.RedisUtils;
+import net.leoch.modules.ops.entity.WindowHostEntity;
+import net.leoch.modules.ops.mapper.WindowHostMapper;
+import net.leoch.modules.ops.service.IWindowHostService;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
+import net.leoch.modules.ops.vo.rsp.WindowHostRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -167,7 +168,20 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
         for (WindowHostImportExcel item : dataList) {
             entityList.add(toEntity(item));
         }
-        this.saveBatch(entityList);
+
+        // 分批处理，避免大批量数据导致 SQL 超时或 OOM
+        final int BATCH_SIZE = 1000;
+        if (entityList.size() > BATCH_SIZE) {
+            log.info("[Windows 主机] Excel 导入分批处理, 总数={}, 批次大小={}", entityList.size(), BATCH_SIZE);
+            List<List<WindowHostEntity>> batches = CollUtil.split(entityList, BATCH_SIZE);
+            for (int i = 0; i < batches.size(); i++) {
+                log.debug("[Windows 主机] 处理第 {}/{} 批, 数量={}", i + 1, batches.size(), batches.get(i).size());
+                this.saveBatch(batches.get(i));
+            }
+        } else {
+            this.saveBatch(entityList);
+        }
+        log.info("[Windows 主机] Excel 导入完成, 总数={}", entityList.size());
     }
 
 

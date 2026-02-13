@@ -1,39 +1,36 @@
 package net.leoch.modules.alert.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.common.exception.ServiceException;
 import net.leoch.common.data.page.PageData;
-import cn.hutool.core.bean.BeanUtil;
 import net.leoch.common.data.validator.AssertUtils;
-import cn.hutool.json.JSONUtil;
-import net.leoch.modules.alert.mapper.AlertRecordMapper;
-import net.leoch.modules.alert.vo.rsp.AlertRecordActionRsp;
-import net.leoch.modules.alert.vo.rsp.AlertProblemRsp;
-import net.leoch.modules.alert.vo.rsp.AlertRecordRsp;
-import net.leoch.modules.alert.vo.req.AlertProblemPageReq;
-import net.leoch.modules.alert.vo.req.AlertRecordPageReq;
+import net.leoch.common.exception.ServiceException;
+import net.leoch.common.utils.common.ParseUtils;
+import net.leoch.common.utils.common.TimeUtils;
 import net.leoch.modules.alert.entity.AlertNotifyLogEntity;
 import net.leoch.modules.alert.entity.AlertRecordActionEntity;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
-import net.leoch.modules.alert.service.AlertManagerService;
-import net.leoch.modules.alert.service.IAlertNotifyLogService;
-import net.leoch.modules.alert.service.IAlertRecordActionService;
-import net.leoch.modules.alert.service.IAlertRecordService;
-import net.leoch.modules.alert.service.IAlertSseService;
-import net.leoch.modules.alert.service.IAlertTriggerService;
-import net.leoch.modules.ops.mapper.BusinessSystemMapper;
-import net.leoch.modules.ops.mapper.LinuxHostMapper;
-import net.leoch.modules.ops.mapper.WindowHostMapper;
+import net.leoch.modules.alert.mapper.AlertRecordMapper;
+import net.leoch.modules.alert.service.*;
+import net.leoch.modules.alert.vo.req.AlertProblemPageReq;
+import net.leoch.modules.alert.vo.req.AlertRecordPageReq;
+import net.leoch.modules.alert.vo.rsp.AlertProblemRsp;
+import net.leoch.modules.alert.vo.rsp.AlertRecordActionRsp;
+import net.leoch.modules.alert.vo.rsp.AlertRecordRsp;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
-import net.leoch.modules.sys.mapper.SysUserMapper;
+import net.leoch.modules.ops.mapper.BusinessSystemMapper;
+import net.leoch.modules.ops.mapper.LinuxHostMapper;
+import net.leoch.modules.ops.mapper.WindowHostMapper;
 import net.leoch.modules.sys.entity.SysUserEntity;
+import net.leoch.modules.sys.mapper.SysUserMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -174,8 +171,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             entity.setInstance(instance);
             entity.setSummary(getValue(annotations, commonAnnotations, "summary"));
             entity.setDescription(getValue(annotations, commonAnnotations, "description"));
-            entity.setStartsAt(parseDate(toStr(alert.get("startsAt"))));
-            entity.setEndsAt(parseDate(toStr(alert.get("endsAt"))));
+            entity.setStartsAt(TimeUtils.parseDate(ParseUtils.toStr(alert.get("startsAt"))));
+            entity.setEndsAt(TimeUtils.parseDate(ParseUtils.toStr(alert.get("endsAt"))));
             entity.setReceiver(receiver);
             entity.setRawJson(rawJson);
             entity.setClosed(0);
@@ -268,8 +265,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         String hostName = toStr(request.getHostName());
         String instance = toStr(request.getInstance());
         String statusFilter = toStr(request.getStatusFilter());
-        Date startTime = parseDateTime(toStr(request.getStartTime()));
-        Date endTime = parseDateTime(toStr(request.getEndTime()));
+        Date startTime = TimeUtils.parseDate(ParseUtils.toStr(request.getStartTime()));
+        Date endTime = TimeUtils.parseDate(ParseUtils.toStr(request.getEndTime()));
 
         LambdaQueryWrapper<AlertRecordEntity> wrapper = new LambdaQueryWrapper<AlertRecordEntity>()
             .in(!severityList.isEmpty(), AlertRecordEntity::getSeverity, severityList)
@@ -460,18 +457,37 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
 
     private Map<String, HostInfo> loadHostInfoMap() {
         Map<String, HostInfo> map = new HashMap<>();
-        List<LinuxHostEntity> linuxList = linuxHostMapper.selectList(null);
+
+        // 只查询必要字段，添加上限保护
+        List<LinuxHostEntity> linuxList = linuxHostMapper.selectList(
+            new LambdaQueryWrapper<LinuxHostEntity>()
+                .select(LinuxHostEntity::getInstance, LinuxHostEntity::getName)
+                .last("LIMIT 10000")
+        );
         for (LinuxHostEntity item : linuxList) {
             putHost(map, item.getInstance(), item.getName(), "linux");
         }
-        List<WindowHostEntity> winList = windowHostMapper.selectList(null);
+
+        List<WindowHostEntity> winList = windowHostMapper.selectList(
+            new LambdaQueryWrapper<WindowHostEntity>()
+                .select(WindowHostEntity::getInstance, WindowHostEntity::getName)
+                .last("LIMIT 10000")
+        );
         for (WindowHostEntity item : winList) {
             putHost(map, item.getInstance(), item.getName(), "windows");
         }
-        List<BusinessSystemEntity> businessList = businessSystemMapper.selectList(null);
+
+        List<BusinessSystemEntity> businessList = businessSystemMapper.selectList(
+            new LambdaQueryWrapper<BusinessSystemEntity>()
+                .select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName)
+                .last("LIMIT 10000")
+        );
         for (BusinessSystemEntity item : businessList) {
             putHost(map, item.getInstance(), item.getName(), "business");
         }
+
+        log.debug("[告警记录] 加载主机映射, linux={}, windows={}, business={}",
+            linuxList.size(), winList.size(), businessList.size());
         return map;
     }
 
@@ -595,7 +611,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         dto.setSummary(record.getSummary());
         dto.setDescription(record.getDescription());
         dto.setProblem(StrUtil.blankToDefault(record.getDescription(), record.getSummary()));
-        dto.setDuration(formatDuration(record.getStartsAt(), record.getEndsAt()));
+        dto.setDuration(TimeUtils.formatDurationZh(record.getStartsAt(), record.getEndsAt()));
         dto.setAckStatus(Boolean.TRUE.equals(acked) ? "已确定" : "未确定");
 
         HostInfo hostInfo = hostMap.get(normalizeInstance(record.getInstance()));
@@ -684,41 +700,11 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         return StrUtil.equalsIgnoreCase(status, dto.getStatus());
     }
 
-    private String formatDuration(Date startsAt, Date endsAt) {
-        if (startsAt == null) {
-            return "-";
-        }
-        long end = endsAt == null ? System.currentTimeMillis() : endsAt.getTime();
-        long seconds = Math.max(0, (end - startsAt.getTime()) / 1000);
-        long days = seconds / 86400;
-        long hours = (seconds % 86400) / 3600;
-        long minutes = (seconds % 3600) / 60;
-        if (days > 0) {
-            return days + "天" + hours + "小时";
-        }
-        if (hours > 0) {
-            return hours + "小时" + minutes + "分钟";
-        }
-        return minutes + "分钟";
-    }
-
-    private Date parseDateTime(String value) {
-        if (StrUtil.isBlank(value)) {
-            return null;
-        }
-        try {
-            return Date.from(Instant.parse(value));
-        } catch (Exception e) {
-            log.warn("[告警记录] 操作失败", e);
-            return null;
-        }
-    }
-
     private int parseInt(String value, int defaultValue) {
         try {
             return Integer.parseInt(value);
         } catch (Exception e) {
-            log.warn("[告警记录] 操作失败", e);
+            log.debug("[告警记录] 整数解析失败, value={}, 使用默认值: {}", value, defaultValue);
             return defaultValue;
         }
     }
@@ -799,7 +785,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         if (instances == null || instances.isEmpty()) {
             return new ArrayList<>();
         }
-        List<String> keys = new ArrayList<>();
+        List<String> keys = new ArrayList<>(instances.size() * 2);
         for (String instance : instances) {
             if (StrUtil.isBlank(instance)) {
                 continue;
@@ -817,8 +803,9 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         if (StrUtil.isBlank(severity)) {
             return new ArrayList<>();
         }
-        List<String> result = new ArrayList<>();
-        for (String s : severity.split(",")) {
+        String[] parts = severity.split(",");
+        List<String> result = new ArrayList<>(parts.length);
+        for (String s : parts) {
             String normalized = normalizeSeverityForQuery(s.trim());
             if (StrUtil.isNotBlank(normalized)) {
                 result.add(normalized);
@@ -911,17 +898,5 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             return val;
         }
         return extraFallback;
-    }
-
-    private static Date parseDate(String value) {
-        if (StrUtil.isBlank(value)) {
-            return null;
-        }
-        try {
-            return Date.from(Instant.parse(value));
-        } catch (Exception e) {
-            log.warn("[告警记录] 操作失败", e);
-            return null;
-        }
     }
 }
