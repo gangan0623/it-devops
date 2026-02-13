@@ -27,11 +27,10 @@ spring:
           max-idle: 10                   # 最大空闲连接
           min-idle: 2                    # 最小空闲连接（降低资源占用）
           time-between-eviction-runs: 60000ms  # 空闲连接检测间隔1min
-knife4j:
-  enable: false
-  basic:
-    enable: false
-    username: admin
-    password: admin
-  setting:
-    enableFooter: false
+# Springdoc OpenAPI 开发环境配置
+springdoc:
+  api-docs:
+    enabled: true                         # 开发环境启用 API 文档
+  swagger-ui:
+    enabled: true                         # 开发环境启用 Swagger UI
+  show-actuator: false                    # 不显示 Actuator 端点

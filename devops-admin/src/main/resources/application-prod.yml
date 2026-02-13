@@ -29,5 +29,9 @@ spring:
           min-idle: 10                   # 最小空闲连接
           time-between-eviction-runs: 60000ms  # 空闲连接检测间隔1min
         shutdown-timeout: 5000ms         # 关闭超时5s
-knife4j:
-  production: true
+# Springdoc OpenAPI 生产环境配置
+springdoc:
+  api-docs:
+    enabled: false                        # 生产环境禁用 API 文档（安全考虑）
+  swagger-ui:
+    enabled: false                        # 生产环境禁用 Swagger UI
