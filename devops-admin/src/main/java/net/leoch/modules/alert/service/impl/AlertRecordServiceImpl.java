@@ -210,6 +210,14 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         if (days == null || days <= 0) {
             throw new ServiceException("抑制天数必须大于0");
         }
+
+        // 幂等性检查：如果当前告警已在有效抑制期内，则跳过
+        if (record.getSuppressedUntil() != null && record.getSuppressedUntil().after(new Date())) {
+            log.warn("[告警记录] 已在抑制中, recordId={}, suppressedUntil={}, 跳过重复抑制",
+                recordId, record.getSuppressedUntil());
+            return;
+        }
+
         Date until = Date.from(Instant.now().plusSeconds(days.longValue() * 24 * 3600));
         LambdaUpdateWrapper<AlertRecordEntity> updateWrapper = new LambdaUpdateWrapper<>();
         updateWrapper.eq(AlertRecordEntity::getAlertName, record.getAlertName())
@@ -223,6 +231,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             details = details + ",silenceId=" + silenceId;
         }
         saveAction(recordId, "抑制", message, details);
+        log.info("[告警记录] 抑制成功, recordId={}, days={}, until={}", recordId, days, until);
         alertSseService.publishRecentAlerts();
     }
 
@@ -235,6 +244,13 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
     @Override
     public void close(Long recordId, String message) {
         AlertRecordEntity record = requireRecord(recordId);
+
+        // 幂等性检查：如果告警已关闭，则跳过
+        if (record.getClosed() != null && record.getClosed() == 1) {
+            log.warn("[告警记录] 已关闭, recordId={}, 跳过重复关闭", recordId);
+            return;
+        }
+
         record.setClosed(1);
         record.setStatus("resolved");
         // 手动关闭时，恢复时间以"点击关闭"的操作时间为准
@@ -244,6 +260,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         alertManagerService.sendResolvedAlert(record, message);
         sendRecoveryMail(record, message);
         saveAction(recordId, "关闭", message, "manualClose=true");
+        log.info("[告警记录] 关闭成功, recordId={}", recordId);
         alertSseService.publishRecentAlerts();
     }
 
@@ -253,8 +270,18 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         int limit = parseInt(toStr(request.getLimit()), 10);
 
         LambdaQueryWrapper<AlertRecordEntity> wrapper = buildProblemWrapper(request);
+
+        // 添加合理的上限保护，避免加载过多数据到内存（OOM 风险）
+        // 注意：由于需要内存过滤，此处使用较大的上限（10000），确保分页结果的完整性
+        // TODO: 未来可考虑将更多过滤条件下推到数据库层，彻底改为数据库分页
+        wrapper.last("LIMIT 10000");
+
         List<AlertRecordEntity> records = this.list(wrapper);
+        log.debug("[告警记录] 问题分页查询, 数据库加载记录数={}", records.size());
+
         List<AlertProblemRsp> filtered = enrichAndFilterProblemRecords(records, request);
+        log.debug("[告警记录] 问题分页查询, 内存过滤后记录数={}", filtered.size());
+
         return paginateProblemResults(filtered, page, limit);
     }
 
@@ -425,21 +452,43 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         alertRecordActionService.saveAction(recordId, action, message, details);
     }
 
-    private String normalizeSeverity(String severity) {
+    /**
+     * 统一的严重级别规范化方法
+     * @param severity 原始严重级别
+     * @param returnNullIfUnknown true: 未知级别返回 null; false: 未知级别返回原值
+     * @return 规范化后的严重级别
+     */
+    private String normalizeSeverity(String severity, boolean returnNullIfUnknown) {
         if (StrUtil.isBlank(severity)) {
-            return null;
+            return returnNullIfUnknown ? null : severity;
         }
         String value = severity.trim().toLowerCase();
+
+        // 信息级别
         if ("信息".equals(value) || "info".equals(value)) {
             return "info";
         }
+        // 重要/警告级别
         if ("重要".equals(value) || "warning".equals(value)) {
             return "warning";
         }
+        // 灾难/严重级别
         if ("灾难".equals(value) || "critical".equals(value)) {
             return "critical";
         }
-        return null;
+        // 恢复级别
+        if ("恢复".equals(value) || "recover".equals(value) || "resolved".equals(value)) {
+            return "recover";
+        }
+
+        return returnNullIfUnknown ? null : value;
+    }
+
+    /**
+     * 规范化严重级别（用于数据保存，未知级别返回 null）
+     */
+    private String normalizeSeverity(String severity) {
+        return normalizeSeverity(severity, true);
     }
 
     private boolean isSuppressed(String alertName, String instance) {
@@ -729,37 +778,67 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         return new ArrayList<>();
     }
 
+    /**
+     * 根据主机名关键字查询实例列表
+     * 重构后使用函数式接口消除代码重复
+     */
     private List<String> listInstancesByHostName(String keyword, String deviceType) {
         if (StrUtil.isBlank(keyword)) {
             return new ArrayList<>();
         }
         String value = keyword.trim();
         List<String> instances = new ArrayList<>();
+
+        // 使用函数式接口定义主机查询策略
         if (StrUtil.isBlank(deviceType) || "linux".equalsIgnoreCase(deviceType)) {
-            List<LinuxHostEntity> list = linuxHostMapper.selectList(
-                new LambdaQueryWrapper<LinuxHostEntity>()
-                    .select(LinuxHostEntity::getInstance)
-                    .like(LinuxHostEntity::getName, value)
-            );
-            list.forEach(item -> instances.add(item.getInstance()));
+            instances.addAll(queryHostInstances(
+                () -> linuxHostMapper.selectList(
+                    new LambdaQueryWrapper<LinuxHostEntity>()
+                        .select(LinuxHostEntity::getInstance)
+                        .like(LinuxHostEntity::getName, value)
+                ),
+                LinuxHostEntity::getInstance
+            ));
         }
         if (StrUtil.isBlank(deviceType) || "windows".equalsIgnoreCase(deviceType)) {
-            List<WindowHostEntity> list = windowHostMapper.selectList(
-                new LambdaQueryWrapper<WindowHostEntity>()
-                    .select(WindowHostEntity::getInstance)
-                    .like(WindowHostEntity::getName, value)
-            );
-            list.forEach(item -> instances.add(item.getInstance()));
+            instances.addAll(queryHostInstances(
+                () -> windowHostMapper.selectList(
+                    new LambdaQueryWrapper<WindowHostEntity>()
+                        .select(WindowHostEntity::getInstance)
+                        .like(WindowHostEntity::getName, value)
+                ),
+                WindowHostEntity::getInstance
+            ));
         }
         if (StrUtil.isBlank(deviceType) || "business".equalsIgnoreCase(deviceType)) {
-            List<BusinessSystemEntity> list = businessSystemMapper.selectList(
-                new LambdaQueryWrapper<BusinessSystemEntity>()
-                    .select(BusinessSystemEntity::getInstance)
-                    .like(BusinessSystemEntity::getName, value)
-            );
-            list.forEach(item -> instances.add(item.getInstance()));
+            instances.addAll(queryHostInstances(
+                () -> businessSystemMapper.selectList(
+                    new LambdaQueryWrapper<BusinessSystemEntity>()
+                        .select(BusinessSystemEntity::getInstance)
+                        .like(BusinessSystemEntity::getName, value)
+                ),
+                BusinessSystemEntity::getInstance
+            ));
         }
+
         return instances.stream().filter(StrUtil::isNotBlank).distinct().collect(Collectors.toList());
+    }
+
+    /**
+     * 通用主机实例查询方法，消除重复代码
+     * @param querySupplier 查询供应商（Lambda 表达式）
+     * @param instanceExtractor 实例提取器（方法引用）
+     * @param <T> 主机实体类型
+     * @return 实例列表
+     */
+    private <T> List<String> queryHostInstances(
+        java.util.function.Supplier<List<T>> querySupplier,
+        java.util.function.Function<T, String> instanceExtractor
+    ) {
+        return querySupplier.get().stream()
+            .map(instanceExtractor)
+            .filter(StrUtil::isNotBlank)
+            .collect(Collectors.toList());
     }
 
     private void applyInstanceLikeFilter(LambdaQueryWrapper<AlertRecordEntity> wrapper, List<String> instances) {
@@ -814,24 +893,11 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         return result.stream().distinct().collect(Collectors.toList());
     }
 
+    /**
+     * 规范化严重级别（用于查询，未知级别返回原值）
+     */
     private String normalizeSeverityForQuery(String severity) {
-        if (StrUtil.isBlank(severity)) {
-            return severity;
-        }
-        String value = severity.trim().toLowerCase();
-        if ("信息".equals(value) || "info".equals(value)) {
-            return "info";
-        }
-        if ("重要".equals(value) || "warning".equals(value)) {
-            return "warning";
-        }
-        if ("灾难".equals(value) || "critical".equals(value)) {
-            return "critical";
-        }
-        if ("恢复".equals(value) || "recover".equals(value) || "resolved".equals(value)) {
-            return "recover";
-        }
-        return value;
+        return normalizeSeverity(severity, false);
     }
 
     private static class HostInfo {
