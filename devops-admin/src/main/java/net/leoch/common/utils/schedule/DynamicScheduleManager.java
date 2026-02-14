@@ -104,6 +104,7 @@ public class DynamicScheduleManager {
         jobLog.setBeanName(job.getBeanName());
         jobLog.setParams(job.getParams());
         jobLog.setCreateDate(new Date());
+        jobLog.setStatus(Constant.FAIL);  // 默认失败状态，执行成功后会更新
 
         long startTime = System.currentTimeMillis();
 

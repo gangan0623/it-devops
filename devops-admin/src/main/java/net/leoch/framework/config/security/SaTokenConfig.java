@@ -21,6 +21,8 @@ public class SaTokenConfig {
                 "/webjars/**",
                 "/login",
                 "/swagger/**",
+                "/swagger-ui.html",
+                "/swagger-ui/**",
                 "/v3/api-docs/**",
                 "/doc.html",
                 "/swagger-resources/**",
