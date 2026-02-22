@@ -1,23 +1,36 @@
 # IDE / OS
 .idea/
+**/.idea/
+**/.github
 .claude
+.codex
 .vscode/
 *.iml
 *.ipr
 *.iws
 .DS_Store
 Thumbs.db
-
+*.swp
+*.swo
+*~
+*.orig
+*.rej
+AGENTS.md
+CLAUDE.md
 # Logs
 *.log
-logs/
+*.log.*
 *.out
+*.pid
+*.pid.lock
+*.pidfile
+**/logs/
 
-# Java / Maven
+# Java / Maven / Gradle
 *.class
 *.ctxt
 .mtj.tmp/
-target/
+
 *.jar
 *.war
 *.ear
@@ -26,13 +39,29 @@ target/
 *.rar
 *.jar.original
 hs_err_pid*
+**/target/
+**/bin/
+**/out/
+.gradle/
+.classpath
+.project
+.settings/
+.factorypath
 
 # Node / Vite
-node_modules/
-dist/
-.vite/
+**/node_modules/
+**/dist/
+**/.vite/
 *.tsbuildinfo
-.cache/
+**/.cache/
+**/.pnpm-store/
+**/.npm/
+**/.yarn/
+**/.eslintcache
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
 
 # Python
 __pycache__/
@@ -41,6 +70,7 @@ __pycache__/
 *.so
 *.egg-info/
 build/
+**/dist/
 .venv/
 .venv*/
 .pytest_cache/
@@ -48,6 +78,8 @@ build/
 .ruff_cache/
 .coverage
 coverage.xml
+htmlcov/
+*.coverage
 
 # Env files (keep shared ones committed)
 .env
@@ -57,7 +89,6 @@ coverage.xml
 !.env.production
 
 # App-specific
-devops-admin/target/
 devops-backup-agent/.venv/
 devops-backup-agent/build/
 devops-backup-agent/dist/
@@ -65,5 +96,3 @@ devops-ui/node_modules/
 devops-ui/dist/
 devops-ui/.vite/
 
-
-/.codex/
