@@ -1,23 +1,28 @@
-
-
 package net.leoch.modules.sys.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qiniu.util.StringUtils;
-import lombok.AllArgsConstructor;
-import net.leoch.common.constant.Constant;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.base.Constant;
+import net.leoch.common.data.validator.AssertUtils;
+import net.leoch.common.data.validator.ValidatorUtils;
+import net.leoch.common.data.validator.group.AddGroup;
+import net.leoch.common.data.validator.group.DefaultGroup;
+import net.leoch.common.data.validator.group.UpdateGroup;
+import net.leoch.common.enums.SuperAdminEnum;
 import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.RenException;
-import net.leoch.common.service.impl.BaseServiceImpl;
-import net.leoch.common.utils.ConvertUtils;
-import net.leoch.common.utils.TreeUtils;
-import net.leoch.modules.security.user.SecurityUser;
-import net.leoch.modules.security.user.UserDetail;
-import net.leoch.modules.sys.dao.SysDeptDao;
-import net.leoch.modules.sys.dao.SysUserDao;
-import net.leoch.modules.sys.dto.SysDeptDTO;
+import net.leoch.common.exception.ServiceException;
+import net.leoch.common.integration.security.SecurityUser;
+import net.leoch.common.integration.security.UserDetail;
+import net.leoch.common.utils.tree.TreeUtils;
 import net.leoch.modules.sys.entity.SysDeptEntity;
-import net.leoch.modules.sys.enums.SuperAdminEnum;
-import net.leoch.modules.sys.service.SysDeptService;
+import net.leoch.modules.sys.mapper.SysDeptMapper;
+import net.leoch.modules.sys.mapper.SysUserMapper;
+import net.leoch.modules.sys.service.ISysDeptService;
+import net.leoch.modules.sys.vo.req.SysDeptReq;
+import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,13 +32,14 @@ import java.util.List;
 import java.util.Map;
 
 
+@Slf4j
 @Service
-@AllArgsConstructor
-public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptDao, SysDeptEntity> implements SysDeptService {
-    private final SysUserDao sysUserDao;
+@RequiredArgsConstructor
+public class SysDeptServiceImpl extends ServiceImpl<SysDeptMapper, SysDeptEntity> implements ISysDeptService {
+    private final SysUserMapper sysUserMapper;
 
     @Override
-    public List<SysDeptDTO> list(Map<String, Object> params) {
+    public List<SysDeptRsp> list(Map<String, Object> params) {
         //普通管理员，只能查询所属部门及子部门的数据
         UserDetail user = SecurityUser.getUser();
         if (user.getSuperAdmin() == SuperAdminEnum.NO.value()) {
@@ -41,76 +47,79 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptDao, SysDeptEntit
         }
 
         //查询部门列表
-        List<SysDeptEntity> entityList = baseDao.getList(params);
+        List<SysDeptEntity> entityList = this.getBaseMapper().getList(params);
 
-        List<SysDeptDTO> dtoList = ConvertUtils.sourceToTarget(entityList, SysDeptDTO.class);
+        List<SysDeptRsp> dtoList = BeanUtil.copyToList(entityList, SysDeptRsp.class);
 
         return TreeUtils.build(dtoList);
     }
 
     @Override
-    public SysDeptDTO get(Long id) {
+    public SysDeptRsp get(Long id) {
         //超级管理员，部门ID为null
         if (id == null) {
             return null;
         }
 
-        SysDeptEntity entity = baseDao.getById(id);
+        SysDeptEntity entity = this.getBaseMapper().getById(id);
 
-        return ConvertUtils.sourceToTarget(entity, SysDeptDTO.class);
+        return BeanUtil.copyProperties(entity, SysDeptRsp.class);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysDeptDTO dto) {
-        SysDeptEntity entity = ConvertUtils.sourceToTarget(dto, SysDeptEntity.class);
+    public void save(SysDeptReq dto) {
+        ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
+        SysDeptEntity entity = BeanUtil.copyProperties(dto, SysDeptEntity.class);
 
         entity.setPids(getPidList(entity.getPid()));
-        insert(entity);
+        this.save(entity);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysDeptDTO dto) {
-        SysDeptEntity entity = ConvertUtils.sourceToTarget(dto, SysDeptEntity.class);
+    public void update(SysDeptReq dto) {
+        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
+        SysDeptEntity entity = BeanUtil.copyProperties(dto, SysDeptEntity.class);
 
         //上级部门不能为自身
         if (entity.getId().equals(entity.getPid())) {
-            throw new RenException(ErrorCode.SUPERIOR_DEPT_ERROR);
+            throw new ServiceException(ErrorCode.SUPERIOR_DEPT_ERROR);
         }
 
         //上级部门不能为下级部门
         List<Long> subDeptList = getSubDeptIdList(entity.getId());
         if (subDeptList.contains(entity.getPid())) {
-            throw new RenException(ErrorCode.SUPERIOR_DEPT_ERROR);
+            throw new ServiceException(ErrorCode.SUPERIOR_DEPT_ERROR);
         }
 
         entity.setPids(getPidList(entity.getPid()));
-        updateById(entity);
+        this.updateById(entity);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
+        AssertUtils.isNull(id, "id");
         //判断是否有子部门
         List<Long> subList = getSubDeptIdList(id);
         if (subList.size() > 1) {
-            throw new RenException(ErrorCode.DEPT_SUB_DELETE_ERROR);
+            throw new ServiceException(ErrorCode.DEPT_SUB_DELETE_ERROR);
         }
 
         //判断部门下面是否有用户
-        int count = sysUserDao.getCountByDeptId(id);
+        int count = sysUserMapper.getCountByDeptId(id);
         if (count > 0) {
-            throw new RenException(ErrorCode.DEPT_USER_DELETE_ERROR);
+            throw new ServiceException(ErrorCode.DEPT_USER_DELETE_ERROR);
         }
 
         //删除
-        baseDao.deleteById(id);
+        this.removeById(id);
     }
 
     @Override
     public List<Long> getSubDeptIdList(Long id) {
-        List<Long> deptIdList = baseDao.getSubDeptIdList("%" + id + "%");
+        List<Long> deptIdList = this.getBaseMapper().getSubDeptIdList("%" + id + "%");
         deptIdList.add(id);
 
         return deptIdList;
@@ -128,7 +137,7 @@ public class SysDeptServiceImpl extends BaseServiceImpl<SysDeptDao, SysDeptEntit
         }
 
         //所有部门的id、pid列表
-        List<SysDeptEntity> deptList = baseDao.getIdAndPidList();
+        List<SysDeptEntity> deptList = this.getBaseMapper().getIdAndPidList();
 
         //list转map
         Map<Long, SysDeptEntity> map = new HashMap<>(deptList.size());

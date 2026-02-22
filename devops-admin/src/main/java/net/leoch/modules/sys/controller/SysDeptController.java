@@ -5,16 +5,12 @@ package net.leoch.modules.sys.controller;
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
-import net.leoch.common.utils.Result;
-import net.leoch.common.validator.AssertUtils;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.AddGroup;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.sys.dto.SysDeptDTO;
-import net.leoch.modules.sys.service.SysDeptService;
+import net.leoch.common.data.result.Result;
+import net.leoch.modules.sys.service.ISysDeptService;
+import net.leoch.modules.sys.vo.req.SysDeptReq;
+import net.leoch.modules.sys.vo.rsp.SysDeptRsp;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -28,36 +24,30 @@ import java.util.List;
 @RestController
 @RequestMapping("/sys/dept")
 @Tag(name = "部门管理")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysDeptController {
-    private final SysDeptService sysDeptService;
+    private final ISysDeptService sysDeptService;
 
     @GetMapping("list")
     @Operation(summary = "列表")
     @SaCheckPermission("sys:dept:list")
-    public Result<List<SysDeptDTO>> list() {
-        List<SysDeptDTO> list = sysDeptService.list(new HashMap<>(1));
-        return new Result<List<SysDeptDTO>>().ok(list);
+    public Result<List<SysDeptRsp>> list() {
+        return new Result<List<SysDeptRsp>>().ok(sysDeptService.list(new HashMap<>(1)));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("sys:dept:info")
-    public Result<SysDeptDTO> get(@PathVariable("id") Long id) {
-        SysDeptDTO data = sysDeptService.get(id);
-        return new Result<SysDeptDTO>().ok(data);
+    public Result<SysDeptRsp> get(@PathVariable("id") Long id) {
+        return new Result<SysDeptRsp>().ok(sysDeptService.get(id));
     }
 
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:dept:save")
-    public Result<Object> save(@RequestBody SysDeptDTO dto) {
-        //效验数据
-        ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-
+    public Result<Object> save(@RequestBody SysDeptReq dto) {
         sysDeptService.save(dto);
-
         return new Result<>();
     }
 
@@ -65,12 +55,8 @@ public class SysDeptController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:dept:update")
-    public Result<Object> update(@RequestBody SysDeptDTO dto) {
-        //效验数据
-        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-
+    public Result<Object> update(@RequestBody SysDeptReq dto) {
         sysDeptService.update(dto);
-
         return new Result<>();
     }
 
@@ -79,9 +65,6 @@ public class SysDeptController {
     @LogOperation("删除")
     @SaCheckPermission("sys:dept:delete")
     public Result<Object> delete(@PathVariable("id") Long id) {
-        //效验数据
-        AssertUtils.isNull(id, "id");
-
         sysDeptService.delete(id);
         return new Result<>();
     }

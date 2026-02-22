@@ -1,22 +1,18 @@
-
-
 package net.leoch.modules.job.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
-import net.leoch.common.constant.Constant;
-import net.leoch.common.page.PageData;
-import net.leoch.common.utils.Result;
-import net.leoch.modules.job.dto.ScheduleJobLogDTO;
-import net.leoch.modules.job.service.ScheduleJobLogService;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
+import lombok.RequiredArgsConstructor;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.result.Result;
+import net.leoch.modules.job.service.IScheduleJobLogService;
+import net.leoch.modules.job.vo.req.ScheduleJobLogPageReq;
+import net.leoch.modules.job.vo.rsp.ScheduleJobLogRsp;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 定时任务日志
@@ -26,32 +22,21 @@ import java.util.Map;
 @RestController
 @RequestMapping("/sys/scheduleLog")
 @Tag(name = "定时任务日志")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ScheduleJobLogController {
-    private final ScheduleJobLogService scheduleJobLogService;
+    private final IScheduleJobLogService scheduleJobLogService;
 
     @GetMapping("page")
     @Operation(summary = "分页")
-    @Parameters({
-            @Parameter(name = Constant.PAGE, description = "当前页码，从1开始", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.LIMIT, description = "每页显示记录数", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = "jobId", description = "jobId", in = ParameterIn.QUERY, ref = "String")
-    })
     @SaCheckPermission("sys:schedule:log")
-    public Result<PageData<ScheduleJobLogDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
-        PageData<ScheduleJobLogDTO> page = scheduleJobLogService.page(params);
-
-        return new Result<PageData<ScheduleJobLogDTO>>().ok(page);
+    public Result<PageData<ScheduleJobLogRsp>> page(ScheduleJobLogPageReq request) {
+        return new Result<PageData<ScheduleJobLogRsp>>().ok(scheduleJobLogService.page(request));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("sys:schedule:log")
-    public Result<ScheduleJobLogDTO> info(@PathVariable("id") Long id) {
-        ScheduleJobLogDTO log = scheduleJobLogService.get(id);
-
-        return new Result<ScheduleJobLogDTO>().ok(log);
+    public Result<ScheduleJobLogRsp> info(@PathVariable("id") Long id) {
+        return new Result<ScheduleJobLogRsp>().ok(scheduleJobLogService.get(id));
     }
 }

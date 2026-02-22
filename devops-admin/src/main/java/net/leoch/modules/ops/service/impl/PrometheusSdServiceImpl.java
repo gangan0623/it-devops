@@ -1,17 +1,19 @@
 package net.leoch.modules.ops.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import net.leoch.modules.ops.dao.BusinessSystemDao;
-import net.leoch.modules.ops.dao.LinuxHostDao;
-import net.leoch.modules.ops.dao.WindowHostDao;
-import net.leoch.modules.ops.dto.PrometheusSdRequest;
-import net.leoch.modules.ops.dto.PrometheusSdResponse;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
-import net.leoch.modules.ops.service.PrometheusSdService;
-import net.leoch.modules.sys.dao.SysDictDataDao;
-import net.leoch.modules.sys.entity.DictData;
+import net.leoch.modules.ops.mapper.BusinessSystemMapper;
+import net.leoch.modules.ops.mapper.LinuxHostMapper;
+import net.leoch.modules.ops.mapper.WindowHostMapper;
+import net.leoch.modules.ops.service.IPrometheusSdService;
+import net.leoch.modules.ops.vo.req.PrometheusSdReq;
+import net.leoch.modules.ops.vo.rsp.PrometheusSdRsp;
+import net.leoch.modules.sys.mapper.SysDictDataMapper;
+import net.leoch.modules.sys.vo.rsp.DictDataRsp;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -21,29 +23,24 @@ import java.util.stream.Collectors;
 /**
  * Prometheus SD 服务
  */
+@Slf4j
 @Service
-public class PrometheusSdServiceImpl implements PrometheusSdService {
+@RequiredArgsConstructor
+public class PrometheusSdServiceImpl implements IPrometheusSdService {
 
-    private final LinuxHostDao linuxHostDao;
-    private final WindowHostDao windowHostDao;
-    private final BusinessSystemDao businessSystemDao;
-    private final SysDictDataDao sysDictDataDao;
-
-    public PrometheusSdServiceImpl(LinuxHostDao linuxHostDao, WindowHostDao windowHostDao, BusinessSystemDao businessSystemDao, SysDictDataDao sysDictDataDao) {
-        this.linuxHostDao = linuxHostDao;
-        this.windowHostDao = windowHostDao;
-        this.businessSystemDao = businessSystemDao;
-        this.sysDictDataDao = sysDictDataDao;
-    }
+    private final LinuxHostMapper linuxHostMapper;
+    private final WindowHostMapper windowHostMapper;
+    private final BusinessSystemMapper businessSystemMapper;
+    private final SysDictDataMapper sysDictDataMapper;
 
     @Override
-    public List<PrometheusSdResponse> linux(PrometheusSdRequest request) {
+    public List<PrometheusSdRsp> linux(PrometheusSdReq request) {
         String areaName = getAreaName(request);
         if (areaName == null) {
             return new ArrayList<>();
         }
         DictMaps dictMaps = loadDictMaps();
-        List<LinuxHostEntity> list = linuxHostDao.selectList(new LambdaQueryWrapper<LinuxHostEntity>()
+        List<LinuxHostEntity> list = linuxHostMapper.selectList(new LambdaQueryWrapper<LinuxHostEntity>()
                 .select(LinuxHostEntity::getInstance, LinuxHostEntity::getName, LinuxHostEntity::getSiteLocation, LinuxHostEntity::getAreaName, LinuxHostEntity::getMenuName, LinuxHostEntity::getSubMenuName, LinuxHostEntity::getType)
                 .eq(LinuxHostEntity::getStatus, 1)
                 .eq(LinuxHostEntity::getAreaName, areaName)
@@ -63,13 +60,13 @@ public class PrometheusSdServiceImpl implements PrometheusSdService {
     }
 
     @Override
-    public List<PrometheusSdResponse> windows(PrometheusSdRequest request) {
+    public List<PrometheusSdRsp> windows(PrometheusSdReq request) {
         String areaName = getAreaName(request);
         if (areaName == null) {
             return new ArrayList<>();
         }
         DictMaps dictMaps = loadDictMaps();
-        List<WindowHostEntity> list = windowHostDao.selectList(new LambdaQueryWrapper<WindowHostEntity>()
+        List<WindowHostEntity> list = windowHostMapper.selectList(new LambdaQueryWrapper<WindowHostEntity>()
                 .select(WindowHostEntity::getInstance, WindowHostEntity::getName, WindowHostEntity::getSiteLocation, WindowHostEntity::getAreaName, WindowHostEntity::getMenuName, WindowHostEntity::getSubMenuName, WindowHostEntity::getType)
                 .eq(WindowHostEntity::getStatus, 1)
                 .eq(WindowHostEntity::getAreaName, areaName)
@@ -89,13 +86,13 @@ public class PrometheusSdServiceImpl implements PrometheusSdService {
     }
 
     @Override
-    public List<PrometheusSdResponse> httpProbe(PrometheusSdRequest request) {
+    public List<PrometheusSdRsp> httpProbe(PrometheusSdReq request) {
         String areaName = getAreaName(request);
         if (areaName == null) {
             return new ArrayList<>();
         }
         DictMaps dictMaps = loadDictMaps();
-        List<BusinessSystemEntity> list = businessSystemDao.selectList(new LambdaQueryWrapper<BusinessSystemEntity>()
+        List<BusinessSystemEntity> list = businessSystemMapper.selectList(new LambdaQueryWrapper<BusinessSystemEntity>()
                 .select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName, BusinessSystemEntity::getSiteLocation, BusinessSystemEntity::getAreaName, BusinessSystemEntity::getMenuName, BusinessSystemEntity::getSubMenuName)
                 .eq(BusinessSystemEntity::getStatus, 1)
                 .eq(BusinessSystemEntity::getAreaName, areaName)
@@ -114,7 +111,7 @@ public class PrometheusSdServiceImpl implements PrometheusSdService {
         );
     }
 
-    private String getAreaName(PrometheusSdRequest request) {
+    private String getAreaName(PrometheusSdReq request) {
         if (request == null || request.getArea() == null) {
             return null;
         }
@@ -135,12 +132,12 @@ public class PrometheusSdServiceImpl implements PrometheusSdService {
     }
 
     private Map<String, String> getDictMapByType(String dictType) {
-        List<DictData> dictDataList = sysDictDataDao.getDictDataListByType(dictType);
+        List<DictDataRsp> dictDataList = sysDictDataMapper.getDictDataListByType(dictType);
         if (dictDataList == null || dictDataList.isEmpty()) {
             return Collections.emptyMap();
         }
         Map<String, String> map = new HashMap<>();
-        for (DictData data : dictDataList) {
+        for (DictDataRsp data : dictDataList) {
             if (data.getDictLabel() != null && data.getDictValue() != null) {
                 String key = data.getDictLabel().trim();
                 if (!key.isEmpty()) {
@@ -177,7 +174,7 @@ public class PrometheusSdServiceImpl implements PrometheusSdService {
         return convertDictValue(dictMaps.areaNameMap, areaName);
     }
 
-    private <T> List<PrometheusSdResponse> buildTargets(
+    private <T> List<PrometheusSdRsp> buildTargets(
             List<T> list,
             String type,
             DictMaps dictMaps,
@@ -205,7 +202,7 @@ public class PrometheusSdServiceImpl implements PrometheusSdService {
                 .collect(Collectors.toList()));
     }
 
-    private PrometheusSdResponse buildTarget(String instance, String name, String siteLocation, String areaName, String targetType, String menuName, String subMenuName, String machineType) {
+    private PrometheusSdRsp buildTarget(String instance, String name, String siteLocation, String areaName, String targetType, String menuName, String subMenuName, String machineType) {
         Map<String, Object> labels = new HashMap<>();
         labels.put("base_site_location", siteLocation);
         if (areaName != null && !areaName.isEmpty()) {
@@ -223,7 +220,7 @@ public class PrometheusSdServiceImpl implements PrometheusSdService {
         labels.put("instance", resolveLabelInstance(instance, targetType));
         labels.put("target_type", targetType);
         labels.put("type", (machineType == null || machineType.isEmpty()) ? targetType : machineType);
-        PrometheusSdResponse response = new PrometheusSdResponse();
+        PrometheusSdRsp response = new PrometheusSdRsp();
         response.setTargets(Collections.singletonList(resolveTarget(instance, targetType)));
         response.setLabels(labels);
         return response;
@@ -254,7 +251,7 @@ public class PrometheusSdServiceImpl implements PrometheusSdService {
         return trimmed;
     }
 
-    private List<PrometheusSdResponse> toTargets(List<PrometheusSdResponse> groups) {
+    private List<PrometheusSdRsp> toTargets(List<PrometheusSdRsp> groups) {
         return groups == null ? new ArrayList<>() : groups;
     }
 

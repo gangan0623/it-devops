@@ -1,36 +1,39 @@
 package net.leoch.modules.alert.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.fasterxml.jackson.core.type.TypeReference;
-import net.leoch.common.service.impl.CrudServiceImpl;
-import net.leoch.common.utils.JsonUtils;
-import net.leoch.modules.alert.dao.AlertMediaDao;
-import net.leoch.modules.alert.dao.AlertNotifyLogDao;
-import net.leoch.modules.alert.dao.AlertRecordDao;
-import net.leoch.modules.alert.dao.AlertTemplateDao;
-import net.leoch.modules.alert.dao.AlertTriggerDao;
-import net.leoch.modules.alert.dto.AlertTriggerDTO;
-import net.leoch.modules.alert.entity.AlertMediaEntity;
-import net.leoch.modules.alert.entity.AlertNotifyLogEntity;
-import net.leoch.modules.alert.entity.AlertRecordEntity;
-import net.leoch.modules.alert.entity.AlertTemplateEntity;
-import net.leoch.modules.alert.entity.AlertTriggerEntity;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.validator.AssertUtils;
+import net.leoch.common.utils.common.ParseUtils;
+import net.leoch.common.utils.common.TimeUtils;
+import net.leoch.common.utils.ops.AlertJsonUtils;
+import net.leoch.common.utils.ops.AlertPayloadUtils;
+import net.leoch.common.utils.ops.AlertTemplateRenderer;
+import net.leoch.modules.alert.entity.*;
+import net.leoch.modules.alert.mapper.AlertMediaMapper;
+import net.leoch.modules.alert.mapper.AlertRecordMapper;
+import net.leoch.modules.alert.mapper.AlertTemplateMapper;
+import net.leoch.modules.alert.mapper.AlertTriggerMapper;
 import net.leoch.modules.alert.service.AlertMailService;
-import net.leoch.modules.alert.service.AlertTriggerService;
-import net.leoch.modules.alert.utils.AlertJsonUtils;
-import net.leoch.modules.alert.utils.AlertPayloadUtils;
-import net.leoch.modules.alert.utils.AlertTemplateRenderer;
-import net.leoch.modules.sys.dao.SysUserDao;
+import net.leoch.modules.alert.service.IAlertNotifyLogService;
+import net.leoch.modules.alert.service.IAlertTriggerService;
+import net.leoch.modules.alert.vo.req.AlertTriggerPageReq;
+import net.leoch.modules.alert.vo.req.AlertTriggerReq;
+import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;
 import net.leoch.modules.sys.entity.SysUserEntity;
+import net.leoch.modules.sys.mapper.SysUserMapper;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -39,44 +42,145 @@ import java.util.stream.Collectors;
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
+@Slf4j
 @Service
-public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, AlertTriggerEntity, AlertTriggerDTO> implements AlertTriggerService {
+@RequiredArgsConstructor
+public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, AlertTriggerEntity> implements IAlertTriggerService {
 
-    private final AlertTemplateDao alertTemplateDao;
-    private final AlertMediaDao alertMediaDao;
-    private final SysUserDao sysUserDao;
+    private final AlertTemplateMapper alertTemplateMapper;
+    private final AlertMediaMapper alertMediaMapper;
+    private final SysUserMapper sysUserMapper;
     private final AlertMailService alertMailService;
-    private final AlertNotifyLogDao alertNotifyLogDao;
-    private final AlertRecordDao alertRecordDao;
+    private final IAlertNotifyLogService alertNotifyLogService;
+    private final AlertRecordMapper alertRecordMapper;
 
-    public AlertTriggerServiceImpl(AlertTemplateDao alertTemplateDao,
-                                   AlertMediaDao alertMediaDao,
-                                   SysUserDao sysUserDao,
-                                   AlertMailService alertMailService,
-                                   AlertNotifyLogDao alertNotifyLogDao,
-                                   AlertRecordDao alertRecordDao) {
-        this.alertTemplateDao = alertTemplateDao;
-        this.alertMediaDao = alertMediaDao;
-        this.sysUserDao = sysUserDao;
-        this.alertMailService = alertMailService;
-        this.alertNotifyLogDao = alertNotifyLogDao;
-        this.alertRecordDao = alertRecordDao;
+    @Override
+    public PageData<AlertTriggerRsp> page(AlertTriggerPageReq request) {
+        IPage<AlertTriggerEntity> page = this.page(request.buildPage(),
+            new LambdaQueryWrapper<AlertTriggerEntity>()
+                .like(StrUtil.isNotBlank(request.getName()), AlertTriggerEntity::getName, request.getName())
+        );
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), AlertTriggerRsp.class), page.getTotal());
     }
 
     @Override
-    public QueryWrapper<AlertTriggerEntity> getWrapper(Map<String, Object> params) {
-        String name = (String) params.get("name");
-        String status = (String) params.get("status");
-
-        QueryWrapper<AlertTriggerEntity> wrapper = new QueryWrapper<>();
-        wrapper.like(StrUtil.isNotBlank(name), "name", name);
-        wrapper.eq(StrUtil.isNotBlank(status), "status", status);
-
-        return wrapper;
+    public List<AlertTriggerRsp> list(AlertTriggerPageReq request) {
+        List<AlertTriggerEntity> entityList = this.list(
+            new LambdaQueryWrapper<AlertTriggerEntity>()
+                .like(request != null && StrUtil.isNotBlank(request.getName()), AlertTriggerEntity::getName, request != null ? request.getName() : null)
+        );
+        return BeanUtil.copyToList(entityList, AlertTriggerRsp.class);
     }
 
     @Override
-    public void fillReceiverUserIdList(AlertTriggerDTO dto) {
+    public AlertTriggerRsp get(Long id) {
+        return BeanUtil.copyProperties(this.getById(id), AlertTriggerRsp.class);
+    }
+
+    @Override
+    public PageData<AlertTriggerRsp> pageWithReceivers(AlertTriggerPageReq request) {
+        PageData<AlertTriggerRsp> pageData = this.page(request);
+        fillReceiverUserIdList(pageData.getList());
+        return pageData;
+    }
+
+    @Override
+    public AlertTriggerRsp getWithReceivers(Long id) {
+        AlertTriggerRsp dto = this.get(id);
+        fillReceiverUserIdList(dto);
+        return dto;
+    }
+
+    @Override
+    public List<Map<String, Object>> options() {
+        // 只查询必要字段
+        List<AlertTriggerEntity> list = this.list(
+            new LambdaQueryWrapper<AlertTriggerEntity>()
+                .select(AlertTriggerEntity::getId, AlertTriggerEntity::getName)
+                .last("LIMIT 1000")
+        );
+        return list.stream().map(item -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", item.getId());
+            map.put("name", item.getName());
+            return map;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public void save(AlertTriggerReq dto) {
+        log.info("[AlertTrigger] 开始保存, dto={}", dto);
+        normalizeReceiverIds(dto);
+        AlertTriggerEntity entity = BeanUtil.copyProperties(dto, AlertTriggerEntity.class);
+        this.save(entity);
+        BeanUtil.copyProperties(entity, dto);
+    }
+
+    @Override
+    public void update(AlertTriggerReq dto) {
+        log.info("[AlertTrigger] 开始更新, dto={}", dto);
+        normalizeReceiverIds(dto);
+        this.updateById(BeanUtil.copyProperties(dto, AlertTriggerEntity.class));
+    }
+
+    @Override
+    public void delete(Long[] ids) {
+        log.info("[AlertTrigger] 开始删除, ids={}", Arrays.toString(ids));
+        AssertUtils.isArrayEmpty(ids, "id");
+        this.removeByIds(Arrays.asList(ids));
+    }
+
+    @Override
+    public Map<String, Object> resources() {
+        Map<String, Object> result = new HashMap<>();
+
+        // 只查询必要字段，过滤启用状态
+        List<AlertTemplateEntity> templates = alertTemplateMapper.selectList(
+            new LambdaQueryWrapper<AlertTemplateEntity>()
+                .eq(AlertTemplateEntity::getStatus, 1)
+                .select(AlertTemplateEntity::getId, AlertTemplateEntity::getName)
+                .last("LIMIT 1000")
+        );
+        List<AlertMediaEntity> medias = alertMediaMapper.selectList(
+            new LambdaQueryWrapper<AlertMediaEntity>()
+                .eq(AlertMediaEntity::getStatus, 1)
+                .select(AlertMediaEntity::getId, AlertMediaEntity::getName)
+                .last("LIMIT 1000")
+        );
+        List<SysUserEntity> users = sysUserMapper.selectList(
+            new QueryWrapper<SysUserEntity>()
+                .select("id", "username", "email")
+                .isNotNull("email")
+                .last("LIMIT 1000")
+        );
+
+        result.put("templates", templates.stream().map(item -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", item.getId());
+            map.put("name", item.getName());
+            return map;
+        }).collect(Collectors.toList()));
+        result.put("medias", medias.stream().map(item -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", item.getId());
+            map.put("name", item.getName());
+            return map;
+        }).collect(Collectors.toList()));
+        result.put("users", users.stream().map(item -> {
+            Map<String, Object> map = new HashMap<>();
+            map.put("id", item.getId());
+            map.put("name", item.getUsername());
+            map.put("email", item.getEmail());
+            return map;
+        }).collect(Collectors.toList()));
+
+        log.debug("[告警触发规则] 加载资源, templates={}, medias={}, users={}",
+            templates.size(), medias.size(), users.size());
+        return result;
+    }
+
+    @Override
+    public void fillReceiverUserIdList(AlertTriggerRsp dto) {
         if (dto == null) {
             return;
         }
@@ -84,51 +188,68 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
     }
 
     @Override
-    public void fillReceiverUserIdList(List<AlertTriggerDTO> list) {
+    public void fillReceiverUserIdList(List<AlertTriggerRsp> list) {
         if (list == null) {
             return;
         }
-        for (AlertTriggerDTO dto : list) {
+        for (AlertTriggerRsp dto : list) {
             fillReceiverUserIdList(dto);
         }
     }
 
     @Override
     public void notifyFromWebhook(Map<String, Object> payload, String rawJson, String severity) {
+        log.info("[告警触发] 开始处理Webhook告警, severity={}, payloadSize={}", severity, rawJson != null ? rawJson.length() : 0);
         if (payload == null) {
+            log.warn("[告警触发] payload为空");
             return;
         }
-        List<AlertTriggerEntity> triggers = baseDao.selectList(new QueryWrapper<AlertTriggerEntity>().eq("status", 1));
+        List<AlertTriggerEntity> triggers = this.list(new LambdaQueryWrapper<AlertTriggerEntity>().eq(AlertTriggerEntity::getStatus, 1));
         if (CollUtil.isEmpty(triggers)) {
+            log.warn("[告警触发] 无可用的触发器");
             return;
         }
+        log.info("[告警触发] 找到{}个可用触发器", triggers.size());
         List<Map<String, Object>> alerts = getAlerts(payload);
         if (CollUtil.isEmpty(alerts)) {
+            log.warn("[告警触发] payload中无告警数据");
             return;
         }
+        log.info("[告警触发] 解析到{}个告警", alerts.size());
+        int matchCount = 0;
+        int sendCount = 0;
         for (Map<String, Object> alert : alerts) {
             String severityForAlert = resolveSeverity(payload, alert, severity);
             Long recordId = findRecordId(payload, alert);
+            String alertName = String.valueOf(alert.getOrDefault("alertname", "unknown"));
             for (AlertTriggerEntity trigger : triggers) {
                 if (!matches(trigger, payload, alert, severityForAlert)) {
                     continue;
                 }
+                matchCount++;
+                log.info("[告警触发] 触发器匹配, triggerId={}, triggerName={}, alertName={}, severity={}",
+                         trigger.getId(), trigger.getName(), alertName, severityForAlert);
                 sendAlert(trigger, payload, alert, severityForAlert, recordId);
+                sendCount++;
             }
         }
+        log.info("[告警触发] 处理完成, 告警数={}, 匹配数={}, 发送数={}", alerts.size(), matchCount, sendCount);
     }
 
     @Override
     public void sendTest(Long templateId, Long triggerId, String rawJson) {
-        AlertTriggerEntity trigger = triggerId == null ? null : baseDao.selectById(triggerId);
+        AlertTriggerEntity trigger = triggerId == null ? null : this.getById(triggerId);
         if (trigger == null) {
             return;
         }
-        AlertTemplateEntity template = templateId == null ? null : alertTemplateDao.selectById(templateId);
+        if (trigger.getStatus() != null && trigger.getStatus() == 0) {
+            return;
+        }
+        AlertTemplateEntity template = templateId == null ? null : alertTemplateMapper.selectById(templateId);
         if (template == null) {
             return;
         }
-        AlertMediaEntity media = trigger.getMediaId() == null ? null : alertMediaDao.selectById(trigger.getMediaId());
+        AlertMediaEntity media = trigger.getMediaId() == null ? null : alertMediaMapper.selectById(trigger.getMediaId());
         if (media == null) {
             return;
         }
@@ -139,15 +260,20 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
     }
 
     private void sendAlert(AlertTriggerEntity trigger, Map<String, Object> payload, Map<String, Object> alert, String severity, Long recordId) {
-        AlertTemplateEntity template = trigger.getTemplateId() == null ? null : alertTemplateDao.selectById(trigger.getTemplateId());
-        AlertMediaEntity media = trigger.getMediaId() == null ? null : alertMediaDao.selectById(trigger.getMediaId());
+        log.debug("[告警触发] 开始发送告警, triggerId={}, severity={}, recordId={}", trigger.getId(), severity, recordId);
+        AlertTemplateEntity template = trigger.getTemplateId() == null ? null : alertTemplateMapper.selectById(trigger.getTemplateId());
+        AlertMediaEntity media = trigger.getMediaId() == null ? null : alertMediaMapper.selectById(trigger.getMediaId());
         if (template == null || media == null) {
+            log.warn("[告警触发] 模板或媒介不存在, triggerId={}, templateId={}, mediaId={}",
+                     trigger.getId(), trigger.getTemplateId(), trigger.getMediaId());
             return;
         }
         if (template.getStatus() != null && template.getStatus() == 0) {
+            log.debug("[告警触发] 模板已禁用, templateId={}", template.getId());
             return;
         }
         if (media.getStatus() != null && media.getStatus() == 0) {
+            log.debug("[告警触发] 媒介已禁用, mediaId={}", media.getId());
             return;
         }
         Map<String, Object> context = buildContext(payload, alert, severity, recordId);
@@ -157,26 +283,36 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
     private void sendWithTemplate(AlertTemplateEntity template, AlertMediaEntity media, String receiverUserIds, Map<String, Object> context) {
         List<String> receivers = getReceiverEmails(receiverUserIds);
         if (CollUtil.isEmpty(receivers)) {
+            log.warn("[告警触发] 无接收人邮箱, receiverUserIds={}", receiverUserIds);
             return;
         }
+        log.info("[告警触发] 准备发送邮件, template={}, media={}, receivers={}",
+                 template.getName(), media.getName(), receivers.size());
         String subject = AlertTemplateRenderer.render(template.getEmailSubject(), context);
         String html = AlertTemplateRenderer.render(template.getEmailHtml(), context);
-        AlertNotifyLogEntity log = new AlertNotifyLogEntity();
-        log.setRecordId(context == null ? null : toLong(context.get("recordId")));
-        log.setAlertName(context == null ? null : toStr(context.get("alertname")));
-        log.setInstance(context == null ? null : toStr(context.get("instance")));
-        log.setSeverity(context == null ? null : toStr(context.get("severity")));
-        log.setMediaName(media.getName());
-        log.setReceivers(String.join(",", receivers));
-        log.setSendTime(new Date());
+        AlertNotifyLogEntity notifyLog = new AlertNotifyLogEntity();
+        notifyLog.setRecordId(context == null ? null : ParseUtils.toLong(context.get("recordId")));
+        notifyLog.setAlertName(context == null ? null : ParseUtils.toStr(context.get("alertname")));
+        notifyLog.setInstance(context == null ? null : ParseUtils.toStr(context.get("instance")));
+        notifyLog.setSeverity(context == null ? null : ParseUtils.toStr(context.get("severity")));
+        notifyLog.setMediaName(media.getName());
+        notifyLog.setReceivers(String.join(",", receivers));
+        notifyLog.setSendTime(new Date());
+        long startTime = System.currentTimeMillis();
         try {
             alertMailService.send(media, receivers, subject, null, html);
-            log.setSendStatus(1);
+            notifyLog.setSendStatus(1);
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            log.info("[告警触发] 邮件发送成功, alertName={}, instance={}, receivers={}, 耗时={}ms",
+                     notifyLog.getAlertName(), notifyLog.getInstance(), receivers.size(), elapsedTime);
         } catch (Exception e) {
-            log.setSendStatus(0);
-            log.setErrorMessage(StrUtil.sub(e.getMessage(), 0, 500));
+            notifyLog.setSendStatus(0);
+            notifyLog.setErrorMessage(StrUtil.sub(e.getMessage(), 0, 500));
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            log.error("[告警触发] 邮件发送失败, alertName={}, instance={}, 耗时={}ms",
+                      notifyLog.getAlertName(), notifyLog.getInstance(), elapsedTime, e);
         } finally {
-            alertNotifyLogDao.insert(log);
+            alertNotifyLogService.save(notifyLog);
         }
     }
 
@@ -221,7 +357,7 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
         context.put("description", getLabelValue(annotations, toMap(payload.get("commonAnnotations")), "description"));
         context.put("startsAt", alert.get("startsAt"));
         context.put("endsAt", alert.get("endsAt"));
-        context.put("duration", formatDuration(parseDate(toStr(alert.get("startsAt"))), parseDate(toStr(alert.get("endsAt")))));
+        context.put("duration", TimeUtils.formatDurationZh(TimeUtils.parseDate(ParseUtils.toStr(alert.get("startsAt"))), TimeUtils.parseDate(ParseUtils.toStr(alert.get("endsAt")))));
         context.put("recordId", recordId);
         return context;
     }
@@ -248,8 +384,9 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
             return new HashMap<>();
         }
         try {
-            return JsonUtils.parseObject(matchLabels, new TypeReference<Map<String, Object>>() {});
-        } catch (Exception ignore) {
+            return JSONUtil.toBean(matchLabels, new TypeReference<Map<String, Object>>() {}, false);
+        } catch (Exception e) {
+            log.warn("[告警触发] 解析匹配标签失败, matchLabels={}", matchLabels, e);
             return new HashMap<>();
         }
     }
@@ -296,8 +433,8 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
         String alertName = getLabelValue(labels, toMap(payload.get("commonLabels")), "alertname");
         String instance = getLabelValue(labels, toMap(payload.get("commonLabels")), "instance", getLabelValue(labels, toMap(payload.get("commonLabels")), "service"));
         String startsAt = alert == null ? null : String.valueOf(alert.get("startsAt"));
-        Date startsAtDate = parseDate(startsAt);
-        AlertRecordEntity record = alertRecordDao.selectOne(
+        Date startsAtDate = TimeUtils.parseDate(startsAt);
+        AlertRecordEntity record = alertRecordMapper.selectOne(
             new QueryWrapper<AlertRecordEntity>()
                 .eq(StrUtil.isNotBlank(alertName), "alert_name", alertName)
                 .eq(StrUtil.isNotBlank(instance), "instance", instance)
@@ -308,7 +445,7 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
         if (record != null) {
             return record.getId();
         }
-        AlertRecordEntity fallback = alertRecordDao.selectOne(
+        AlertRecordEntity fallback = alertRecordMapper.selectOne(
             new QueryWrapper<AlertRecordEntity>()
                 .eq(StrUtil.isNotBlank(alertName), "alert_name", alertName)
                 .eq(StrUtil.isNotBlank(instance), "instance", instance)
@@ -344,6 +481,15 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
         return extraFallback;
     }
 
+    private void normalizeReceiverIds(AlertTriggerReq dto) {
+        if (dto == null || CollUtil.isEmpty(dto.getReceiverUserIdList())) {
+            return;
+        }
+        dto.setReceiverUserIds(dto.getReceiverUserIdList().stream()
+            .map(String::valueOf)
+            .collect(Collectors.joining(",")));
+    }
+
     private List<Long> splitIds(String ids) {
         if (StrUtil.isBlank(ids)) {
             return new ArrayList<>();
@@ -360,7 +506,7 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
         if (ids.isEmpty()) {
             return new ArrayList<>();
         }
-        List<SysUserEntity> users = sysUserDao.selectList(
+        List<SysUserEntity> users = sysUserMapper.selectList(
             new QueryWrapper<SysUserEntity>()
                 .select("id", "email", "username")
                 .in("id", ids)
@@ -370,49 +516,5 @@ public class AlertTriggerServiceImpl extends CrudServiceImpl<AlertTriggerDao, Al
             .filter(StrUtil::isNotBlank)
             .distinct()
             .collect(Collectors.toList());
-    }
-
-    private Date parseDate(String value) {
-        if (StrUtil.isBlank(value)) {
-            return null;
-        }
-        try {
-            return Date.from(java.time.Instant.parse(value));
-        } catch (Exception ignore) {
-            return null;
-        }
-    }
-
-    private String formatDuration(Date startsAt, Date endsAt) {
-        if (startsAt == null) {
-            return "-";
-        }
-        long end = endsAt == null ? System.currentTimeMillis() : endsAt.getTime();
-        long seconds = Math.max(0, (end - startsAt.getTime()) / 1000);
-        long days = seconds / 86400;
-        long hours = (seconds % 86400) / 3600;
-        long minutes = (seconds % 3600) / 60;
-        if (days > 0) {
-            return days + "天" + hours + "小时";
-        }
-        if (hours > 0) {
-            return hours + "小时" + minutes + "分钟";
-        }
-        return minutes + "分钟";
-    }
-
-    private Long toLong(Object value) {
-        if (value == null) {
-            return null;
-        }
-        try {
-            return Long.parseLong(String.valueOf(value));
-        } catch (Exception ignore) {
-            return null;
-        }
-    }
-
-    private String toStr(Object value) {
-        return value == null ? null : String.valueOf(value);
     }
 }

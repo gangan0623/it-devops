@@ -1,30 +1,21 @@
-
-
 package net.leoch.modules.log.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
-import net.leoch.common.constant.Constant;
-import net.leoch.common.page.PageData;
-import net.leoch.common.utils.ExcelUtils;
-import net.leoch.common.utils.Result;
-import net.leoch.modules.log.dto.SysLogLoginDTO;
-import net.leoch.modules.log.excel.SysLogLoginExcel;
-import net.leoch.modules.log.service.SysLogLoginService;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.result.Result;
+import net.leoch.common.integration.excel.SysLogLoginExcel;
+import net.leoch.common.utils.excel.ExcelUtils;
+import net.leoch.modules.log.service.ISysLogLoginService;
+import net.leoch.modules.log.vo.req.SysLogLoginPageReq;
+import net.leoch.modules.log.vo.rsp.SysLogLoginRsp;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
-import java.util.Map;
 
 
 /**
@@ -36,40 +27,23 @@ import java.util.Map;
 @RestController
 @RequestMapping("sys/log/login")
 @Tag(name = "登录日志")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysLogLoginController {
-    private final SysLogLoginService sysLogLoginService;
+    private final ISysLogLoginService sysLogLoginService;
 
     @GetMapping("page")
     @Operation(summary = "分页")
-    @Parameters({
-            @Parameter(name = Constant.PAGE, description = "当前页码，从1开始", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.LIMIT, description = "每页显示记录数", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = "status", description = "状态  0：失败    1：成功    2：账号已锁定", in = ParameterIn.QUERY, ref = "int"),
-            @Parameter(name = "creatorName", description = "用户名", in = ParameterIn.QUERY, ref = "String")
-    })
     @SaCheckPermission("sys:log:login")
-    public Result<PageData<SysLogLoginDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
-        PageData<SysLogLoginDTO> page = sysLogLoginService.page(params);
-
-        return new Result<PageData<SysLogLoginDTO>>().ok(page);
+    public Result<PageData<SysLogLoginRsp>> page(SysLogLoginPageReq request) {
+        return new Result<PageData<SysLogLoginRsp>>().ok(sysLogLoginService.page(request));
     }
 
     @GetMapping("export")
     @Operation(summary = "导出")
     @LogOperation("导出")
-    @Parameters({
-            @Parameter(name = "status", description = "状态  0：失败    1：成功    2：账号已锁定", in = ParameterIn.QUERY, ref = "int"),
-            @Parameter(name = "creatorName", description = "用户名", in = ParameterIn.QUERY, ref = "String")
-    })
     @SaCheckPermission("sys:log:login")
-    public void export(@Parameter(hidden = true) @RequestParam Map<String, Object> params, HttpServletResponse response) throws Exception {
-        List<SysLogLoginDTO> list = sysLogLoginService.list(params);
-
-        ExcelUtils.exportExcelToTarget(response, null, "登录日志", list, SysLogLoginExcel.class);
-
+    public void export(SysLogLoginPageReq request, HttpServletResponse response) throws Exception {
+        ExcelUtils.exportExcelToTarget(response, null, "登录日志", sysLogLoginService.list(request), SysLogLoginExcel.class);
     }
 
 }

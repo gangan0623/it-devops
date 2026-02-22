@@ -1,51 +1,60 @@
-
-
 package net.leoch.modules.sys.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import lombok.AllArgsConstructor;
-import net.leoch.common.page.PageData;
-import net.leoch.common.service.impl.BaseServiceImpl;
-import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.sys.dao.SysDictDataDao;
-import net.leoch.modules.sys.dao.SysDictTypeDao;
-import net.leoch.modules.sys.dto.SysDictTypeDTO;
-import net.leoch.modules.sys.entity.DictData;
-import net.leoch.modules.sys.entity.DictType;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.validator.AssertUtils;
+import net.leoch.common.data.validator.ValidatorUtils;
+import net.leoch.common.data.validator.group.DefaultGroup;
+import net.leoch.common.data.validator.group.UpdateGroup;
 import net.leoch.modules.sys.entity.SysDictTypeEntity;
-import net.leoch.modules.sys.service.SysDictTypeService;
+import net.leoch.modules.sys.mapper.SysDictDataMapper;
+import net.leoch.modules.sys.mapper.SysDictTypeMapper;
+import net.leoch.modules.sys.service.ISysDictTypeService;
+import net.leoch.modules.sys.vo.req.SysDictTypePageReq;
+import net.leoch.modules.sys.vo.req.SysDictTypeReq;
+import net.leoch.modules.sys.vo.rsp.DictDataRsp;
+import net.leoch.modules.sys.vo.rsp.DictTypeRsp;
+import net.leoch.modules.sys.vo.rsp.SysDictTypeRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 字典类型
  *
  * @author Taohongqiang
  */
+@Slf4j
 @Service
-@AllArgsConstructor
-public class SysDictTypeServiceImpl extends BaseServiceImpl<SysDictTypeDao, SysDictTypeEntity> implements SysDictTypeService {
-    private final SysDictDataDao sysDictDataDao;
+@RequiredArgsConstructor
+public class SysDictTypeServiceImpl extends ServiceImpl<SysDictTypeMapper, SysDictTypeEntity> implements ISysDictTypeService {
+    private final SysDictDataMapper sysDictDataMapper;
 
     @Override
-    public PageData<SysDictTypeDTO> page(Map<String, Object> params) {
-        IPage<SysDictTypeEntity> page = baseDao.selectPage(
-                getPage(params, "sort", true),
-                getWrapper(params)
+    public PageData<SysDictTypeRsp> page(SysDictTypePageReq request) {
+        IPage<SysDictTypeEntity> page = this.page(
+                request.<SysDictTypeEntity>buildPage().addOrder(
+                    com.baomidou.mybatisplus.core.metadata.OrderItem.asc("sort")
+                ),
+                getWrapper(request)
         );
 
-        return getPageData(page, SysDictTypeDTO.class);
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), SysDictTypeRsp.class), page.getTotal());
     }
 
-    private QueryWrapper<SysDictTypeEntity> getWrapper(Map<String, Object> params) {
-        String dictType = (String) params.get("dictType");
-        String dictName = (String) params.get("dictName");
+    private QueryWrapper<SysDictTypeEntity> getWrapper(SysDictTypePageReq request) {
+        String dictType = request.getDictType();
+        String dictName = request.getDictName();
 
         QueryWrapper<SysDictTypeEntity> wrapper = new QueryWrapper<>();
         wrapper.like(StrUtil.isNotBlank(dictType), "dict_type", dictType);
@@ -55,44 +64,50 @@ public class SysDictTypeServiceImpl extends BaseServiceImpl<SysDictTypeDao, SysD
     }
 
     @Override
-    public SysDictTypeDTO get(Long id) {
-        SysDictTypeEntity entity = baseDao.selectById(id);
+    public SysDictTypeRsp get(Long id) {
+        SysDictTypeEntity entity = this.getById(id);
 
-        return ConvertUtils.sourceToTarget(entity, SysDictTypeDTO.class);
+        return BeanUtil.copyProperties(entity, SysDictTypeRsp.class);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysDictTypeDTO dto) {
-        SysDictTypeEntity entity = ConvertUtils.sourceToTarget(dto, SysDictTypeEntity.class);
+    public void save(SysDictTypeReq dto) {
+        ValidatorUtils.validateEntity(dto, DefaultGroup.class);
+        SysDictTypeEntity entity = BeanUtil.copyProperties(dto, SysDictTypeEntity.class);
 
-        insert(entity);
+        this.save(entity);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysDictTypeDTO dto) {
-        SysDictTypeEntity entity = ConvertUtils.sourceToTarget(dto, SysDictTypeEntity.class);
+    public void update(SysDictTypeReq dto) {
+        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
+        SysDictTypeEntity entity = BeanUtil.copyProperties(dto, SysDictTypeEntity.class);
 
-        updateById(entity);
+        this.updateById(entity);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long[] ids) {
+        AssertUtils.isArrayEmpty(ids, "id");
         //删除
-        deleteBatchIds(Arrays.asList(ids));
+        this.removeByIds(Arrays.asList(ids));
     }
 
     @Override
-    public List<DictType> getAllList() {
-        List<DictType> typeList = baseDao.getDictTypeList();
-        List<DictData> dataList = sysDictDataDao.getDictDataList();
-        for (DictType type : typeList) {
-            for (DictData data : dataList) {
-                if (type.getId().equals(data.getDictTypeId())) {
-                    type.getDataList().add(data);
-                }
+    public List<DictTypeRsp> getAllList() {
+        List<DictTypeRsp> typeList = this.getBaseMapper().getDictTypeList();
+        List<DictDataRsp> dataList = sysDictDataMapper.getDictDataList();
+
+        Map<Long, List<DictDataRsp>> dataMap = dataList.stream()
+                .collect(Collectors.groupingBy(DictDataRsp::getDictTypeId));
+
+        for (DictTypeRsp type : typeList) {
+            List<DictDataRsp> items = dataMap.get(type.getId());
+            if (items != null) {
+                type.setDataList(items);
             }
         }
         return typeList;

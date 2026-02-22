@@ -1,16 +1,17 @@
 package net.leoch.modules.ops.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import net.leoch.common.exception.RenException;
-import net.leoch.common.service.impl.CrudServiceImpl;
-import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.ops.dao.DeviceBackupHistoryDao;
-import net.leoch.modules.ops.dto.DeviceBackupHistoryDTO;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.exception.ServiceException;
 import net.leoch.modules.ops.entity.DeviceBackupHistoryEntity;
-import net.leoch.modules.ops.service.DeviceBackupHistoryService;
+import net.leoch.modules.ops.mapper.DeviceBackupHistoryMapper;
+import net.leoch.modules.ops.service.IDeviceBackupHistoryService;
+import net.leoch.modules.ops.vo.rsp.DeviceBackupHistoryRsp;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -21,18 +22,11 @@ import java.util.*;
 /**
  * 设备备份历史表
  */
+@Slf4j
 @Service
-public class DeviceBackupHistoryServiceImpl extends CrudServiceImpl<DeviceBackupHistoryDao, DeviceBackupHistoryEntity, DeviceBackupHistoryDTO> implements DeviceBackupHistoryService {
+public class DeviceBackupHistoryServiceImpl extends ServiceImpl<DeviceBackupHistoryMapper, DeviceBackupHistoryEntity> implements IDeviceBackupHistoryService {
 
-    @Override
-    public QueryWrapper<DeviceBackupHistoryEntity> getWrapper(Map<String, Object> params) {
-        String ip = (String) params.get("ip");
-        QueryWrapper<DeviceBackupHistoryEntity> wrapper = new QueryWrapper<>();
-        wrapper.lambda().eq(StrUtil.isNotBlank(ip), DeviceBackupHistoryEntity::getIp, ip);
-        wrapper.lambda().orderByDesc(DeviceBackupHistoryEntity::getBackupTime);
-        return wrapper;
-    }
-
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public void saveHistory(String name, String ip, String url, Integer status) {
         if (StrUtil.isBlank(ip)) {
@@ -44,30 +38,39 @@ public class DeviceBackupHistoryServiceImpl extends CrudServiceImpl<DeviceBackup
         entity.setUrl(url);
         entity.setBackupTime(new Date());
         entity.setBackupStatus(status);
-        baseDao.insert(entity);
+        this.getBaseMapper().insert(entity);
     }
 
     @Override
-    public List<DeviceBackupHistoryDTO> listByIp(String ip, Integer limit) {
+    public List<DeviceBackupHistoryRsp> listByIp(String ip, Integer limit) {
         LambdaQueryWrapper<DeviceBackupHistoryEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(StrUtil.isNotBlank(ip), DeviceBackupHistoryEntity::getIp, ip);
         wrapper.orderByDesc(DeviceBackupHistoryEntity::getBackupTime);
         if (limit != null && limit > 0) {
             wrapper.last("limit " + Math.min(limit, 200));
         }
-        List<DeviceBackupHistoryEntity> list = baseDao.selectList(wrapper);
-        return ConvertUtils.sourceToTarget(list, DeviceBackupHistoryDTO.class);
+        List<DeviceBackupHistoryEntity> list = this.list(wrapper);
+        return BeanUtil.copyToList(list, DeviceBackupHistoryRsp.class);
+    }
+
+    @Override
+    public DeviceBackupHistoryRsp get(Long id) {
+        if (id == null) {
+            return null;
+        }
+        DeviceBackupHistoryEntity entity = this.getById(id);
+        return BeanUtil.copyProperties(entity, DeviceBackupHistoryRsp.class);
     }
 
     @Override
     public List<Map<String, Object>> diffById(Long leftId, Long rightId) {
         if (leftId == null || rightId == null) {
-            throw new RenException("请选择两条记录进行对比");
+            throw new ServiceException("请选择两条记录进行对比");
         }
-        DeviceBackupHistoryEntity left = baseDao.selectById(leftId);
-        DeviceBackupHistoryEntity right = baseDao.selectById(rightId);
+        DeviceBackupHistoryEntity left = this.getById(leftId);
+        DeviceBackupHistoryEntity right = this.getById(rightId);
         if (left == null || right == null) {
-            throw new RenException("历史记录不存在");
+            throw new ServiceException("历史记录不存在");
         }
         List<String> leftLines = readLines(left.getUrl());
         List<String> rightLines = readLines(right.getUrl());
@@ -94,14 +97,14 @@ public class DeviceBackupHistoryServiceImpl extends CrudServiceImpl<DeviceBackup
             connection.setReadTimeout(15000);
             int code = connection.getResponseCode();
             if (code != 200) {
-                throw new RenException("备份文件读取失败，HTTP " + code);
+                throw new ServiceException("备份文件读取失败，HTTP " + code);
             }
             try (InputStream in = connection.getInputStream()) {
                 byte[] bytes = in.readAllBytes();
                 return new String(bytes, StandardCharsets.UTF_8);
             }
         } catch (Exception e) {
-            throw new RenException("备份文件读取失败: " + e.getMessage());
+            throw new ServiceException("备份文件读取失败: " + e.getMessage());
         } finally {
             if (connection != null) {
                 connection.disconnect();
@@ -121,7 +124,7 @@ public class DeviceBackupHistoryServiceImpl extends CrudServiceImpl<DeviceBackup
             connection.setReadTimeout(15000);
             int code = connection.getResponseCode();
             if (code != 200) {
-                throw new RenException("备份文件读取失败，HTTP " + code);
+                throw new ServiceException("备份文件读取失败，HTTP " + code);
             }
             try (InputStream in = connection.getInputStream()) {
                 byte[] bytes = in.readAllBytes();
@@ -134,7 +137,7 @@ public class DeviceBackupHistoryServiceImpl extends CrudServiceImpl<DeviceBackup
                 return list;
             }
         } catch (Exception e) {
-            throw new RenException("备份文件读取失败: " + e.getMessage());
+            throw new ServiceException("备份文件读取失败: " + e.getMessage());
         } finally {
             if (connection != null) {
                 connection.disconnect();
@@ -186,7 +189,7 @@ public class DeviceBackupHistoryServiceImpl extends CrudServiceImpl<DeviceBackup
                 i--;
             }
         }
-        java.util.Collections.reverse(result);
+        Collections.reverse(result);
         return result;
     }
 }

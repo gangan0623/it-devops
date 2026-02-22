@@ -1,35 +1,37 @@
 package net.leoch.modules.ops.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import jakarta.annotation.Resource;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
-import net.leoch.common.exception.RenException;
-import net.leoch.common.page.PageData;
-import net.leoch.common.redis.RedisKeys;
-import net.leoch.common.redis.RedisUtils;
-import net.leoch.common.service.impl.CrudServiceImpl;
-import net.leoch.common.utils.ConvertUtils;
-import net.leoch.common.utils.ExcelUtils;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.AddGroup;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.ops.dao.WindowHostDao;
-import net.leoch.modules.ops.dto.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.validator.ValidatorUtils;
+import net.leoch.common.data.validator.group.AddGroup;
+import net.leoch.common.data.validator.group.DefaultGroup;
+import net.leoch.common.data.validator.group.UpdateGroup;
+import net.leoch.common.exception.ServiceException;
+import net.leoch.common.integration.excel.WindowHostExcel;
+import net.leoch.common.integration.excel.template.WindowHostImportExcel;
+import net.leoch.common.integration.security.SecurityUser;
+import net.leoch.common.utils.excel.ExcelUtils;
+import net.leoch.common.utils.ops.MetricsUtils;
+import net.leoch.common.utils.ops.OpsQueryUtils;
+import net.leoch.common.utils.redis.RedisKeys;
+import net.leoch.common.utils.redis.RedisUtils;
 import net.leoch.modules.ops.entity.WindowHostEntity;
-import net.leoch.modules.ops.excel.WindowHostExcel;
-import net.leoch.modules.ops.excel.template.WindowHostImportExcel;
-import net.leoch.modules.ops.service.WindowHostService;
-import net.leoch.modules.ops.util.MetricsUtils;
-import net.leoch.modules.ops.util.OpsQueryUtils;
-import net.leoch.modules.security.user.SecurityUser;
+import net.leoch.modules.ops.mapper.WindowHostMapper;
+import net.leoch.modules.ops.service.IWindowHostService;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
+import net.leoch.modules.ops.vo.rsp.WindowHostRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,62 +43,38 @@ import java.util.*;
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
+@Slf4j
 @Service
-public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, WindowHostEntity, WindowHostDTO> implements WindowHostService {
+@RequiredArgsConstructor
+public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowHostEntity> implements IWindowHostService {
 
-    @Resource
-    private RedisUtils redisUtils;
-
-    @Override
-    public QueryWrapper<WindowHostEntity> getWrapper(Map<String, Object> params) {
-        QueryWrapper<WindowHostEntity> wrapper = new QueryWrapper<>();
-        LambdaQueryWrapper<WindowHostEntity> lambda = wrapper.lambda();
-        String id = (String) params.get("id");
-        String instance = (String) params.get("instance");
-        String name = (String) params.get("name");
-        String areaName = (String) params.get("areaName");
-        String siteLocation = (String) params.get("siteLocation");
-        String menuName = (String) params.get("menuName");
-        String type = (String) params.get("type");
-        String status = (String) params.get("status");
-        lambda.eq(StrUtil.isNotBlank(id), WindowHostEntity::getId, id);
-        WindowHostPageRequest req = new WindowHostPageRequest();
-        req.setInstance(instance);
-        req.setName(name);
-        req.setAreaName(areaName);
-        req.setSiteLocation(siteLocation);
-        req.setMenuName(menuName);
-        req.setType(type);
-        req.setStatus(status);
-        applyCommonFilters(lambda, req);
-        return wrapper;
-    }
+    private final RedisUtils redisUtils;
 
     @Override
-    public PageData<WindowHostDTO> page(WindowHostPageRequest request) {
+    public PageData<WindowHostRsp> page(WindowHostPageReq request) {
         LambdaQueryWrapper<WindowHostEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
-            List<WindowHostEntity> list = baseDao.selectList(wrapper);
-            List<WindowHostDTO> dtoList = ConvertUtils.sourceToTarget(list, WindowHostDTO.class);
+            List<WindowHostEntity> list = this.list(wrapper);
+            List<WindowHostRsp> dtoList = BeanUtil.copyToList(list, WindowHostRsp.class);
             fillOnlineStatus(dtoList);
-            OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), WindowHostDTO::getOnlineStatus);
+            OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), WindowHostRsp::getOnlineStatus);
             return OnlineStatusSupport.buildPageData(dtoList, request.getPage(), request.getLimit());
         }
-        Page<WindowHostEntity> page = buildPage(request);
-        IPage<WindowHostEntity> result = baseDao.selectPage(page, wrapper);
-        List<WindowHostDTO> dtoList = ConvertUtils.sourceToTarget(result.getRecords(), WindowHostDTO.class);
+        Page<WindowHostEntity> page = request.buildPage();
+        IPage<WindowHostEntity> result = this.page(page, wrapper);
+        List<WindowHostRsp> dtoList = BeanUtil.copyToList(result.getRecords(), WindowHostRsp.class);
         fillOnlineStatus(dtoList);
         return new PageData<>(dtoList, result.getTotal());
     }
 
     @Override
-    public WindowHostDTO get(WindowHostIdRequest request) {
+    public WindowHostRsp get(WindowHostIdReq request) {
         if (request == null || request.getId() == null) {
             return null;
         }
-        WindowHostEntity entity = baseDao.selectById(request.getId());
-        WindowHostDTO dto = ConvertUtils.sourceToTarget(entity, WindowHostDTO.class);
+        WindowHostEntity entity = this.getById(request.getId());
+        WindowHostRsp dto = BeanUtil.copyProperties(entity, WindowHostRsp.class);
         if (dto != null) {
             fillOnlineStatus(Collections.singletonList(dto));
         }
@@ -104,21 +82,28 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
     }
 
     @Override
-    public void save(WindowHostDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    public void save(WindowHostSaveReq dto) {
+        log.info("[WindowHost] 开始保存, dto={}", dto);
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-        validateUnique(dto);
-        super.save(dto);
+        validateUnique(dto.getInstance(), dto.getName(), dto.getId());
+        WindowHostEntity entity = BeanUtil.copyProperties(dto, WindowHostEntity.class);
+        this.save(entity);
+        BeanUtil.copyProperties(entity, dto);
     }
 
     @Override
-    public void update(WindowHostDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    public void update(WindowHostUpdateReq dto) {
+        log.info("[WindowHost] 开始更新, dto={}", dto);
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-        validateUnique(dto);
-        super.update(dto);
+        validateUnique(dto.getInstance(), dto.getName(), dto.getId());
+        WindowHostEntity entity = BeanUtil.copyProperties(dto, WindowHostEntity.class);
+        this.updateById(entity);
     }
 
     @Override
-    public void updateStatus(WindowHostStatusUpdateRequest request) {
+    public void updateStatus(WindowHostStatusUpdateReq request) {
         if (request == null) {
             return;
         }
@@ -126,7 +111,7 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
     }
 
     @Override
-    public boolean online(WindowHostOnlineRequest request) {
+    public boolean online(WindowHostOnlineReq request) {
         if (request == null || StrUtil.isBlank(request.getInstance())) {
             return false;
         }
@@ -134,7 +119,37 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
     }
 
     @Override
-    public boolean check(WindowHostCheckRequest request) {
+    public OpsHostStatusSummaryRsp summary(WindowHostPageReq request) {
+        LambdaQueryWrapper<WindowHostEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(WindowHostEntity::getInstance, WindowHostEntity::getStatus);
+        List<WindowHostEntity> list = this.list(wrapper);
+        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getWindowHostOnlineKey());
+        OpsHostStatusSummaryRsp summary = new OpsHostStatusSummaryRsp();
+        summary.setTotalCount((long) list.size());
+        for (WindowHostEntity item : list) {
+            if (item == null) {
+                continue;
+            }
+            Integer status = item.getStatus();
+            if (Integer.valueOf(1).equals(status)) {
+                summary.setEnabledCount(summary.getEnabledCount() + 1);
+            } else if (Integer.valueOf(0).equals(status)) {
+                summary.setDisabledCount(summary.getDisabledCount() + 1);
+            }
+            Boolean onlineStatus = OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(item.getInstance()));
+            if (Boolean.TRUE.equals(onlineStatus)) {
+                summary.setOnlineCount(summary.getOnlineCount() + 1);
+            } else if (Boolean.FALSE.equals(onlineStatus)) {
+                summary.setOfflineCount(summary.getOfflineCount() + 1);
+            } else {
+                summary.setUnknownCount(summary.getUnknownCount() + 1);
+            }
+        }
+        return summary;
+    }
+
+    @Override
+    public boolean check(WindowHostCheckReq request) {
         if (request == null) {
             return false;
         }
@@ -142,35 +157,48 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
     }
 
     @Override
-    @Transactional
-    public void importExcel(WindowHostImportRequest request) throws Exception {
+    @Transactional(rollbackFor = Exception.class)
+    public void importExcel(WindowHostImportReq request) throws Exception {
         if (request == null || request.getFile() == null || request.getFile().isEmpty()) {
-            throw new RenException("上传文件不能为空");
+            throw new ServiceException("上传文件不能为空");
         }
         List<WindowHostImportExcel> dataList = EasyExcel.read(request.getFile().getInputStream()).head(WindowHostImportExcel.class).sheet().doReadSync();
         if (CollUtil.isEmpty(dataList)) {
-            throw new RenException("导入数据不能为空");
+            throw new ServiceException("导入数据不能为空");
         }
         List<WindowHostEntity> entityList = new ArrayList<>(dataList.size());
         for (WindowHostImportExcel item : dataList) {
             entityList.add(toEntity(item));
         }
-        insertBatch(entityList);
+
+        // 分批处理，避免大批量数据导致 SQL 超时或 OOM
+        final int BATCH_SIZE = 1000;
+        if (entityList.size() > BATCH_SIZE) {
+            log.info("[Windows 主机] Excel 导入分批处理, 总数={}, 批次大小={}", entityList.size(), BATCH_SIZE);
+            List<List<WindowHostEntity>> batches = CollUtil.split(entityList, BATCH_SIZE);
+            for (int i = 0; i < batches.size(); i++) {
+                log.debug("[Windows 主机] 处理第 {}/{} 批, 数量={}", i + 1, batches.size(), batches.get(i).size());
+                this.saveBatch(batches.get(i));
+            }
+        } else {
+            this.saveBatch(entityList);
+        }
+        log.info("[Windows 主机] Excel 导入完成, 总数={}", entityList.size());
     }
 
 
-    private void fillOnlineStatus(List<WindowHostDTO> list) {
+    private void fillOnlineStatus(List<WindowHostRsp> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getWindowHostOnlineKey());
-        for (WindowHostDTO dto : list) {
+        for (WindowHostRsp dto : list) {
             String instance = dto.getInstance();
             dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
         }
     }
 
-    private void applyCommonFilters(LambdaQueryWrapper<WindowHostEntity> wrapper, WindowHostPageRequest request) {
+    private void applyCommonFilters(LambdaQueryWrapper<WindowHostEntity> wrapper, WindowHostPageReq request) {
         wrapper.like(StrUtil.isNotBlank(request.getInstance()), WindowHostEntity::getInstance, request.getInstance());
         wrapper.like(StrUtil.isNotBlank(request.getName()), WindowHostEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getSiteLocation()), WindowHostEntity::getSiteLocation, request.getSiteLocation());
@@ -199,26 +227,27 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
     }
 
     @Override
-    public void export(WindowHostPageRequest request, HttpServletResponse response) throws Exception {
+    public void export(WindowHostPageReq request, HttpServletResponse response) throws Exception {
         LambdaQueryWrapper<WindowHostEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
-        List<WindowHostEntity> list = baseDao.selectList(wrapper);
-        List<WindowHostDTO> dtoList = ConvertUtils.sourceToTarget(list, WindowHostDTO.class);
+        List<WindowHostEntity> list = this.list(wrapper);
+        List<WindowHostRsp> dtoList = BeanUtil.copyToList(list, WindowHostRsp.class);
         ExcelUtils.exportExcelToTarget(response, null, "Windows主机表", dtoList, WindowHostExcel.class);
     }
 
     @Override
-    public void delete(WindowHostDeleteRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(WindowHostDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
-        super.delete(request.getIds());
+        this.removeByIds(Arrays.asList(request.getIds()));
     }
 
     @Override
     public boolean existsByInstanceOrName(String instance, String name, Long excludeId) {
         return OpsQueryUtils.existsByInstanceOrName(
-                baseDao,
+                this.getBaseMapper(),
                 WindowHostEntity::getId,
                 WindowHostEntity::getInstance,
                 WindowHostEntity::getName,
@@ -239,24 +268,12 @@ public class WindowHostServiceImpl extends CrudServiceImpl<WindowHostDao, Window
         entity.setUpdateDate(new Date());
         LambdaUpdateWrapper<WindowHostEntity> wrapper = new LambdaUpdateWrapper<>();
         wrapper.in(WindowHostEntity::getId, Arrays.asList(ids));
-        baseDao.update(entity, wrapper);
+        this.update(entity, wrapper);
     }
 
-    private Page<WindowHostEntity> buildPage(WindowHostPageRequest request) {
-        if (request == null) {
-            return new Page<>(1, 10);
-        }
-        return OpsQueryUtils.buildPage(
-                request.getPage(),
-                request.getLimit(),
-                request.getOrderField(),
-                request.getOrder()
-        );
-    }
-
-    private void validateUnique(WindowHostDTO dto) {
-        if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
-            throw new RenException("地址或名称已存在");
+    private void validateUnique(String instance, String name, Long excludeId) {
+        if (existsByInstanceOrName(instance, name, excludeId)) {
+            throw new ServiceException("地址或名称已存在");
         }
     }
 

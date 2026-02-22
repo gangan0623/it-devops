@@ -1,19 +1,22 @@
 package net.leoch.modules.ops.controller;
 
+
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
-import net.leoch.common.constant.Constant;
-import net.leoch.common.page.PageData;
-import net.leoch.common.utils.Result;
-import net.leoch.modules.ops.dto.*;
-import net.leoch.modules.ops.service.DeviceBackupService;
+import net.leoch.common.base.Constant;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.result.Result;
+import net.leoch.modules.ops.service.IDeviceBackupService;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.DeviceBackupRsp;
+import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -26,10 +29,9 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("ops/devicebackup")
 @Tag(name="设备备份表")
+@RequiredArgsConstructor
 public class DeviceBackupController {
-
-    @Resource
-    private DeviceBackupService deviceBackupService;
+    private final IDeviceBackupService deviceBackupService;
 
     @GetMapping("page")
     @Operation(summary = "分页")
@@ -40,22 +42,29 @@ public class DeviceBackupController {
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("ops:devicebackup:page")
-    public Result<PageData<DeviceBackupDTO>> page(@Parameter(hidden = true) DeviceBackupPageRequest request){
-        return new Result<PageData<DeviceBackupDTO>>().ok(deviceBackupService.page(request));
+    public Result<PageData<DeviceBackupRsp>> page(@Parameter(hidden = true) DeviceBackupPageReq request){
+        return new Result<PageData<DeviceBackupRsp>>().ok(deviceBackupService.page(request));
     }
 
-    @GetMapping("{id}")
+    @GetMapping("summary")
+    @Operation(summary = "状态汇总")
+    @SaCheckPermission("ops:devicebackup:page")
+    public Result<OpsHostStatusSummaryRsp> summary(@Parameter(hidden = true) DeviceBackupPageReq request){
+        return new Result<OpsHostStatusSummaryRsp>().ok(deviceBackupService.summary(request));
+    }
+
+    @GetMapping("{id:\\d+}")
     @Operation(summary = "信息")
     @SaCheckPermission("ops:devicebackup:info")
-    public Result<DeviceBackupDTO> get(@PathVariable Long id){
-        return new Result<DeviceBackupDTO>().ok(deviceBackupService.get(DeviceBackupIdRequest.of(id)));
+    public Result<DeviceBackupRsp> get(@PathVariable Long id){
+        return new Result<DeviceBackupRsp>().ok(deviceBackupService.get(DeviceBackupIdReq.of(id)));
     }
 
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("ops:devicebackup:save")
-    public Result<Object> save(@RequestBody DeviceBackupSaveRequest request){
+    public Result<Object> save(@RequestBody DeviceBackupSaveReq request){
         deviceBackupService.save(request);
         return new Result<>();
     }
@@ -64,7 +73,7 @@ public class DeviceBackupController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("ops:devicebackup:update")
-    public Result<Object> update(@RequestBody DeviceBackupUpdateRequest request){
+    public Result<Object> update(@RequestBody DeviceBackupUpdateReq request){
         deviceBackupService.update(request);
         return new Result<>();
     }
@@ -73,7 +82,7 @@ public class DeviceBackupController {
     @Operation(summary = "批量状态更新")
     @LogOperation("批量状态更新")
     @SaCheckPermission("ops:devicebackup:update")
-    public Result<Object> updateStatus(@RequestBody DeviceBackupStatusUpdateRequest request){
+    public Result<Object> updateStatus(@RequestBody DeviceBackupStatusUpdateReq request){
         deviceBackupService.updateStatus(request);
         return new Result<>();
     }
@@ -82,7 +91,7 @@ public class DeviceBackupController {
     @Operation(summary = "导入")
     @LogOperation("导入")
     @SaCheckPermission("ops:devicebackup:import")
-    public Result<Object> importExcel(@ModelAttribute DeviceBackupImportRequest request) throws Exception {
+    public Result<Object> importExcel(@ModelAttribute DeviceBackupImportReq request) throws Exception {
         deviceBackupService.importExcel(request);
         return new Result<>();
     }
@@ -98,14 +107,14 @@ public class DeviceBackupController {
     @GetMapping("online")
     @Operation(summary = "在线状态")
     @SaCheckPermission("ops:devicebackup:page")
-    public Result<Boolean> online(DeviceBackupOnlineRequest request){
+    public Result<Boolean> online(DeviceBackupOnlineReq request){
         return new Result<Boolean>().ok(deviceBackupService.online(request));
     }
 
     @GetMapping("check")
     @Operation(summary = "唯一校验")
     @SaCheckPermission("ops:devicebackup:page")
-    public Result<Boolean> check(DeviceBackupCheckRequest request){
+    public Result<Boolean> check(DeviceBackupCheckReq request){
         return new Result<Boolean>().ok(deviceBackupService.check(request));
     }
 
@@ -114,9 +123,7 @@ public class DeviceBackupController {
     @LogOperation("删除")
     @SaCheckPermission("ops:devicebackup:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
-        DeviceBackupDeleteRequest request = new DeviceBackupDeleteRequest();
-        request.setIds(ids);
-        deviceBackupService.delete(request);
+        deviceBackupService.delete(DeviceBackupDeleteReq.of(ids));
         return new Result<>();
     }
 
@@ -124,7 +131,7 @@ public class DeviceBackupController {
     @Operation(summary = "导出")
     @LogOperation("导出")
     @SaCheckPermission("ops:devicebackup:export")
-    public void export(@Parameter(hidden = true) @ModelAttribute DeviceBackupPageRequest request, HttpServletResponse response) throws Exception {
+    public void export(@Parameter(hidden = true) @ModelAttribute DeviceBackupPageReq request, HttpServletResponse response) throws Exception {
         deviceBackupService.export(request, response);
     }
 

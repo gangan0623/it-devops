@@ -4,27 +4,34 @@ package net.leoch.modules.security.service.impl;
 
 import com.wf.captcha.SpecCaptcha;
 import com.wf.captcha.base.Captcha;
-import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
-import net.leoch.common.redis.RedisKeys;
-import net.leoch.common.redis.RedisUtils;
-import net.leoch.modules.security.service.CaptchaService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.data.validator.AssertUtils;
+import net.leoch.common.exception.ErrorCode;
+import net.leoch.common.utils.redis.RedisKeys;
+import net.leoch.common.utils.redis.RedisUtils;
+import net.leoch.modules.security.service.ICaptchaService;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.time.Duration;
 
 /**
  * 验证码
  *
  * @author Taohongqiang
  */
+@Slf4j
 @Service
-public class CaptchaServiceImpl implements CaptchaService {
-    @Resource
-    private RedisUtils redisUtils;
+@RequiredArgsConstructor
+public class CaptchaServiceImpl implements ICaptchaService {
+    private final RedisUtils redisUtils;
 
     @Override
     public void create(HttpServletResponse response, String uuid) throws IOException {
+        AssertUtils.isBlank(uuid, ErrorCode.IDENTIFIER_NOT_NULL);
+
         response.setContentType("image/gif");
         response.setHeader("Pragma", "No-cache");
         response.setHeader("Cache-Control", "no-cache");
@@ -50,12 +57,12 @@ public class CaptchaServiceImpl implements CaptchaService {
 
     private void setCache(String key, String value) {
         key = RedisKeys.getCaptchaKey(key);
-        redisUtils.set(key, value, 300);
+        redisUtils.set(key, value, Duration.ofSeconds(300));
     }
 
     private String getCache(String key) {
         key = RedisKeys.getCaptchaKey(key);
-        String captcha = (String) redisUtils.get(key);
+        String captcha = redisUtils.get(key);
         //删除验证码
         if (captcha != null) {
             redisUtils.delete(key);

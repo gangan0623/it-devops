@@ -1,0 +1,65 @@
+package net.leoch.modules.sys.service;
+
+import com.baomidou.mybatisplus.extension.service.IService;
+import net.leoch.common.integration.security.UserDetail;
+import net.leoch.modules.sys.entity.SysMenuEntity;
+import net.leoch.modules.sys.vo.req.SysMenuReq;
+import net.leoch.modules.sys.vo.rsp.SysMenuRsp;
+
+import java.util.List;
+import java.util.Set;
+
+
+/**
+ * 菜单管理
+ *
+ * @author Taohongqiang
+ */
+public interface ISysMenuService extends IService<SysMenuEntity> {
+
+	SysMenuRsp get(Long id);
+
+	void save(SysMenuReq dto);
+
+	void update(SysMenuReq dto);
+
+	void delete(Long id);
+
+	/**
+	 * 菜单列表
+	 *
+	 * @param menuType 菜单类型
+	 */
+	List<SysMenuRsp> getAllMenuList(Integer menuType);
+
+	/**
+	 * 用户菜单列表
+	 *
+	 * @param user  用户
+	 * @param menuType 菜单类型
+	 */
+	List<SysMenuRsp> getUserMenuList(UserDetail user, Integer menuType);
+
+	/**
+	 * 根据父菜单，查询子菜单
+	 * @param pid  父菜单ID
+	 */
+	List<SysMenuRsp> getListPid(Long pid);
+
+	/**
+	 * 当前登录用户菜单列表
+	 * @param menuType 菜单类型
+	 */
+	List<SysMenuRsp> getCurrentUserMenuList(Integer menuType);
+
+	/**
+	 * 当前登录用户权限标识
+	 */
+	Set<String> getCurrentUserPermissions();
+
+	/**
+	 * 删除菜单（含子菜单检查）
+	 * @param id 菜单ID
+	 */
+	void deleteWithChildCheck(Long id);
+}

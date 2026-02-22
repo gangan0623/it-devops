@@ -1,6 +1,6 @@
 package net.leoch.modules.sys.controller;
 
-import net.leoch.common.utils.Result;
+import net.leoch.common.data.result.Result;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 

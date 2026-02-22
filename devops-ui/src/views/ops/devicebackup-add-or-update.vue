@@ -1,7 +1,8 @@
 <template>
-  <el-dialog v-model="visible" :title="!dataForm.id ? '新增' : '修改'" :close-on-click-modal="false" :close-on-press-escape="false">
-    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px">
-          <el-form-item label="地址" prop="instance">
+  <el-dialog v-model="visible" :title="!dataForm.id ? '新增备份设备' : '修改备份设备'" width="780px" :close-on-click-modal="false" :close-on-press-escape="false">
+    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="dialog-form">
+      <div class="form-section-title">设备凭据</div>
+      <el-form-item label="地址" prop="instance">
         <el-input v-model="dataForm.instance" placeholder="地址" @blur="checkUnique('instance')"></el-input>
       </el-form-item>
           <el-form-item label="名称" prop="name">
@@ -13,7 +14,8 @@
       <el-form-item label="密码" prop="password">
         <el-input v-model="dataForm.password" placeholder="修改时留空不变" show-password></el-input>
       </el-form-item>
-          <el-form-item label="区域名称" prop="areaName">
+      <div class="form-section-title">资产信息</div>
+      <el-form-item label="区域名称" prop="areaName">
         <ren-select
           v-model="dataForm.areaName"
           dict-type="area_name_type"
@@ -53,8 +55,10 @@
       </el-form-item>
               </el-form>
     <template #footer>
-      <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="dataFormSubmitHandle()">确定</el-button>
+      <div class="dialog-footer">
+        <el-button @click="visible = false">取消</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
+      </div>
     </template>
   </el-dialog>
 </template>
@@ -68,6 +72,7 @@ const emit = defineEmits(["refreshDataList"]);
 
 const visible = ref(false);
 const dataFormRef = ref();
+const submitLoading = ref(false);
 
 const dataForm = reactive({
   id: "",
@@ -217,16 +222,21 @@ const dataFormSubmitHandle = () => {
     delete submitData.createDate;
     delete submitData.updater;
     delete submitData.updateDate;
-    (!dataForm.id ? baseService.post : baseService.put)("/ops/devicebackup", submitData).then((res) => {
-      ElMessage.success({
-        message: '成功',
-        duration: 500,
-        onClose: () => {
-          visible.value = false;
-          emit("refreshDataList");
-        }
+    submitLoading.value = true;
+    (!dataForm.id ? baseService.post : baseService.put)("/ops/devicebackup", submitData)
+      .then(() => {
+        ElMessage.success({
+          message: "成功",
+          duration: 500,
+          onClose: () => {
+            visible.value = false;
+            emit("refreshDataList");
+          }
+        });
+      })
+      .finally(() => {
+        submitLoading.value = false;
       });
-    });
   });
 };
 
@@ -245,3 +255,6 @@ defineExpose({
   }
 });
 </script>
+
+<style scoped>
+</style>

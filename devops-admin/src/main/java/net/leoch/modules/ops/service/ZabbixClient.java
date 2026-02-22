@@ -1,12 +1,12 @@
 package net.leoch.modules.ops.service;
 
 import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.util.StrUtil;
-import com.fasterxml.jackson.core.type.TypeReference;
-import net.leoch.common.utils.JsonUtils;
-import net.leoch.modules.ops.config.ZabbixConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import cn.hutool.json.JSONUtil;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.framework.config.ops.HttpTimeoutConfig;
+import net.leoch.framework.config.ops.ZabbixConfig;
 import org.springframework.stereotype.Service;
 
 import java.io.OutputStream;
@@ -21,42 +21,55 @@ import java.util.Map;
 /**
  * Zabbix API client
  */
+@Slf4j
 @Service
 public class ZabbixClient {
-    private static final Logger logger = LoggerFactory.getLogger(ZabbixClient.class);
     private final ZabbixConfigService configService;
+    private final HttpTimeoutConfig httpTimeoutConfig;
 
-    public ZabbixClient(ZabbixConfigService configService) {
+    public ZabbixClient(ZabbixConfigService configService, HttpTimeoutConfig httpTimeoutConfig) {
         this.configService = configService;
+        this.httpTimeoutConfig = httpTimeoutConfig;
     }
 
     public List<Map<String, String>> getHostsByTemplates() {
+        log.info("[Zabbix] 开始获取主机列表");
         ZabbixConfig config = configService.getConfig();
         if (config == null || StrUtil.isBlank(config.getUrl())) {
-            return new ArrayList<>();
+            log.warn("[Zabbix] 配置为空或URL未配置");
+            return List.of();
         }
         String auth = login(config);
         if (StrUtil.isBlank(auth)) {
-            return new ArrayList<>();
+            log.warn("[Zabbix] 登录失败");
+            return List.of();
         }
         List<String> templateIds = getTemplateIds(config, auth);
         if (CollUtil.isEmpty(templateIds)) {
-            return new ArrayList<>();
+            log.warn("[Zabbix] 未找到匹配的模板, templates={}", config.getTemplates());
+            return List.of();
         }
-        return getHosts(config, auth, templateIds);
+        List<Map<String, String>> hosts = getHosts(config, auth, templateIds);
+        log.info("[Zabbix] 获取主机列表完成, 数量={}", hosts.size());
+        return hosts;
     }
 
     private String login(ZabbixConfig config) {
+        log.debug("[Zabbix] 开始登录, url={}, username={}", config.getUrl(), config.getUsername());
         Map<String, Object> params = new HashMap<>();
         params.put("username", config.getUsername());
         params.put("password", config.getPassword());
         Object result = call(config, "user.login", params, null);
-        return result == null ? null : String.valueOf(result);
+        if (result == null) {
+            log.error("[Zabbix] 登录失败, url={}, username={}", config.getUrl(), config.getUsername());
+            return null;
+        }
+        return String.valueOf(result);
     }
 
     private List<String> getTemplateIds(ZabbixConfig config, String auth) {
         if (CollUtil.isEmpty(config.getTemplates())) {
-            return new ArrayList<>();
+            return List.of();
         }
         Map<String, Object> params = new HashMap<>();
         params.put("output", List.of("templateid", "name"));
@@ -117,12 +130,19 @@ public class ZabbixClient {
 
     private Object call(ZabbixConfig config, String method, Map<String, Object> params, String bearer) {
         HttpURLConnection connection = null;
+        long startTime = System.currentTimeMillis();
         try {
+            // 脱敏处理：避免在日志中泄露敏感信息
+            Map<String, Object> safeParams = new HashMap<>(params);
+            if (safeParams.containsKey("password")) {
+                safeParams.put("password", "******");
+            }
+            log.debug("[Zabbix] 开始调用接口, method={}, params={}", method, JSONUtil.toJsonStr(safeParams));
             URL url = new URL(config.getUrl());
             connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("POST");
-            connection.setConnectTimeout(5000);
-            connection.setReadTimeout(10000);
+            connection.setConnectTimeout(httpTimeoutConfig.getConnectTimeout());
+            connection.setReadTimeout(httpTimeoutConfig.getReadTimeout());
             connection.setDoOutput(true);
             connection.setRequestProperty("Content-Type", "application/json");
             if (StrUtil.isNotBlank(bearer)) {
@@ -133,27 +153,32 @@ public class ZabbixClient {
             payload.put("method", method);
             payload.put("params", params);
             payload.put("id", 1);
-            String body = JsonUtils.toJsonString(payload);
+            String body = JSONUtil.toJsonStr(payload);
             try (OutputStream out = connection.getOutputStream()) {
                 out.write(body.getBytes(StandardCharsets.UTF_8));
             }
             int code = connection.getResponseCode();
             if (code != 200) {
-                logger.warn("Zabbix接口响应异常 code={}", code);
+                log.warn("[Zabbix] 接口响应异常, method={}, code={}", method, code);
                 return null;
             }
             byte[] bytes = connection.getInputStream().readAllBytes();
-            Map<String, Object> resp = JsonUtils.parseObject(new String(bytes, StandardCharsets.UTF_8), new TypeReference<Map<String, Object>>() {});
+            Map<String, Object> resp = JSONUtil.toBean(new String(bytes, StandardCharsets.UTF_8), new TypeReference<>() {
+            }, false);
             if (resp == null) {
+                log.warn("[Zabbix] 接口响应为空, method={}", method);
                 return null;
             }
             if (resp.get("error") != null) {
-                logger.warn("Zabbix接口返回错误: {}", resp.get("error"));
+                log.error("[Zabbix] 接口返回错误, method={}, error={}", method, resp.get("error"));
                 return null;
             }
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            log.info("[Zabbix] 接口调用成功, method={}, 耗时={}ms", method, elapsedTime);
             return resp.get("result");
         } catch (Exception e) {
-            logger.warn("Zabbix接口调用失败: {}", e.getMessage());
+            long elapsedTime = System.currentTimeMillis() - startTime;
+            log.error("[Zabbix] 接口调用失败, method={}, 耗时={}ms", method, elapsedTime, e);
             return null;
         } finally {
             if (connection != null) {

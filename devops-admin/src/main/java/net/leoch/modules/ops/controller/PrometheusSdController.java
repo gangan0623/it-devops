@@ -2,9 +2,10 @@ package net.leoch.modules.ops.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import net.leoch.modules.ops.dto.PrometheusSdRequest;
-import net.leoch.modules.ops.dto.PrometheusSdResponse;
-import net.leoch.modules.ops.service.PrometheusSdService;
+import lombok.RequiredArgsConstructor;
+import net.leoch.modules.ops.service.IPrometheusSdService;
+import net.leoch.modules.ops.vo.req.PrometheusSdReq;
+import net.leoch.modules.ops.vo.rsp.PrometheusSdRsp;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,35 +19,26 @@ import java.util.List;
 @RestController
 @RequestMapping("/sd")
 @Tag(name = "Prometheus SD")
+@RequiredArgsConstructor
 public class PrometheusSdController {
 
-    private final PrometheusSdService prometheusSdService;
-
-    public PrometheusSdController(PrometheusSdService prometheusSdService) {
-        this.prometheusSdService = prometheusSdService;
-    }
+    private final IPrometheusSdService prometheusSdService;
 
     @GetMapping("/linux/{area}/info")
     @Operation(summary = "Linux Prometheus SD")
-    public List<PrometheusSdResponse> linux(@PathVariable String area) {
-        PrometheusSdRequest request = new PrometheusSdRequest();
-        request.setArea(area);
-        return prometheusSdService.linux(request);
+    public List<PrometheusSdRsp> linux(@PathVariable String area) {
+        return prometheusSdService.linux(PrometheusSdReq.ofArea(area));
     }
 
     @GetMapping("/windows/{area}/info")
     @Operation(summary = "Windows Prometheus SD")
-    public List<PrometheusSdResponse> windows(@PathVariable String area) {
-        PrometheusSdRequest request = new PrometheusSdRequest();
-        request.setArea(area);
-        return prometheusSdService.windows(request);
+    public List<PrometheusSdRsp> windows(@PathVariable String area) {
+        return prometheusSdService.windows(PrometheusSdReq.ofArea(area));
     }
 
     @GetMapping("/probe/{area}/info")
     @Operation(summary = "HTTP Probe Prometheus SD")
-    public List<PrometheusSdResponse> httpProbe(@PathVariable String area) {
-        PrometheusSdRequest request = new PrometheusSdRequest();
-        request.setArea(area);
-        return prometheusSdService.httpProbe(request);
+    public List<PrometheusSdRsp> httpProbe(@PathVariable String area) {
+        return prometheusSdService.httpProbe(PrometheusSdReq.ofArea(area));
     }
 }

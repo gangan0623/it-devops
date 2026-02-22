@@ -1,5 +1,6 @@
 
 
+
 package net.leoch.modules.security.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -8,34 +9,17 @@ import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
-import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.exception.RenException;
-import net.leoch.common.utils.IpUtils;
-import net.leoch.common.utils.Result;
-import net.leoch.common.validator.AssertUtils;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.modules.log.entity.SysLogLoginEntity;
-import net.leoch.modules.log.enums.LoginOperationEnum;
-import net.leoch.modules.log.enums.LoginStatusEnum;
-import net.leoch.modules.log.service.SysLogLoginService;
-import net.leoch.modules.security.dto.LoginDTO;
-import net.leoch.modules.security.password.PasswordUtils;
-import net.leoch.modules.security.service.CaptchaService;
-import net.leoch.modules.security.service.SysUserTokenService;
-import net.leoch.modules.security.user.SecurityUser;
-import net.leoch.modules.security.user.UserDetail;
-import net.leoch.modules.sys.dto.SysUserDTO;
-import net.leoch.modules.sys.enums.UserStatusEnum;
-import net.leoch.modules.sys.service.SysUserService;
-import org.springframework.http.HttpHeaders;
+import lombok.RequiredArgsConstructor;
+import net.leoch.common.data.result.Result;
+import net.leoch.modules.security.service.ICaptchaService;
+import net.leoch.modules.security.service.ISecurityService;
+import net.leoch.modules.security.vo.req.LoginReq;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
-import java.util.Date;
 
 /**
  * 登录
@@ -44,103 +28,28 @@ import java.util.Date;
  */
 @RestController
 @Tag(name = "登录管理")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class LoginController {
-    private final SysUserService sysUserService;
-    private final SysUserTokenService sysUserTokenService;
-    private final CaptchaService captchaService;
-    private final SysLogLoginService sysLogLoginService;
+    private final ISecurityService securityService;
+    private final ICaptchaService captchaService;
 
     @GetMapping("captcha")
     @Operation(summary = "验证码")
-    @Parameter(in = ParameterIn.QUERY, ref = "string", name = "uuid", required = true)
+    @Parameter(in = ParameterIn.QUERY, ref = "string", name = "uuid")
     public void captcha(HttpServletResponse response, String uuid) throws IOException {
-        //uuid不能为空
-        AssertUtils.isBlank(uuid, ErrorCode.IDENTIFIER_NOT_NULL);
-
-        //生成验证码
         captchaService.create(response, uuid);
     }
 
     @PostMapping("login")
     @Operation(summary = "登录")
-    public Result<Object> login(HttpServletRequest request, @RequestBody LoginDTO login) {
-        //效验数据
-        ValidatorUtils.validateEntity(login);
-
-        //验证码是否正确
-        boolean flag = captchaService.validate(login.getUuid(), login.getCaptcha());
-        if (!flag) {
-            return new Result().error(ErrorCode.CAPTCHA_ERROR);
-        }
-
-        //用户信息
-        SysUserDTO user = sysUserService.getByUsername(login.getUsername());
-
-        SysLogLoginEntity log = new SysLogLoginEntity();
-        log.setOperation(LoginOperationEnum.LOGIN.value());
-        log.setCreateDate(new Date());
-        log.setIp(IpUtils.getIpAddr(request));
-        log.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
-
-        //用户不存在
-        if (user == null) {
-            log.setStatus(LoginStatusEnum.FAIL.value());
-            log.setCreatorName(login.getUsername());
-            sysLogLoginService.save(log);
-
-            throw new RenException(ErrorCode.ACCOUNT_PASSWORD_ERROR);
-        }
-
-        //密码错误
-        if (!PasswordUtils.matches(login.getPassword(), user.getPassword())) {
-            log.setStatus(LoginStatusEnum.FAIL.value());
-            log.setCreator(user.getId());
-            log.setCreatorName(user.getUsername());
-            sysLogLoginService.save(log);
-
-            throw new RenException(ErrorCode.ACCOUNT_PASSWORD_ERROR);
-        }
-
-        //账号停用
-        if (user.getStatus() == UserStatusEnum.DISABLE.value()) {
-            log.setStatus(LoginStatusEnum.LOCK.value());
-            log.setCreator(user.getId());
-            log.setCreatorName(user.getUsername());
-            sysLogLoginService.save(log);
-
-            throw new RenException(ErrorCode.ACCOUNT_DISABLE);
-        }
-
-        //登录成功
-        log.setStatus(LoginStatusEnum.SUCCESS.value());
-        log.setCreator(user.getId());
-        log.setCreatorName(user.getUsername());
-        sysLogLoginService.save(log);
-
-        return sysUserTokenService.createToken(user.getId());
+    public Result<Object> login(HttpServletRequest request, @RequestBody LoginReq login) {
+        return securityService.login(request, login);
     }
 
     @PostMapping("logout")
     @Operation(summary = "退出")
     public Result<Object> logout(HttpServletRequest request) {
-        UserDetail user = SecurityUser.getUser();
-
-        //退出
-        sysUserTokenService.logout(user.getId());
-
-        //用户信息
-        SysLogLoginEntity log = new SysLogLoginEntity();
-        log.setOperation(LoginOperationEnum.LOGOUT.value());
-        log.setIp(IpUtils.getIpAddr(request));
-        log.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
-        log.setIp(IpUtils.getIpAddr(request));
-        log.setStatus(LoginStatusEnum.SUCCESS.value());
-        log.setCreator(user.getId());
-        log.setCreatorName(user.getUsername());
-        log.setCreateDate(new Date());
-        sysLogLoginService.save(log);
-
+        securityService.recordLogout(request);
         return new Result<>();
     }
 

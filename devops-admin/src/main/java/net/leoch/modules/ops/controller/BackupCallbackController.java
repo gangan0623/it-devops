@@ -2,10 +2,11 @@ package net.leoch.modules.ops.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import net.leoch.common.utils.Result;
-import net.leoch.modules.ops.dto.BackupCallbackItem;
-import net.leoch.modules.ops.dto.BackupCallbackRequest;
-import net.leoch.modules.ops.service.BackupCallbackService;
+import lombok.RequiredArgsConstructor;
+import net.leoch.common.data.result.Result;
+import net.leoch.modules.ops.service.IBackupCallbackService;
+import net.leoch.modules.ops.vo.req.BackupCallbackItemReq;
+import net.leoch.modules.ops.vo.req.BackupCallbackReq;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,18 +17,15 @@ import java.util.List;
 @RestController
 @RequestMapping("ops/backup")
 @Tag(name = "备份回调")
+@RequiredArgsConstructor
 public class BackupCallbackController {
 
-    private final BackupCallbackService backupCallbackService;
-
-    public BackupCallbackController(BackupCallbackService backupCallbackService) {
-        this.backupCallbackService = backupCallbackService;
-    }
+    private final IBackupCallbackService backupCallbackService;
 
     @PostMapping("callback")
     @Operation(summary = "备份回调")
     public Result<Object> callback(@RequestHeader(value = "agent-token", required = false) String token,
-                                   @RequestBody List<BackupCallbackItem> items) {
-        return backupCallbackService.callback(BackupCallbackRequest.of(token, items));
+                                   @RequestBody List<BackupCallbackItemReq> items) {
+        return backupCallbackService.callback(BackupCallbackReq.of(token, items));
     }
 }

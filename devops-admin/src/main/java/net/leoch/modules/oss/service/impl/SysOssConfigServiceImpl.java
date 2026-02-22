@@ -1,13 +1,20 @@
 package net.leoch.modules.oss.service.impl;
 
 import cn.hutool.core.util.StrUtil;
-import lombok.AllArgsConstructor;
-import net.leoch.common.service.impl.BaseServiceImpl;
-import net.leoch.common.utils.JsonUtils;
-import net.leoch.modules.oss.cloud.CloudStorageConfig;
-import net.leoch.modules.oss.dao.SysOssConfigDao;
+import cn.hutool.json.JSONUtil;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.base.Constant;
+import net.leoch.common.data.validator.ValidatorUtils;
+import net.leoch.common.data.validator.group.AliyunGroup;
+import net.leoch.common.data.validator.group.MinioGroup;
+import net.leoch.common.data.validator.group.QcloudGroup;
+import net.leoch.common.data.validator.group.QiniuGroup;
+import net.leoch.common.integration.storage.CloudStorageConfig;
 import net.leoch.modules.oss.entity.SysOssConfigEntity;
-import net.leoch.modules.oss.service.SysOssConfigService;
+import net.leoch.modules.oss.mapper.SysOssConfigMapper;
+import net.leoch.modules.oss.service.ISysOssConfigService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,24 +23,25 @@ import org.springframework.transaction.annotation.Transactional;
  *
  * @author Taohongqiang
  */
+@Slf4j
 @Service
-@AllArgsConstructor
-public class SysOssConfigServiceImpl extends BaseServiceImpl<SysOssConfigDao, SysOssConfigEntity> implements SysOssConfigService {
+@RequiredArgsConstructor
+public class SysOssConfigServiceImpl extends ServiceImpl<SysOssConfigMapper, SysOssConfigEntity> implements ISysOssConfigService {
     private static final Long CONFIG_ID = 1L;
 
     @Override
     public CloudStorageConfig getConfig() {
-        SysOssConfigEntity entity = baseDao.selectById(CONFIG_ID);
+        SysOssConfigEntity entity = this.getById(CONFIG_ID);
         if (entity == null || StrUtil.isBlank(entity.getConfigJson())) {
             CloudStorageConfig config = new CloudStorageConfig();
             if (config.getType() == null) {
-                config.setType(net.leoch.common.constant.Constant.CloudService.MINIO.getValue());
+                config.setType(Constant.CloudService.MINIO.getValue());
             }
             return config;
         }
-        CloudStorageConfig config = JsonUtils.parseObject(entity.getConfigJson(), CloudStorageConfig.class);
+        CloudStorageConfig config = JSONUtil.toBean(entity.getConfigJson(), CloudStorageConfig.class);
         if (config.getType() == null) {
-            config.setType(net.leoch.common.constant.Constant.CloudService.MINIO.getValue());
+            config.setType(Constant.CloudService.MINIO.getValue());
         }
         return config;
     }
@@ -41,15 +49,26 @@ public class SysOssConfigServiceImpl extends BaseServiceImpl<SysOssConfigDao, Sy
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void saveConfig(CloudStorageConfig config) {
+        ValidatorUtils.validateEntity(config);
+        if (config.getType() == Constant.CloudService.QINIU.getValue()) {
+            ValidatorUtils.validateEntity(config, QiniuGroup.class);
+        } else if (config.getType() == Constant.CloudService.ALIYUN.getValue()) {
+            ValidatorUtils.validateEntity(config, AliyunGroup.class);
+        } else if (config.getType() == Constant.CloudService.QCLOUD.getValue()) {
+            ValidatorUtils.validateEntity(config, QcloudGroup.class);
+        } else if (config.getType() == Constant.CloudService.MINIO.getValue()) {
+            ValidatorUtils.validateEntity(config, MinioGroup.class);
+        }
+
         SysOssConfigEntity entity = new SysOssConfigEntity();
         entity.setId(CONFIG_ID);
-        entity.setConfigJson(JsonUtils.toJsonString(config));
+        entity.setConfigJson(JSONUtil.toJsonStr(config));
 
-        SysOssConfigEntity existing = baseDao.selectById(CONFIG_ID);
+        SysOssConfigEntity existing = this.getById(CONFIG_ID);
         if (existing == null) {
-            insert(entity);
+            this.save(entity);
         } else {
-            updateById(entity);
+            this.updateById(entity);
         }
     }
 }

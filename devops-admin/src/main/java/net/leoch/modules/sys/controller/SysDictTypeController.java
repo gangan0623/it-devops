@@ -1,29 +1,20 @@
-
-
 package net.leoch.modules.sys.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
-import net.leoch.common.constant.Constant;
-import net.leoch.common.page.PageData;
-import net.leoch.common.utils.Result;
-import net.leoch.common.validator.AssertUtils;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.sys.dto.SysDictTypeDTO;
-import net.leoch.modules.sys.entity.DictType;
-import net.leoch.modules.sys.service.SysDictTypeService;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.result.Result;
+import net.leoch.modules.sys.service.ISysDictTypeService;
+import net.leoch.modules.sys.vo.req.SysDictTypePageReq;
+import net.leoch.modules.sys.vo.req.SysDictTypeReq;
+import net.leoch.modules.sys.vo.rsp.DictTypeRsp;
+import net.leoch.modules.sys.vo.rsp.SysDictTypeRsp;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * 字典类型
@@ -33,47 +24,30 @@ import java.util.Map;
 @RestController
 @RequestMapping("sys/dict/type")
 @Tag(name = "字典类型")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysDictTypeController {
-    private final SysDictTypeService sysDictTypeService;
+    private final ISysDictTypeService sysDictTypeService;
 
     @GetMapping("page")
     @Operation(summary = "字典类型")
-    @Parameters({
-            @Parameter(name = Constant.PAGE, description = "当前页码，从1开始", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.LIMIT, description = "每页显示记录数", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = "dictType", description = "字典类型", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = "dictName", description = "字典名称", in = ParameterIn.QUERY, ref = "String")
-    })
     @SaCheckPermission("sys:dict:page")
-    public Result<PageData<SysDictTypeDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
-        //字典类型
-        PageData<SysDictTypeDTO> page = sysDictTypeService.page(params);
-
-        return new Result<PageData<SysDictTypeDTO>>().ok(page);
+    public Result<PageData<SysDictTypeRsp>> page(SysDictTypePageReq request) {
+        return new Result<PageData<SysDictTypeRsp>>().ok(sysDictTypeService.page(request));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("sys:dict:info")
-    public Result<SysDictTypeDTO> get(@PathVariable("id") Long id) {
-        SysDictTypeDTO data = sysDictTypeService.get(id);
-
-        return new Result<SysDictTypeDTO>().ok(data);
+    public Result<SysDictTypeRsp> get(@PathVariable("id") Long id) {
+        return new Result<SysDictTypeRsp>().ok(sysDictTypeService.get(id));
     }
 
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:dict:save")
-    public Result<Object> save(@RequestBody SysDictTypeDTO dto) {
-        //效验数据
-        ValidatorUtils.validateEntity(dto, DefaultGroup.class);
-
+    public Result<Object> save(@RequestBody SysDictTypeReq dto) {
         sysDictTypeService.save(dto);
-
         return new Result<>();
     }
 
@@ -81,12 +55,8 @@ public class SysDictTypeController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:dict:update")
-    public Result<Object> update(@RequestBody SysDictTypeDTO dto) {
-        //效验数据
-        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-
+    public Result<Object> update(@RequestBody SysDictTypeReq dto) {
         sysDictTypeService.update(dto);
-
         return new Result<>();
     }
 
@@ -95,20 +65,14 @@ public class SysDictTypeController {
     @LogOperation("删除")
     @SaCheckPermission("sys:dict:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
-        //效验数据
-        AssertUtils.isArrayEmpty(ids, "id");
-
         sysDictTypeService.delete(ids);
-
         return new Result<>();
     }
 
     @GetMapping("all")
     @Operation(summary = "所有字典数据")
-    public Result<List<DictType>> all() {
-        List<DictType> list = sysDictTypeService.getAllList();
-
-        return new Result<List<DictType>>().ok(list);
+    public Result<List<DictTypeRsp>> all() {
+        return new Result<List<DictTypeRsp>>().ok(sysDictTypeService.getAllList());
     }
 
 }

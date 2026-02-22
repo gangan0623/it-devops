@@ -1,35 +1,37 @@
 package net.leoch.modules.ops.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import jakarta.annotation.Resource;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
-import net.leoch.common.exception.RenException;
-import net.leoch.common.page.PageData;
-import net.leoch.common.redis.RedisKeys;
-import net.leoch.common.redis.RedisUtils;
-import net.leoch.common.service.impl.CrudServiceImpl;
-import net.leoch.common.utils.ConvertUtils;
-import net.leoch.common.utils.ExcelUtils;
-import net.leoch.common.utils.PingUtils;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.AddGroup;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.ops.dao.BusinessSystemDao;
-import net.leoch.modules.ops.dto.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.validator.ValidatorUtils;
+import net.leoch.common.data.validator.group.AddGroup;
+import net.leoch.common.data.validator.group.DefaultGroup;
+import net.leoch.common.data.validator.group.UpdateGroup;
+import net.leoch.common.exception.ServiceException;
+import net.leoch.common.integration.excel.BusinessSystemExcel;
+import net.leoch.common.integration.excel.template.BusinessSystemImportExcel;
+import net.leoch.common.integration.security.SecurityUser;
+import net.leoch.common.utils.excel.ExcelUtils;
+import net.leoch.common.utils.ops.OpsQueryUtils;
+import net.leoch.common.utils.ops.PingUtils;
+import net.leoch.common.utils.redis.RedisKeys;
+import net.leoch.common.utils.redis.RedisUtils;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
-import net.leoch.modules.ops.excel.BusinessSystemExcel;
-import net.leoch.modules.ops.excel.template.BusinessSystemImportExcel;
-import net.leoch.modules.ops.service.BusinessSystemService;
-import net.leoch.modules.ops.util.OpsQueryUtils;
-import net.leoch.modules.security.user.SecurityUser;
+import net.leoch.modules.ops.mapper.BusinessSystemMapper;
+import net.leoch.modules.ops.service.IBusinessSystemService;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.BusinessSystemRsp;
+import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,60 +43,38 @@ import java.util.*;
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
+@Slf4j
 @Service
-public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao, BusinessSystemEntity, BusinessSystemDTO> implements BusinessSystemService {
+@RequiredArgsConstructor
+public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper, BusinessSystemEntity> implements IBusinessSystemService {
 
-    @Resource
-    private RedisUtils redisUtils;
-
-    @Override
-    public QueryWrapper<BusinessSystemEntity> getWrapper(Map<String, Object> params){
-        QueryWrapper<BusinessSystemEntity> wrapper = new QueryWrapper<>();
-        LambdaQueryWrapper<BusinessSystemEntity> lambda = wrapper.lambda();
-        String id = (String)params.get("id");
-        String instance = (String)params.get("instance");
-        String name = (String)params.get("name");
-        String areaName = (String) params.get("areaName");
-        String siteLocation = (String) params.get("siteLocation");
-        String menuName = (String) params.get("menuName");
-        String status = (String) params.get("status");
-        lambda.eq(StrUtil.isNotBlank(id), BusinessSystemEntity::getId, id);
-        BusinessSystemPageRequest req = new BusinessSystemPageRequest();
-        req.setInstance(instance);
-        req.setName(name);
-        req.setAreaName(areaName);
-        req.setSiteLocation(siteLocation);
-        req.setMenuName(menuName);
-        req.setStatus(status);
-        applyCommonFilters(lambda, req);
-        return wrapper;
-    }
+    private final RedisUtils redisUtils;
 
     @Override
-    public PageData<BusinessSystemDTO> page(BusinessSystemPageRequest request) {
+    public PageData<BusinessSystemRsp> page(BusinessSystemPageReq request) {
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
-            List<BusinessSystemEntity> list = baseDao.selectList(wrapper);
-            List<BusinessSystemDTO> dtoList = ConvertUtils.sourceToTarget(list, BusinessSystemDTO.class);
+            List<BusinessSystemEntity> list = this.list(wrapper);
+            List<BusinessSystemRsp> dtoList = BeanUtil.copyToList(list, BusinessSystemRsp.class);
             fillOnlineStatus(dtoList);
-            OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), BusinessSystemDTO::getOnlineStatus);
+            OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), BusinessSystemRsp::getOnlineStatus);
             return OnlineStatusSupport.buildPageData(dtoList, request.getPage(), request.getLimit());
         }
-        Page<BusinessSystemEntity> page = buildPage(request);
-        IPage<BusinessSystemEntity> result = baseDao.selectPage(page, wrapper);
-        List<BusinessSystemDTO> dtoList = ConvertUtils.sourceToTarget(result.getRecords(), BusinessSystemDTO.class);
+        Page<BusinessSystemEntity> page = request.buildPage();
+        IPage<BusinessSystemEntity> result = this.page(page, wrapper);
+        List<BusinessSystemRsp> dtoList = BeanUtil.copyToList(result.getRecords(), BusinessSystemRsp.class);
         fillOnlineStatus(dtoList);
         return new PageData<>(dtoList, result.getTotal());
     }
 
     @Override
-    public BusinessSystemDTO get(BusinessSystemIdRequest request) {
+    public BusinessSystemRsp get(BusinessSystemIdReq request) {
         if (request == null || request.getId() == null) {
             return null;
         }
-        BusinessSystemEntity entity = baseDao.selectById(request.getId());
-        BusinessSystemDTO dto = ConvertUtils.sourceToTarget(entity, BusinessSystemDTO.class);
+        BusinessSystemEntity entity = this.getById(request.getId());
+        BusinessSystemRsp dto = BeanUtil.copyProperties(entity, BusinessSystemRsp.class);
         if (dto != null) {
             fillOnlineStatus(Collections.singletonList(dto));
         }
@@ -102,21 +82,29 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
     }
 
     @Override
-    public void save(BusinessSystemDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    public void save(BusinessSystemSaveReq dto) {
+        log.info("[BusinessSystem] 开始保存, instance={}", dto != null ? dto.getInstance() : null);
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-        validateUnique(dto);
-        super.save(dto);
+        validateUnique(dto.getInstance(), dto.getName(), dto.getId());
+        BusinessSystemEntity entity = BeanUtil.copyProperties(dto, BusinessSystemEntity.class);
+        this.save(entity);
+        BeanUtil.copyProperties(entity, dto);
     }
 
     @Override
-    public void update(BusinessSystemDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    public void update(BusinessSystemUpdateReq dto) {
+        log.info("[BusinessSystem] 开始更新, id={}", dto != null ? dto.getId() : null);
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-        validateUnique(dto);
-        super.update(dto);
+        validateUnique(dto.getInstance(), dto.getName(), dto.getId());
+        BusinessSystemEntity entity = BeanUtil.copyProperties(dto, BusinessSystemEntity.class);
+        this.updateById(entity);
     }
 
     @Override
-    public void updateStatus(BusinessSystemStatusUpdateRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public void updateStatus(BusinessSystemStatusUpdateReq request) {
         if (request == null) {
             return;
         }
@@ -124,7 +112,7 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
     }
 
     @Override
-    public boolean online(BusinessSystemOnlineRequest request) {
+    public boolean online(BusinessSystemOnlineReq request) {
         if (request == null || StrUtil.isBlank(request.getInstance())) {
             return false;
         }
@@ -132,7 +120,37 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
     }
 
     @Override
-    public boolean check(BusinessSystemCheckRequest request) {
+    public OpsHostStatusSummaryRsp summary(BusinessSystemPageReq request) {
+        LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getStatus);
+        List<BusinessSystemEntity> list = this.list(wrapper);
+        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBusinessSystemOnlineKey());
+        OpsHostStatusSummaryRsp summary = new OpsHostStatusSummaryRsp();
+        summary.setTotalCount((long) list.size());
+        for (BusinessSystemEntity item : list) {
+            if (item == null) {
+                continue;
+            }
+            Integer status = item.getStatus();
+            if (Integer.valueOf(1).equals(status)) {
+                summary.setEnabledCount(summary.getEnabledCount() + 1);
+            } else if (Integer.valueOf(0).equals(status)) {
+                summary.setDisabledCount(summary.getDisabledCount() + 1);
+            }
+            Boolean onlineStatus = OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(item.getInstance()));
+            if (Boolean.TRUE.equals(onlineStatus)) {
+                summary.setOnlineCount(summary.getOnlineCount() + 1);
+            } else if (Boolean.FALSE.equals(onlineStatus)) {
+                summary.setOfflineCount(summary.getOfflineCount() + 1);
+            } else {
+                summary.setUnknownCount(summary.getUnknownCount() + 1);
+            }
+        }
+        return summary;
+    }
+
+    @Override
+    public boolean check(BusinessSystemCheckReq request) {
         if (request == null) {
             return false;
         }
@@ -140,20 +158,33 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
     }
 
     @Override
-    @Transactional
-    public void importExcel(BusinessSystemImportRequest request) throws Exception {
+    @Transactional(rollbackFor = Exception.class)
+    public void importExcel(BusinessSystemImportReq request) throws Exception {
         if (request == null || request.getFile() == null || request.getFile().isEmpty()) {
-            throw new RenException("上传文件不能为空");
+            throw new ServiceException("上传文件不能为空");
         }
         List<BusinessSystemImportExcel> dataList = EasyExcel.read(request.getFile().getInputStream()).head(BusinessSystemImportExcel.class).sheet().doReadSync();
         if (CollUtil.isEmpty(dataList)) {
-            throw new RenException("导入数据不能为空");
+            throw new ServiceException("导入数据不能为空");
         }
         List<BusinessSystemEntity> entityList = new ArrayList<>(dataList.size());
         for (BusinessSystemImportExcel item : dataList) {
             entityList.add(toEntity(item));
         }
-        insertBatch(entityList);
+
+        // 分批处理，避免大批量数据导致 SQL 超时或 OOM
+        final int BATCH_SIZE = 1000;
+        if (entityList.size() > BATCH_SIZE) {
+            log.info("[业务系统] Excel 导入分批处理, 总数={}, 批次大小={}", entityList.size(), BATCH_SIZE);
+            List<List<BusinessSystemEntity>> batches = CollUtil.split(entityList, BATCH_SIZE);
+            for (int i = 0; i < batches.size(); i++) {
+                log.debug("[业务系统] 处理第 {}/{} 批, 数量={}", i + 1, batches.size(), batches.get(i).size());
+                this.saveBatch(batches.get(i));
+            }
+        } else {
+            this.saveBatch(entityList);
+        }
+        log.info("[业务系统] Excel 导入完成, 总数={}", entityList.size());
     }
 
     @Override
@@ -162,23 +193,25 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
     }
 
     @Override
-    public void export(BusinessSystemPageRequest request, HttpServletResponse response) throws Exception {
+    public void export(BusinessSystemPageReq request, HttpServletResponse response) throws Exception {
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
-        List<BusinessSystemEntity> list = baseDao.selectList(wrapper);
-        List<BusinessSystemDTO> dtoList = ConvertUtils.sourceToTarget(list, BusinessSystemDTO.class);
+        List<BusinessSystemEntity> list = this.list(wrapper);
+        List<BusinessSystemRsp> dtoList = BeanUtil.copyToList(list, BusinessSystemRsp.class);
         ExcelUtils.exportExcelToTarget(response, null, "业务系统表", dtoList, BusinessSystemExcel.class);
     }
 
     @Override
-    public void delete(BusinessSystemDeleteRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(BusinessSystemDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
-        super.delete(request.getIds());
+        this.removeByIds(Arrays.asList(request.getIds()));
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long[] ids, Integer status) {
         if (ids == null || ids.length == 0) {
             return;
@@ -189,13 +222,13 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
         entity.setUpdateDate(new Date());
         LambdaUpdateWrapper<BusinessSystemEntity> wrapper = new LambdaUpdateWrapper<>();
         wrapper.in(BusinessSystemEntity::getId, Arrays.asList(ids));
-        baseDao.update(entity, wrapper);
+        this.update(entity, wrapper);
     }
 
     @Override
     public boolean existsByInstanceOrName(String instance, String name, Long excludeId) {
         return OpsQueryUtils.existsByInstanceOrName(
-                baseDao,
+                this.getBaseMapper(),
                 BusinessSystemEntity::getId,
                 BusinessSystemEntity::getInstance,
                 BusinessSystemEntity::getName,
@@ -205,18 +238,18 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
         );
     }
 
-    private void fillOnlineStatus(List<BusinessSystemDTO> list) {
+    private void fillOnlineStatus(List<BusinessSystemRsp> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBusinessSystemOnlineKey());
-        for (BusinessSystemDTO dto : list) {
+        for (BusinessSystemRsp dto : list) {
             String instance = dto.getInstance();
             dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
         }
     }
 
-    private void applyCommonFilters(LambdaQueryWrapper<BusinessSystemEntity> wrapper, BusinessSystemPageRequest request) {
+    private void applyCommonFilters(LambdaQueryWrapper<BusinessSystemEntity> wrapper, BusinessSystemPageReq request) {
         wrapper.like(StrUtil.isNotBlank(request.getInstance()), BusinessSystemEntity::getInstance, request.getInstance());
         wrapper.like(StrUtil.isNotBlank(request.getName()), BusinessSystemEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getSiteLocation()), BusinessSystemEntity::getSiteLocation, request.getSiteLocation());
@@ -237,21 +270,9 @@ public class BusinessSystemServiceImpl extends CrudServiceImpl<BusinessSystemDao
         return entity;
     }
 
-    private Page<BusinessSystemEntity> buildPage(BusinessSystemPageRequest request) {
-        if (request == null) {
-            return new Page<>(1, 10);
-        }
-        return OpsQueryUtils.buildPage(
-                request.getPage(),
-                request.getLimit(),
-                request.getOrderField(),
-                request.getOrder()
-        );
-    }
-
-    private void validateUnique(BusinessSystemDTO dto) {
-        if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
-            throw new RenException("地址或名称已存在");
+    private void validateUnique(String instance, String name, Long excludeId) {
+        if (existsByInstanceOrName(instance, name, excludeId)) {
+            throw new ServiceException("地址或名称已存在");
         }
     }
 }

@@ -1,27 +1,17 @@
-
-
 package net.leoch.modules.job.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.Parameters;
-import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
-import net.leoch.common.constant.Constant;
-import net.leoch.common.page.PageData;
-import net.leoch.common.utils.Result;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.AddGroup;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.job.dto.ScheduleJobDTO;
-import net.leoch.modules.job.service.ScheduleJobService;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.result.Result;
+import net.leoch.modules.job.service.IScheduleJobService;
+import net.leoch.modules.job.vo.req.ScheduleJobPageReq;
+import net.leoch.modules.job.vo.req.ScheduleJobReq;
+import net.leoch.modules.job.vo.rsp.ScheduleJobRsp;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 /**
  * 定时任务
@@ -31,44 +21,30 @@ import java.util.Map;
 @RestController
 @RequestMapping("/sys/schedule")
 @Tag(name = "定时任务")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ScheduleJobController {
-    private final ScheduleJobService scheduleJobService;
+    private final IScheduleJobService scheduleJobService;
 
     @GetMapping("page")
     @Operation(summary = "分页")
-    @Parameters({
-            @Parameter(name = Constant.PAGE, description = "当前页码，从1开始", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.LIMIT, description = "每页显示记录数", in = ParameterIn.QUERY, required = true, ref = "int"),
-            @Parameter(name = Constant.ORDER_FIELD, description = "排序字段", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref = "String"),
-            @Parameter(name = "beanName", description = "beanName", in = ParameterIn.QUERY, ref = "String")
-    })
     @SaCheckPermission("sys:schedule:page")
-    public Result<PageData<ScheduleJobDTO>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
-        PageData<ScheduleJobDTO> page = scheduleJobService.page(params);
-
-        return new Result<PageData<ScheduleJobDTO>>().ok(page);
+    public Result<PageData<ScheduleJobRsp>> page(ScheduleJobPageReq request) {
+        return new Result<PageData<ScheduleJobRsp>>().ok(scheduleJobService.page(request));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("sys:schedule:info")
-    public Result<ScheduleJobDTO> info(@PathVariable("id") Long id) {
-        ScheduleJobDTO schedule = scheduleJobService.get(id);
-
-        return new Result<ScheduleJobDTO>().ok(schedule);
+    public Result<ScheduleJobRsp> info(@PathVariable("id") Long id) {
+        return new Result<ScheduleJobRsp>().ok(scheduleJobService.get(id));
     }
 
     @PostMapping
     @Operation(summary = "保存")
     @LogOperation("保存")
     @SaCheckPermission("sys:schedule:save")
-    public Result<Object> save(@RequestBody ScheduleJobDTO dto) {
-        ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-
+    public Result<Object> save(@RequestBody ScheduleJobReq dto) {
         scheduleJobService.save(dto);
-
         return new Result<>();
     }
 
@@ -76,11 +52,8 @@ public class ScheduleJobController {
     @Operation(summary = "修改")
     @LogOperation("修改")
     @SaCheckPermission("sys:schedule:update")
-    public Result<Object> update(@RequestBody ScheduleJobDTO dto) {
-        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-
+    public Result<Object> update(@RequestBody ScheduleJobReq dto) {
         scheduleJobService.update(dto);
-
         return new Result<>();
     }
 
@@ -90,7 +63,6 @@ public class ScheduleJobController {
     @SaCheckPermission("sys:schedule:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
         scheduleJobService.deleteBatch(ids);
-
         return new Result<>();
     }
 
@@ -100,7 +72,6 @@ public class ScheduleJobController {
     @SaCheckPermission("sys:schedule:run")
     public Result<Object> run(@RequestBody Long[] ids) {
         scheduleJobService.run(ids);
-
         return new Result<>();
     }
 
@@ -110,7 +81,6 @@ public class ScheduleJobController {
     @SaCheckPermission("sys:schedule:pause")
     public Result<Object> pause(@RequestBody Long[] ids) {
         scheduleJobService.pause(ids);
-
         return new Result<>();
     }
 
@@ -120,7 +90,6 @@ public class ScheduleJobController {
     @SaCheckPermission("sys:schedule:resume")
     public Result<Object> resume(@RequestBody Long[] ids) {
         scheduleJobService.resume(ids);
-
         return new Result<>();
     }
 

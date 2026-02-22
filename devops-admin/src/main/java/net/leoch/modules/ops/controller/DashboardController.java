@@ -2,9 +2,10 @@ package net.leoch.modules.ops.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import net.leoch.common.utils.Result;
-import net.leoch.modules.ops.dto.DashboardSummaryResponse;
-import net.leoch.modules.ops.service.DashboardService;
+import lombok.RequiredArgsConstructor;
+import net.leoch.common.data.result.Result;
+import net.leoch.modules.ops.service.IDashboardService;
+import net.leoch.modules.ops.vo.rsp.DashboardSummaryRsp;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,17 +16,14 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("ops/dashboard")
 @Tag(name = "工作台统计")
+@RequiredArgsConstructor
 public class DashboardController {
 
-    private final DashboardService dashboardService;
-
-    public DashboardController(DashboardService dashboardService) {
-        this.dashboardService = dashboardService;
-    }
+    private final IDashboardService dashboardService;
 
     @GetMapping("summary")
     @Operation(summary = "统计概览")
-    public Result<DashboardSummaryResponse> summary() {
-        return new Result<DashboardSummaryResponse>().ok(dashboardService.summary());
+    public Result<DashboardSummaryRsp> summary() {
+        return new Result<DashboardSummaryRsp>().ok(dashboardService.summary());
     }
 }

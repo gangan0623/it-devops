@@ -1,5 +1,6 @@
 package net.leoch.modules.ops.controller;
 
+
 import cn.dev33.satoken.annotation.SaCheckPermission;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -7,12 +8,16 @@ import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
-import net.leoch.common.constant.Constant;
-import net.leoch.common.page.PageData;
-import net.leoch.common.utils.Result;
-import net.leoch.modules.ops.dto.*;
-import net.leoch.modules.ops.service.DeviceBackupRecordService;
+import net.leoch.common.base.Constant;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.result.Result;
+import net.leoch.modules.ops.service.IDeviceBackupRecordService;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.DeviceBackupDiffLineRsp;
+import net.leoch.modules.ops.vo.rsp.DeviceBackupHistoryRsp;
+import net.leoch.modules.ops.vo.rsp.DeviceBackupRecordRsp;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,13 +28,10 @@ import java.util.List;
 @RestController
 @RequestMapping("ops/devicebackuprecord")
 @Tag(name="设备备份信息表")
+@RequiredArgsConstructor
 public class DeviceBackupRecordController {
 
-    private final DeviceBackupRecordService deviceBackupRecordService;
-
-    public DeviceBackupRecordController(DeviceBackupRecordService deviceBackupRecordService) {
-        this.deviceBackupRecordService = deviceBackupRecordService;
-    }
+    private final IDeviceBackupRecordService deviceBackupRecordService;
 
     @GetMapping("page")
     @Operation(summary = "分页")
@@ -40,15 +42,15 @@ public class DeviceBackupRecordController {
         @Parameter(name = Constant.ORDER, description = "排序方式，可选值(asc、desc)", in = ParameterIn.QUERY, ref="String")
     })
     @SaCheckPermission("ops:devicebackuprecord:page")
-    public Result<PageData<DeviceBackupRecordDTO>> page(@Parameter(hidden = true) DeviceBackupRecordPageRequest request){
-        return new Result<PageData<DeviceBackupRecordDTO>>().ok(deviceBackupRecordService.page(request));
+    public Result<PageData<DeviceBackupRecordRsp>> page(@Parameter(hidden = true) DeviceBackupRecordPageReq request){
+        return new Result<PageData<DeviceBackupRecordRsp>>().ok(deviceBackupRecordService.page(request));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "信息")
     @SaCheckPermission("ops:devicebackuprecord:info")
-    public Result<DeviceBackupRecordDTO> get(@PathVariable Long id){
-        return new Result<DeviceBackupRecordDTO>().ok(deviceBackupRecordService.get(DeviceBackupRecordIdRequest.of(id)));
+    public Result<DeviceBackupRecordRsp> get(@PathVariable Long id){
+        return new Result<DeviceBackupRecordRsp>().ok(deviceBackupRecordService.get(DeviceBackupRecordIdReq.of(id)));
     }
 
     @DeleteMapping
@@ -56,44 +58,42 @@ public class DeviceBackupRecordController {
     @LogOperation("删除")
     @SaCheckPermission("ops:devicebackuprecord:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
-        DeviceBackupRecordDeleteRequest request = new DeviceBackupRecordDeleteRequest();
-        request.setIds(ids);
-        deviceBackupRecordService.delete(request);
+        deviceBackupRecordService.delete(DeviceBackupRecordDeleteReq.of(ids));
         return new Result<>();
     }
 
     @GetMapping("history")
     @Operation(summary = "历史列表")
     @SaCheckPermission("ops:devicebackuprecord:history")
-    public Result<List<DeviceBackupHistoryDTO>> history(DeviceBackupRecordHistoryRequest request) {
-        return new Result<List<DeviceBackupHistoryDTO>>().ok(deviceBackupRecordService.history(request));
+    public Result<List<DeviceBackupHistoryRsp>> history(DeviceBackupRecordHistoryReq request) {
+        return new Result<List<DeviceBackupHistoryRsp>>().ok(deviceBackupRecordService.history(request));
     }
 
     @GetMapping("diff")
     @Operation(summary = "历史对比")
     @SaCheckPermission("ops:devicebackuprecord:diff")
-    public Result<List<DeviceBackupDiffLineDTO>> diff(DeviceBackupRecordDiffRequest request) {
-        return new Result<List<DeviceBackupDiffLineDTO>>().ok(deviceBackupRecordService.diff(request));
+    public Result<List<DeviceBackupDiffLineRsp>> diff(DeviceBackupRecordDiffReq request) {
+        return new Result<List<DeviceBackupDiffLineRsp>>().ok(deviceBackupRecordService.diff(request));
     }
 
     @GetMapping("diff-current")
     @Operation(summary = "历史对比当前")
     @SaCheckPermission("ops:devicebackuprecord:diff")
-    public Result<List<DeviceBackupDiffLineDTO>> diffCurrent(DeviceBackupRecordDiffCurrentRequest request) {
-        return new Result<List<DeviceBackupDiffLineDTO>>().ok(deviceBackupRecordService.diffCurrent(request));
+    public Result<List<DeviceBackupDiffLineRsp>> diffCurrent(DeviceBackupRecordDiffCurrentReq request) {
+        return new Result<List<DeviceBackupDiffLineRsp>>().ok(deviceBackupRecordService.diffCurrent(request));
     }
 
     @GetMapping("preview")
     @Operation(summary = "预览备份内容")
     @SaCheckPermission("ops:devicebackuprecord:preview")
-    public Result<String> preview(DeviceBackupRecordPreviewRequest request) {
+    public Result<String> preview(DeviceBackupRecordPreviewReq request) {
         return new Result<String>().ok(deviceBackupRecordService.preview(request));
     }
 
     @GetMapping("download")
     @Operation(summary = "下载备份文件")
     @SaCheckPermission("ops:devicebackuprecord:download")
-    public void download(DeviceBackupRecordDownloadRequest request, HttpServletResponse response) {
+    public void download(DeviceBackupRecordDownloadReq request, HttpServletResponse response) {
         deviceBackupRecordService.download(request, response);
     }
 }

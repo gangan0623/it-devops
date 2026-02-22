@@ -1,36 +1,42 @@
 package net.leoch.modules.ops.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
-import net.leoch.common.constant.Constant;
-import net.leoch.common.exception.RenException;
-import net.leoch.common.page.PageData;
-import net.leoch.common.service.impl.CrudServiceImpl;
-import net.leoch.common.utils.ConvertUtils;
-import net.leoch.common.utils.ExcelUtils;
-import net.leoch.common.utils.PingUtils;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.AddGroup;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.ops.dao.BackupAgentDao;
-import net.leoch.modules.ops.dao.DeviceBackupDao;
-import net.leoch.modules.ops.dto.*;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.base.Constant;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.validator.ValidatorUtils;
+import net.leoch.common.data.validator.group.AddGroup;
+import net.leoch.common.data.validator.group.DefaultGroup;
+import net.leoch.common.data.validator.group.UpdateGroup;
+import net.leoch.common.exception.ServiceException;
+import net.leoch.common.integration.excel.DeviceBackupExcel;
+import net.leoch.common.integration.excel.template.DeviceBackupImportExcel;
+import net.leoch.common.integration.security.SecurityUser;
+import net.leoch.common.utils.excel.ExcelUtils;
+import net.leoch.common.utils.ops.PingUtils;
+import net.leoch.common.utils.redis.RedisKeys;
+import net.leoch.common.utils.redis.RedisUtils;
+import net.leoch.framework.config.ops.OnlineStatusConfig;
 import net.leoch.modules.ops.entity.BackupAgentEntity;
 import net.leoch.modules.ops.entity.DeviceBackupEntity;
-import net.leoch.modules.ops.excel.DeviceBackupExcel;
-import net.leoch.modules.ops.excel.template.DeviceBackupImportExcel;
-import net.leoch.modules.ops.service.DeviceBackupService;
-import net.leoch.modules.security.user.SecurityUser;
+import net.leoch.modules.ops.mapper.BackupAgentMapper;
+import net.leoch.modules.ops.mapper.DeviceBackupMapper;
+import net.leoch.modules.ops.service.IDeviceBackupService;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.DeviceBackupRsp;
+import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -41,40 +47,28 @@ import java.util.stream.Collectors;
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
+@Slf4j
 @Service
-public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, DeviceBackupEntity, DeviceBackupDTO> implements DeviceBackupService {
+public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, DeviceBackupEntity> implements IDeviceBackupService {
 
-    private final BackupAgentDao backupAgentDao;
+    /** 允许排序的数据库列名白名单 */
+    private static final Set<String> ALLOWED_ORDER_FIELDS = Set.of(
+            "id", "instance", "name", "area_name", "group_name", "device_model",
+            "status", "agent_id", "create_date", "update_date");
 
-    public DeviceBackupServiceImpl(BackupAgentDao backupAgentDao) {
-        this.backupAgentDao = backupAgentDao;
+    private final BackupAgentMapper backupAgentMapper;
+    private final RedisUtils redisUtils;
+    private final OnlineStatusConfig properties;
+
+    public DeviceBackupServiceImpl(BackupAgentMapper backupAgentMapper, RedisUtils redisUtils,
+                                   OnlineStatusConfig properties) {
+        this.backupAgentMapper = backupAgentMapper;
+        this.redisUtils = redisUtils;
+        this.properties = properties;
     }
 
     @Override
-    public QueryWrapper<DeviceBackupEntity> getWrapper(Map<String, Object> params) {
-        QueryWrapper<DeviceBackupEntity> wrapper = new QueryWrapper<>();
-        LambdaQueryWrapper<DeviceBackupEntity> lambda = wrapper.lambda();
-        String id = (String) params.get("id");
-        String instance = (String) params.get("instance");
-        String name = (String) params.get("name");
-        String areaName = (String) params.get("areaName");
-        String groupName = (String) params.get("groupName");
-        String deviceModel = (String) params.get("deviceModel");
-        String status = (String) params.get("status");
-        String agentId = (String) params.get("agentId");
-        lambda.eq(StrUtil.isNotBlank(id), DeviceBackupEntity::getId, id);
-        lambda.like(StrUtil.isNotBlank(instance), DeviceBackupEntity::getInstance, instance);
-        lambda.like(StrUtil.isNotBlank(name), DeviceBackupEntity::getName, name);
-        lambda.eq(StrUtil.isNotBlank(areaName), DeviceBackupEntity::getAreaName, areaName);
-        lambda.eq(StrUtil.isNotBlank(groupName), DeviceBackupEntity::getGroupName, groupName);
-        lambda.eq(StrUtil.isNotBlank(deviceModel), DeviceBackupEntity::getDeviceModel, deviceModel);
-        lambda.eq(StrUtil.isNotBlank(status), DeviceBackupEntity::getStatus, status);
-        lambda.eq(StrUtil.isNotBlank(agentId), DeviceBackupEntity::getAgentId, agentId);
-        return wrapper;
-    }
-
-    @Override
-    public PageData<DeviceBackupDTO> page(DeviceBackupPageRequest request) {
+    public PageData<DeviceBackupRsp> page(DeviceBackupPageReq request) {
         LambdaQueryWrapper<DeviceBackupEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StrUtil.isNotBlank(request.getInstance()), DeviceBackupEntity::getInstance, request.getInstance());
         wrapper.like(StrUtil.isNotBlank(request.getName()), DeviceBackupEntity::getName, request.getName());
@@ -84,21 +78,23 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), DeviceBackupEntity::getStatus, request.getStatus());
         wrapper.eq(StrUtil.isNotBlank(request.getAgentId()), DeviceBackupEntity::getAgentId, request.getAgentId());
         Page<DeviceBackupEntity> page = buildPage(request);
-        IPage<DeviceBackupEntity> result = baseDao.selectPage(page, wrapper);
-        List<DeviceBackupDTO> list = ConvertUtils.sourceToTarget(result.getRecords(), DeviceBackupDTO.class);
+        IPage<DeviceBackupEntity> result = this.page(page, wrapper);
+        List<DeviceBackupRsp> list = BeanUtil.copyToList(result.getRecords(), DeviceBackupRsp.class);
+        fillOnlineStatus(list);
         fillAgentNames(list);
         maskPasswords(list);
         return new PageData<>(list, result.getTotal());
     }
 
     @Override
-    public DeviceBackupDTO get(DeviceBackupIdRequest request) {
+    public DeviceBackupRsp get(DeviceBackupIdReq request) {
         if (request == null || request.getId() == null) {
             return null;
         }
-        DeviceBackupEntity entity = baseDao.selectById(request.getId());
-        DeviceBackupDTO dto = ConvertUtils.sourceToTarget(entity, DeviceBackupDTO.class);
+        DeviceBackupEntity entity = this.getById(request.getId());
+        DeviceBackupRsp dto = BeanUtil.copyProperties(entity, DeviceBackupRsp.class);
         if (dto != null) {
+            fillOnlineStatus(Arrays.asList(dto));
             fillAgentNames(Arrays.asList(dto));
             maskPassword(dto);
         }
@@ -106,27 +102,34 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
     }
 
     @Override
-    public void save(DeviceBackupSaveRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public void save(DeviceBackupSaveReq request) {
+        log.info("[DeviceBackup] 开始保存, instance={}", request != null ? request.getInstance() : null);
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
-        validateUnique(request);
-        super.save(request);
+        validateUnique(request.getId(), request.getInstance(), request.getName());
+        DeviceBackupEntity entity = BeanUtil.copyProperties(request, DeviceBackupEntity.class);
+        this.save(entity);
     }
 
     @Override
-    public void update(DeviceBackupUpdateRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public void update(DeviceBackupUpdateReq request) {
+        log.info("[DeviceBackup] 开始更新, id={}", request != null ? request.getId() : null);
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
-        validateUnique(request);
+        validateUnique(request.getId(), request.getInstance(), request.getName());
         if (request != null && request.getId() != null && StrUtil.isBlank(request.getPassword())) {
-            DeviceBackupEntity existing = baseDao.selectById(request.getId());
-            if (existing != null) {
+            DeviceBackupEntity existing = this.getById(request.getId());
+            if (existing != null && StrUtil.isNotBlank(existing.getPassword())) {
                 request.setPassword(existing.getPassword());
             }
         }
-        super.update(request);
+        DeviceBackupEntity entity = BeanUtil.copyProperties(request, DeviceBackupEntity.class);
+        this.updateById(entity);
     }
 
     @Override
-    public void updateStatus(DeviceBackupStatusUpdateRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public void updateStatus(DeviceBackupStatusUpdateReq request) {
         if (request == null) {
             return;
         }
@@ -134,15 +137,16 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
     }
 
     @Override
-    public boolean online(DeviceBackupOnlineRequest request) {
+    public boolean online(DeviceBackupOnlineReq request) {
         if (request == null || StrUtil.isBlank(request.getInstance())) {
             return false;
         }
-        return PingUtils.isReachable(request.getInstance(), 2000);
+        int timeout = properties.getOnlineStatus().getTimeout().getDevice();
+        return PingUtils.isReachable(request.getInstance(), timeout);
     }
 
     @Override
-    public boolean check(DeviceBackupCheckRequest request) {
+    public boolean check(DeviceBackupCheckReq request) {
         if (request == null) {
             return false;
         }
@@ -150,13 +154,44 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
     }
 
     @Override
-    public void importExcel(DeviceBackupImportRequest request) throws Exception {
+    public OpsHostStatusSummaryRsp summary(DeviceBackupPageReq request) {
+        LambdaQueryWrapper<DeviceBackupEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(DeviceBackupEntity::getInstance, DeviceBackupEntity::getStatus);
+        List<DeviceBackupEntity> list = this.list(wrapper);
+        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getDeviceBackupOnlineKey());
+        OpsHostStatusSummaryRsp summary = new OpsHostStatusSummaryRsp();
+        summary.setTotalCount((long) list.size());
+        for (DeviceBackupEntity item : list) {
+            if (item == null) {
+                continue;
+            }
+            Integer status = item.getStatus();
+            if (Integer.valueOf(1).equals(status)) {
+                summary.setEnabledCount(summary.getEnabledCount() + 1);
+            } else if (Integer.valueOf(0).equals(status)) {
+                summary.setDisabledCount(summary.getDisabledCount() + 1);
+            }
+            Boolean onlineStatus = OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(item.getInstance()));
+            if (Boolean.TRUE.equals(onlineStatus)) {
+                summary.setOnlineCount(summary.getOnlineCount() + 1);
+            } else if (Boolean.FALSE.equals(onlineStatus)) {
+                summary.setOfflineCount(summary.getOfflineCount() + 1);
+            } else {
+                summary.setUnknownCount(summary.getUnknownCount() + 1);
+            }
+        }
+        return summary;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void importExcel(DeviceBackupImportReq request) throws Exception {
         if (request == null || request.getFile() == null || request.getFile().isEmpty()) {
-            throw new RenException("上传文件不能为空");
+            throw new ServiceException("上传文件不能为空");
         }
         List<DeviceBackupImportExcel> dataList = EasyExcel.read(request.getFile().getInputStream()).head(DeviceBackupImportExcel.class).sheet().doReadSync();
         if (CollUtil.isEmpty(dataList)) {
-            throw new RenException("导入数据不能为空");
+            throw new ServiceException("导入数据不能为空");
         }
         List<DeviceBackupEntity> entityList = new ArrayList<>(dataList.size());
         for (DeviceBackupImportExcel item : dataList) {
@@ -172,7 +207,20 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
             entity.setAgentId(item.getAgentId());
             entityList.add(entity);
         }
-        insertBatch(entityList);
+
+        // 分批处理，避免大批量数据导致 SQL 超时或 OOM
+        final int BATCH_SIZE = 1000;
+        if (entityList.size() > BATCH_SIZE) {
+            log.info("[设备备份] Excel 导入分批处理, 总数={}, 批次大小={}", entityList.size(), BATCH_SIZE);
+            List<List<DeviceBackupEntity>> batches = CollUtil.split(entityList, BATCH_SIZE);
+            for (int i = 0; i < batches.size(); i++) {
+                log.debug("[设备备份] 处理第 {}/{} 批, 数量={}", i + 1, batches.size(), batches.get(i).size());
+                this.saveBatch(batches.get(i));
+            }
+        } else {
+            this.saveBatch(entityList);
+        }
+        log.info("[设备备份] Excel 导入完成, 总数={}", entityList.size());
     }
 
     @Override
@@ -181,7 +229,7 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
     }
 
     @Override
-    public void export(DeviceBackupPageRequest request, HttpServletResponse response) throws Exception {
+    public void export(DeviceBackupPageReq request, HttpServletResponse response) throws Exception {
         LambdaQueryWrapper<DeviceBackupEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StrUtil.isNotBlank(request.getInstance()), DeviceBackupEntity::getInstance, request.getInstance());
         wrapper.like(StrUtil.isNotBlank(request.getName()), DeviceBackupEntity::getName, request.getName());
@@ -190,38 +238,20 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
         wrapper.eq(StrUtil.isNotBlank(request.getDeviceModel()), DeviceBackupEntity::getDeviceModel, request.getDeviceModel());
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), DeviceBackupEntity::getStatus, request.getStatus());
         wrapper.eq(StrUtil.isNotBlank(request.getAgentId()), DeviceBackupEntity::getAgentId, request.getAgentId());
-        List<DeviceBackupEntity> list = baseDao.selectList(wrapper);
-        List<DeviceBackupDTO> dtoList = ConvertUtils.sourceToTarget(list, DeviceBackupDTO.class);
+        List<DeviceBackupEntity> list = this.list(wrapper);
+        List<DeviceBackupRsp> dtoList = BeanUtil.copyToList(list, DeviceBackupRsp.class);
         fillAgentNames(dtoList);
         maskPasswords(dtoList);
         ExcelUtils.exportExcelToTarget(response, null, "设备备份表", dtoList, DeviceBackupExcel.class);
     }
 
     @Override
-    public void delete(DeviceBackupDeleteRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(DeviceBackupDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
-        super.delete(request.getIds());
-    }
-
-    @Override
-    public List<DeviceBackupDTO> list(Map<String, Object> params) {
-        List<DeviceBackupDTO> list = super.list(params);
-        fillAgentNames(list);
-        maskPasswords(list);
-        return list;
-    }
-
-    @Override
-    public DeviceBackupDTO get(Long id) {
-        DeviceBackupDTO dto = super.get(id);
-        if (dto == null) {
-            return null;
-        }
-        fillAgentNames(Arrays.asList(dto));
-        maskPassword(dto);
-        return dto;
+        this.removeByIds(Arrays.asList(request.getIds()));
     }
 
     @Override
@@ -241,10 +271,11 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
         if (excludeId != null) {
             wrapper.ne(DeviceBackupEntity::getId, excludeId);
         }
-        return baseDao.selectCount(wrapper) > 0;
+        return this.count(wrapper) > 0;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long[] ids, Integer status) {
         if (ids == null || ids.length == 0) {
             return;
@@ -255,10 +286,10 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
         entity.setUpdateDate(new Date());
         LambdaUpdateWrapper<DeviceBackupEntity> wrapper = new LambdaUpdateWrapper<>();
         wrapper.in(DeviceBackupEntity::getId, Arrays.asList(ids));
-        baseDao.update(entity, wrapper);
+        this.update(entity, wrapper);
     }
 
-    private Page<DeviceBackupEntity> buildPage(DeviceBackupPageRequest request) {
+    private Page<DeviceBackupEntity> buildPage(DeviceBackupPageReq request) {
         long curPage = 1;
         long limit = 10;
         if (request != null) {
@@ -274,27 +305,30 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
             return page;
         }
         if (StrUtil.isNotBlank(request.getOrderField()) && StrUtil.isNotBlank(request.getOrder())) {
-            if (Constant.ASC.equalsIgnoreCase(request.getOrder())) {
-                page.addOrder(OrderItem.asc(request.getOrderField()));
+            String orderField = request.getOrderField();
+            if (!ALLOWED_ORDER_FIELDS.contains(orderField)) {
+                log.warn("[设备备份] 非法排序字段: {}", orderField);
+            } else if (Constant.ASC.equalsIgnoreCase(request.getOrder())) {
+                page.addOrder(OrderItem.asc(orderField));
             } else {
-                page.addOrder(OrderItem.desc(request.getOrderField()));
+                page.addOrder(OrderItem.desc(orderField));
             }
         }
         return page;
     }
 
-    private void validateUnique(DeviceBackupDTO dto) {
-        if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
-            throw new RenException("地址或名称已存在");
+    private void validateUnique(Long id, String instance, String name) {
+        if (existsByInstanceOrName(instance, name, id)) {
+            throw new ServiceException("地址或名称已存在");
         }
     }
 
-    private void fillAgentNames(List<DeviceBackupDTO> list) {
+    private void fillAgentNames(List<DeviceBackupRsp> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
         List<Long> agentIds = list.stream()
-            .map(DeviceBackupDTO::getAgentId)
+            .map(DeviceBackupRsp::getAgentId)
             .filter(Objects::nonNull)
             .distinct()
             .collect(Collectors.toList());
@@ -304,28 +338,44 @@ public class DeviceBackupServiceImpl extends CrudServiceImpl<DeviceBackupDao, De
         LambdaQueryWrapper<BackupAgentEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.select(BackupAgentEntity::getId, BackupAgentEntity::getName);
         wrapper.in(BackupAgentEntity::getId, agentIds);
-        List<BackupAgentEntity> agents = backupAgentDao.selectList(wrapper);
-        Map<Long, String> agentNameMap = new HashMap<>();
-        for (BackupAgentEntity agent : agents) {
-            agentNameMap.put(agent.getId(), agent.getName());
+        List<BackupAgentEntity> agents = backupAgentMapper.selectList(wrapper);
+        if (agents == null || agents.isEmpty()) {
+            return;
         }
-        for (DeviceBackupDTO dto : list) {
-            if (dto.getAgentId() != null) {
+        Map<Long, String> agentNameMap = new HashMap<>((int) (agents.size() / 0.75) + 1);
+        for (BackupAgentEntity agent : agents) {
+            if (agent != null && agent.getId() != null) {
+                agentNameMap.put(agent.getId(), agent.getName());
+            }
+        }
+        for (DeviceBackupRsp dto : list) {
+            if (dto != null && dto.getAgentId() != null) {
                 dto.setAgentName(agentNameMap.get(dto.getAgentId()));
             }
         }
     }
 
-    private void maskPasswords(List<DeviceBackupDTO> list) {
+    private void fillOnlineStatus(List<DeviceBackupRsp> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
-        for (DeviceBackupDTO dto : list) {
+        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getDeviceBackupOnlineKey());
+        for (DeviceBackupRsp dto : list) {
+            String instance = dto.getInstance();
+            dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
+        }
+    }
+
+    private void maskPasswords(List<DeviceBackupRsp> list) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+        for (DeviceBackupRsp dto : list) {
             maskPassword(dto);
         }
     }
 
-    private void maskPassword(DeviceBackupDTO dto) {
+    private void maskPassword(DeviceBackupRsp dto) {
         if (dto != null) {
             dto.setPassword(null);
         }

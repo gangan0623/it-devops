@@ -5,8 +5,9 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import net.leoch.common.entity.BaseEntity;
+import net.leoch.common.base.BaseEntity;
 
+import java.io.Serial;
 import java.util.Date;
 
 /**
@@ -17,7 +18,8 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode(callSuper = false)
 @TableName("sys_oss_config")
-public class SysOssConfigEntity extends BaseEntity {
+public class SysOssConfigEntity extends BaseEntity  {
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

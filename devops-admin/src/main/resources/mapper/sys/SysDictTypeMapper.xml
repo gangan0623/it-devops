@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.leoch.modules.sys.mapper.SysDictTypeMapper">
+
+    <select id="getDictTypeList" resultType="net.leoch.modules.sys.vo.rsp.DictTypeRsp">
+        select id, dict_type from sys_dict_type order by dict_type, sort
+    </select>
+
+</mapper>

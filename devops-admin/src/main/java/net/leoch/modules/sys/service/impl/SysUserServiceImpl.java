@@ -1,28 +1,39 @@
-
-
 package net.leoch.modules.sys.service.impl;
 
+import cn.dev33.satoken.stp.StpUtil;
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import lombok.AllArgsConstructor;
-import net.leoch.common.constant.Constant;
-import net.leoch.common.page.PageData;
-import net.leoch.common.service.impl.BaseServiceImpl;
-import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.security.password.PasswordUtils;
-import net.leoch.modules.security.user.SecurityUser;
-import net.leoch.modules.security.user.UserDetail;
-import net.leoch.modules.sys.dao.SysUserDao;
-import net.leoch.modules.sys.dto.SysUserDTO;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.validator.AssertUtils;
+import net.leoch.common.data.validator.ValidatorUtils;
+import net.leoch.common.data.validator.group.AddGroup;
+import net.leoch.common.data.validator.group.DefaultGroup;
+import net.leoch.common.data.validator.group.UpdateGroup;
+import net.leoch.common.enums.SuperAdminEnum;
+import net.leoch.common.enums.UserStatusEnum;
+import net.leoch.common.exception.ErrorCode;
+import net.leoch.common.exception.ServiceException;
+import net.leoch.common.integration.security.SecurityUser;
+import net.leoch.common.integration.security.UserDetail;
+import net.leoch.common.utils.security.PasswordUtils;
 import net.leoch.modules.sys.entity.SysUserEntity;
-import net.leoch.modules.sys.enums.SuperAdminEnum;
-import net.leoch.modules.sys.service.SysDeptService;
-import net.leoch.modules.sys.service.SysRoleUserService;
-import net.leoch.modules.sys.service.SysUserService;
+import net.leoch.modules.sys.mapper.SysUserMapper;
+import net.leoch.modules.sys.service.ISysDeptService;
+import net.leoch.modules.sys.service.ISysRoleUserService;
+import net.leoch.modules.sys.service.ISysUserService;
+import net.leoch.modules.sys.vo.req.PasswordReq;
+import net.leoch.modules.sys.vo.req.SysUserPageReq;
+import net.leoch.modules.sys.vo.req.SysUserReq;
+import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,19 +43,28 @@ import java.util.Map;
  *
  * @author Taohongqiang
  */
+@Slf4j
 @Service
-@AllArgsConstructor
-public class SysUserServiceImpl extends BaseServiceImpl<SysUserDao, SysUserEntity> implements SysUserService {
-    private final SysRoleUserService sysRoleUserService;
-    private final SysDeptService sysDeptService;
+@RequiredArgsConstructor
+public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity> implements ISysUserService {
+    private final ISysRoleUserService sysRoleUserService;
+    private final ISysDeptService sysDeptService;
 
     @Override
-    public PageData<SysUserDTO> page(Map<String, Object> params) {
+    public PageData<SysUserRsp> page(SysUserPageReq request) {
+        Map<String, Object> params = new HashMap<>();
+
         //转换成like
-        paramsToLike(params, "username");
+        if (StrUtil.isNotBlank(request.getUsername())) {
+            params.put("username", "%" + request.getUsername() + "%");
+        }
+        if (StrUtil.isNotBlank(request.getDeptId())) {
+            params.put("deptId", request.getDeptId());
+        }
 
         //分页
-        IPage<SysUserEntity> page = getPage(params, Constant.CREATE_DATE, false);
+        IPage<SysUserEntity> page = request.buildPage();
+        params.put("page", page);
 
         //普通管理员，只能查询所属部门及子部门的数据
         UserDetail user = SecurityUser.getUser();
@@ -53,41 +73,62 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserDao, SysUserEntit
         }
 
         //查询
-        List<SysUserEntity> list = baseDao.getList(params);
+        List<SysUserEntity> list = this.getBaseMapper().getList(params);
 
-        return getPageData(list, page.getTotal(), SysUserDTO.class);
+        return new PageData<>(BeanUtil.copyToList(list, SysUserRsp.class), page.getTotal());
     }
 
     @Override
-    public List<SysUserDTO> list(Map<String, Object> params) {
+    public List<SysUserRsp> list(SysUserPageReq request) {
+        Map<String, Object> params = new HashMap<>();
+
+        if (StrUtil.isNotBlank(request.getUsername())) {
+            params.put("username", "%" + request.getUsername() + "%");
+        }
+        if (StrUtil.isNotBlank(request.getDeptId())) {
+            params.put("deptId", request.getDeptId());
+        }
+
         //普通管理员，只能查询所属部门及子部门的数据
         UserDetail user = SecurityUser.getUser();
         if (user.getSuperAdmin() == SuperAdminEnum.NO.value()) {
             params.put("deptIdList", sysDeptService.getSubDeptIdList(user.getDeptId()));
         }
 
-        List<SysUserEntity> entityList = baseDao.getList(params);
+        List<SysUserEntity> entityList = this.getBaseMapper().getList(params);
 
-        return ConvertUtils.sourceToTarget(entityList, SysUserDTO.class);
+        return BeanUtil.copyToList(entityList, SysUserRsp.class);
     }
 
     @Override
-    public SysUserDTO get(Long id) {
-        SysUserEntity entity = baseDao.getById(id);
+    public SysUserRsp get(Long id) {
+        SysUserEntity entity = this.getBaseMapper().getById(id);
 
-        return ConvertUtils.sourceToTarget(entity, SysUserDTO.class);
+        return BeanUtil.copyProperties(entity, SysUserRsp.class);
     }
 
     @Override
-    public SysUserDTO getByUsername(String username) {
-        SysUserEntity entity = baseDao.getByUsername(username);
-        return ConvertUtils.sourceToTarget(entity, SysUserDTO.class);
+    public SysUserRsp getWithRoles(Long id) {
+        SysUserRsp user = this.get(id);
+        if (user != null) {
+            //用户角色列表
+            List<Long> roleIdList = sysRoleUserService.getRoleIdList(id);
+            user.setRoleIdList(roleIdList);
+        }
+        return user;
+    }
+
+    @Override
+    public SysUserRsp getByUsername(String username) {
+        SysUserEntity entity = this.getBaseMapper().getByUsername(username);
+        return BeanUtil.copyProperties(entity, SysUserRsp.class);
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysUserDTO dto) {
-        SysUserEntity entity = ConvertUtils.sourceToTarget(dto, SysUserEntity.class);
+    public void save(SysUserReq dto) {
+        ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
+        SysUserEntity entity = BeanUtil.copyProperties(dto, SysUserEntity.class);
 
         //密码加密
         String password = PasswordUtils.encode(entity.getPassword());
@@ -95,7 +136,7 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserDao, SysUserEntit
 
         //保存用户
         entity.setSuperAdmin(SuperAdminEnum.NO.value());
-        insert(entity);
+        this.save(entity);
 
         //保存角色用户关系
         sysRoleUserService.saveOrUpdate(entity.getId(), dto.getRoleIdList());
@@ -103,8 +144,9 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserDao, SysUserEntit
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysUserDTO dto) {
-        SysUserEntity entity = ConvertUtils.sourceToTarget(dto, SysUserEntity.class);
+    public void update(SysUserReq dto) {
+        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
+        SysUserEntity entity = BeanUtil.copyProperties(dto, SysUserEntity.class);
 
         //密码加密
         if (StrUtil.isBlank(dto.getPassword())) {
@@ -115,19 +157,45 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserDao, SysUserEntit
         }
 
         //更新用户
-        updateById(entity);
+        this.updateById(entity);
 
         //更新角色用户关系
         sysRoleUserService.saveOrUpdate(entity.getId(), dto.getRoleIdList());
+
+        //用户被禁用时，强制下线
+        if (dto.getStatus() != null && dto.getStatus() == UserStatusEnum.DISABLE.value()) {
+            kickout(new Long[]{entity.getId()});
+        }
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(Long[] ids) {
+        AssertUtils.isArrayEmpty(ids, "id");
+
+        //强制下线被删除的用户
+        kickout(ids);
+
         //删除用户
-        baseDao.deleteBatchIds(Arrays.asList(ids));
+        this.removeByIds(Arrays.asList(ids));
 
         //删除角色用户关系
         sysRoleUserService.deleteByUserIds(ids);
+    }
+
+    @Override
+    public void kickout(Long[] ids) {
+        if (ids == null || ids.length == 0) {
+            return;
+        }
+        for (Long userId : ids) {
+            try {
+                StpUtil.kickout(userId);
+                log.info("[用户管理] 强制下线, userId={}", userId);
+            } catch (Exception e) {
+                log.warn("[用户管理] 强制下线失败, userId={}", userId, e);
+            }
+        }
     }
 
     @Override
@@ -135,17 +203,39 @@ public class SysUserServiceImpl extends BaseServiceImpl<SysUserDao, SysUserEntit
     public void updatePassword(Long id, String newPassword) {
         newPassword = PasswordUtils.encode(newPassword);
 
-        baseDao.updatePassword(id, newPassword);
+        this.getBaseMapper().updatePassword(id, newPassword);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void changePassword(PasswordReq dto) {
+        log.info("[用户密码] 修改密码请求");
+
+        UserDetail user = SecurityUser.getUser();
+
+        //原密码不正确
+        if (!PasswordUtils.matches(dto.getPassword(), user.getPassword())) {
+            log.warn("[用户密码] 原密码错误, userId={}", user.getId());
+            throw new ServiceException(ErrorCode.PASSWORD_ERROR);
+        }
+
+        this.updatePassword(user.getId(), dto.getNewPassword());
+        log.info("[用户密码] 修改密码成功, userId={}", user.getId());
+    }
+
+    @Override
+    public SysUserRsp getCurrentUserInfo() {
+        return BeanUtil.copyProperties(SecurityUser.getUser(), SysUserRsp.class);
     }
 
     @Override
     public int getCountByDeptId(Long deptId) {
-        return baseDao.getCountByDeptId(deptId);
+        return this.getBaseMapper().getCountByDeptId(deptId);
     }
 
     @Override
     public List<Long> getUserIdListByDeptId(List<Long> deptIdList) {
-        return baseDao.getUserIdListByDeptId(deptIdList);
+        return this.getBaseMapper().getUserIdListByDeptId(deptIdList);
     }
 
 }

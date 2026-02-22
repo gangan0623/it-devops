@@ -5,29 +5,32 @@ spring:
     username: root
     password: Leoch.db.2050
     hikari:
-      minimum-idle: 10
-      maximum-pool-size: 100
-      connection-timeout: 6000
-      idle-timeout: 300000
-      max-lifetime: 600000
+      minimum-idle: 5                    # 最小空闲连接（降低资源占用）
+      maximum-pool-size: 50              # 最大连接数（开发环境降低）
+      connection-timeout: 10000          # 连接超时10s（增加稳定性）
+      idle-timeout: 600000               # 空闲连接存活时间10min
+      max-lifetime: 1800000              # 连接最大存活时间30min
+      connection-test-query: SELECT 1    # 连接测试查询
+      validation-timeout: 3000           # 验证超时3s
   data:
     redis:
       database: 0
       host: 192.168.17.121
       port: 6379
       password: Leoch@@20260101
-      timeout: 6000ms
+      timeout: 10000ms                   # 命令超时10s（增加稳定性）
+      connect-timeout: 5000ms            # 连接超时5s
       lettuce:
         pool:
-          max-active: 1000  # 连接池最大连接数（使用负值表示没有限制）
-          max-wait: -1ms      # 连接池最大阻塞等待时间（使用负值表示没有限制）
-          max-idle: 10      # 连接池中的最大空闲连接
-          min-idle: 5       # 连接池中的最小空闲连接
-knife4j:
-  enable: false
-  basic:
-    enable: false
-    username: admin
-    password: admin
-  setting:
-    enableFooter: false
+          max-active: 50                 # 最大连接数（开发环境降低）
+          max-wait: 3000ms               # 最大等待时间3s（避免无限阻塞）
+          max-idle: 10                   # 最大空闲连接
+          min-idle: 2                    # 最小空闲连接（降低资源占用）
+          time-between-eviction-runs: 60000ms  # 空闲连接检测间隔1min
+# Springdoc OpenAPI 开发环境配置
+springdoc:
+  api-docs:
+    enabled: true                         # 开发环境启用 API 文档
+  swagger-ui:
+    enabled: true                         # 开发环境启用 Swagger UI
+  show-actuator: false                    # 不显示 Actuator 端点

@@ -1,12 +1,14 @@
 <template>
-  <el-dialog v-model="visible" :title="!dataForm.id ? '新增' : '修改'" :close-on-click-modal="false" :close-on-press-escape="false">
-    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px">
-          <el-form-item label="地址" prop="instance">
+  <el-dialog v-model="visible" :title="!dataForm.id ? '新增业务系统' : '修改业务系统'" width="760px" :close-on-click-modal="false" :close-on-press-escape="false">
+    <el-form :model="dataForm" :rules="rules" ref="dataFormRef" @keyup.enter="dataFormSubmitHandle()" label-width="120px" class="dialog-form">
+      <div class="form-section-title">接入信息</div>
+      <el-form-item label="地址" prop="instance">
         <el-input v-model="dataForm.instance" placeholder="站点提示 http://192.168.1.243:8081 完整域名" @blur="checkUnique('instance')"></el-input>
       </el-form-item>
           <el-form-item label="名称" prop="name">
         <el-input v-model="dataForm.name" placeholder="名称" @blur="checkUnique('name')"></el-input>
       </el-form-item>
+      <div class="form-section-title">归属信息</div>
       <el-form-item label="区域名称" prop="areaName">
         <ren-select
           v-model="dataForm.areaName"
@@ -45,8 +47,10 @@
       </el-form-item>
               </el-form>
     <template #footer>
-      <el-button @click="visible = false">取消</el-button>
-      <el-button type="primary" @click="dataFormSubmitHandle()">确定</el-button>
+      <div class="dialog-footer">
+        <el-button @click="visible = false">取消</el-button>
+        <el-button type="primary" :loading="submitLoading" @click="dataFormSubmitHandle()">确定</el-button>
+      </div>
     </template>
   </el-dialog>
 </template>
@@ -60,6 +64,7 @@ const emit = defineEmits(["refreshDataList"]);
 
 const visible = ref(false);
 const dataFormRef = ref();
+const submitLoading = ref(false);
 
 const dataForm = reactive({
   id: "",
@@ -174,16 +179,21 @@ const dataFormSubmitHandle = () => {
     delete submitData.createDate;
     delete submitData.updater;
     delete submitData.updateDate;
-    (!dataForm.id ? baseService.post : baseService.put)("/ops/businesssystem", submitData).then((res) => {
-      ElMessage.success({
-        message: '成功',
-        duration: 500,
-        onClose: () => {
-          visible.value = false;
-          emit("refreshDataList");
-        }
+    submitLoading.value = true;
+    (!dataForm.id ? baseService.post : baseService.put)("/ops/businesssystem", submitData)
+      .then(() => {
+        ElMessage.success({
+          message: "成功",
+          duration: 500,
+          onClose: () => {
+            visible.value = false;
+            emit("refreshDataList");
+          }
+        });
+      })
+      .finally(() => {
+        submitLoading.value = false;
       });
-    });
   });
 };
 
@@ -201,3 +211,6 @@ defineExpose({
   }
 });
 </script>
+
+<style scoped>
+</style>

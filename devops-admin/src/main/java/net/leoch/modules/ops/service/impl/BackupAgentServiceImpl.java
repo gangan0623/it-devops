@@ -1,35 +1,41 @@
 package net.leoch.modules.ops.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
-import net.leoch.common.constant.Constant;
-import net.leoch.common.exception.RenException;
-import net.leoch.common.page.PageData;
-import net.leoch.common.service.impl.CrudServiceImpl;
-import net.leoch.common.utils.ConvertUtils;
-import net.leoch.common.utils.ExcelUtils;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.AddGroup;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.ops.dao.BackupAgentDao;
-import net.leoch.modules.ops.dao.DeviceBackupDao;
-import net.leoch.modules.ops.dto.*;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.base.Constant;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.validator.ValidatorUtils;
+import net.leoch.common.data.validator.group.AddGroup;
+import net.leoch.common.data.validator.group.DefaultGroup;
+import net.leoch.common.data.validator.group.UpdateGroup;
+import net.leoch.common.exception.ServiceException;
+import net.leoch.common.integration.excel.BackupAgentExcel;
+import net.leoch.common.integration.excel.template.BackupAgentImportExcel;
+import net.leoch.common.integration.security.SecurityUser;
+import net.leoch.common.utils.excel.ExcelUtils;
+import net.leoch.common.utils.redis.RedisKeys;
+import net.leoch.common.utils.redis.RedisUtils;
+import net.leoch.framework.config.ops.OnlineStatusConfig;
 import net.leoch.modules.ops.entity.BackupAgentEntity;
 import net.leoch.modules.ops.entity.DeviceBackupEntity;
-import net.leoch.modules.ops.excel.BackupAgentExcel;
-import net.leoch.modules.ops.excel.template.BackupAgentImportExcel;
-import net.leoch.modules.ops.service.BackupAgentService;
-import net.leoch.modules.security.user.SecurityUser;
+import net.leoch.modules.ops.mapper.BackupAgentMapper;
+import net.leoch.modules.ops.mapper.DeviceBackupMapper;
+import net.leoch.modules.ops.service.IBackupAgentService;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.BackupAgentRsp;
+import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -43,79 +49,92 @@ import java.util.*;
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
+@Slf4j
 @Service
-public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, BackupAgentEntity, BackupAgentDTO> implements BackupAgentService {
+public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, BackupAgentEntity> implements IBackupAgentService {
 
-    private final DeviceBackupDao deviceBackupDao;
+    /** 允许排序的数据库列名白名单 */
+    private static final Set<String> ALLOWED_ORDER_FIELDS = Set.of(
+            "id", "instance", "name", "area_name", "status", "create_date", "update_date");
 
-    public BackupAgentServiceImpl(DeviceBackupDao deviceBackupDao) {
-        this.deviceBackupDao = deviceBackupDao;
+    /** 健康检查响应模式 */
+    private static final String[] HEALTH_OK_PATTERNS = {
+            "\"status\":\"ok\"",
+            "\"status\" : \"ok\"",
+            "\"status\": \"ok\""
+    };
+
+    private final DeviceBackupMapper deviceBackupMapper;
+    private final RedisUtils redisUtils;
+    private final OnlineStatusConfig properties;
+
+    public BackupAgentServiceImpl(DeviceBackupMapper deviceBackupMapper,
+                                  RedisUtils redisUtils,
+                                  OnlineStatusConfig properties) {
+        this.deviceBackupMapper = deviceBackupMapper;
+        this.redisUtils = redisUtils;
+        this.properties = properties;
     }
 
     @Override
-    public QueryWrapper<BackupAgentEntity> getWrapper(Map<String, Object> params) {
-        QueryWrapper<BackupAgentEntity> wrapper = new QueryWrapper<>();
-        LambdaQueryWrapper<BackupAgentEntity> lambda = wrapper.lambda();
-        String id = (String) params.get("id");
-        String instance = (String) params.get("instance");
-        String name = (String) params.get("name");
-        String areaName = (String) params.get("areaName");
-        String status = (String) params.get("status");
-        lambda.eq(StrUtil.isNotBlank(id), BackupAgentEntity::getId, id);
-        lambda.like(StrUtil.isNotBlank(instance), BackupAgentEntity::getInstance, instance);
-        lambda.like(StrUtil.isNotBlank(name), BackupAgentEntity::getName, name);
-        lambda.eq(StrUtil.isNotBlank(areaName), BackupAgentEntity::getAreaName, areaName);
-        lambda.eq(StrUtil.isNotBlank(status), BackupAgentEntity::getStatus, status);
-        return wrapper;
-    }
-
-    @Override
-    public PageData<BackupAgentDTO> page(BackupAgentPageRequest request) {
-        LambdaQueryWrapper<BackupAgentEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(StrUtil.isNotBlank(request.getInstance()), BackupAgentEntity::getInstance, request.getInstance());
-        wrapper.like(StrUtil.isNotBlank(request.getName()), BackupAgentEntity::getName, request.getName());
-        wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), BackupAgentEntity::getAreaName, request.getAreaName());
-        wrapper.eq(StrUtil.isNotBlank(request.getStatus()), BackupAgentEntity::getStatus, request.getStatus());
+    public PageData<BackupAgentRsp> page(BackupAgentPageReq request) {
         Page<BackupAgentEntity> page = buildPage(request);
-        IPage<BackupAgentEntity> result = baseDao.selectPage(page, wrapper);
-        List<BackupAgentDTO> list = ConvertUtils.sourceToTarget(result.getRecords(), BackupAgentDTO.class);
+        IPage<BackupAgentEntity> result = this.page(page,
+                new LambdaQueryWrapper<BackupAgentEntity>()
+                        .like(StrUtil.isNotBlank(request.getInstance()), BackupAgentEntity::getInstance, request.getInstance())
+                        .like(StrUtil.isNotBlank(request.getName()), BackupAgentEntity::getName, request.getName())
+                        .eq(StrUtil.isNotBlank(request.getAreaName()), BackupAgentEntity::getAreaName, request.getAreaName())
+                        .eq(StrUtil.isNotBlank(request.getStatus()), BackupAgentEntity::getStatus, request.getStatus())
+        );
+        List<BackupAgentRsp> list = BeanUtil.copyToList(result.getRecords(), BackupAgentRsp.class);
+        fillOnlineStatus(list);
         maskTokens(list);
         return new PageData<>(list, result.getTotal());
     }
 
     @Override
-    public BackupAgentDTO get(BackupAgentIdRequest request) {
+    public BackupAgentRsp get(BackupAgentIdReq request) {
         if (request == null || request.getId() == null) {
             return null;
         }
-        BackupAgentEntity entity = baseDao.selectById(request.getId());
-        BackupAgentDTO dto = ConvertUtils.sourceToTarget(entity, BackupAgentDTO.class);
+        BackupAgentEntity entity = this.getById(request.getId());
+        BackupAgentRsp dto = BeanUtil.copyProperties(entity, BackupAgentRsp.class);
+        if (dto != null) {
+            fillOnlineStatus(Collections.singletonList(dto));
+        }
         maskToken(dto);
         return dto;
     }
 
     @Override
-    public void save(BackupAgentSaveRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public void save(BackupAgentSaveReq request) {
+        log.info("[BackupAgent] 开始保存, request={}", request);
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
-        validateUnique(request);
-        super.save(request);
+        validateUnique(request.getId(), request.getInstance(), request.getName());
+        BackupAgentEntity entity = BeanUtil.copyProperties(request, BackupAgentEntity.class);
+        this.save(entity);
     }
 
     @Override
-    public void update(BackupAgentUpdateRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public void update(BackupAgentUpdateReq request) {
+        log.info("[BackupAgent] 开始更新, request={}", request);
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
-        validateUnique(request);
+        validateUnique(request.getId(), request.getInstance(), request.getName());
         if (request != null && request.getId() != null && StrUtil.isBlank(request.getToken())) {
-            BackupAgentEntity existing = baseDao.selectById(request.getId());
+            BackupAgentEntity existing = this.getById(request.getId());
             if (existing != null) {
                 request.setToken(existing.getToken());
             }
         }
-        super.update(request);
+        BackupAgentEntity entity = BeanUtil.copyProperties(request, BackupAgentEntity.class);
+        this.updateById(entity);
     }
 
     @Override
-    public void updateStatus(BackupAgentStatusUpdateRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public void updateStatus(BackupAgentStatusUpdateReq request) {
         if (request == null) {
             return;
         }
@@ -123,7 +142,7 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
     }
 
     @Override
-    public boolean online(BackupAgentOnlineRequest request) {
+    public boolean online(BackupAgentOnlineReq request) {
         if (request == null || StrUtil.isBlank(request.getInstance())) {
             return false;
         }
@@ -131,7 +150,7 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
     }
 
     @Override
-    public boolean check(BackupAgentCheckRequest request) {
+    public boolean check(BackupAgentCheckReq request) {
         if (request == null) {
             return false;
         }
@@ -139,13 +158,44 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
     }
 
     @Override
-    public void importExcel(BackupAgentImportRequest request) throws Exception {
+    public OpsHostStatusSummaryRsp summary(BackupAgentPageReq request) {
+        LambdaQueryWrapper<BackupAgentEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(BackupAgentEntity::getInstance, BackupAgentEntity::getStatus);
+        List<BackupAgentEntity> list = this.list(wrapper);
+        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBackupAgentOnlineKey());
+        OpsHostStatusSummaryRsp summary = new OpsHostStatusSummaryRsp();
+        summary.setTotalCount((long) list.size());
+        for (BackupAgentEntity item : list) {
+            if (item == null) {
+                continue;
+            }
+            Integer status = item.getStatus();
+            if (Integer.valueOf(1).equals(status)) {
+                summary.setEnabledCount(summary.getEnabledCount() + 1);
+            } else if (Integer.valueOf(0).equals(status)) {
+                summary.setDisabledCount(summary.getDisabledCount() + 1);
+            }
+            Boolean onlineStatus = OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(item.getInstance()));
+            if (Boolean.TRUE.equals(onlineStatus)) {
+                summary.setOnlineCount(summary.getOnlineCount() + 1);
+            } else if (Boolean.FALSE.equals(onlineStatus)) {
+                summary.setOfflineCount(summary.getOfflineCount() + 1);
+            } else {
+                summary.setUnknownCount(summary.getUnknownCount() + 1);
+            }
+        }
+        return summary;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void importExcel(BackupAgentImportReq request) throws Exception {
         if (request == null || request.getFile() == null || request.getFile().isEmpty()) {
-            throw new RenException("上传文件不能为空");
+            throw new ServiceException("上传文件不能为空");
         }
         List<BackupAgentImportExcel> dataList = EasyExcel.read(request.getFile().getInputStream()).head(BackupAgentImportExcel.class).sheet().doReadSync();
         if (CollUtil.isEmpty(dataList)) {
-            throw new RenException("导入数据不能为空");
+            throw new ServiceException("导入数据不能为空");
         }
         List<BackupAgentEntity> entityList = new ArrayList<>(dataList.size());
         for (BackupAgentImportExcel item : dataList) {
@@ -157,7 +207,20 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
             entity.setStatus(item.getStatus());
             entityList.add(entity);
         }
-        insertBatch(entityList);
+
+        // 分批处理，避免大批量数据导致 SQL 超时或 OOM
+        final int BATCH_SIZE = 1000;
+        if (entityList.size() > BATCH_SIZE) {
+            log.info("[备份节点] Excel 导入分批处理, 总数={}, 批次大小={}", entityList.size(), BATCH_SIZE);
+            List<List<BackupAgentEntity>> batches = CollUtil.split(entityList, BATCH_SIZE);
+            for (int i = 0; i < batches.size(); i++) {
+                log.debug("[备份节点] 处理第 {}/{} 批, 数量={}", i + 1, batches.size(), batches.get(i).size());
+                this.saveBatch(batches.get(i));
+            }
+        } else {
+            this.saveBatch(entityList);
+        }
+        log.info("[备份节点] Excel 导入完成, 总数={}", entityList.size());
     }
 
     @Override
@@ -166,38 +229,32 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
     }
 
     @Override
-    public void export(BackupAgentPageRequest request, HttpServletResponse response) throws Exception {
+    public void export(BackupAgentPageReq request, HttpServletResponse response) throws Exception {
         LambdaQueryWrapper<BackupAgentEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StrUtil.isNotBlank(request.getInstance()), BackupAgentEntity::getInstance, request.getInstance());
         wrapper.like(StrUtil.isNotBlank(request.getName()), BackupAgentEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), BackupAgentEntity::getAreaName, request.getAreaName());
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), BackupAgentEntity::getStatus, request.getStatus());
-        List<BackupAgentEntity> list = baseDao.selectList(wrapper);
-        List<BackupAgentDTO> dtoList = ConvertUtils.sourceToTarget(list, BackupAgentDTO.class);
+        List<BackupAgentEntity> list = this.list(wrapper);
+        List<BackupAgentRsp> dtoList = BeanUtil.copyToList(list, BackupAgentRsp.class);
         maskTokens(dtoList);
         ExcelUtils.exportExcelToTarget(response, null, "备份节点表", dtoList, BackupAgentExcel.class);
     }
 
     @Override
-    public void delete(BackupAgentDeleteRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(BackupAgentDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
-        delete(request.getIds());
-    }
-
-    @Override
-    public List<BackupAgentDTO> list(Map<String, Object> params) {
-        List<BackupAgentDTO> list = super.list(params);
-        maskTokens(list);
-        return list;
-    }
-
-    @Override
-    public BackupAgentDTO get(Long id) {
-        BackupAgentDTO dto = super.get(id);
-        maskToken(dto);
-        return dto;
+        Long[] ids = request.getIds();
+        LambdaQueryWrapper<DeviceBackupEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(DeviceBackupEntity::getAgentId, Arrays.asList(ids));
+        int used = Math.toIntExact(deviceBackupMapper.selectCount(wrapper));
+        if (used > 0) {
+            throw new ServiceException("存在绑定的备份设备，无法删除");
+        }
+        this.removeByIds(Arrays.asList(ids));
     }
 
     @Override
@@ -217,10 +274,11 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
         if (excludeId != null) {
             wrapper.ne(BackupAgentEntity::getId, excludeId);
         }
-        return baseDao.selectCount(wrapper) > 0;
+        return this.count(wrapper) > 0;
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long[] ids, Integer status) {
         if (ids == null || ids.length == 0) {
             return;
@@ -231,24 +289,10 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
         entity.setUpdateDate(new Date());
         LambdaUpdateWrapper<BackupAgentEntity> wrapper = new LambdaUpdateWrapper<>();
         wrapper.in(BackupAgentEntity::getId, Arrays.asList(ids));
-        baseDao.update(entity, wrapper);
+        this.update(entity, wrapper);
     }
 
-    @Override
-    public void delete(Long[] ids) {
-        if (ids == null || ids.length == 0) {
-            return;
-        }
-        LambdaQueryWrapper<DeviceBackupEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(DeviceBackupEntity::getAgentId, Arrays.asList(ids));
-        int used = Math.toIntExact(deviceBackupDao.selectCount(wrapper));
-        if (used > 0) {
-            throw new RenException("存在绑定的备份设备，无法删除");
-        }
-        super.delete(ids);
-    }
-
-    private Page<BackupAgentEntity> buildPage(BackupAgentPageRequest request) {
+    private Page<BackupAgentEntity> buildPage(BackupAgentPageReq request) {
         long curPage = 1;
         long limit = 10;
         if (request != null) {
@@ -264,31 +308,45 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
             return page;
         }
         if (StrUtil.isNotBlank(request.getOrderField()) && StrUtil.isNotBlank(request.getOrder())) {
-            if (Constant.ASC.equalsIgnoreCase(request.getOrder())) {
-                page.addOrder(OrderItem.asc(request.getOrderField()));
+            String orderField = request.getOrderField();
+            if (!ALLOWED_ORDER_FIELDS.contains(orderField)) {
+                log.warn("[备份节点] 非法排序字段: {}", orderField);
+            } else if (Constant.ASC.equalsIgnoreCase(request.getOrder())) {
+                page.addOrder(OrderItem.asc(orderField));
             } else {
-                page.addOrder(OrderItem.desc(request.getOrderField()));
+                page.addOrder(OrderItem.desc(orderField));
             }
         }
         return page;
     }
 
-    private void validateUnique(BackupAgentDTO dto) {
-        if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
-            throw new RenException("地址或名称已存在");
+    private void validateUnique(Long id, String instance, String name) {
+        if (existsByInstanceOrName(instance, name, id)) {
+            throw new ServiceException("地址或名称已存在");
         }
     }
 
-    private void maskTokens(List<BackupAgentDTO> list) {
+    private void maskTokens(List<BackupAgentRsp> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
-        for (BackupAgentDTO dto : list) {
+        for (BackupAgentRsp dto : list) {
             maskToken(dto);
         }
     }
 
-    private void maskToken(BackupAgentDTO dto) {
+    private void fillOnlineStatus(List<BackupAgentRsp> list) {
+        if (list == null || list.isEmpty()) {
+            return;
+        }
+        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBackupAgentOnlineKey());
+        for (BackupAgentRsp dto : list) {
+            String instance = dto.getInstance();
+            dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
+        }
+    }
+
+    private void maskToken(BackupAgentRsp dto) {
         if (dto != null) {
             dto.setToken(null);
         }
@@ -304,8 +362,8 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
             URL target = new URL(url);
             connection = (HttpURLConnection) target.openConnection();
             connection.setRequestMethod("GET");
-            connection.setConnectTimeout(2000);
-            connection.setReadTimeout(2000);
+            connection.setConnectTimeout(properties.getHttp().getTimeout().getBackupAgentHealthConnect());
+            connection.setReadTimeout(properties.getHttp().getTimeout().getBackupAgentHealthRead());
             connection.connect();
             int code = connection.getResponseCode();
             if (code != 200) {
@@ -314,9 +372,15 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
             try (InputStream in = connection.getInputStream()) {
                 byte[] bytes = in.readAllBytes();
                 String body = new String(bytes);
-                return body.contains("\"status\":\"ok\"") || body.contains("\"status\" : \"ok\"") || body.contains("\"status\": \"ok\"");
+                for (String pattern : HEALTH_OK_PATTERNS) {
+                    if (body.contains(pattern)) {
+                        return true;
+                    }
+                }
+                return false;
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.debug("[备份节点] 健康检查失败, instance: {}", instance, e);
             return false;
         } finally {
             if (connection != null) {
@@ -346,14 +410,15 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
                 if (parts.length > 1) {
                     try {
                         port = Integer.parseInt(parts[1]);
-                    } catch (Exception ignore) {
+                    } catch (Exception e) {
+                        log.debug("[备份节点] 端口解析失败, value: {}", parts[1], e);
                         port = -1;
                     }
                 }
                 path = slash > -1 ? raw.substring(slash) : "";
             }
             if (port == -1) {
-                port = 8120;
+                port = properties.getBackup().getAgentDefaultPort();
             }
             if (path == null || path.isEmpty() || "/".equals(path)) {
                 path = "/healthz";
@@ -365,11 +430,12 @@ public class BackupAgentServiceImpl extends CrudServiceImpl<BackupAgentDao, Back
                 }
             }
             return new URI(scheme, null, host, port, path, null, null).toString();
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.debug("[备份节点] 健康检查URL构建失败, instance: {}", trimmed, e);
             if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
                 return trimmed.endsWith("/healthz") ? trimmed : trimmed + (trimmed.endsWith("/") ? "healthz" : "/healthz");
             }
-            return "http://" + trimmed + ":8120/healthz";
+            return "http://" + trimmed + ":" + properties.getBackup().getAgentDefaultPort() + "/healthz";
         }
     }
 }

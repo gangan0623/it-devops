@@ -1,58 +1,39 @@
-
-
 package net.leoch.modules.log.service.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import cn.hutool.core.bean.BeanUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import net.leoch.common.constant.Constant;
-import net.leoch.common.page.PageData;
-import net.leoch.common.service.impl.BaseServiceImpl;
-import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.log.dao.SysLogErrorDao;
-import net.leoch.modules.log.dto.SysLogErrorDTO;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.data.page.PageData;
 import net.leoch.modules.log.entity.SysLogErrorEntity;
-import net.leoch.modules.log.service.SysLogErrorService;
+import net.leoch.modules.log.mapper.SysLogErrorMapper;
+import net.leoch.modules.log.service.ISysLogErrorService;
+import net.leoch.modules.log.vo.req.SysLogErrorPageReq;
+import net.leoch.modules.log.vo.rsp.SysLogErrorRsp;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Map;
 
-/**
- * 异常日志
- *
- * @author Taohongqiang
- * @since 1.0.0
- */
+@Slf4j
 @Service
-public class SysLogErrorServiceImpl extends BaseServiceImpl<SysLogErrorDao, SysLogErrorEntity> implements SysLogErrorService {
+public class SysLogErrorServiceImpl extends ServiceImpl<SysLogErrorMapper, SysLogErrorEntity> implements ISysLogErrorService {
 
     @Override
-    public PageData<SysLogErrorDTO> page(Map<String, Object> params) {
-        IPage<SysLogErrorEntity> page = baseDao.selectPage(
-            getPage(params, Constant.CREATE_DATE, false),
-            getWrapper(params)
+    public PageData<SysLogErrorRsp> page(SysLogErrorPageReq request) {
+        IPage<SysLogErrorEntity> page = this.page(request.buildPage(),
+            new LambdaQueryWrapper<SysLogErrorEntity>()
+                .orderByDesc(SysLogErrorEntity::getCreateDate)
         );
-
-        return getPageData(page, SysLogErrorDTO.class);
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), SysLogErrorRsp.class), page.getTotal());
     }
 
     @Override
-    public List<SysLogErrorDTO> list(Map<String, Object> params) {
-        List<SysLogErrorEntity> entityList = baseDao.selectList(getWrapper(params));
-
-        return ConvertUtils.sourceToTarget(entityList, SysLogErrorDTO.class);
+    public List<SysLogErrorRsp> list(SysLogErrorPageReq request) {
+        List<SysLogErrorEntity> entityList = this.list(
+            new LambdaQueryWrapper<SysLogErrorEntity>()
+                .orderByDesc(SysLogErrorEntity::getCreateDate)
+        );
+        return BeanUtil.copyToList(entityList, SysLogErrorRsp.class);
     }
-
-    private QueryWrapper<SysLogErrorEntity> getWrapper(Map<String, Object> params){
-        QueryWrapper<SysLogErrorEntity> wrapper = new QueryWrapper<>();
-        return wrapper;
-    }
-
-    @Override
-    @Transactional(rollbackFor = Exception.class)
-    public void save(SysLogErrorEntity entity) {
-        insert(entity);
-    }
-
 }

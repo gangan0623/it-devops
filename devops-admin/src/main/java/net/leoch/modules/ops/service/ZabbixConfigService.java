@@ -1,9 +1,9 @@
 package net.leoch.modules.ops.service;
 
-import lombok.AllArgsConstructor;
-import net.leoch.common.constant.Constant;
-import net.leoch.modules.ops.config.ZabbixConfig;
-import net.leoch.modules.sys.service.SysParamsService;
+import lombok.RequiredArgsConstructor;
+import net.leoch.common.base.Constant;
+import net.leoch.framework.config.ops.ZabbixConfig;
+import net.leoch.modules.sys.service.ISysParamsService;
 import org.springframework.stereotype.Service;
 
 /**
@@ -12,9 +12,9 @@ import org.springframework.stereotype.Service;
  * @author Taohongqiang
  */
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class ZabbixConfigService {
-    private final SysParamsService sysParamsService;
+    private final ISysParamsService sysParamsService;
 
     public ZabbixConfig getConfig() {
         return sysParamsService.getValueObject(Constant.ZABBIX_CONFIG_KEY, ZabbixConfig.class);

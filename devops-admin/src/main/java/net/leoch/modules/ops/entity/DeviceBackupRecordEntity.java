@@ -15,17 +15,38 @@ import java.util.Date;
 @TableName("tb_device_backup_record")
 public class DeviceBackupRecordEntity {
 
+    /**
+     * 主键ID
+     */
     private Long id;
 
+    /**
+     * 名称
+     */
     private String name;
 
+    /**
+     * IP地址
+     */
     private String ip;
 
+    /**
+     * URL地址
+     */
     private String url;
 
+    /**
+     * lastBackupTime时间
+     */
     private Date lastBackupTime;
 
+    /**
+     * 状态
+     */
     private Integer lastBackupStatus;
 
+    /**
+     * backupNum
+     */
     private Integer backupNum;
 }

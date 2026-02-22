@@ -27,6 +27,8 @@ sa-token:
   is-share: true
   token-style: random-32
   is-log: false
+  is-print: false
+  max-login-count: 5
 
 #mybatis
 mybatis-plus:
@@ -44,4 +46,58 @@ mybatis-plus:
     map-underscore-to-camel-case: true
     cache-enabled: false
     call-setters-on-nulls: true
+
+# 自定义配置：在线状态探测与线程池
+devops:
+  online-status:
+    # 在线状态探测超时配置（单位：毫秒）
+    timeout:
+      metrics: 3000      # Linux/Windows主机指标检查超时
+      ping: 2000         # 业务系统Ping超时
+      agent: 2000        # 备份代理健康检查超时
+      device: 2000       # 设备备份在线检测超时
+      future: 2000       # 异步任务Future等待超时
+    # 线程池配置
+    thread-pool:
+      core-size: 4       # 核心线程数（默认）
+      max-size: 50       # 最大线程数（默认）
+      queue-capacity: 100  # 任务队列容量
+  # HTTP超时配置（单位：毫秒）
+  http:
+    timeout:
+      monitor-health-check-connect: 3000  # 监控组件健康检查连接超时
+      monitor-health-check-read: 3000     # 监控组件健康检查读取超时
+      monitor-version-fetch-connect: 5000 # 监控组件版本获取连接超时
+      monitor-version-fetch-read: 8000    # 监控组件版本获取读取超时
+      backup-agent-health-connect: 2000   # 备份代理健康检查连接超时
+      backup-agent-health-read: 2000      # 备份代理健康检查读取超时
+      backup-trigger-connect: 5000        # 触发备份任务连接超时
+      backup-trigger-read: 10000          # 触发备份任务读取超时
+  # 备份配置
+  backup:
+    agent-default-port: 8120              # 备份代理默认端口
+    download-connect-timeout: 5000        # 备份文件下载连接超时（毫秒）
+    download-read-timeout: 15000          # 备份文件下载读取超时（毫秒）
+  # 缓存配置
+  cache:
+    online-status-ttl: 600                # 在线状态缓存过期时间（秒）
+  # SSE配置
+  sse:
+    emitter-timeout: 0                    # SSE连接超时（0表示无限制，单位：毫秒）
+    batch-size-limit: 50                  # SSE批量推送上限（防止单次推送过多数据）
+
+# Springdoc OpenAPI 3.0 配置 (Apifox 标准规范)
+springdoc:
+  api-docs:
+    enabled: true                         # 启用 API 文档
+    path: /v3/api-docs                    # OpenAPI JSON 路径
+  swagger-ui:
+    enabled: true                         # 启用 Swagger UI
+    path: /swagger-ui.html                # Swagger UI 访问路径
+    tags-sorter: alpha                    # 按字母顺序排序标签
+    operations-sorter: alpha              # 按字母顺序排序操作
+  group-configs:
+    - group: default
+      paths-to-match: /**
+      packages-to-scan: net.leoch.modules
 

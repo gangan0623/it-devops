@@ -1,34 +1,20 @@
-
-
 package net.leoch.modules.oss.controller;
 
 import cn.dev33.satoken.annotation.SaCheckPermission;
-import cn.hutool.core.io.file.FileNameUtil;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
-import net.leoch.common.constant.Constant;
-import net.leoch.common.exception.ErrorCode;
-import net.leoch.common.page.PageData;
-import net.leoch.common.utils.Result;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.AliyunGroup;
-import net.leoch.common.validator.group.MinioGroup;
-import net.leoch.common.validator.group.QcloudGroup;
-import net.leoch.common.validator.group.QiniuGroup;
-import net.leoch.modules.oss.cloud.CloudStorageConfig;
-import net.leoch.modules.oss.cloud.OSSFactory;
-import net.leoch.modules.oss.entity.SysOssEntity;
-import net.leoch.modules.oss.service.SysOssConfigService;
-import net.leoch.modules.oss.service.SysOssService;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.result.Result;
+import net.leoch.common.integration.storage.CloudStorageConfig;
+import net.leoch.modules.oss.service.ISysOssConfigService;
+import net.leoch.modules.oss.service.ISysOssService;
+import net.leoch.modules.oss.vo.rsp.SysOssRsp;
+import net.leoch.modules.sys.vo.req.SysOssPageReq;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
-import java.util.Date;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -39,27 +25,23 @@ import java.util.Map;
 @RestController
 @RequestMapping("sys/oss")
 @Tag(name = "文件上传")
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class SysOssController {
-    private final SysOssService sysOssService;
-    private final SysOssConfigService sysOssConfigService;
+    private final ISysOssService sysOssService;
+    private final ISysOssConfigService sysOssConfigService;
 
     @GetMapping("page")
     @Operation(summary = "分页")
     @SaCheckPermission("sys:oss:all")
-    public Result<PageData<SysOssEntity>> page(@Parameter(hidden = true) @RequestParam Map<String, Object> params) {
-        PageData<SysOssEntity> page = sysOssService.page(params);
-
-        return new Result<PageData<SysOssEntity>>().ok(page);
+    public Result<PageData<SysOssRsp>> page(SysOssPageReq request) {
+        return new Result<PageData<SysOssRsp>>().ok(sysOssService.page(request));
     }
 
     @GetMapping("info")
     @Operation(summary = "云存储配置信息")
     @SaCheckPermission("sys:oss:all")
     public Result<CloudStorageConfig> info() {
-        CloudStorageConfig config = sysOssConfigService.getConfig();
-
-        return new Result<CloudStorageConfig>().ok(config);
+        return new Result<CloudStorageConfig>().ok(sysOssConfigService.getConfig());
     }
 
     @PostMapping
@@ -67,24 +49,7 @@ public class SysOssController {
     @LogOperation("保存云存储配置信息")
     @SaCheckPermission("sys:oss:all")
     public Result<Object> saveConfig(@RequestBody CloudStorageConfig config) {
-        //校验类型
-        ValidatorUtils.validateEntity(config);
-
-        if (config.getType() == Constant.CloudService.QINIU.getValue()) {
-            //校验七牛数据
-            ValidatorUtils.validateEntity(config, QiniuGroup.class);
-        } else if (config.getType() == Constant.CloudService.ALIYUN.getValue()) {
-            //校验阿里云数据
-            ValidatorUtils.validateEntity(config, AliyunGroup.class);
-        } else if (config.getType() == Constant.CloudService.QCLOUD.getValue()) {
-            //校验腾讯云数据
-            ValidatorUtils.validateEntity(config, QcloudGroup.class);
-        } else if (config.getType() == Constant.CloudService.MINIO.getValue()) {
-            ValidatorUtils.validateEntity(config, MinioGroup.class);
-        }
-
         sysOssConfigService.saveConfig(config);
-
         return new Result<>();
     }
 
@@ -92,24 +57,7 @@ public class SysOssController {
     @Operation(summary = "上传文件")
     @SaCheckPermission("sys:oss:all")
     public Result<Map<String, Object>> upload(@RequestParam("file") MultipartFile file) throws Exception {
-        if (file.isEmpty()) {
-            return new Result<Map<String, Object>>().error(ErrorCode.UPLOAD_FILE_EMPTY);
-        }
-
-        //上传文件
-        String suffix = FileNameUtil.getSuffix(file.getOriginalFilename());
-        String url = OSSFactory.build().uploadSuffix(file.getBytes(), suffix);
-
-        //保存文件信息
-        SysOssEntity ossEntity = new SysOssEntity();
-        ossEntity.setUrl(url);
-        ossEntity.setCreateDate(new Date());
-        sysOssService.insert(ossEntity);
-
-        Map<String, Object> data = new HashMap<>(1);
-        data.put("src", url);
-
-        return new Result<Map<String, Object>>().ok(data);
+        return new Result<Map<String, Object>>().ok(sysOssService.upload(file));
     }
 
     @DeleteMapping
@@ -117,8 +65,7 @@ public class SysOssController {
     @LogOperation("删除")
     @SaCheckPermission("sys:oss:all")
     public Result<Object> delete(@RequestBody Long[] ids) {
-        sysOssService.deleteBatchIds(Arrays.asList(ids));
-
+        sysOssService.delete(ids);
         return new Result<>();
     }
 

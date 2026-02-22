@@ -1,61 +1,66 @@
-
-
 package net.leoch.modules.sys.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import lombok.AllArgsConstructor;
-import net.leoch.common.constant.Constant;
-import net.leoch.common.page.PageData;
-import net.leoch.common.service.impl.BaseServiceImpl;
-import net.leoch.common.utils.ConvertUtils;
-import net.leoch.modules.security.user.SecurityUser;
-import net.leoch.modules.security.user.UserDetail;
-import net.leoch.modules.sys.dao.SysRoleDao;
-import net.leoch.modules.sys.dto.SysRoleDTO;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.validator.AssertUtils;
+import net.leoch.common.data.validator.ValidatorUtils;
+import net.leoch.common.data.validator.group.AddGroup;
+import net.leoch.common.data.validator.group.DefaultGroup;
+import net.leoch.common.data.validator.group.UpdateGroup;
+import net.leoch.common.enums.SuperAdminEnum;
+import net.leoch.common.integration.security.SecurityUser;
+import net.leoch.common.integration.security.UserDetail;
 import net.leoch.modules.sys.entity.SysRoleEntity;
-import net.leoch.modules.sys.enums.SuperAdminEnum;
+import net.leoch.modules.sys.mapper.SysRoleMapper;
 import net.leoch.modules.sys.service.*;
+import net.leoch.modules.sys.vo.req.SysRolePageReq;
+import net.leoch.modules.sys.vo.req.SysRoleReq;
+import net.leoch.modules.sys.vo.rsp.SysRoleRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 角色
  *
  * @author Taohongqiang
  */
+@Slf4j
 @Service
-@AllArgsConstructor
-public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleDao, SysRoleEntity> implements SysRoleService {
-    private final SysRoleMenuService sysRoleMenuService;
-    private final SysRoleDataScopeService sysRoleDataScopeService;
-    private final SysRoleUserService sysRoleUserService;
-    private final SysDeptService sysDeptService;
+@RequiredArgsConstructor
+public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity> implements ISysRoleService {
+    private final ISysRoleMenuService sysRoleMenuService;
+    private final ISysRoleDataScopeService sysRoleDataScopeService;
+    private final ISysRoleUserService sysRoleUserService;
+    private final ISysDeptService sysDeptService;
 
     @Override
-    public PageData<SysRoleDTO> page(Map<String, Object> params) {
-        IPage<SysRoleEntity> page = baseDao.selectPage(
-                getPage(params, Constant.CREATE_DATE, false),
-                getWrapper(params)
+    public PageData<SysRoleRsp> page(SysRolePageReq request) {
+        IPage<SysRoleEntity> page = this.page(
+                request.buildPage(),
+                getWrapper(request)
         );
 
-        return getPageData(page, SysRoleDTO.class);
+        return new PageData<>(BeanUtil.copyToList(page.getRecords(), SysRoleRsp.class), page.getTotal());
     }
 
     @Override
-    public List<SysRoleDTO> list(Map<String, Object> params) {
-        List<SysRoleEntity> entityList = baseDao.selectList(getWrapper(params));
+    public List<SysRoleRsp> list(SysRolePageReq request) {
+        List<SysRoleEntity> entityList = this.list(getWrapper(request));
 
-        return ConvertUtils.sourceToTarget(entityList, SysRoleDTO.class);
+        return BeanUtil.copyToList(entityList, SysRoleRsp.class);
     }
 
-    private QueryWrapper<SysRoleEntity> getWrapper(Map<String, Object> params) {
-        String name = (String) params.get("name");
+    private QueryWrapper<SysRoleEntity> getWrapper(SysRolePageReq request) {
+        String name = request.getName();
 
         QueryWrapper<SysRoleEntity> wrapper = new QueryWrapper<>();
         wrapper.like(StrUtil.isNotBlank(name), "name", name);
@@ -71,19 +76,30 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleDao, SysRoleEntit
     }
 
     @Override
-    public SysRoleDTO get(Long id) {
-        SysRoleEntity entity = baseDao.selectById(id);
+    public SysRoleRsp get(Long id) {
+        SysRoleEntity entity = this.getById(id);
 
-        return ConvertUtils.sourceToTarget(entity, SysRoleDTO.class);
+        return BeanUtil.copyProperties(entity, SysRoleRsp.class);
+    }
+
+    @Override
+    public SysRoleRsp getWithMenuAndDataScope(Long id) {
+        SysRoleRsp role = this.get(id);
+        if (role != null) {
+            role.setMenuIdList(sysRoleMenuService.getMenuIdList(id));
+            role.setDeptIdList(sysRoleDataScopeService.getDeptIdList(id));
+        }
+        return role;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void save(SysRoleDTO dto) {
-        SysRoleEntity entity = ConvertUtils.sourceToTarget(dto, SysRoleEntity.class);
+    public void save(SysRoleReq dto) {
+        ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
+        SysRoleEntity entity = BeanUtil.copyProperties(dto, SysRoleEntity.class);
 
         //保存角色
-        insert(entity);
+        this.save(entity);
 
         //保存角色菜单关系
         sysRoleMenuService.saveOrUpdate(entity.getId(), dto.getMenuIdList());
@@ -94,11 +110,12 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleDao, SysRoleEntit
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void update(SysRoleDTO dto) {
-        SysRoleEntity entity = ConvertUtils.sourceToTarget(dto, SysRoleEntity.class);
+    public void update(SysRoleReq dto) {
+        ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
+        SysRoleEntity entity = BeanUtil.copyProperties(dto, SysRoleEntity.class);
 
         //更新角色
-        updateById(entity);
+        this.updateById(entity);
 
         //更新角色菜单关系
         sysRoleMenuService.saveOrUpdate(entity.getId(), dto.getMenuIdList());
@@ -110,8 +127,9 @@ public class SysRoleServiceImpl extends BaseServiceImpl<SysRoleDao, SysRoleEntit
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long[] ids) {
+        AssertUtils.isArrayEmpty(ids, "id");
         //删除角色
-        baseDao.deleteBatchIds(Arrays.asList(ids));
+        this.removeByIds(Arrays.asList(ids));
 
         //删除角色用户关系
         sysRoleUserService.deleteByRoleIds(ids);

@@ -2,141 +2,116 @@ package net.leoch.modules.ops.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import net.leoch.modules.alert.dao.AlertRecordDao;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
-import net.leoch.modules.ops.dao.*;
-import net.leoch.modules.ops.dto.*;
-import net.leoch.modules.ops.entity.BusinessSystemEntity;
-import net.leoch.modules.ops.entity.DeviceBackupEntity;
-import net.leoch.modules.ops.entity.DeviceBackupRecordEntity;
-import net.leoch.modules.ops.entity.LinuxHostEntity;
-import net.leoch.modules.ops.entity.MonitorComponentEntity;
-import net.leoch.modules.ops.entity.WindowHostEntity;
-import net.leoch.modules.ops.service.DashboardService;
+import net.leoch.modules.alert.mapper.AlertRecordMapper;
+import net.leoch.modules.ops.entity.*;
+import net.leoch.modules.ops.mapper.*;
+import net.leoch.modules.ops.service.IDashboardService;
 import net.leoch.modules.ops.service.ZabbixClient;
+import net.leoch.modules.ops.vo.rsp.*;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 工作台统计
  */
+@Slf4j
 @Service
-public class DashboardServiceImpl implements DashboardService {
+@RequiredArgsConstructor
+public class DashboardServiceImpl implements IDashboardService {
 
-    private final WindowHostDao windowHostDao;
-    private final LinuxHostDao linuxHostDao;
-    private final BusinessSystemDao businessSystemDao;
-    private final DeviceBackupDao deviceBackupDao;
-    private final DeviceBackupRecordDao deviceBackupRecordDao;
-    private final MonitorComponentDao monitorComponentDao;
-    private final AlertRecordDao alertRecordDao;
+    private final WindowHostMapper windowHostMapper;
+    private final LinuxHostMapper linuxHostMapper;
+    private final BusinessSystemMapper businessSystemMapper;
+    private final DeviceBackupMapper deviceBackupMapper;
+    private final DeviceBackupRecordMapper deviceBackupRecordMapper;
+    private final MonitorComponentMapper monitorComponentMapper;
+    private final AlertRecordMapper alertRecordMapper;
     private final ZabbixClient zabbixClient;
 
-    public DashboardServiceImpl(WindowHostDao windowHostDao,
-                                LinuxHostDao linuxHostDao,
-                                BusinessSystemDao businessSystemDao,
-                                DeviceBackupDao deviceBackupDao,
-                                DeviceBackupRecordDao deviceBackupRecordDao,
-                                MonitorComponentDao monitorComponentDao,
-                                AlertRecordDao alertRecordDao,
-                                ZabbixClient zabbixClient) {
-        this.windowHostDao = windowHostDao;
-        this.linuxHostDao = linuxHostDao;
-        this.businessSystemDao = businessSystemDao;
-        this.deviceBackupDao = deviceBackupDao;
-        this.deviceBackupRecordDao = deviceBackupRecordDao;
-        this.monitorComponentDao = monitorComponentDao;
-        this.alertRecordDao = alertRecordDao;
-        this.zabbixClient = zabbixClient;
+    @Override
+    public DashboardSummaryRsp summary() {
+        DashboardSummaryRsp data = new DashboardSummaryRsp();
+        data.setHostCounts(buildHostCounts());
+        data.setBackupStats(buildBackupStats());
+        data.setDeviceDiff(buildDeviceDiff());
+        data.setRecentAlerts(buildRecentAlerts());
+        data.setMonitorComponents(buildMonitorComponents());
+        return data;
     }
 
-    @Override
-    public DashboardSummaryResponse summary() {
-        DashboardSummaryResponse data = new DashboardSummaryResponse();
+    private DashboardHostCountsRsp buildHostCounts() {
+        DashboardHostCountsRsp hostCounts = new DashboardHostCountsRsp();
+        hostCounts.setWindows(windowHostMapper.selectCount(new LambdaQueryWrapper<>()));
+        hostCounts.setLinux(linuxHostMapper.selectCount(new LambdaQueryWrapper<>()));
+        hostCounts.setBusiness(businessSystemMapper.selectCount(new LambdaQueryWrapper<>()));
+        return hostCounts;
+    }
 
-        DashboardHostCounts hostCounts = new DashboardHostCounts();
-        hostCounts.setWindows(windowHostDao.selectCount(new LambdaQueryWrapper<>()));
-        hostCounts.setLinux(linuxHostDao.selectCount(new LambdaQueryWrapper<>()));
-        hostCounts.setBusiness(businessSystemDao.selectCount(new LambdaQueryWrapper<>()));
-        data.setHostCounts(hostCounts);
+    private DashboardBackupStatsRsp buildBackupStats() {
+        // 使用聚合查询一次性获取所有统计信息，替代5次独立查询
+        DashboardBackupStatsRsp backupStats = deviceBackupRecordMapper.getBackupStats();
+        log.debug("[看板] 备份统计, total={}, success={}, fail={}, round={}",
+                backupStats.getTotal(), backupStats.getSuccess(), backupStats.getFail(), backupStats.getRound());
+        return backupStats;
+    }
 
-        DashboardBackupStats backupStats = new DashboardBackupStats();
-        long total = deviceBackupRecordDao.selectCount(new LambdaQueryWrapper<>());
-        long success = deviceBackupRecordDao.selectCount(
-                new LambdaQueryWrapper<DeviceBackupRecordEntity>().eq(DeviceBackupRecordEntity::getLastBackupStatus, 1)
-        );
-        long fail = deviceBackupRecordDao.selectCount(
-                new LambdaQueryWrapper<DeviceBackupRecordEntity>().eq(DeviceBackupRecordEntity::getLastBackupStatus, 0)
-        );
-        DeviceBackupRecordEntity maxBackup = deviceBackupRecordDao.selectOne(
-                new LambdaQueryWrapper<DeviceBackupRecordEntity>()
-                        .select(DeviceBackupRecordEntity::getBackupNum)
-                        .orderByDesc(DeviceBackupRecordEntity::getBackupNum)
-                        .last("limit 1")
-        );
-        Integer round = maxBackup == null ? 0 : maxBackup.getBackupNum();
-        DeviceBackupRecordEntity lastBackup = deviceBackupRecordDao.selectOne(
-                new LambdaQueryWrapper<DeviceBackupRecordEntity>()
-                        .select(DeviceBackupRecordEntity::getLastBackupTime)
-                        .orderByDesc(DeviceBackupRecordEntity::getLastBackupTime)
-                        .last("limit 1")
-        );
-        backupStats.setRound(round == null ? 0 : round);
-        backupStats.setTotal(total);
-        backupStats.setSuccess(success);
-        backupStats.setFail(fail);
-        backupStats.setLastTime(lastBackup == null ? null : lastBackup.getLastBackupTime());
-        data.setBackupStats(backupStats);
-
+    private DashboardDeviceDiffRsp buildDeviceDiff() {
         List<Map<String, String>> zabbixHosts = zabbixClient.getHostsByTemplates();
-        List<DeviceBackupEntity> backupDevices = deviceBackupDao.selectList(
+        List<DeviceBackupEntity> backupDevices = deviceBackupMapper.selectList(
                 new LambdaQueryWrapper<DeviceBackupEntity>()
                         .select(DeviceBackupEntity::getInstance, DeviceBackupEntity::getName)
         );
-        Set<String> zabbixIps = new HashSet<>();
-        for (Map<String, String> host : zabbixHosts) {
-            String ip = host.get("ip");
-            if (StrUtil.isNotBlank(ip)) {
-                zabbixIps.add(ip);
-            }
-        }
-        Set<String> backupIps = new HashSet<>();
-        for (DeviceBackupEntity device : backupDevices) {
-            if (device != null && StrUtil.isNotBlank(device.getInstance())) {
-                backupIps.add(device.getInstance());
-            }
-        }
-        List<DashboardDeviceDiffItem> zabbixOnly = new ArrayList<>();
-        for (Map<String, String> host : zabbixHosts) {
-            String ip = host.get("ip");
-            if (StrUtil.isBlank(ip) || backupIps.contains(ip)) {
-                continue;
-            }
-            DashboardDeviceDiffItem item = new DashboardDeviceDiffItem();
-            item.setIp(ip);
-            item.setName(host.get("name"));
-            zabbixOnly.add(item);
-        }
-        List<DashboardDeviceDiffItem> backupOnly = new ArrayList<>();
-        for (DeviceBackupEntity device : backupDevices) {
-            if (device == null || StrUtil.isBlank(device.getInstance())) {
-                continue;
-            }
-            if (zabbixIps.contains(device.getInstance())) {
-                continue;
-            }
-            DashboardDeviceDiffItem item = new DashboardDeviceDiffItem();
-            item.setIp(device.getInstance());
-            item.setName(device.getName());
-            backupOnly.add(item);
-        }
-        DashboardDeviceDiff diff = new DashboardDeviceDiff();
+
+        // 使用 Stream API 构建 IP 集合，提升代码可读性
+        Set<String> zabbixIps = zabbixHosts.stream()
+                .map(host -> host.get("ip"))
+                .filter(StrUtil::isNotBlank)
+                .collect(Collectors.toSet());
+
+        Set<String> backupIps = backupDevices.stream()
+                .filter(device -> device != null && StrUtil.isNotBlank(device.getInstance()))
+                .map(DeviceBackupEntity::getInstance)
+                .collect(Collectors.toSet());
+
+        // 找出只在 Zabbix 中的设备（差集运算 O(n)）
+        List<DashboardDeviceDiffItemRsp> zabbixOnly = zabbixHosts.stream()
+                .filter(host -> StrUtil.isNotBlank(host.get("ip")) && !backupIps.contains(host.get("ip")))
+                .map(host -> {
+                    DashboardDeviceDiffItemRsp item = new DashboardDeviceDiffItemRsp();
+                    item.setIp(host.get("ip"));
+                    item.setName(host.get("name"));
+                    return item;
+                })
+                .collect(Collectors.toList());
+
+        // 找出只在备份中的设备（差集运算 O(n)）
+        List<DashboardDeviceDiffItemRsp> backupOnly = backupDevices.stream()
+                .filter(device -> device != null && StrUtil.isNotBlank(device.getInstance()))
+                .filter(device -> !zabbixIps.contains(device.getInstance()))
+                .map(device -> {
+                    DashboardDeviceDiffItemRsp item = new DashboardDeviceDiffItemRsp();
+                    item.setIp(device.getInstance());
+                    item.setName(device.getName());
+                    return item;
+                })
+                .collect(Collectors.toList());
+
+        log.debug("[看板] 设备差异分析, zabbix={}, backup={}, zabbixOnly={}, backupOnly={}",
+                zabbixHosts.size(), backupDevices.size(), zabbixOnly.size(), backupOnly.size());
+
+        DashboardDeviceDiffRsp diff = new DashboardDeviceDiffRsp();
         diff.setZabbixOnly(zabbixOnly);
         diff.setBackupOnly(backupOnly);
-        data.setDeviceDiff(diff);
+        return diff;
+    }
 
-        List<AlertRecordEntity> alerts = alertRecordDao.selectList(
+    private List<DashboardAlertSummaryRsp> buildRecentAlerts() {
+        List<AlertRecordEntity> alerts = alertRecordMapper.selectList(
                 new LambdaQueryWrapper<AlertRecordEntity>()
                         .select(AlertRecordEntity::getAlertName, AlertRecordEntity::getInstance, AlertRecordEntity::getStartsAt,
                                 AlertRecordEntity::getSeverity, AlertRecordEntity::getStatus)
@@ -144,9 +119,9 @@ public class DashboardServiceImpl implements DashboardService {
                         .last("limit 10")
         );
         Map<String, String> hostMap = loadHostMap();
-        List<DashboardAlertSummary> recentAlerts = new ArrayList<>();
+        List<DashboardAlertSummaryRsp> recentAlerts = new ArrayList<>();
         for (AlertRecordEntity alert : alerts) {
-            DashboardAlertSummary item = new DashboardAlertSummary();
+            DashboardAlertSummaryRsp item = new DashboardAlertSummaryRsp();
             item.setAlertName(alert.getAlertName());
             item.setInstance(alert.getInstance());
             item.setHostName(hostMap.get(normalizeInstance(alert.getInstance())));
@@ -155,37 +130,37 @@ public class DashboardServiceImpl implements DashboardService {
             item.setStatus(alert.getStatus());
             recentAlerts.add(item);
         }
-        data.setRecentAlerts(recentAlerts);
+        return recentAlerts;
+    }
 
-        List<MonitorComponentEntity> components = monitorComponentDao.selectList(
+    private List<DashboardMonitorComponentItemRsp> buildMonitorComponents() {
+        List<MonitorComponentEntity> components = monitorComponentMapper.selectList(
                 new LambdaQueryWrapper<MonitorComponentEntity>()
                         .select(MonitorComponentEntity::getName, MonitorComponentEntity::getOnlineStatus, MonitorComponentEntity::getUpdateAvailable)
                         .orderByDesc(MonitorComponentEntity::getUpdateDate)
         );
-        List<DashboardMonitorComponentItem> monitorItems = new ArrayList<>();
+        List<DashboardMonitorComponentItemRsp> monitorItems = new ArrayList<>();
         for (MonitorComponentEntity component : components) {
-            DashboardMonitorComponentItem item = new DashboardMonitorComponentItem();
+            DashboardMonitorComponentItemRsp item = new DashboardMonitorComponentItemRsp();
             item.setName(component.getName());
             item.setOnlineStatus(component.getOnlineStatus());
             item.setUpdateAvailable(component.getUpdateAvailable());
             monitorItems.add(item);
         }
-        data.setMonitorComponents(monitorItems);
-
-        return data;
+        return monitorItems;
     }
 
     private Map<String, String> loadHostMap() {
         Map<String, String> map = new HashMap<>();
-        List<LinuxHostEntity> linuxList = linuxHostDao.selectList(new LambdaQueryWrapper<LinuxHostEntity>().select(LinuxHostEntity::getInstance, LinuxHostEntity::getName));
+        List<LinuxHostEntity> linuxList = linuxHostMapper.selectList(new LambdaQueryWrapper<LinuxHostEntity>().select(LinuxHostEntity::getInstance, LinuxHostEntity::getName));
         for (LinuxHostEntity item : linuxList) {
             putHost(map, item.getInstance(), item.getName());
         }
-        List<WindowHostEntity> winList = windowHostDao.selectList(new LambdaQueryWrapper<WindowHostEntity>().select(WindowHostEntity::getInstance, WindowHostEntity::getName));
+        List<WindowHostEntity> winList = windowHostMapper.selectList(new LambdaQueryWrapper<WindowHostEntity>().select(WindowHostEntity::getInstance, WindowHostEntity::getName));
         for (WindowHostEntity item : winList) {
             putHost(map, item.getInstance(), item.getName());
         }
-        List<BusinessSystemEntity> businessList = businessSystemDao.selectList(new LambdaQueryWrapper<BusinessSystemEntity>().select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName));
+        List<BusinessSystemEntity> businessList = businessSystemMapper.selectList(new LambdaQueryWrapper<BusinessSystemEntity>().select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName));
         for (BusinessSystemEntity item : businessList) {
             putHost(map, item.getInstance(), item.getName());
         }

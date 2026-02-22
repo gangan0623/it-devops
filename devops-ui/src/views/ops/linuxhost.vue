@@ -3,12 +3,18 @@
     <div class="ops-toolbar">
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
-          <el-input v-model="state.dataForm.instance" placeholder="地址(模糊)" clearable @keyup.enter="state.getDataList()"></el-input>
-          <el-input v-model="state.dataForm.name" placeholder="名称(模糊)" clearable @keyup.enter="state.getDataList()"></el-input>
-          <el-button @click="state.getDataList()">查询</el-button>
+          <el-input v-model="state.dataForm.instance" class="query-input" placeholder="地址(模糊)" clearable @keyup.enter="queryList()"></el-input>
+          <el-button class="query-btn" :loading="state.dataListLoading" @click="queryList()">查询</el-button>
+          <el-button class="query-btn" @click="handleToolbarReset">重置</el-button>
           <el-button :icon="Filter" @click="filterDrawer = true">筛选<span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span></el-button>
         </div>
         <div class="ops-toolbar__group ops-actions">
+          <div class="host-stats">
+            <span class="host-stats__item host-stats__item--on">启用 {{ enabledCount }}</span>
+            <span class="host-stats__item host-stats__item--off">禁用 {{ disabledCount }}</span>
+            <span class="host-stats__item host-stats__item--online">在线 {{ onlineCount }}</span>
+            <span class="host-stats__item host-stats__item--filter">离线 {{ offlineCount }}</span>
+          </div>
           <el-button v-if="state.hasPermission('ops:linuxhost:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
           <el-button v-if="state.hasPermission('ops:linuxhost:update')" type="success" @click="handleBatchToggle">启用/禁用</el-button>
           <el-button v-if="state.hasPermission('ops:linuxhost:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
@@ -24,6 +30,9 @@
         </el-form-item>
         <el-form-item label="区域名称">
           <ren-select v-model="state.dataForm.areaName" dict-type="area_name_type" label-field="dictValue" value-field="dictLabel" placeholder="全部"></ren-select>
+        </el-form-item>
+        <el-form-item label="名称(模糊)">
+          <el-input v-model="state.dataForm.name" placeholder="名称(模糊)" clearable></el-input>
         </el-form-item>
         <el-form-item label="状态">
           <el-select v-model="state.dataForm.status" placeholder="全部" clearable>
@@ -91,7 +100,7 @@
       </div>
     </el-dialog>
     <!-- 弹窗, 新增 / 修改 -->
-    <add-or-update ref="addOrUpdateRef" @refreshDataList="state.getDataList">确定</add-or-update>
+    <add-or-update ref="addOrUpdateRef" @refreshDataList="queryList">确定</add-or-update>
   </div>
 </template>
 
@@ -103,7 +112,7 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {computed, reactive, ref, toRefs} from "vue";
+import {computed, onMounted, reactive, ref, toRefs} from "vue";
 import AddOrUpdate from "./linuxhost-add-or-update.vue";
 import baseService from "@/service/baseService";
 import {ElMessage, ElMessageBox} from "element-plus";
@@ -130,6 +139,16 @@ const view = reactive({
 });
 
 const state = reactive({ ...useView(view), ...toRefs(view) });
+const statusSummary = ref({
+  enabledCount: 0,
+  disabledCount: 0,
+  onlineCount: 0,
+  offlineCount: 0
+});
+const enabledCount = computed(() => statusSummary.value.enabledCount);
+const disabledCount = computed(() => statusSummary.value.disabledCount);
+const onlineCount = computed(() => statusSummary.value.onlineCount);
+const offlineCount = computed(() => statusSummary.value.offlineCount);
 
 const filterDrawer = ref(false);
 
@@ -137,6 +156,7 @@ const activeFilterCount = computed(() => {
   let count = 0;
   if (state.dataForm.siteLocation) count++;
   if (state.dataForm.areaName) count++;
+  if (state.dataForm.name) count++;
   if (state.dataForm.status !== "" && state.dataForm.status !== null && state.dataForm.status !== undefined) count++;
   if (state.dataForm.menuName) count++;
   if (state.dataForm.type) count++;
@@ -145,7 +165,7 @@ const activeFilterCount = computed(() => {
 
 const handleFilterConfirm = () => {
   filterDrawer.value = false;
-  state.getDataList();
+  queryList();
 };
 
 const handleFilterReset = () => {
@@ -154,6 +174,12 @@ const handleFilterReset = () => {
   state.dataForm.status = "";
   state.dataForm.menuName = "";
   state.dataForm.type = "";
+};
+
+const handleToolbarReset = () => {
+  state.dataForm.instance = "";
+  handleFilterReset();
+  queryList();
 };
 
 const addOrUpdateRef = ref();
@@ -186,9 +212,9 @@ const handleImportSuccess = (res: IObject) => {
   }
   ElMessage.success({
     message: "成功",
-    duration: 500,
-    onClose: () => {
-      state.getDataList();
+      duration: 500,
+      onClose: () => {
+      queryList();
     }
   });
 };
@@ -196,6 +222,36 @@ const handleImportSuccess = (res: IObject) => {
 const handleTemplateDownload = () => {
   window.location.href = templateUrl;
 };
+
+const loadStatusSummary = () => {
+  baseService
+    .get("/ops/linuxhost/summary")
+    .then((res) => {
+      statusSummary.value = {
+        enabledCount: Number(res.data?.enabledCount || 0),
+        disabledCount: Number(res.data?.disabledCount || 0),
+        onlineCount: Number(res.data?.onlineCount || 0),
+        offlineCount: Number(res.data?.offlineCount || 0)
+      };
+    })
+    .catch(() => {
+      statusSummary.value = {
+        enabledCount: 0,
+        disabledCount: 0,
+        onlineCount: 0,
+        offlineCount: 0
+      };
+    });
+};
+
+const queryList = () => {
+  state.getDataList();
+  loadStatusSummary();
+};
+
+onMounted(() => {
+  loadStatusSummary();
+});
 
 const handleBatchToggle = () => {
   if (!state.dataListSelections || state.dataListSelections.length === 0) {
@@ -238,7 +294,7 @@ const updateStatusHandle = (status: number) => {
         message: "成功",
         duration: 500,
         onClose: () => {
-          state.getDataList();
+          queryList();
         }
       });
     });
@@ -247,52 +303,18 @@ const updateStatusHandle = (status: number) => {
 </script>
 
 <style scoped>
-.ops-toolbar {
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-}
-.ops-toolbar__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-.ops-toolbar__group {
+/* 统计标签容器 */
+.host-stats {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
 }
-.filter-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 16px;
-  height: 16px;
-  margin-left: 4px;
-  padding: 0 4px;
-  font-size: 11px;
-  line-height: 1;
-  color: #fff;
-  background: #409eff;
-  border-radius: 8px;
-}
-.filter-form .el-select,
-.filter-form .ren-select {
-  width: 100%;
-}
-.filter-form .el-form-item {
-  margin-bottom: 18px;
-}
-.import-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
+
+/* 统计标签基础样式 */
+.host-stats__item {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
 }
 </style>

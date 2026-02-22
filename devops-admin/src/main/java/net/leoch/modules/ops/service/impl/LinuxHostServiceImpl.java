@@ -1,35 +1,37 @@
 package net.leoch.modules.ops.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.excel.EasyExcel;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import jakarta.annotation.Resource;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import jakarta.servlet.http.HttpServletResponse;
-import net.leoch.common.exception.RenException;
-import net.leoch.common.page.PageData;
-import net.leoch.common.redis.RedisKeys;
-import net.leoch.common.redis.RedisUtils;
-import net.leoch.common.service.impl.CrudServiceImpl;
-import net.leoch.common.utils.ConvertUtils;
-import net.leoch.common.utils.ExcelUtils;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.AddGroup;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.ops.dao.LinuxHostDao;
-import net.leoch.modules.ops.dto.*;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import net.leoch.common.data.page.PageData;
+import net.leoch.common.data.validator.ValidatorUtils;
+import net.leoch.common.data.validator.group.AddGroup;
+import net.leoch.common.data.validator.group.DefaultGroup;
+import net.leoch.common.data.validator.group.UpdateGroup;
+import net.leoch.common.exception.ServiceException;
+import net.leoch.common.integration.excel.LinuxHostExcel;
+import net.leoch.common.integration.excel.template.LinuxHostImportExcel;
+import net.leoch.common.integration.security.SecurityUser;
+import net.leoch.common.utils.excel.ExcelUtils;
+import net.leoch.common.utils.ops.MetricsUtils;
+import net.leoch.common.utils.ops.OpsQueryUtils;
+import net.leoch.common.utils.redis.RedisKeys;
+import net.leoch.common.utils.redis.RedisUtils;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
-import net.leoch.modules.ops.excel.LinuxHostExcel;
-import net.leoch.modules.ops.excel.template.LinuxHostImportExcel;
-import net.leoch.modules.ops.service.LinuxHostService;
-import net.leoch.modules.ops.util.MetricsUtils;
-import net.leoch.modules.ops.util.OpsQueryUtils;
-import net.leoch.modules.security.user.SecurityUser;
+import net.leoch.modules.ops.mapper.LinuxHostMapper;
+import net.leoch.modules.ops.service.ILinuxHostService;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.LinuxHostRsp;
+import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -41,62 +43,38 @@ import java.util.*;
  * @author Taohongqiang
  * @since 1.0.0 2026-01-28
  */
+@Slf4j
 @Service
-public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHostEntity, LinuxHostDTO> implements LinuxHostService {
+@RequiredArgsConstructor
+public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHostEntity> implements ILinuxHostService {
 
-    @Resource
-    private RedisUtils redisUtils;
-
-    @Override
-    public QueryWrapper<LinuxHostEntity> getWrapper(Map<String, Object> params){
-        QueryWrapper<LinuxHostEntity> wrapper = new QueryWrapper<>();
-        LambdaQueryWrapper<LinuxHostEntity> lambda = wrapper.lambda();
-        String id = (String)params.get("id");
-        String instance = (String)params.get("instance");
-        String name = (String)params.get("name");
-        String areaName = (String) params.get("areaName");
-        String siteLocation = (String) params.get("siteLocation");
-        String menuName = (String) params.get("menuName");
-        String type = (String) params.get("type");
-        String status = (String) params.get("status");
-        lambda.eq(StrUtil.isNotBlank(id), LinuxHostEntity::getId, id);
-        LinuxHostPageRequest req = new LinuxHostPageRequest();
-        req.setInstance(instance);
-        req.setName(name);
-        req.setAreaName(areaName);
-        req.setSiteLocation(siteLocation);
-        req.setMenuName(menuName);
-        req.setType(type);
-        req.setStatus(status);
-        applyCommonFilters(lambda, req);
-        return wrapper;
-    }
+    private final RedisUtils redisUtils;
 
     @Override
-    public PageData<LinuxHostDTO> page(LinuxHostPageRequest request) {
+    public PageData<LinuxHostRsp> page(LinuxHostPageReq request) {
         LambdaQueryWrapper<LinuxHostEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
         if ("online_status".equalsIgnoreCase(request.getOrderField())) {
-            List<LinuxHostEntity> list = baseDao.selectList(wrapper);
-            List<LinuxHostDTO> dtoList = ConvertUtils.sourceToTarget(list, LinuxHostDTO.class);
+            List<LinuxHostEntity> list = this.list(wrapper);
+            List<LinuxHostRsp> dtoList = BeanUtil.copyToList(list, LinuxHostRsp.class);
             fillOnlineStatus(dtoList);
-            OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), LinuxHostDTO::getOnlineStatus);
+            OnlineStatusSupport.sortByOnlineStatus(dtoList, request.getOrder(), LinuxHostRsp::getOnlineStatus);
             return OnlineStatusSupport.buildPageData(dtoList, request.getPage(), request.getLimit());
         }
-        Page<LinuxHostEntity> page = buildPage(request);
-        IPage<LinuxHostEntity> result = baseDao.selectPage(page, wrapper);
-        List<LinuxHostDTO> dtoList = ConvertUtils.sourceToTarget(result.getRecords(), LinuxHostDTO.class);
+        Page<LinuxHostEntity> page = request.buildPage();
+        IPage<LinuxHostEntity> result = this.page(page, wrapper);
+        List<LinuxHostRsp> dtoList = BeanUtil.copyToList(result.getRecords(), LinuxHostRsp.class);
         fillOnlineStatus(dtoList);
         return new PageData<>(dtoList, result.getTotal());
     }
 
     @Override
-    public LinuxHostDTO get(LinuxHostIdRequest request) {
+    public LinuxHostRsp get(LinuxHostIdReq request) {
         if (request == null || request.getId() == null) {
             return null;
         }
-        LinuxHostEntity entity = baseDao.selectById(request.getId());
-        LinuxHostDTO dto = ConvertUtils.sourceToTarget(entity, LinuxHostDTO.class);
+        LinuxHostEntity entity = this.getById(request.getId());
+        LinuxHostRsp dto = BeanUtil.copyProperties(entity, LinuxHostRsp.class);
         if (dto != null) {
             fillOnlineStatus(Collections.singletonList(dto));
         }
@@ -104,21 +82,29 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
     }
 
     @Override
-    public void save(LinuxHostDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    public void save(LinuxHostSaveReq dto) {
+        log.info("[LinuxHost] 开始保存, instance={}", dto != null ? dto.getInstance() : null);
         ValidatorUtils.validateEntity(dto, AddGroup.class, DefaultGroup.class);
-        validateUnique(dto);
-        super.save(dto);
+        validateUnique(dto.getInstance(), dto.getName(), dto.getId());
+        LinuxHostEntity entity = BeanUtil.copyProperties(dto, LinuxHostEntity.class);
+        this.save(entity);
+        BeanUtil.copyProperties(entity, dto);
     }
 
     @Override
-    public void update(LinuxHostDTO dto) {
+    @Transactional(rollbackFor = Exception.class)
+    public void update(LinuxHostUpdateReq dto) {
+        log.info("[LinuxHost] 开始更新, id={}", dto != null ? dto.getId() : null);
         ValidatorUtils.validateEntity(dto, UpdateGroup.class, DefaultGroup.class);
-        validateUnique(dto);
-        super.update(dto);
+        validateUnique(dto.getInstance(), dto.getName(), dto.getId());
+        LinuxHostEntity entity = BeanUtil.copyProperties(dto, LinuxHostEntity.class);
+        this.updateById(entity);
     }
 
     @Override
-    public void updateStatus(LinuxHostStatusUpdateRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public void updateStatus(LinuxHostStatusUpdateReq request) {
         if (request == null) {
             return;
         }
@@ -126,7 +112,7 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
     }
 
     @Override
-    public boolean online(LinuxHostOnlineRequest request) {
+    public boolean online(LinuxHostOnlineReq request) {
         if (request == null || StrUtil.isBlank(request.getInstance())) {
             return false;
         }
@@ -134,7 +120,37 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
     }
 
     @Override
-    public boolean check(LinuxHostCheckRequest request) {
+    public OpsHostStatusSummaryRsp summary(LinuxHostPageReq request) {
+        LambdaQueryWrapper<LinuxHostEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(LinuxHostEntity::getInstance, LinuxHostEntity::getStatus);
+        List<LinuxHostEntity> list = this.list(wrapper);
+        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getLinuxHostOnlineKey());
+        OpsHostStatusSummaryRsp summary = new OpsHostStatusSummaryRsp();
+        summary.setTotalCount((long) list.size());
+        for (LinuxHostEntity item : list) {
+            if (item == null) {
+                continue;
+            }
+            Integer status = item.getStatus();
+            if (Integer.valueOf(1).equals(status)) {
+                summary.setEnabledCount(summary.getEnabledCount() + 1);
+            } else if (Integer.valueOf(0).equals(status)) {
+                summary.setDisabledCount(summary.getDisabledCount() + 1);
+            }
+            Boolean onlineStatus = OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(item.getInstance()));
+            if (Boolean.TRUE.equals(onlineStatus)) {
+                summary.setOnlineCount(summary.getOnlineCount() + 1);
+            } else if (Boolean.FALSE.equals(onlineStatus)) {
+                summary.setOfflineCount(summary.getOfflineCount() + 1);
+            } else {
+                summary.setUnknownCount(summary.getUnknownCount() + 1);
+            }
+        }
+        return summary;
+    }
+
+    @Override
+    public boolean check(LinuxHostCheckReq request) {
         if (request == null) {
             return false;
         }
@@ -142,35 +158,48 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
     }
 
     @Override
-    @Transactional
-    public void importExcel(LinuxHostImportRequest request) throws Exception {
+    @Transactional(rollbackFor = Exception.class)
+    public void importExcel(LinuxHostImportReq request) throws Exception {
         if (request == null || request.getFile() == null || request.getFile().isEmpty()) {
-            throw new RenException("上传文件不能为空");
+            throw new ServiceException("上传文件不能为空");
         }
         List<LinuxHostImportExcel> dataList = EasyExcel.read(request.getFile().getInputStream()).head(LinuxHostImportExcel.class).sheet().doReadSync();
         if (CollUtil.isEmpty(dataList)) {
-            throw new RenException("导入数据不能为空");
+            throw new ServiceException("导入数据不能为空");
         }
         List<LinuxHostEntity> entityList = new ArrayList<>(dataList.size());
         for (LinuxHostImportExcel item : dataList) {
             entityList.add(toEntity(item));
         }
-        insertBatch(entityList);
+
+        // 分批处理，避免大批量数据导致 SQL 超时或 OOM
+        final int BATCH_SIZE = 1000;
+        if (entityList.size() > BATCH_SIZE) {
+            log.info("[Linux 主机] Excel 导入分批处理, 总数={}, 批次大小={}", entityList.size(), BATCH_SIZE);
+            List<List<LinuxHostEntity>> batches = CollUtil.split(entityList, BATCH_SIZE);
+            for (int i = 0; i < batches.size(); i++) {
+                log.debug("[Linux 主机] 处理第 {}/{} 批, 数量={}", i + 1, batches.size(), batches.get(i).size());
+                this.saveBatch(batches.get(i));
+            }
+        } else {
+            this.saveBatch(entityList);
+        }
+        log.info("[Linux 主机] Excel 导入完成, 总数={}", entityList.size());
     }
 
 
-    private void fillOnlineStatus(List<LinuxHostDTO> list) {
+    private void fillOnlineStatus(List<LinuxHostRsp> list) {
         if (list == null || list.isEmpty()) {
             return;
         }
         Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getLinuxHostOnlineKey());
-        for (LinuxHostDTO dto : list) {
+        for (LinuxHostRsp dto : list) {
             String instance = dto.getInstance();
             dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
         }
     }
 
-    private void applyCommonFilters(LambdaQueryWrapper<LinuxHostEntity> wrapper, LinuxHostPageRequest request) {
+    private void applyCommonFilters(LambdaQueryWrapper<LinuxHostEntity> wrapper, LinuxHostPageReq request) {
         wrapper.like(StrUtil.isNotBlank(request.getInstance()), LinuxHostEntity::getInstance, request.getInstance());
         wrapper.like(StrUtil.isNotBlank(request.getName()), LinuxHostEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getSiteLocation()), LinuxHostEntity::getSiteLocation, request.getSiteLocation());
@@ -199,26 +228,27 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
     }
 
     @Override
-    public void export(LinuxHostPageRequest request, HttpServletResponse response) throws Exception {
+    public void export(LinuxHostPageReq request, HttpServletResponse response) throws Exception {
         LambdaQueryWrapper<LinuxHostEntity> wrapper = new LambdaQueryWrapper<>();
         applyCommonFilters(wrapper, request);
-        List<LinuxHostEntity> list = baseDao.selectList(wrapper);
-        List<LinuxHostDTO> dtoList = ConvertUtils.sourceToTarget(list, LinuxHostDTO.class);
+        List<LinuxHostEntity> list = this.list(wrapper);
+        List<LinuxHostRsp> dtoList = BeanUtil.copyToList(list, LinuxHostRsp.class);
         ExcelUtils.exportExcelToTarget(response, null, "Linux主机表", dtoList, LinuxHostExcel.class);
     }
 
     @Override
-    public void delete(LinuxHostDeleteRequest request) {
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(LinuxHostDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
-        super.delete(request.getIds());
+        this.removeByIds(Arrays.asList(request.getIds()));
     }
 
     @Override
     public boolean existsByInstanceOrName(String instance, String name, Long excludeId) {
         return OpsQueryUtils.existsByInstanceOrName(
-                baseDao,
+                this.getBaseMapper(),
                 LinuxHostEntity::getId,
                 LinuxHostEntity::getInstance,
                 LinuxHostEntity::getName,
@@ -229,6 +259,7 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateStatus(Long[] ids, Integer status) {
         if (ids == null || ids.length == 0) {
             return;
@@ -239,24 +270,12 @@ public class LinuxHostServiceImpl extends CrudServiceImpl<LinuxHostDao, LinuxHos
         entity.setUpdateDate(new Date());
         LambdaUpdateWrapper<LinuxHostEntity> wrapper = new LambdaUpdateWrapper<>();
         wrapper.in(LinuxHostEntity::getId, Arrays.asList(ids));
-        baseDao.update(entity, wrapper);
+        this.update(entity, wrapper);
     }
 
-    private Page<LinuxHostEntity> buildPage(LinuxHostPageRequest request) {
-        if (request == null) {
-            return new Page<>(1, 10);
-        }
-        return OpsQueryUtils.buildPage(
-                request.getPage(),
-                request.getLimit(),
-                request.getOrderField(),
-                request.getOrder()
-        );
-    }
-
-    private void validateUnique(LinuxHostDTO dto) {
-        if (dto != null && existsByInstanceOrName(dto.getInstance(), dto.getName(), dto.getId())) {
-            throw new RenException("地址或名称已存在");
+    private void validateUnique(String instance, String name, Long excludeId) {
+        if (existsByInstanceOrName(instance, name, excludeId)) {
+            throw new ServiceException("地址或名称已存在");
         }
     }
 }

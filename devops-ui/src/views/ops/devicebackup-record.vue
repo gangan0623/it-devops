@@ -1,13 +1,13 @@
 <template>
   <div class="mod-ops__devicebackup-record">
-    <el-form :inline="true" :model="state.dataForm" @keyup.enter="state.getDataList()" class="ops-toolbar">
+    <el-form :inline="true" :model="state.dataForm" @keyup.enter="queryList()" class="ops-toolbar">
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
           <el-form-item>
-            <el-input v-model="state.dataForm.name" placeholder="主机名" clearable></el-input>
+            <el-input v-model="state.dataForm.name" class="query-input" placeholder="主机名" clearable></el-input>
           </el-form-item>
           <el-form-item>
-            <el-input v-model="state.dataForm.ip" placeholder="IP" clearable></el-input>
+            <el-input v-model="state.dataForm.ip" class="query-input" placeholder="IP" clearable></el-input>
           </el-form-item>
           <el-form-item>
             <el-select v-model="state.dataForm.status" placeholder="状态" clearable>
@@ -16,16 +16,23 @@
             </el-select>
           </el-form-item>
           <el-form-item>
-            <el-button @click="state.getDataList()">查询</el-button>
+            <el-button class="query-btn" :loading="state.dataListLoading" @click="queryList()">查询</el-button>
+          </el-form-item>
+          <el-form-item>
+            <el-button class="query-btn" @click="handleToolbarReset">重置</el-button>
           </el-form-item>
         </div>
         <div class="ops-toolbar__group ops-actions">
+          <div class="record-stats">
+            <span class="record-stats__item record-stats__item--ok">已完成 {{ successCount }}</span>
+            <span class="record-stats__item record-stats__item--bad">异常 {{ failCount }}</span>
+          </div>
           <el-button v-if="state.hasPermission('ops:devicebackuprecord:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
         </div>
       </div>
     </el-form>
 
-    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" style="width: 100%">
+    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="backup-record-table" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
       <el-table-column prop="name" label="主机名" header-align="center" align="center"></el-table-column>
       <el-table-column prop="ip" label="IP" header-align="center" align="center"></el-table-column>
@@ -58,35 +65,61 @@
       @current-change="state.pageCurrentChangeHandle"
     ></el-pagination>
 
-    <el-dialog v-model="historyVisible" title="备份历史" width="900px">
+    <el-dialog v-model="historyVisible" title="备份历史" width="960px" class="history-dialog">
       <div class="history-toolbar">
+        <div class="history-toolbar__left">
+          <div class="history-stats">
+            <span class="history-stats__item history-stats__item--ok">已完成 {{ historySuccessCount }}</span>
+            <span class="history-stats__item history-stats__item--bad">异常 {{ historyFailCount }}</span>
+          </div>
+          <el-date-picker v-model="historyDateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD" size="small" style="width: 260px" @change="historyPage = 1"></el-date-picker>
+          <el-switch v-model="showOnlyFailed" inline-prompt active-text="仅异常" inactive-text="全部" @change="historyPage = 1"></el-switch>
+        </div>
         <el-button v-if="state.hasPermission('ops:devicebackuprecord:diff')" type="primary" @click="handleDiff" :disabled="historySelections.length !== 1">对比</el-button>
       </div>
-      <el-table v-loading="historyLoading" :data="historyList" border @selection-change="handleHistorySelectionChange" style="width: 100%">
+      <el-table v-loading="historyLoading" :data="pagedHistoryList" border @selection-change="handleHistorySelectionChange" max-height="420" style="width: 100%">
         <el-table-column type="selection" width="50" header-align="center" align="center"></el-table-column>
         <el-table-column prop="name" label="主机名" header-align="center" align="center"></el-table-column>
         <el-table-column prop="ip" label="IP" header-align="center" align="center"></el-table-column>
-        <el-table-column prop="url" label="备份URL" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="backupTime" label="备份时间" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="backupStatus" label="备份状态" header-align="center" align="center">
-        <template v-slot="scope">
-          <el-tag v-if="scope.row.backupStatus === 1" size="small" type="success">已完成</el-tag>
-          <el-tag v-else size="small" type="danger">异常</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="操作" header-align="center" align="center" width="140">
-        <template v-slot="scope">
-          <el-button v-if="state.hasPermission('ops:devicebackuprecord:preview')" type="primary" link @click="openPreview(scope.row.url)">预览</el-button>
-          <el-button type="primary" link @click="downloadFile(scope.row.url)">下载</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+        <el-table-column prop="url" label="备份URL" header-align="center" align="center" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="backupTime" label="备份时间" header-align="center" align="center" width="180"></el-table-column>
+        <el-table-column prop="backupStatus" label="备份状态" header-align="center" align="center" width="100">
+          <template v-slot="scope">
+            <el-tag v-if="scope.row.backupStatus === 1" size="small" type="success">已完成</el-tag>
+            <el-tag v-else size="small" type="danger">异常</el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column label="操作" header-align="center" align="center" width="140">
+          <template v-slot="scope">
+            <el-button v-if="state.hasPermission('ops:devicebackuprecord:preview')" type="primary" link @click="openPreview(scope.row.url)">预览</el-button>
+            <el-button type="primary" link @click="downloadFile(scope.row.url)">下载</el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+      <el-pagination
+        v-if="filteredHistoryList.length > historyPageSize"
+        :current-page="historyPage"
+        :page-size="historyPageSize"
+        :page-sizes="[20, 50, 100]"
+        :total="filteredHistoryList.length"
+        layout="total, sizes, prev, pager, next"
+        @size-change="(val: number) => { historyPageSize = val; historyPage = 1; }"
+        @current-change="(val: number) => { historyPage = val; }"
+        style="margin-top: 12px; justify-content: flex-end"
+      ></el-pagination>
     </el-dialog>
 
     <el-dialog v-model="diffVisible" title="备份对比" width="100%" top="2vh" class="diff-dialog">
+      <div class="diff-summary">
+        <span class="diff-summary__total">共 {{ diffLines.length }} 行</span>
+        <span class="diff-summary__same">未变 {{ diffSameCount }}</span>
+        <span class="diff-summary__add">+ 新增 {{ diffAddCount }}</span>
+        <span class="diff-summary__del">- 删除 {{ diffDelCount }}</span>
+      </div>
       <div class="diff-wrap">
         <div class="diff-grid">
           <div class="diff-side diff-side--left">
+            <div class="diff-side__header">旧版本</div>
             <div v-for="(line, index) in diffLines" :key="`left-${index}`" class="diff-line" :class="`diff-line--${line.type}`">
               <span class="diff-line__num">{{ line.leftLineNo || "" }}</span>
               <span class="diff-line__prefix">{{ line.type === 'del' ? '-' : line.type === 'same' ? ' ' : '' }}</span>
@@ -94,6 +127,7 @@
             </div>
           </div>
           <div class="diff-side diff-side--right">
+            <div class="diff-side__header">当前版本</div>
             <div v-for="(line, index) in diffLines" :key="`right-${index}`" class="diff-line" :class="`diff-line--${line.type}`">
               <span class="diff-line__num">{{ line.rightLineNo || "" }}</span>
               <span class="diff-line__prefix">{{ line.type === 'add' ? '+' : line.type === 'same' ? ' ' : '' }}</span>
@@ -122,7 +156,7 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {nextTick, reactive, ref, toRefs} from "vue";
+import {computed, nextTick, reactive, ref, toRefs} from "vue";
 import baseService from "@/service/baseService";
 import app from "@/constants/app";
 import {getToken} from "@/utils/cache";
@@ -141,16 +175,54 @@ const view = reactive({
 });
 
 const state = reactive({ ...useView(view), ...toRefs(view) });
+const successCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.lastBackupStatus) === 1).length);
+const failCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.lastBackupStatus) === 0).length);
 
 const historyVisible = ref(false);
 const historyLoading = ref(false);
 const historyList = ref<any[]>([]);
 const historySelections = ref<any[]>([]);
+const showOnlyFailed = ref(false);
+const historyDateRange = ref<string[] | null>(null);
+const historyPage = ref(1);
+const historyPageSize = ref(20);
 const diffVisible = ref(false);
 const diffLines = ref<any[]>([]);
+const diffAddCount = computed(() => diffLines.value.filter((l: any) => l.type === "add").length);
+const diffDelCount = computed(() => diffLines.value.filter((l: any) => l.type === "del").length);
+const diffSameCount = computed(() => diffLines.value.filter((l: any) => l.type === "same").length);
 const currentIp = ref("");
 const previewVisible = ref(false);
 const previewContent = ref("");
+const queryList = () => {
+  state.getDataList();
+};
+const handleToolbarReset = () => {
+  state.dataForm.name = "";
+  state.dataForm.ip = "";
+  state.dataForm.status = "";
+  queryList();
+};
+const historySuccessCount = computed(() => (historyList.value || []).filter((item: any) => Number(item?.backupStatus) === 1).length);
+const historyFailCount = computed(() => (historyList.value || []).filter((item: any) => Number(item?.backupStatus) === 0).length);
+const filteredHistoryList = computed(() => {
+  let list = historyList.value || [];
+  if (showOnlyFailed.value) {
+    list = list.filter((item: any) => Number(item?.backupStatus) === 0);
+  }
+  if (historyDateRange.value && historyDateRange.value.length === 2) {
+    const [start, end] = historyDateRange.value;
+    list = list.filter((item: any) => {
+      const t = String(item?.backupTime || "").slice(0, 10);
+      return t >= start && t <= end;
+    });
+  }
+  return list;
+});
+const pagedHistoryList = computed(() => {
+  const start = (historyPage.value - 1) * historyPageSize.value;
+  return filteredHistoryList.value.slice(start, start + historyPageSize.value);
+});
 
 const openHistory = (row: any) => {
   if (!row?.ip) {
@@ -160,6 +232,9 @@ const openHistory = (row: any) => {
   historyVisible.value = true;
   historyLoading.value = true;
   historySelections.value = [];
+  showOnlyFailed.value = false;
+  historyDateRange.value = null;
+  historyPage.value = 1;
   baseService
     .get("/ops/devicebackuprecord/history", { ip: row.ip, limit: 200 })
     .then((res) => {
@@ -284,45 +359,132 @@ const setupPreviewSync = () => {
 </script>
 
 <style lang="less" scoped>
-.ops-toolbar {
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-}
-.ops-toolbar__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-.ops-toolbar__group {
+/* 统计标签容器 */
+.record-stats {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
 }
-.ops-filters .el-form-item {
-  margin-bottom: 0;
+
+/* 统计标签基础样式 */
+.record-stats__item {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
 }
+
+/* 表格单元格不换行 */
 .mod-ops__devicebackup-record :deep(.el-table .cell) {
   white-space: nowrap;
 }
+
+/* 历史弹窗 */
+.history-dialog :deep(.el-dialog__body) {
+  max-height: 72vh;
+  overflow-y: auto;
+}
+
 .history-toolbar {
   display: flex;
-  justify-content: flex-end;
-  margin-bottom: 10px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
 }
+
+.history-toolbar__left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.history-stats {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-stats__item {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.history-stats__item--ok {
+  color: #065f46;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+}
+
+.history-stats__item--bad {
+  color: #991b1b;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+}
+
+/* 差异统计摘要 */
+.diff-summary {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.diff-summary__total {
+  color: #475569;
+}
+
+.diff-summary__same {
+  color: #64748b;
+}
+
+.diff-summary__add {
+  color: #059669;
+  padding: 2px 8px;
+  background: #ecfdf5;
+  border-radius: 4px;
+}
+
+.diff-summary__del {
+  color: #dc2626;
+  padding: 2px 8px;
+  background: #fef2f2;
+  border-radius: 4px;
+}
+
+/* 版本标题 */
+.diff-side__header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+  background: #f1f5f9;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* 差异对比视图 */
 .diff-wrap {
   max-height: 80vh;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  font-family: Consolas, "Courier New", monospace;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-family: "SF Mono", Consolas, "Courier New", monospace;
   font-size: 12px;
   line-height: 1.6;
   background: #fff;
@@ -332,68 +494,84 @@ const setupPreviewSync = () => {
   display: flex;
   flex-direction: column;
 }
+
 .diff-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  border-top: 1px solid #f3f4f6;
+  border-top: 1px solid #e2e8f0;
   overflow: hidden;
   flex: 1;
   min-height: 0;
 }
+
 .diff-side {
   overflow: auto;
   height: 100%;
 }
+
 .diff-side--left {
-  border-right: 1px solid #e5e7eb;
+  border-right: 1px solid #e2e8f0;
 }
+
 .diff-line {
   display: grid;
   grid-template-columns: 50px 18px 1fr;
   gap: 8px;
-  padding: 2px 8px;
+  padding: 3px 10px;
   white-space: pre;
-  border-bottom: 1px solid #f3f4f6;
+  border-bottom: 1px solid #f1f5f9;
 }
+
 .diff-line__num {
-  color: #9aa0a6;
+  color: #94a3b8;
   text-align: right;
+  font-size: 11px;
 }
+
 .diff-line__prefix {
   text-align: center;
-  color: #6b7280;
+  color: #64748b;
 }
+
 .diff-line__text {
   display: inline-block;
   min-width: max-content;
 }
+
 .diff-scrollbar {
-  height: 16px;
+  height: 14px;
   overflow-x: auto;
   overflow-y: hidden;
-  border-top: 1px solid #e5e7eb;
-  background: #fafafa;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
 }
+
 .diff-scrollbar__spacer {
   height: 1px;
 }
+
 .diff-side--right .diff-line--add {
-  background: #f0fff4;
+  background: #ecfdf5;
 }
+
 .diff-side--right .diff-line--add .diff-line__prefix {
-  color: #16a34a;
+  color: #10b981;
 }
+
 .diff-side--left .diff-line--del {
-  background: #fff1f2;
+  background: #fef2f2;
 }
+
 .diff-side--left .diff-line--del .diff-line__prefix {
-  color: #dc2626;
+  color: #ef4444;
 }
+
+/* 预览视图 */
 .preview-wrap {
   max-height: 80vh;
   overflow: hidden;
-  border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
   background: #fff;
   position: relative;
   flex: 1;
@@ -401,33 +579,39 @@ const setupPreviewSync = () => {
   display: flex;
   flex-direction: column;
 }
+
 .preview-view {
   overflow: auto;
-  padding: 12px;
-  font-family: Consolas, "Courier New", monospace;
+  padding: 14px;
+  font-family: "SF Mono", Consolas, "Courier New", monospace;
   font-size: 12px;
   line-height: 1.6;
   white-space: pre;
   flex: 1;
   min-height: 0;
-}
-.preview-scrollbar {
-  height: 16px;
-  overflow-x: auto;
-  overflow-y: hidden;
-  border-top: 1px solid #e5e7eb;
   background: #fafafa;
 }
+
+.preview-scrollbar {
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-top: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
 .preview-scrollbar__spacer {
   height: 1px;
 }
 
+/* 弹窗布局 */
 .diff-dialog :deep(.el-dialog__body) {
   display: flex;
   flex-direction: column;
   height: calc(100vh - 180px);
   overflow: hidden;
 }
+
 .preview-dialog :deep(.el-dialog__body) {
   display: flex;
   flex-direction: column;

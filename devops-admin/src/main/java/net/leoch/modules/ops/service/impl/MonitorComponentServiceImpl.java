@@ -2,26 +2,27 @@ package net.leoch.modules.ops.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import net.leoch.common.constant.Constant;
-import net.leoch.common.exception.RenException;
-import net.leoch.common.page.PageData;
-import net.leoch.common.service.impl.CrudServiceImpl;
-import net.leoch.common.utils.ConvertUtils;
-import net.leoch.common.utils.JsonUtils;
-import net.leoch.common.validator.ValidatorUtils;
-import net.leoch.common.validator.group.AddGroup;
-import net.leoch.common.validator.group.DefaultGroup;
-import net.leoch.common.validator.group.UpdateGroup;
-import net.leoch.modules.ops.dao.MonitorComponentDao;
-import net.leoch.modules.ops.dto.*;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import net.leoch.common.base.Constant;
+import net.leoch.common.exception.ServiceException;
+import net.leoch.common.data.page.PageData;
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.json.JSONUtil;
+import net.leoch.common.data.validator.ValidatorUtils;
+import net.leoch.common.data.validator.group.AddGroup;
+import net.leoch.common.data.validator.group.DefaultGroup;
+import net.leoch.common.data.validator.group.UpdateGroup;
+import net.leoch.modules.ops.mapper.MonitorComponentMapper;
+import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.*;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
-import net.leoch.modules.ops.service.MonitorComponentService;
-import net.leoch.modules.security.user.SecurityUser;
+import net.leoch.modules.ops.service.IMonitorComponentService;
+import net.leoch.common.integration.security.SecurityUser;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
@@ -29,15 +30,27 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * 监控组件
  */
+@Slf4j
 @Service
-public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponentDao, MonitorComponentEntity, MonitorComponentDTO> implements MonitorComponentService {
+public class MonitorComponentServiceImpl extends ServiceImpl<MonitorComponentMapper, MonitorComponentEntity> implements IMonitorComponentService {
+
+    /**
+     * 允许排序的数据库列名白名单
+     */
+    private static final Set<String> ALLOWED_ORDER_FIELDS = Set.of(
+            "id", "name", "type", "ip", "port", "online_status",
+            "version", "last_check_time", "create_date", "update_date");
 
     private static final String TYPE_PROMETHEUS = "prometheus";
     private static final String TYPE_VMALERT = "vmalert";
@@ -46,98 +59,112 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
     private static final String TYPE_BLACKBOX = "blackbox";
 
     @Override
-    public QueryWrapper<MonitorComponentEntity> getWrapper(Map<String, Object> params) {
-        QueryWrapper<MonitorComponentEntity> wrapper = new QueryWrapper<>();
-        LambdaQueryWrapper<MonitorComponentEntity> lambda = wrapper.lambda();
-        String name = (String) params.get("name");
-        String type = (String) params.get("type");
-        String ip = (String) params.get("ip");
-        lambda.like(StrUtil.isNotBlank(name), MonitorComponentEntity::getName, name);
-        lambda.eq(StrUtil.isNotBlank(type), MonitorComponentEntity::getType, type);
-        lambda.like(StrUtil.isNotBlank(ip), MonitorComponentEntity::getIp, ip);
-        return wrapper;
-    }
-
-    @Override
-    public PageData<MonitorComponentDTO> page(MonitorComponentPageRequest request) {
+    public PageData<MonitorComponentRsp> page(MonitorComponentPageReq request) {
         LambdaQueryWrapper<MonitorComponentEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.like(StrUtil.isNotBlank(request.getName()), MonitorComponentEntity::getName, request.getName());
         wrapper.eq(StrUtil.isNotBlank(request.getType()), MonitorComponentEntity::getType, normalizeType(request.getType()));
         wrapper.like(StrUtil.isNotBlank(request.getIp()), MonitorComponentEntity::getIp, request.getIp());
         Page<MonitorComponentEntity> page = buildPage(request);
-        IPage<MonitorComponentEntity> result = baseDao.selectPage(page, wrapper);
-        return new PageData<>(ConvertUtils.sourceToTarget(result.getRecords(), MonitorComponentDTO.class), result.getTotal());
+        IPage<MonitorComponentEntity> result = this.page(page, wrapper);
+        return new PageData<>(BeanUtil.copyToList(result.getRecords(), MonitorComponentRsp.class), result.getTotal());
     }
 
     @Override
-    public MonitorComponentDTO get(MonitorComponentIdRequest request) {
+    public MonitorComponentRsp get(MonitorComponentIdReq request) {
+        log.info("[监控组件] 查询详情开始, id={}", request != null ? request.getId() : null);
         if (request == null || request.getId() == null) {
+            log.warn("[监控组件] 查询参数为空");
             return null;
         }
-        return ConvertUtils.sourceToTarget(baseDao.selectById(request.getId()), MonitorComponentDTO.class);
+        MonitorComponentRsp result = BeanUtil.copyProperties(this.getById(request.getId()), MonitorComponentRsp.class);
+        log.info("[监控组件] 查询详情完成, id={}, found={}", request.getId(), result != null);
+        return result;
     }
 
     @Override
-    public void save(MonitorComponentSaveRequest request) {
+    public void save(MonitorComponentSaveReq request) {
+        log.info("[MonitorComponent] 开始保存, request={}", request);
         ValidatorUtils.validateEntity(request, AddGroup.class, DefaultGroup.class);
-        validateUnique(request);
-        if (request != null && request.getType() != null) {
+        validateUnique(request.getId(), request.getIp(), request.getPort(), request.getName());
+        if (request.getType() != null) {
             request.setType(normalizeType(request.getType()));
         }
-        super.save(request);
+        MonitorComponentEntity entity = BeanUtil.copyProperties(request, MonitorComponentEntity.class);
+        this.save(entity);
     }
 
     @Override
-    public void update(MonitorComponentUpdateRequest request) {
+    public void update(MonitorComponentUpdateReq request) {
+        log.info("[MonitorComponent] 开始更新, request={}", request);
         ValidatorUtils.validateEntity(request, UpdateGroup.class, DefaultGroup.class);
-        validateUnique(request);
-        if (request != null && request.getType() != null) {
+        validateUnique(request.getId(), request.getIp(), request.getPort(), request.getName());
+        if (request.getType() != null) {
             request.setType(normalizeType(request.getType()));
         }
-        super.update(request);
+        MonitorComponentEntity entity = BeanUtil.copyProperties(request, MonitorComponentEntity.class);
+        this.updateById(entity);
     }
 
     @Override
-    public void delete(MonitorComponentDeleteRequest request) {
+    public void delete(MonitorComponentDeleteReq request) {
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
             return;
         }
-        super.delete(request.getIds());
+        this.removeByIds(Arrays.asList(request.getIds()));
     }
 
     @Override
-    public boolean check(MonitorComponentCheckRequest request) {
+    public boolean check(MonitorComponentCheckReq request) {
+        log.info("[监控组件] 唯一性检查开始, ip={}, port={}, name={}",
+                request != null ? request.getIp() : null,
+                request != null ? request.getPort() : null,
+                request != null ? request.getName() : null);
         if (request == null) {
+            log.warn("[监控组件] 检查参数为空");
             return false;
         }
-        return existsByIpPortOrName(request.getIp(), request.getPort(), request.getName(), request.getId());
+        boolean exists = existsByIpPortOrName(request.getIp(), request.getPort(), request.getName(), request.getId());
+        log.info("[监控组件] 唯一性检查完成, exists={}", exists);
+        return exists;
     }
 
     @Override
-    public boolean probe(MonitorComponentProbeRequest request) {
+    public boolean probe(MonitorComponentProbeReq request) {
+        log.info("[监控组件] 探测开始, id={}", request != null ? request.getId() : null);
         if (request == null || request.getId() == null) {
+            log.warn("[监控组件] 探测参数为空");
             return false;
         }
-        MonitorComponentEntity entity = baseDao.selectById(request.getId());
+        MonitorComponentEntity entity = this.getById(request.getId());
         if (entity == null) {
+            log.warn("[监控组件] 探测失败，组件不存在, id={}", request.getId());
             return false;
         }
         boolean ok = probeByType(entity);
+        log.info("[监控组件] 探测完成, id={}, name={}, type={}, result={}",
+                entity.getId(), entity.getName(), entity.getType(), ok);
         updateProbeResult(entity.getId(), ok);
         return ok;
     }
 
     @Override
-    public MonitorComponentDTO versionCheck(MonitorComponentVersionRequest request) {
+    public MonitorComponentRsp versionCheck(MonitorComponentVersionReq request) {
+        log.info("[监控组件] 版本检查开始, id={}", request != null ? request.getId() : null);
         if (request == null || request.getId() == null) {
+            log.warn("[监控组件] 版本检查参数为空");
             return null;
         }
-        MonitorComponentEntity entity = baseDao.selectById(request.getId());
+        MonitorComponentEntity entity = this.getById(request.getId());
         if (entity == null) {
+            log.warn("[监控组件] 版本检查失败，组件不存在, id={}", request.getId());
             return null;
         }
-        String current = fetchVersion(entity);
+        log.info("[监控组件] 获取当前版本, id={}, name={}, type={}",
+                entity.getId(), entity.getName(), entity.getType());
+        String current = stripVersionPrefix(fetchVersion(entity));
         String latest = fetchLatestVersion(normalizeType(entity.getType()));
+        log.info("[监控组件] 版本信息获取完成, id={}, currentVersion={}, latestVersion={}",
+                entity.getId(), current, latest);
         Integer updateAvailable = null;
         if (StrUtil.isNotBlank(current) && StrUtil.isNotBlank(latest)) {
             updateAvailable = compareVersions(current, latest) < 0 ? 1 : 0;
@@ -151,17 +178,18 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         update.setLastCheckTime(new Date());
         update.setUpdater(SecurityUser.getUserId());
         update.setUpdateDate(new Date());
-        baseDao.update(update, wrapper);
-        MonitorComponentEntity refreshed = baseDao.selectById(entity.getId());
-        return ConvertUtils.sourceToTarget(refreshed, MonitorComponentDTO.class);
+        this.update(update, wrapper);
+        MonitorComponentEntity refreshed = this.getById(entity.getId());
+        log.info("[监控组件] 版本检查完成, id={}, updateAvailable={}", entity.getId(), updateAvailable);
+        return BeanUtil.copyProperties(refreshed, MonitorComponentRsp.class);
     }
 
     @Override
-    public List<MonitorComponentDTO> list(MonitorComponentListRequest request) {
+    public List<MonitorComponentRsp> list(MonitorComponentListReq request) {
         LambdaQueryWrapper<MonitorComponentEntity> wrapper = new LambdaQueryWrapper<>();
         wrapper.orderByDesc(MonitorComponentEntity::getUpdateDate);
-        List<MonitorComponentEntity> list = baseDao.selectList(wrapper);
-        return ConvertUtils.sourceToTarget(list, MonitorComponentDTO.class);
+        List<MonitorComponentEntity> list = this.list(wrapper);
+        return BeanUtil.copyToList(list, MonitorComponentRsp.class);
     }
 
     @Override
@@ -183,15 +211,10 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         if (excludeId != null) {
             wrapper.ne(MonitorComponentEntity::getId, excludeId);
         }
-        return baseDao.selectCount(wrapper) > 0;
+        return this.count(wrapper) > 0;
     }
 
-    @Override
-    public PageData<MonitorComponentDTO> page(Map<String, Object> params) {
-        return super.page(params);
-    }
-
-    private Page<MonitorComponentEntity> buildPage(MonitorComponentPageRequest request) {
+    private Page<MonitorComponentEntity> buildPage(MonitorComponentPageReq request) {
         long curPage = 1;
         long limit = 10;
         if (request != null) {
@@ -207,18 +230,23 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
             return page;
         }
         if (StrUtil.isNotBlank(request.getOrderField()) && StrUtil.isNotBlank(request.getOrder())) {
+            String orderField = request.getOrderField();
+            if (!ALLOWED_ORDER_FIELDS.contains(orderField)) {
+                log.warn("[监控组件] 非法排序字段: {}, 已忽略", orderField);
+                return page;
+            }
             if (Constant.ASC.equalsIgnoreCase(request.getOrder())) {
-                page.addOrder(OrderItem.asc(request.getOrderField()));
+                page.addOrder(OrderItem.asc(orderField));
             } else {
-                page.addOrder(OrderItem.desc(request.getOrderField()));
+                page.addOrder(OrderItem.desc(orderField));
             }
         }
         return page;
     }
 
-    private void validateUnique(MonitorComponentDTO dto) {
-        if (dto != null && existsByIpPortOrName(dto.getIp(), dto.getPort(), dto.getName(), dto.getId())) {
-            throw new RenException("IP端口或名称已存在");
+    private void validateUnique(Long id, String ip, Integer port, String name) {
+        if (existsByIpPortOrName(ip, port, name, id)) {
+            throw new ServiceException("IP端口或名称已存在");
         }
     }
 
@@ -237,7 +265,7 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         update.setUpdateDate(new Date());
         LambdaUpdateWrapper<MonitorComponentEntity> wrapper = new LambdaUpdateWrapper<>();
         wrapper.eq(MonitorComponentEntity::getId, id);
-        baseDao.update(update, wrapper);
+        this.update(update, wrapper);
     }
 
     private boolean probeByType(MonitorComponentEntity entity) {
@@ -275,7 +303,7 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         if (StrUtil.isBlank(base)) {
             return null;
         }
-        if (TYPE_PROMETHEUS.equals(type) || TYPE_VICTORIAMETRICS.equals(type)) {
+        if (TYPE_PROMETHEUS.equals(type)) {
             String json = httpGet(base + "/api/v1/status/buildinfo");
             String version = parseJsonVersion(json, "data", "version");
             if (StrUtil.isNotBlank(version)) {
@@ -327,7 +355,14 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         if (StrUtil.isBlank(tag)) {
             return null;
         }
-        return tag.startsWith("v") ? tag.substring(1) : tag;
+        return stripVersionPrefix(tag);
+    }
+
+    private String stripVersionPrefix(String version) {
+        if (StrUtil.isBlank(version)) {
+            return version;
+        }
+        return version.startsWith("v") ? version.substring(1) : version;
     }
 
     private String parseJsonVersion(String json, String... keys) {
@@ -335,7 +370,7 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
             return null;
         }
         try {
-            Object current = JsonUtils.parseObject(json, Map.class);
+            Object current = JSONUtil.parseObj(json);
             for (String key : keys) {
                 if (!(current instanceof Map)) {
                     return null;
@@ -343,7 +378,8 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
                 current = ((Map<?, ?>) current).get(key);
             }
             return current == null ? null : String.valueOf(current);
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.warn("[监控组件] 解析JSON版本失败, keys={}", String.join(".", keys), e);
             return null;
         }
     }
@@ -364,8 +400,8 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
                 continue;
             }
             String labels = line.substring(braceStart + 1, braceEnd);
-            java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("(^|,)\\s*" + java.util.regex.Pattern.quote(key) + "=\"([^\"]*)\"");
-            java.util.regex.Matcher matcher = pattern.matcher(labels);
+            Pattern pattern = Pattern.compile("(^|,)\\s*" + Pattern.quote(key) + "=\"([^\"]*)\"");
+            Matcher matcher = pattern.matcher(labels);
             if (matcher.find()) {
                 return matcher.group(2);
             }
@@ -411,7 +447,8 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
     private int parseInt(String value) {
         try {
             return Integer.parseInt(value.replaceAll("\\D", ""));
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.warn("[监控组件] 解析整数失败, value={}", value, e);
             return 0;
         }
     }
@@ -424,7 +461,8 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
             connection.setConnectTimeout(3000);
             connection.setReadTimeout(3000);
             return connection.getResponseCode() == 200;
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.warn("[监控组件] HTTP健康检查失败, url={}", url, e);
             return false;
         } finally {
             if (connection != null) {
@@ -451,7 +489,8 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
                 byte[] bytes = in.readAllBytes();
                 return new String(bytes, StandardCharsets.UTF_8);
             }
-        } catch (Exception ignore) {
+        } catch (Exception e) {
+            log.warn("[监控组件] HTTP GET请求失败, url={}", url, e);
             return null;
         } finally {
             if (connection != null) {
@@ -485,3 +524,4 @@ public class MonitorComponentServiceImpl extends CrudServiceImpl<MonitorComponen
         return value;
     }
 }
+

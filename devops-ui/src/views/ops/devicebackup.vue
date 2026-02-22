@@ -3,12 +3,18 @@
     <div class="ops-toolbar">
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
-          <el-input v-model="state.dataForm.instance" placeholder="地址(模糊)" clearable @keyup.enter="state.getDataList()"></el-input>
-          <el-input v-model="state.dataForm.name" placeholder="名称(模糊)" clearable @keyup.enter="state.getDataList()"></el-input>
-          <el-button @click="state.getDataList()">查询</el-button>
+          <el-input v-model="state.dataForm.instance" class="query-input" placeholder="地址(模糊)" clearable @keyup.enter="queryList()"></el-input>
+          <el-button class="query-btn" :loading="state.dataListLoading" @click="queryList()">查询</el-button>
+          <el-button class="query-btn" @click="handleToolbarReset">重置</el-button>
           <el-button :icon="Filter" @click="filterDrawer = true">筛选<span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span></el-button>
         </div>
         <div class="ops-toolbar__group ops-actions">
+          <div class="device-stats">
+            <span class="device-stats__item device-stats__item--on">启用 {{ enabledCount }}</span>
+            <span class="device-stats__item device-stats__item--off">禁用 {{ disabledCount }}</span>
+            <span class="device-stats__item device-stats__item--online">在线 {{ onlineCount }}</span>
+            <span class="device-stats__item device-stats__item--filter">离线 {{ offlineCount }}</span>
+          </div>
           <el-button v-if="state.hasPermission('ops:devicebackup:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
           <el-button v-if="state.hasPermission('ops:devicebackup:update')" type="success" @click="handleBatchToggle">启用/禁用</el-button>
           <el-button v-if="state.hasPermission('ops:devicebackup:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
@@ -24,6 +30,9 @@
         </el-form-item>
         <el-form-item label="分组名称">
           <ren-select v-model="state.dataForm.groupName" dict-type="network_device_group" label-field="dictValue" value-field="dictLabel" placeholder="全部"></ren-select>
+        </el-form-item>
+        <el-form-item label="名称(模糊)">
+          <el-input v-model="state.dataForm.name" placeholder="名称(模糊)" clearable></el-input>
         </el-form-item>
         <el-form-item label="设备型号">
           <ren-select v-model="state.dataForm.deviceModel" dict-type="network_device_model" label-field="dictValue" value-field="dictLabel" placeholder="全部"></ren-select>
@@ -45,7 +54,7 @@
         <el-button type="primary" @click="handleFilterConfirm">确定</el-button>
       </template>
     </el-drawer>
-    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" style="width: 100%">
+    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="device-table" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
               <el-table-column prop="instance" label="地址" header-align="center" align="center"></el-table-column>
               <el-table-column prop="name" label="名称" header-align="center" align="center"></el-table-column>
@@ -96,13 +105,13 @@
       </div>
     </el-dialog>
     <!-- 弹窗, 新增 / 修改 -->
-    <add-or-update ref="addOrUpdateRef" @refreshDataList="state.getDataList">确定</add-or-update>
+    <add-or-update ref="addOrUpdateRef" @refreshDataList="queryList">确定</add-or-update>
   </div>
 </template>
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {computed, reactive, ref, toRefs, watch} from "vue";
+import {computed, onMounted, reactive, ref, toRefs} from "vue";
 import AddOrUpdate from "./devicebackup-add-or-update.vue";
 import baseService from "@/service/baseService";
 import {ElMessage, ElMessageBox} from "element-plus";
@@ -129,6 +138,16 @@ const view = reactive({
 });
 
 const state = reactive({ ...useView(view), ...toRefs(view) });
+const statusSummary = ref({
+  enabledCount: 0,
+  disabledCount: 0,
+  onlineCount: 0,
+  offlineCount: 0
+});
+const enabledCount = computed(() => statusSummary.value.enabledCount);
+const disabledCount = computed(() => statusSummary.value.disabledCount);
+const onlineCount = computed(() => statusSummary.value.onlineCount);
+const offlineCount = computed(() => statusSummary.value.offlineCount);
 
 const backupAgentOptions = ref<{ id: number; label: string }[]>([]);
 
@@ -138,6 +157,7 @@ const activeFilterCount = computed(() => {
   let count = 0;
   if (state.dataForm.areaName) count++;
   if (state.dataForm.groupName) count++;
+  if (state.dataForm.name) count++;
   if (state.dataForm.deviceModel) count++;
   if (state.dataForm.status !== "" && state.dataForm.status !== null && state.dataForm.status !== undefined) count++;
   if (state.dataForm.agentId) count++;
@@ -146,7 +166,7 @@ const activeFilterCount = computed(() => {
 
 const handleFilterConfirm = () => {
   filterDrawer.value = false;
-  state.getDataList();
+  queryList();
 };
 
 const handleFilterReset = () => {
@@ -155,6 +175,12 @@ const handleFilterReset = () => {
   state.dataForm.deviceModel = "";
   state.dataForm.status = "";
   state.dataForm.agentId = "";
+};
+
+const handleToolbarReset = () => {
+  state.dataForm.instance = "";
+  handleFilterReset();
+  queryList();
 };
 
 const addOrUpdateRef = ref();
@@ -187,9 +213,9 @@ const handleImportSuccess = (res: IObject) => {
   }
   ElMessage.success({
     message: "成功",
-    duration: 500,
-    onClose: () => {
-      state.getDataList();
+      duration: 500,
+      onClose: () => {
+      queryList();
     }
   });
 };
@@ -209,35 +235,36 @@ const loadBackupAgents = () => {
   });
 };
 
-const refreshOnlineStatus = () => {
-  if (!state.dataList || state.dataList.length === 0) {
-    return;
-  }
-  state.dataList.forEach((row: { instance?: string; onlineStatus?: boolean | null }) => {
-    row.onlineStatus = null;
-    if (!row.instance) {
-      row.onlineStatus = false;
-      return;
-    }
-    baseService
-      .get("/ops/devicebackup/online", { instance: row.instance })
-      .then((res) => {
-        row.onlineStatus = !!res.data;
-      })
-      .catch(() => {
-        row.onlineStatus = false;
-      });
-  });
+const loadStatusSummary = () => {
+  baseService
+    .get("/ops/devicebackup/summary")
+    .then((res) => {
+      statusSummary.value = {
+        enabledCount: Number(res.data?.enabledCount || 0),
+        disabledCount: Number(res.data?.disabledCount || 0),
+        onlineCount: Number(res.data?.onlineCount || 0),
+        offlineCount: Number(res.data?.offlineCount || 0)
+      };
+    })
+    .catch(() => {
+      statusSummary.value = {
+        enabledCount: 0,
+        disabledCount: 0,
+        onlineCount: 0,
+        offlineCount: 0
+      };
+    });
 };
 
-watch(
-  () => state.dataList,
-  () => {
-    refreshOnlineStatus();
-  }
-);
+const queryList = () => {
+  state.getDataList();
+  loadStatusSummary();
+};
 
 loadBackupAgents();
+onMounted(() => {
+  loadStatusSummary();
+});
 
 const handleBatchToggle = () => {
   if (!state.dataListSelections || state.dataListSelections.length === 0) {
@@ -280,7 +307,7 @@ const updateStatusHandle = (status: number) => {
         message: "成功",
         duration: 500,
         onClose: () => {
-          state.getDataList();
+          queryList();
         }
       });
     });
@@ -289,58 +316,23 @@ const updateStatusHandle = (status: number) => {
 </script>
 
 <style scoped>
-.ops-toolbar {
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-}
-.ops-toolbar__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-.ops-toolbar__group {
+/* 统计标签容器 */
+.device-stats {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
 }
-.ops-filters .el-form-item {
-  margin-bottom: 0;
+
+/* 统计标签基础样式 */
+.device-stats__item {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
 }
+
+/* 表格单元格不换行 */
 .mod-ops__devicebackup :deep(.el-table .cell) {
   white-space: nowrap;
-}
-.filter-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 16px;
-  height: 16px;
-  margin-left: 4px;
-  padding: 0 4px;
-  font-size: 11px;
-  line-height: 1;
-  color: #fff;
-  background: #409eff;
-  border-radius: 8px;
-}
-.filter-form .el-select,
-.filter-form .ren-select {
-  width: 100%;
-}
-.filter-form .el-form-item {
-  margin-bottom: 18px;
-}
-.import-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
 }
 </style>

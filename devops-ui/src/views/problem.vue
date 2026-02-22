@@ -7,7 +7,10 @@
             <el-input v-model="filters.hostName" class="query-input" placeholder="主机名(模糊)" clearable @keyup.enter="query" />
           </el-form-item>
           <el-form-item>
-            <el-button class="query-btn" @click="query">查询</el-button>
+            <el-button class="query-btn" :loading="loading" @click="query">查询</el-button>
+          </el-form-item>
+          <el-form-item>
+            <el-button class="query-btn" @click="handleToolbarReset">重置</el-button>
           </el-form-item>
           <el-form-item>
             <el-button class="query-btn" :icon="Filter" @click="filterDrawer = true">
@@ -16,6 +19,17 @@
             </el-button>
           </el-form-item>
         </div>
+        <div class="ops-toolbar__group ops-actions">
+          <el-checkbox-group v-model="filters.severity" size="small" @change="handleSeverityChange">
+            <el-checkbox-button label="critical">灾难</el-checkbox-button>
+            <el-checkbox-button label="warning">重要</el-checkbox-button>
+            <el-checkbox-button label="info">信息</el-checkbox-button>
+          </el-checkbox-group>
+          <div class="record-stats">
+            <span class="record-stats__item record-stats__item--bad">告警 {{ firingCount }}</span>
+            <span class="record-stats__item record-stats__item--ok">恢复 {{ resolvedCount }}</span>
+          </div>
+        </div>
       </div>
     </el-form>
 
@@ -23,7 +37,7 @@
       <el-form label-position="top" class="filter-form">
         <el-form-item label="分类">
           <el-select v-model="filters.category" @change="onCategoryChange">
-            <el-option label="实时告警情况" value="realtime" />
+            <el-option label="实时告警" value="realtime" />
             <el-option label="历史告警" value="history" />
           </el-select>
         </el-form-item>
@@ -44,10 +58,10 @@
           <el-input v-model="filters.instance" clearable />
         </el-form-item>
         <el-form-item label="告警级别">
-          <el-select v-model="filters.severity" clearable>
-            <el-option label="信息" value="info" />
-            <el-option label="重要" value="warning" />
+          <el-select v-model="filters.severity" multiple clearable collapse-tags>
             <el-option label="灾难" value="critical" />
+            <el-option label="重要" value="warning" />
+            <el-option label="信息" value="info" />
             <el-option label="恢复" value="recover" />
           </el-select>
         </el-form-item>
@@ -66,7 +80,7 @@
     </el-drawer>
 
     <el-table v-loading="loading" :data="list" border class="alert-record-table" style="width: 100%">
-      <el-table-column prop="startsAt" label="时间" header-align="center" align="center" width="165" />
+      <el-table-column prop="createDate" label="记录时间" header-align="center" align="center" width="165" />
       <el-table-column label="严重性" header-align="center" align="center" width="90">
         <template #default="scope">
           <span :class="severityClass(scope.row)">{{ formatSeverity(scope.row.severity) }}</span>
@@ -127,6 +141,7 @@
           </el-tooltip>
         </template>
       </el-table-column>
+      <el-table-column prop="startsAt" label="开始时间" header-align="center" align="center" width="165" />
       <el-table-column label="持续时间" header-align="center" align="center" width="120">
         <template #default="scope">
           {{ formatDuration(scope.row) }}
@@ -281,7 +296,7 @@ const filters = reactive({
   endTime: "",
   deviceType: "",
   hostName: "",
-  severity: "",
+  severity: [] as string[],
   instance: "",
   statusFilter: ""
 });
@@ -292,11 +307,14 @@ const activeFilterCount = computed(() => {
   if (filters.startTime) count++;
   if (filters.endTime) count++;
   if (filters.deviceType) count++;
-  if (filters.severity) count++;
+  if (filters.severity.length) count++;
   if (filters.instance) count++;
   if (filters.statusFilter) count++;
   return count;
 });
+
+const firingCount = ref(0);
+const resolvedCount = ref(0);
 
 const updateVisible = ref(false);
 const actionLoading = ref(false);
@@ -317,7 +335,7 @@ const query = () => {
     category: filters.category,
     deviceType: filters.deviceType,
     hostName: filters.hostName,
-    severity: filters.severity,
+    severity: filters.severity.join(","),
     instance: filters.instance,
     statusFilter: filters.statusFilter,
     startTime: filters.startTime,
@@ -329,6 +347,8 @@ const query = () => {
       const data = res.data || {};
       list.value = Array.isArray(data.list) ? data.list : [];
       total.value = Number(data.total || 0);
+      firingCount.value = Number(data.firingCount || 0);
+      resolvedCount.value = Number(data.resolvedCount || 0);
     })
     .finally(() => {
       loading.value = false;
@@ -342,12 +362,23 @@ const onCategoryChange = () => {
   }
 };
 
+const handleToolbarReset = () => {
+  filters.hostName = "";
+  handleFilterReset();
+  query();
+};
+
+const handleSeverityChange = () => {
+  page.value = 1;
+  query();
+};
+
 const handleFilterReset = () => {
   filters.category = "realtime";
   filters.startTime = "";
   filters.endTime = "";
   filters.deviceType = "";
-  filters.severity = "";
+  filters.severity = [];
   filters.instance = "";
   filters.statusFilter = "";
 };
@@ -561,210 +592,155 @@ onMounted(() => {
 </script>
 
 <style scoped lang="less">
-.ops-toolbar {
-  padding: 12px 16px;
-  margin-bottom: 12px;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.06);
-}
-.ops-toolbar__row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  flex-wrap: nowrap;
-  overflow-x: auto;
-}
-.ops-toolbar__group {
+/* 统计标签容器 */
+.record-stats {
   display: flex;
   align-items: center;
   gap: 8px;
-  flex-wrap: nowrap;
-  white-space: nowrap;
 }
-.ops-filters .el-form-item {
-  margin-bottom: 0;
-  margin-right: 16px !important;
+
+/* 统计标签基础样式 */
+.record-stats__item {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
 }
-.ops-filters .el-form-item:last-child {
-  margin-right: 0 !important;
-}
-.query-input {
-  width: 220px;
-}
-.query-btn {
-  height: 32px;
-  padding: 0 14px;
-}
-.ops-toolbar__group :deep(.el-input__wrapper) {
-  height: 32px;
-}
-.filter-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 16px;
-  height: 16px;
-  margin-left: 4px;
-  padding: 0 4px;
-  font-size: 11px;
-  line-height: 1;
-  color: #fff;
-  background: #409eff;
-  border-radius: 8px;
-}
-.filter-form .el-select,
-.filter-form .el-date-editor,
-.filter-form .el-input {
-  width: 100%;
-}
-.filter-form .el-form-item {
-  margin-bottom: 18px;
-}
+
+/* 表格单元格不换行 */
 .alert-record-table :deep(.cell) {
   white-space: nowrap;
 }
-.status-tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 48px;
-  height: 22px;
-  padding: 0 8px;
-  font-size: 12px;
-  border-radius: 999px;
-}
-.status-tag--bad {
-  color: #b91c1c;
-  background: #fee2e2;
-}
-.status-tag--ok {
-  color: #166534;
-  background: #dcfce7;
-}
-.severity-tag {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 48px;
-  height: 22px;
-  padding: 0 8px;
-  font-size: 12px;
-  border-radius: 999px;
-  color: #fff;
-}
-.severity-tag--critical {
-  background: #e45959;
-}
-.severity-tag--warning {
-  background: #ffa059;
-}
-.severity-tag--info {
-  background: #7499ff;
-}
-.severity-tag--resolved {
-  background: #4caf50;
-}
+
+/* 操作链接 */
 .action-hover {
-  color: #409eff;
+  color: #3b82f6;
   cursor: pointer;
+  transition: color 0.15s;
 }
+
+.action-hover:hover {
+  color: #2563eb;
+}
+
+/* 事件提示框 */
 .event-tip {
   min-width: 320px;
   max-width: 420px;
 }
+
 .event-tip__title {
-  margin-bottom: 8px;
-  padding-bottom: 6px;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
   font-size: 13px;
-  font-weight: 700;
-  color: #111827;
-  border-bottom: 1px solid #e5e7eb;
+  font-weight: 600;
+  color: #0f172a;
+  border-bottom: 1px solid #e2e8f0;
 }
+
 .event-tip__group {
-  margin-bottom: 8px;
-  padding: 8px;
+  margin-bottom: 10px;
+  padding: 10px;
   background: #f8fafc;
   border-radius: 6px;
 }
+
 .event-tip__group-title {
-  margin-bottom: 6px;
+  margin-bottom: 8px;
   font-size: 12px;
-  color: #2563eb;
+  font-weight: 500;
+  color: #3b82f6;
 }
+
 .event-tip__row {
   display: flex;
-  gap: 10px;
-  margin-bottom: 4px;
+  gap: 12px;
+  margin-bottom: 6px;
   line-height: 1.5;
 }
+
 .event-tip__row:last-child {
   margin-bottom: 0;
 }
+
 .event-tip__key {
   flex: 0 0 64px;
-  color: #6b7280;
+  color: #64748b;
+  font-size: 12px;
 }
+
 .event-tip__value {
   flex: 1;
   white-space: normal;
   word-break: break-all;
-  color: #111827;
+  color: #0f172a;
 }
+
+/* 更新弹窗 */
 .update-dialog__meta {
-  padding: 12px 14px;
-  margin-bottom: 12px;
-  background: linear-gradient(135deg, #f8fbff 0%, #eef4ff 100%);
-  border: 1px solid #dbe7ff;
+  padding: 14px 16px;
+  margin-bottom: 14px;
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
 }
+
 .update-dialog__meta-label {
-  margin-bottom: 4px;
+  margin-bottom: 6px;
   font-size: 12px;
-  color: #4b5563;
+  color: #64748b;
 }
+
 .update-dialog__meta-value {
-  color: #111827;
+  color: #0f172a;
   line-height: 1.6;
   word-break: break-all;
 }
+
 .update-dialog__content {
   display: grid;
   grid-template-columns: minmax(360px, 1fr) minmax(400px, 1.2fr);
-  gap: 12px;
+  gap: 14px;
 }
+
 .update-card {
-  padding: 14px;
+  padding: 16px;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e2e8f0;
   border-radius: 8px;
 }
+
 .update-card__title {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   font-size: 14px;
   font-weight: 600;
   color: #0f172a;
 }
+
 .update-form :deep(.el-form-item) {
-  margin-bottom: 14px;
+  margin-bottom: 16px;
 }
+
 .op-row {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
+
 .op-input {
   width: 190px;
 }
+
 .hint {
   color: #64748b;
   font-size: 12px;
 }
+
 .history-table :deep(.cell) {
   line-height: 1.5;
 }
+
 @media (max-width: 980px) {
   .update-dialog__content {
     grid-template-columns: 1fr;

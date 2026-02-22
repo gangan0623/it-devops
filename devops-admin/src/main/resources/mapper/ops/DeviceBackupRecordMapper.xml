@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.leoch.modules.ops.mapper.DeviceBackupRecordMapper">
+
+    <resultMap type="net.leoch.modules.ops.entity.DeviceBackupRecordEntity" id="deviceBackupRecordMap">
+        <result property="id" column="id"/>
+        <result property="name" column="name"/>
+        <result property="ip" column="ip"/>
+        <result property="url" column="url"/>
+        <result property="lastBackupTime" column="last_backup_time"/>
+        <result property="lastBackupStatus" column="last_backup_status"/>
+        <result property="backupNum" column="backup_num"/>
+    </resultMap>
+
+    <resultMap type="net.leoch.modules.ops.vo.rsp.DashboardBackupStatsRsp" id="backupStatsMap">
+        <result property="round" column="round"/>
+        <result property="total" column="total"/>
+        <result property="success" column="success"/>
+        <result property="fail" column="fail"/>
+        <result property="lastTime" column="last_time"/>
+    </resultMap>
+
+    <!-- 一次性查询所有备份统计信息，避免多次 count 查询 -->
+    <select id="getBackupStats" resultMap="backupStatsMap">
+        SELECT
+            COUNT(*) as total,
+            COUNT(CASE WHEN last_backup_status = 1 THEN 1 END) as success,
+            COUNT(CASE WHEN last_backup_status = 0 THEN 1 END) as fail,
+            COALESCE(MAX(backup_num), 0) as round,
+            MAX(last_backup_time) as last_time
+        FROM tb_device_backup_record
+    </select>
+
+</mapper>

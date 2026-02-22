@@ -1,0 +1,18 @@
+package net.leoch.modules.sys.vo.req;
+
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import net.leoch.common.data.page.BasePage;
+
+/**
+ * 参数管理分页请求
+ */
+@Data
+@EqualsAndHashCode(callSuper = true)
+@Schema(name = "SysParamsPageReq")
+public class SysParamsPageReq extends BasePage {
+
+    @Schema(description = "参数编码")
+    private String paramCode;
+}
