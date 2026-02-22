@@ -20,6 +20,9 @@ public class AlertProblemRsp implements Serializable  {
     @SchemaProperty(name = "告警记录ID")
     private Long id;
 
+    @SchemaProperty(name = "创建时间")
+    private Date createDate;
+
     @SchemaProperty(name = "时间轴")
     private Date startsAt;
 

@@ -44,6 +44,6 @@ public class ExceptionUtils {
             }
         }
 
-        return sw != null ? sw.toString() : "";
+        return sw.toString();
     }
 }

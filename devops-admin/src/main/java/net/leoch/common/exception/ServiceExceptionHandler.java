@@ -79,7 +79,9 @@ public class ServiceExceptionHandler {
 
         //请求相关信息
         HttpServletRequest request = HttpContextUtils.getHttpServletRequest();
-        log.setIp(JakartaServletUtil.getClientIP(request));
+        if (request != null) {
+            log.setIp(JakartaServletUtil.getClientIP(request));
+        }
         if (request != null) {
             log.setUserAgent(request.getHeader(HttpHeaders.USER_AGENT));
         }

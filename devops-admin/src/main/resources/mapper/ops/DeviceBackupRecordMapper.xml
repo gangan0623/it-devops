@@ -29,8 +29,7 @@
             COUNT(CASE WHEN last_backup_status = 0 THEN 1 END) as fail,
             COALESCE(MAX(backup_num), 0) as round,
             MAX(last_backup_time) as last_time
-        FROM device_backup_record
-        WHERE deleted = 0
+        FROM tb_device_backup_record
     </select>
 
 </mapper>

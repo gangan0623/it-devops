@@ -108,7 +108,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
                 applyInstanceLikeFilter(wrapper, instances);
             }
         }
-        wrapper.orderByDesc(AlertRecordEntity::getStartsAt);
+        wrapper.orderByDesc(AlertRecordEntity::getCreateDate);
 
         IPage<AlertRecordEntity> page = this.page(request.buildPage(), wrapper);
         PageData<AlertRecordRsp> pageData = new PageData<>(BeanUtil.copyToList(page.getRecords(), AlertRecordRsp.class), page.getTotal());
@@ -299,7 +299,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
 
         LambdaQueryWrapper<AlertRecordEntity> wrapper = new LambdaQueryWrapper<AlertRecordEntity>()
             .in(!severityList.isEmpty(), AlertRecordEntity::getSeverity, severityList)
-            .orderByDesc(AlertRecordEntity::getStartsAt);
+            .orderByDesc(AlertRecordEntity::getCreateDate);
 
         if (StrUtil.isNotBlank(hostName)) {
             List<String> instancesByName = listInstancesByHostName(hostName, deviceType);
@@ -654,6 +654,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
                                          ActionMeta actionMeta) {
         AlertProblemRsp dto = new AlertProblemRsp();
         dto.setId(record.getId());
+        dto.setCreateDate(record.getCreateDate());
         dto.setStartsAt(record.getStartsAt());
         dto.setEndsAt(record.getEndsAt());
         dto.setSeverity(record.getSeverity());

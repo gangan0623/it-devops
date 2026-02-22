@@ -70,7 +70,7 @@
 
     <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="alert-record-table" max-height="600" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
-      <el-table-column prop="startsAt" label="时间" header-align="center" align="center" width="180"></el-table-column>
+      <el-table-column prop="createDate" label="记录时间" header-align="center" align="center" width="180"></el-table-column>
       <el-table-column prop="severity" label="严重性" header-align="center" align="center" width="90">
         <template v-slot="scope">
           <span :class="severityClass(scope.row)">{{ formatSeverity(scope.row.severity) }}</span>
@@ -131,6 +131,7 @@
           </el-tooltip>
         </template>
       </el-table-column>
+      <el-table-column prop="startsAt" label="开始时间" header-align="center" align="center" width="180"></el-table-column>
       <el-table-column label="持续时间" header-align="center" align="center" width="120">
         <template v-slot="scope">
           {{ formatDuration(scope.row) }}

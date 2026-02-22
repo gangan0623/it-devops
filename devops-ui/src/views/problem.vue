@@ -80,7 +80,7 @@
     </el-drawer>
 
     <el-table v-loading="loading" :data="list" border class="alert-record-table" style="width: 100%">
-      <el-table-column prop="startsAt" label="时间" header-align="center" align="center" width="165" />
+      <el-table-column prop="createDate" label="记录时间" header-align="center" align="center" width="165" />
       <el-table-column label="严重性" header-align="center" align="center" width="90">
         <template #default="scope">
           <span :class="severityClass(scope.row)">{{ formatSeverity(scope.row.severity) }}</span>
@@ -141,6 +141,7 @@
           </el-tooltip>
         </template>
       </el-table-column>
+      <el-table-column prop="startsAt" label="开始时间" header-align="center" align="center" width="165" />
       <el-table-column label="持续时间" header-align="center" align="center" width="120">
         <template #default="scope">
           {{ formatDuration(scope.row) }}
