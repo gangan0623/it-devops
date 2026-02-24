@@ -24,8 +24,6 @@ import net.leoch.common.integration.security.SecurityUser;
 import net.leoch.common.utils.excel.ExcelUtils;
 import net.leoch.common.utils.ops.OpsQueryUtils;
 import net.leoch.common.utils.ops.PingUtils;
-import net.leoch.common.utils.redis.RedisKeys;
-import net.leoch.common.utils.redis.RedisUtils;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.mapper.BusinessSystemMapper;
 import net.leoch.modules.ops.service.IBusinessSystemService;
@@ -47,8 +45,6 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper, BusinessSystemEntity> implements IBusinessSystemService {
-
-    private final RedisUtils redisUtils;
 
     @Override
     public PageData<BusinessSystemRsp> page(BusinessSystemPageReq request) {
@@ -122,9 +118,8 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     @Override
     public OpsHostStatusSummaryRsp summary(BusinessSystemPageReq request) {
         LambdaQueryWrapper<BusinessSystemEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getStatus);
+        wrapper.select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getStatus, BusinessSystemEntity::getOnlineStatus);
         List<BusinessSystemEntity> list = this.list(wrapper);
-        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBusinessSystemOnlineKey());
         OpsHostStatusSummaryRsp summary = new OpsHostStatusSummaryRsp();
         summary.setTotalCount((long) list.size());
         for (BusinessSystemEntity item : list) {
@@ -137,7 +132,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
             } else if (Integer.valueOf(0).equals(status)) {
                 summary.setDisabledCount(summary.getDisabledCount() + 1);
             }
-            Boolean onlineStatus = OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(item.getInstance()));
+            Boolean onlineStatus = item.getOnlineStatus();
             if (Boolean.TRUE.equals(onlineStatus)) {
                 summary.setOnlineCount(summary.getOnlineCount() + 1);
             } else if (Boolean.FALSE.equals(onlineStatus)) {
@@ -239,14 +234,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
     }
 
     private void fillOnlineStatus(List<BusinessSystemRsp> list) {
-        if (list == null || list.isEmpty()) {
-            return;
-        }
-        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBusinessSystemOnlineKey());
-        for (BusinessSystemRsp dto : list) {
-            String instance = dto.getInstance();
-            dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
-        }
+        // online_status 已落库到 tb_business_system，BeanUtil 复制时会带上该字段
     }
 
     private void applyCommonFilters(LambdaQueryWrapper<BusinessSystemEntity> wrapper, BusinessSystemPageReq request) {
@@ -255,6 +243,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
         wrapper.eq(StrUtil.isNotBlank(request.getSiteLocation()), BusinessSystemEntity::getSiteLocation, request.getSiteLocation());
         wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), BusinessSystemEntity::getAreaName, request.getAreaName());
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), BusinessSystemEntity::getStatus, request.getStatus());
+        wrapper.eq(StrUtil.isNotBlank(request.getOnlineStatus()), BusinessSystemEntity::getOnlineStatus, request.getOnlineStatus());
         wrapper.eq(StrUtil.isNotBlank(request.getMenuName()), BusinessSystemEntity::getMenuName, request.getMenuName());
     }
 

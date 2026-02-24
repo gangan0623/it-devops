@@ -24,8 +24,6 @@ import net.leoch.common.integration.security.SecurityUser;
 import net.leoch.common.utils.excel.ExcelUtils;
 import net.leoch.common.utils.ops.MetricsUtils;
 import net.leoch.common.utils.ops.OpsQueryUtils;
-import net.leoch.common.utils.redis.RedisKeys;
-import net.leoch.common.utils.redis.RedisUtils;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.mapper.LinuxHostMapper;
 import net.leoch.modules.ops.service.ILinuxHostService;
@@ -47,8 +45,6 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHostEntity> implements ILinuxHostService {
-
-    private final RedisUtils redisUtils;
 
     @Override
     public PageData<LinuxHostRsp> page(LinuxHostPageReq request) {
@@ -122,9 +118,8 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
     @Override
     public OpsHostStatusSummaryRsp summary(LinuxHostPageReq request) {
         LambdaQueryWrapper<LinuxHostEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(LinuxHostEntity::getInstance, LinuxHostEntity::getStatus);
+        wrapper.select(LinuxHostEntity::getInstance, LinuxHostEntity::getStatus, LinuxHostEntity::getOnlineStatus);
         List<LinuxHostEntity> list = this.list(wrapper);
-        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getLinuxHostOnlineKey());
         OpsHostStatusSummaryRsp summary = new OpsHostStatusSummaryRsp();
         summary.setTotalCount((long) list.size());
         for (LinuxHostEntity item : list) {
@@ -137,7 +132,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
             } else if (Integer.valueOf(0).equals(status)) {
                 summary.setDisabledCount(summary.getDisabledCount() + 1);
             }
-            Boolean onlineStatus = OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(item.getInstance()));
+            Boolean onlineStatus = item.getOnlineStatus();
             if (Boolean.TRUE.equals(onlineStatus)) {
                 summary.setOnlineCount(summary.getOnlineCount() + 1);
             } else if (Boolean.FALSE.equals(onlineStatus)) {
@@ -189,14 +184,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
 
 
     private void fillOnlineStatus(List<LinuxHostRsp> list) {
-        if (list == null || list.isEmpty()) {
-            return;
-        }
-        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getLinuxHostOnlineKey());
-        for (LinuxHostRsp dto : list) {
-            String instance = dto.getInstance();
-            dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
-        }
+        // online_status 已落库到 tb_linux_host，BeanUtil 复制时会带上该字段
     }
 
     private void applyCommonFilters(LambdaQueryWrapper<LinuxHostEntity> wrapper, LinuxHostPageReq request) {
@@ -205,6 +193,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
         wrapper.eq(StrUtil.isNotBlank(request.getSiteLocation()), LinuxHostEntity::getSiteLocation, request.getSiteLocation());
         wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), LinuxHostEntity::getAreaName, request.getAreaName());
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), LinuxHostEntity::getStatus, request.getStatus());
+        wrapper.eq(StrUtil.isNotBlank(request.getOnlineStatus()), LinuxHostEntity::getOnlineStatus, request.getOnlineStatus());
         wrapper.eq(StrUtil.isNotBlank(request.getMenuName()), LinuxHostEntity::getMenuName, request.getMenuName());
         wrapper.eq(StrUtil.isNotBlank(request.getType()), LinuxHostEntity::getType, request.getType());
     }

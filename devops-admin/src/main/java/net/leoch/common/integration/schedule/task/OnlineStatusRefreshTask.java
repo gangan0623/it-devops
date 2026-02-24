@@ -2,10 +2,12 @@ package net.leoch.common.integration.schedule.task;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import net.leoch.common.utils.ops.MetricsUtils;
 import net.leoch.common.utils.ops.PingUtils;
-import net.leoch.common.utils.redis.RedisKeys;
-import net.leoch.common.utils.redis.RedisUtils;
 import net.leoch.framework.config.ops.OnlineStatusConfig;
 import net.leoch.modules.ops.entity.*;
 import net.leoch.modules.ops.mapper.*;
@@ -13,8 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
-import java.time.Duration;
 import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -34,7 +36,6 @@ public class OnlineStatusRefreshTask implements ITask {
     private final BusinessSystemMapper businessSystemMapper;
     private final BackupAgentMapper backupAgentMapper;
     private final DeviceBackupMapper deviceBackupMapper;
-    private final RedisUtils redisUtils;
     private final OnlineStatusConfig properties;
 
     public OnlineStatusRefreshTask(LinuxHostMapper linuxHostMapper,
@@ -42,14 +43,12 @@ public class OnlineStatusRefreshTask implements ITask {
                                    BusinessSystemMapper businessSystemMapper,
                                    BackupAgentMapper backupAgentMapper,
                                    DeviceBackupMapper deviceBackupMapper,
-                                   RedisUtils redisUtils,
                                    OnlineStatusConfig properties) {
         this.linuxHostMapper = linuxHostMapper;
         this.windowHostMapper = windowHostMapper;
         this.businessSystemMapper = businessSystemMapper;
         this.backupAgentMapper = backupAgentMapper;
         this.deviceBackupMapper = deviceBackupMapper;
-        this.redisUtils = redisUtils;
         this.properties = properties;
     }
 
@@ -69,7 +68,7 @@ public class OnlineStatusRefreshTask implements ITask {
                 .select(LinuxHostEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, LinuxHostEntity::getInstance,
                 instance -> MetricsUtils.metricsOk(instance, properties.getOnlineStatus().getTimeout().getMetrics()));
-        refreshCache(RedisKeys.getLinuxHostOnlineKey(), statusMap);
+        refreshTableStatus(linuxHostMapper, LinuxHostEntity::getOnlineStatus, LinuxHostEntity::getInstance, statusMap);
     }
 
     private void refreshWindows() {
@@ -77,7 +76,7 @@ public class OnlineStatusRefreshTask implements ITask {
                 .select(WindowHostEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, WindowHostEntity::getInstance,
                 instance -> MetricsUtils.metricsOk(instance, properties.getOnlineStatus().getTimeout().getMetrics()));
-        refreshCache(RedisKeys.getWindowHostOnlineKey(), statusMap);
+        refreshTableStatus(windowHostMapper, WindowHostEntity::getOnlineStatus, WindowHostEntity::getInstance, statusMap);
     }
 
     private void refreshBusinessSystems() {
@@ -85,14 +84,14 @@ public class OnlineStatusRefreshTask implements ITask {
                 .select(BusinessSystemEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, BusinessSystemEntity::getInstance,
                 instance -> PingUtils.isReachable(instance, properties.getOnlineStatus().getTimeout().getPing()));
-        refreshCache(RedisKeys.getBusinessSystemOnlineKey(), statusMap);
+        refreshTableStatus(businessSystemMapper, BusinessSystemEntity::getOnlineStatus, BusinessSystemEntity::getInstance, statusMap);
     }
 
     private void refreshBackupAgents() {
         List<BackupAgentEntity> list = backupAgentMapper.selectList(new LambdaQueryWrapper<BackupAgentEntity>()
                 .select(BackupAgentEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, BackupAgentEntity::getInstance, this::checkBackupAgentHealth);
-        refreshCache(RedisKeys.getBackupAgentOnlineKey(), statusMap);
+        refreshTableStatus(backupAgentMapper, BackupAgentEntity::getOnlineStatus, BackupAgentEntity::getInstance, statusMap);
     }
 
     private void refreshDeviceBackups() {
@@ -100,14 +99,69 @@ public class OnlineStatusRefreshTask implements ITask {
                 .select(DeviceBackupEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, DeviceBackupEntity::getInstance,
                 instance -> PingUtils.isReachable(instance, properties.getOnlineStatus().getTimeout().getDevice()));
-        refreshCache(RedisKeys.getDeviceBackupOnlineKey(), statusMap);
+        refreshTableStatus(deviceBackupMapper, DeviceBackupEntity::getOnlineStatus, DeviceBackupEntity::getInstance, statusMap);
     }
 
-    private void refreshCache(String key, Map<String, Object> statusMap) {
-        redisUtils.delete(key);
-        if (!statusMap.isEmpty()) {
-            redisUtils.hPutAll(key, statusMap, Duration.ofSeconds(properties.getCache().getOnlineStatusTtl()));
+    private static final int UPDATE_BATCH_SIZE = 500;
+
+    private <T> void refreshTableStatus(BaseMapper<T> mapper,
+                                        SFunction<T, ?> onlineStatusColumn,
+                                        SFunction<T, ?> instanceColumn,
+                                        Map<String, Object> statusMap) {
+        mapper.update(null, new LambdaUpdateWrapper<T>()
+                .set(onlineStatusColumn, false)
+                .isNotNull(instanceColumn));
+        if (statusMap == null || statusMap.isEmpty()) {
+            return;
         }
+        List<String> onlineInstances = new ArrayList<>();
+        for (Map.Entry<String, Object> entry : statusMap.entrySet()) {
+            String instance = entry.getKey();
+            if (StrUtil.isBlank(instance)) {
+                continue;
+            }
+            Integer dbStatus = toDbStatus(entry.getValue());
+            if (Integer.valueOf(1).equals(dbStatus)) {
+                onlineInstances.add(instance);
+            }
+        }
+        batchUpdateByInstances(mapper, onlineStatusColumn, instanceColumn, onlineInstances, true);
+    }
+
+    private <T> void batchUpdateByInstances(BaseMapper<T> mapper,
+                                            SFunction<T, ?> onlineStatusColumn,
+                                            SFunction<T, ?> instanceColumn,
+                                            List<String> instances,
+                                            Boolean status) {
+        if (instances == null || instances.isEmpty()) {
+            return;
+        }
+        for (int i = 0; i < instances.size(); i += UPDATE_BATCH_SIZE) {
+            List<String> batch = instances.subList(i, Math.min(i + UPDATE_BATCH_SIZE, instances.size()));
+            mapper.update(null, new LambdaUpdateWrapper<T>()
+                    .set(onlineStatusColumn, status)
+                    .in(instanceColumn, batch));
+        }
+    }
+
+    private Integer toDbStatus(Object value) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Boolean bool) {
+            return bool ? 1 : 0;
+        }
+        if (value instanceof Number number) {
+            return number.intValue() == 0 ? 0 : 1;
+        }
+        String str = String.valueOf(value);
+        if ("true".equalsIgnoreCase(str) || "1".equals(str)) {
+            return 1;
+        }
+        if ("false".equalsIgnoreCase(str) || "0".equals(str)) {
+            return 0;
+        }
+        return null;
     }
 
     private <T> Map<String, Object> refreshWithThreads(List<T> list,
@@ -160,7 +214,7 @@ public class OnlineStatusRefreshTask implements ITask {
         if (!base.startsWith("http://") && !base.startsWith("https://")) {
             base = "http://" + base;
         }
-        String url = base.endsWith("/") ? (base + "health") : (base + "/health");
+        String url = base.endsWith("/") ? (base + "healthz") : (base + "/healthz");
         int timeout = properties.getOnlineStatus().getTimeout().getAgent();
         try {
             java.net.HttpURLConnection conn = (java.net.HttpURLConnection) new java.net.URL(url).openConnection();

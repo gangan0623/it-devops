@@ -24,8 +24,6 @@ import net.leoch.common.integration.excel.template.DeviceBackupImportExcel;
 import net.leoch.common.integration.security.SecurityUser;
 import net.leoch.common.utils.excel.ExcelUtils;
 import net.leoch.common.utils.ops.PingUtils;
-import net.leoch.common.utils.redis.RedisKeys;
-import net.leoch.common.utils.redis.RedisUtils;
 import net.leoch.framework.config.ops.OnlineStatusConfig;
 import net.leoch.modules.ops.entity.BackupAgentEntity;
 import net.leoch.modules.ops.entity.DeviceBackupEntity;
@@ -57,13 +55,11 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
             "status", "agent_id", "create_date", "update_date");
 
     private final BackupAgentMapper backupAgentMapper;
-    private final RedisUtils redisUtils;
     private final OnlineStatusConfig properties;
 
-    public DeviceBackupServiceImpl(BackupAgentMapper backupAgentMapper, RedisUtils redisUtils,
+    public DeviceBackupServiceImpl(BackupAgentMapper backupAgentMapper,
                                    OnlineStatusConfig properties) {
         this.backupAgentMapper = backupAgentMapper;
-        this.redisUtils = redisUtils;
         this.properties = properties;
     }
 
@@ -76,6 +72,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
         wrapper.eq(StrUtil.isNotBlank(request.getGroupName()), DeviceBackupEntity::getGroupName, request.getGroupName());
         wrapper.eq(StrUtil.isNotBlank(request.getDeviceModel()), DeviceBackupEntity::getDeviceModel, request.getDeviceModel());
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), DeviceBackupEntity::getStatus, request.getStatus());
+        wrapper.eq(StrUtil.isNotBlank(request.getOnlineStatus()), DeviceBackupEntity::getOnlineStatus, request.getOnlineStatus());
         wrapper.eq(StrUtil.isNotBlank(request.getAgentId()), DeviceBackupEntity::getAgentId, request.getAgentId());
         Page<DeviceBackupEntity> page = buildPage(request);
         IPage<DeviceBackupEntity> result = this.page(page, wrapper);
@@ -156,9 +153,8 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
     @Override
     public OpsHostStatusSummaryRsp summary(DeviceBackupPageReq request) {
         LambdaQueryWrapper<DeviceBackupEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(DeviceBackupEntity::getInstance, DeviceBackupEntity::getStatus);
+        wrapper.select(DeviceBackupEntity::getInstance, DeviceBackupEntity::getStatus, DeviceBackupEntity::getOnlineStatus);
         List<DeviceBackupEntity> list = this.list(wrapper);
-        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getDeviceBackupOnlineKey());
         OpsHostStatusSummaryRsp summary = new OpsHostStatusSummaryRsp();
         summary.setTotalCount((long) list.size());
         for (DeviceBackupEntity item : list) {
@@ -171,7 +167,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
             } else if (Integer.valueOf(0).equals(status)) {
                 summary.setDisabledCount(summary.getDisabledCount() + 1);
             }
-            Boolean onlineStatus = OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(item.getInstance()));
+            Boolean onlineStatus = item.getOnlineStatus();
             if (Boolean.TRUE.equals(onlineStatus)) {
                 summary.setOnlineCount(summary.getOnlineCount() + 1);
             } else if (Boolean.FALSE.equals(onlineStatus)) {
@@ -356,14 +352,7 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
     }
 
     private void fillOnlineStatus(List<DeviceBackupRsp> list) {
-        if (list == null || list.isEmpty()) {
-            return;
-        }
-        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getDeviceBackupOnlineKey());
-        for (DeviceBackupRsp dto : list) {
-            String instance = dto.getInstance();
-            dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
-        }
+        // online_status 已落库到 tb_device_backup，BeanUtil 复制时会带上该字段
     }
 
     private void maskPasswords(List<DeviceBackupRsp> list) {

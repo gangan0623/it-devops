@@ -31,6 +31,9 @@ public class DeviceBackupPageReq extends BasePage {
     @Schema(description = "状态")
     private String status;
 
+    @Schema(description = "在线状态")
+    private String onlineStatus;
+
     @Schema(description = "备份节点ID")
     private String agentId;
 }

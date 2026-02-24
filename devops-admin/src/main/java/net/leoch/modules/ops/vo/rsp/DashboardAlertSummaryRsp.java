@@ -25,7 +25,7 @@ public class DashboardAlertSummaryRsp implements Serializable  {
     @Schema(description = "主机名")
     private String hostName;
 
-    @Schema(description = "时间")
+    @Schema(description = "记录时间")
     private Date time;
 
     @Schema(description = "级别")

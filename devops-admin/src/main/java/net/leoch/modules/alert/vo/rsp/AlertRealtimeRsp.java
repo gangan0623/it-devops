@@ -31,6 +31,6 @@ public class AlertRealtimeRsp implements Serializable  {
     @Schema(description = "状态")
     private String status;
 
-    @Schema(description = "时间")
+    @Schema(description = "记录时间")
     private Date time;
 }

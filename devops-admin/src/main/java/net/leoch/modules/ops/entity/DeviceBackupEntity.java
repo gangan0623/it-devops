@@ -54,6 +54,10 @@ public class DeviceBackupEntity {
      */
 	private Integer status;
     /**
+     * 在线状态 0离线 1在线
+     */
+    private Boolean onlineStatus;
+    /**
      * 节点ID
      */
 	private Long agentId;

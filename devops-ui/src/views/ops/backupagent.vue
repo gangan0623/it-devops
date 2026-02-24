@@ -7,7 +7,9 @@
           <el-input v-model="state.dataForm.name" class="query-input" placeholder="名称(模糊)" clearable @keyup.enter="queryList()"></el-input>
           <el-button class="query-btn" :loading="state.dataListLoading" @click="queryList()">查询</el-button>
           <el-button class="query-btn" @click="handleToolbarReset">重置</el-button>
-          <el-button :icon="Filter" @click="filterDrawer = true">筛选<span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span></el-button>
+          <el-button :icon="Filter" @click="filterDrawer = true"
+            >筛选<span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span></el-button
+          >
         </div>
         <div class="ops-toolbar__group ops-actions">
           <div class="agent-stats">
@@ -35,38 +37,44 @@
             <el-option label="禁用" :value="0"></el-option>
           </el-select>
         </el-form-item>
+        <el-form-item label="在线状态">
+          <el-select v-model="state.dataForm.onlineStatus" placeholder="全部" clearable>
+            <el-option label="在线" :value="1"></el-option>
+            <el-option label="不在线" :value="0"></el-option>
+          </el-select>
+        </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="handleFilterReset">重置</el-button>
         <el-button type="primary" @click="handleFilterConfirm">确定</el-button>
       </template>
     </el-drawer>
-    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="agent-table" style="width: 100%">
+    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="ops-table-nowrap" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
-              <el-table-column prop="instance" label="地址" header-align="center" align="center"></el-table-column>
-              <el-table-column prop="name" label="名称" header-align="center" align="center"></el-table-column>
-              <el-table-column label="区域名称" header-align="center" align="center">
-                <template v-slot="scope">{{ state.getDictValueByLabel("area_name_type", scope.row.areaName) }}</template>
-              </el-table-column>
-              <el-table-column prop="token" label="Token" header-align="center" align="center">
-                <template v-slot="scope">
-                  <span>***</span>
-                </template>
-              </el-table-column>
-              <el-table-column prop="status" label="状态" header-align="center" align="center">
-                <template v-slot="scope">
-                  <el-tag v-if="scope.row.status === 0" size="small" type="danger">禁用</el-tag>
-                  <el-tag v-else size="small" type="success">启用</el-tag>
-                </template>
-              </el-table-column>
-              <el-table-column prop="onlineStatus" label="在线状态" header-align="center" align="center">
-                <template v-slot="scope">
-                  <el-tag v-if="scope.row.onlineStatus === true" size="small" type="success">在线</el-tag>
-                  <el-tag v-else-if="scope.row.onlineStatus === false" size="small" type="danger">不在线</el-tag>
-                  <el-tag v-else size="small" type="info">检测中</el-tag>
-                </template>
-              </el-table-column>
-            <el-table-column label="操作" fixed="right" header-align="center" align="center" width="150">
+      <el-table-column prop="instance" label="地址" header-align="center" align="center" min-width="180"></el-table-column>
+      <el-table-column prop="name" label="名称" header-align="center" align="center" min-width="180"></el-table-column>
+      <el-table-column label="区域名称" header-align="center" align="center" min-width="60">
+        <template v-slot="scope">{{ state.getDictValueByLabel("area_name_type", scope.row.areaName) }}</template>
+      </el-table-column>
+      <el-table-column prop="token" label="Token" header-align="center" align="center" min-width="60">
+        <template v-slot="scope">
+          <span>***</span>
+        </template>
+      </el-table-column>
+      <el-table-column prop="status" label="状态" header-align="center" align="center" min-width="60">
+        <template v-slot="scope">
+          <el-tag v-if="scope.row.status === 0" size="small" type="danger">禁用</el-tag>
+          <el-tag v-else size="small" type="success">启用</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column prop="onlineStatus" label="在线状态" header-align="center" align="center" min-width="60">
+        <template v-slot="scope">
+          <el-tag v-if="scope.row.onlineStatus === true" size="small" type="success">在线</el-tag>
+          <el-tag v-else-if="scope.row.onlineStatus === false" size="small" type="danger">不在线</el-tag>
+          <el-tag v-else size="small" type="info">检测中</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="操作" fixed="right" header-align="center" align="center" width="260">
         <template v-slot="scope">
           <el-button v-if="state.hasPermission('ops:backupagent:update')" type="primary" link @click="addOrUpdateHandle(scope.row.id)">修改</el-button>
           <el-button v-if="state.hasPermission('ops:backupagent:save')" type="primary" link @click="cloneHandle(scope.row)">克隆</el-button>
@@ -90,14 +98,14 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {computed, onMounted, reactive, ref, toRefs} from "vue";
+import { computed, onMounted, reactive, ref, toRefs } from "vue";
 import AddOrUpdate from "./backupagent-add-or-update.vue";
 import baseService from "@/service/baseService";
-import {ElMessage, ElMessageBox} from "element-plus";
-import {Filter} from "@element-plus/icons-vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { Filter } from "@element-plus/icons-vue";
 import app from "@/constants/app";
-import {getToken} from "@/utils/cache";
-import {IObject} from "@/types/interface";
+import { getToken } from "@/utils/cache";
+import { IObject } from "@/types/interface";
 
 const view = reactive({
   deleteIsBatch: true,
@@ -109,7 +117,8 @@ const view = reactive({
     instance: "",
     name: "",
     areaName: "",
-    status: "" as string | number
+    status: "" as string | number,
+    onlineStatus: "" as string | number
   }
 });
 
@@ -131,6 +140,7 @@ const activeFilterCount = computed(() => {
   let count = 0;
   if (state.dataForm.areaName) count++;
   if (state.dataForm.status !== "" && state.dataForm.status !== null && state.dataForm.status !== undefined) count++;
+  if (state.dataForm.onlineStatus !== "" && state.dataForm.onlineStatus !== null && state.dataForm.onlineStatus !== undefined) count++;
   return count;
 });
 
@@ -142,6 +152,7 @@ const handleFilterConfirm = () => {
 const handleFilterReset = () => {
   state.dataForm.areaName = "";
   state.dataForm.status = "";
+  state.dataForm.onlineStatus = "";
 };
 
 const handleToolbarReset = () => {
@@ -181,8 +192,8 @@ const handleImportSuccess = (res: IObject) => {
   }
   ElMessage.success({
     message: "成功",
-      duration: 500,
-      onClose: () => {
+    duration: 500,
+    onClose: () => {
       queryList();
     }
   });
@@ -272,6 +283,10 @@ const updateStatusHandle = (status: number) => {
 </script>
 
 <style scoped>
+.ops-table-nowrap :deep(.cell) {
+  white-space: nowrap;
+}
+
 /* 统计标签容器 */
 .agent-stats {
   display: flex;

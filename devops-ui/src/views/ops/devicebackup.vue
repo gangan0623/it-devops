@@ -43,6 +43,12 @@
             <el-option label="禁用" :value="0"></el-option>
           </el-select>
         </el-form-item>
+        <el-form-item label="在线状态">
+          <el-select v-model="state.dataForm.onlineStatus" placeholder="全部" clearable>
+            <el-option label="在线" :value="1"></el-option>
+            <el-option label="不在线" :value="0"></el-option>
+          </el-select>
+        </el-form-item>
         <el-form-item label="备份节点">
           <el-select v-model="state.dataForm.agentId" placeholder="全部" clearable filterable>
             <el-option v-for="item in backupAgentOptions" :key="item.id" :label="item.label" :value="item.id"></el-option>
@@ -54,40 +60,40 @@
         <el-button type="primary" @click="handleFilterConfirm">确定</el-button>
       </template>
     </el-drawer>
-    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="device-table" style="width: 100%">
+    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="ops-table-nowrap" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
-              <el-table-column prop="instance" label="地址" header-align="center" align="center"></el-table-column>
-              <el-table-column prop="name" label="名称" header-align="center" align="center"></el-table-column>
-              <el-table-column prop="username" label="用户名" header-align="center" align="center"></el-table-column>
-              <el-table-column prop="password" label="密码" header-align="center" align="center">
+              <el-table-column prop="instance" label="地址" header-align="center" align="center" min-width="180"></el-table-column>
+              <el-table-column prop="name" label="名称" header-align="center" align="center" min-width="180"></el-table-column>
+              <el-table-column prop="username" label="用户名" header-align="center" align="center" min-width="60"></el-table-column>
+              <el-table-column prop="password" label="密码" header-align="center" align="center" min-width="60">
                 <template v-slot="scope">
                   <span>***</span>
                 </template>
               </el-table-column>
-              <el-table-column label="区域名称" header-align="center" align="center">
+              <el-table-column label="区域名称" header-align="center" align="center" min-width="60">
                 <template v-slot="scope">{{ state.getDictValueByLabel("area_name_type", scope.row.areaName) }}</template>
               </el-table-column>
-              <el-table-column label="分组名称" header-align="center" align="center">
+              <el-table-column label="分组名称" header-align="center" align="center" min-width="60">
                 <template v-slot="scope">{{ state.getDictValueByLabel("network_device_group", scope.row.groupName) }}</template>
               </el-table-column>
-              <el-table-column label="设备型号" header-align="center" align="center">
+              <el-table-column label="设备型号" header-align="center" align="center" min-width="60">
                 <template v-slot="scope">{{ state.getDictValueByLabel("network_device_model", scope.row.deviceModel) }}</template>
               </el-table-column>
-              <el-table-column prop="status" label="状态" header-align="center" align="center">
+              <el-table-column prop="status" label="状态" header-align="center" align="center" min-width="60">
                 <template v-slot="scope">
                   <el-tag v-if="scope.row.status === 0" size="small" type="danger">禁用</el-tag>
                   <el-tag v-else size="small" type="success">启用</el-tag>
                 </template>
               </el-table-column>
-              <el-table-column prop="agentName" label="节点名称" header-align="center" align="center"></el-table-column>
-              <el-table-column prop="onlineStatus" label="在线状态" header-align="center" align="center">
+              <el-table-column prop="agentName" label="节点名称" header-align="center" align="center" min-width="60"></el-table-column>
+              <el-table-column prop="onlineStatus" label="在线状态" header-align="center" align="center" min-width="60">
                 <template v-slot="scope">
                   <el-tag v-if="scope.row.onlineStatus === true" size="small" type="success">在线</el-tag>
                   <el-tag v-else-if="scope.row.onlineStatus === false" size="small" type="danger">不在线</el-tag>
                   <el-tag v-else size="small" type="info">检测中</el-tag>
                 </template>
               </el-table-column>
-            <el-table-column label="操作" fixed="right" header-align="center" align="center" width="150">
+            <el-table-column label="操作" fixed="right" header-align="center" align="center" width="260">
         <template v-slot="scope">
           <el-button v-if="state.hasPermission('ops:devicebackup:update')" type="primary" link @click="addOrUpdateHandle(scope.row.id)">修改</el-button>
           <el-button v-if="state.hasPermission('ops:devicebackup:save')" type="primary" link @click="cloneHandle(scope.row)">克隆</el-button>
@@ -133,6 +139,7 @@ const view = reactive({
     groupName: "",
     deviceModel: "",
     status: "" as string | number,
+    onlineStatus: "" as string | number,
     agentId: ""
   }
 });
@@ -160,6 +167,7 @@ const activeFilterCount = computed(() => {
   if (state.dataForm.name) count++;
   if (state.dataForm.deviceModel) count++;
   if (state.dataForm.status !== "" && state.dataForm.status !== null && state.dataForm.status !== undefined) count++;
+  if (state.dataForm.onlineStatus !== "" && state.dataForm.onlineStatus !== null && state.dataForm.onlineStatus !== undefined) count++;
   if (state.dataForm.agentId) count++;
   return count;
 });
@@ -174,6 +182,7 @@ const handleFilterReset = () => {
   state.dataForm.groupName = "";
   state.dataForm.deviceModel = "";
   state.dataForm.status = "";
+  state.dataForm.onlineStatus = "";
   state.dataForm.agentId = "";
 };
 
@@ -332,7 +341,7 @@ const updateStatusHandle = (status: number) => {
 }
 
 /* 表格单元格不换行 */
-.mod-ops__devicebackup :deep(.el-table .cell) {
+.ops-table-nowrap :deep(.cell) {
   white-space: nowrap;
 }
 </style>

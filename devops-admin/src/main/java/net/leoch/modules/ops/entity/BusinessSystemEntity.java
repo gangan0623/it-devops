@@ -50,6 +50,10 @@ public class BusinessSystemEntity {
      */
 	private Integer status;
     /**
+     * 在线状态 0离线 1在线
+     */
+    private Boolean onlineStatus;
+    /**
      * 创建者
      */
     @TableField(fill = FieldFill.INSERT)

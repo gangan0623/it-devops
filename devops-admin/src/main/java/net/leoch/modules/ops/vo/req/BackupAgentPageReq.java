@@ -24,4 +24,7 @@ public class BackupAgentPageReq extends BasePage {
 
     @Schema(description = "状态")
     private String status;
+
+    @Schema(description = "在线状态")
+    private String onlineStatus;
 }

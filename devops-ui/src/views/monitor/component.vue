@@ -47,7 +47,7 @@
       </template>
     </el-drawer>
 
-    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" class="ops-table-nowrap" style="width: 100%">
+    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" @sort-change="state.dataListSortChangeHandle" class="ops-table-nowrap" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
       <el-table-column prop="name" label="名称" header-align="center" align="center" min-width="160"></el-table-column>
       <el-table-column prop="type" label="类型" header-align="center" align="center" width="140">

@@ -81,10 +81,10 @@ public class AlertSseServiceImpl implements IAlertSseService {
         List<AlertRecordEntity> list = alertRecordMapper.selectList(
             new LambdaQueryWrapper<AlertRecordEntity>()
                 .select(AlertRecordEntity::getAlertName, AlertRecordEntity::getInstance, AlertRecordEntity::getSeverity,
-                    AlertRecordEntity::getStatus, AlertRecordEntity::getStartsAt)
+                    AlertRecordEntity::getStatus, AlertRecordEntity::getCreateDate)
                 .and(wrapper -> wrapper.isNull(AlertRecordEntity::getClosed).or().eq(AlertRecordEntity::getClosed, 0))
                 .and(wrapper -> wrapper.isNull(AlertRecordEntity::getSuppressedUntil).or().le(AlertRecordEntity::getSuppressedUntil, new java.util.Date()))
-                .orderByDesc(AlertRecordEntity::getStartsAt)
+                .orderByDesc(AlertRecordEntity::getCreateDate)
                 .last("limit 10")
         );
         Map<String, String> hostMap = loadHostMap();
@@ -96,7 +96,7 @@ public class AlertSseServiceImpl implements IAlertSseService {
             dto.setHostName(hostMap.get(normalizeInstance(entity.getInstance())));
             dto.setSeverity(entity.getSeverity());
             dto.setStatus(entity.getStatus());
-            dto.setTime(entity.getStartsAt());
+            dto.setTime(entity.getCreateDate());
             result.add(dto);
         }
         return result;

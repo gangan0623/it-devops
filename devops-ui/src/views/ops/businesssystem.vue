@@ -40,6 +40,12 @@
             <el-option label="禁用" :value="0"></el-option>
           </el-select>
         </el-form-item>
+        <el-form-item label="在线状态">
+          <el-select v-model="state.dataForm.onlineStatus" placeholder="全部" clearable>
+            <el-option label="在线" :value="1"></el-option>
+            <el-option label="不在线" :value="0"></el-option>
+          </el-select>
+        </el-form-item>
         <el-form-item label="分组名称">
           <ren-select v-model="state.dataForm.menuName" dict-type="server_host_group" label-field="dictValue" value-field="dictLabel" placeholder="全部"></ren-select>
         </el-form-item>
@@ -52,31 +58,31 @@
     <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" @sort-change="state.dataListSortChangeHandle" class="ops-table-nowrap" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
               <el-table-column prop="instance" label="地址" header-align="center" align="center" min-width="180"></el-table-column>
-              <el-table-column prop="name" label="名称" header-align="center" align="center"></el-table-column>
-              <el-table-column label="区域名称" header-align="center" align="center">
+              <el-table-column prop="name" label="名称" header-align="center" align="center" min-width="180"></el-table-column>
+              <el-table-column label="区域名称" header-align="center" align="center" min-width="60">
                 <template v-slot="scope">{{ state.getDictValueByLabel("area_name_type", scope.row.areaName) }}</template>
               </el-table-column>
-              <el-table-column label="站点位置" header-align="center" align="center">
+              <el-table-column label="站点位置" header-align="center" align="center" min-width="60">
                 <template v-slot="scope">{{ state.getDictValueByLabel("base_site_location", scope.row.siteLocation) }}</template>
               </el-table-column>
-              <el-table-column label="分组名称" header-align="center" align="center">
+              <el-table-column label="分组名称" header-align="center" align="center" min-width="60">
                 <template v-slot="scope">{{ state.getDictValueByLabel("server_host_group", scope.row.menuName) }}</template>
               </el-table-column>
-              <el-table-column prop="subMenuName" label="子组名称" header-align="center" align="center"></el-table-column>
-              <el-table-column prop="status" label="状态" header-align="center" align="center" width="80">
+              <el-table-column prop="subMenuName" label="子组名称" header-align="center" align="center" min-width="60"></el-table-column>
+              <el-table-column prop="status" label="状态" header-align="center" align="center" min-width="60">
                 <template v-slot="scope">
                   <el-tag v-if="scope.row.status === 0" size="small" type="danger">禁用</el-tag>
                   <el-tag v-else size="small" type="success">启用</el-tag>
                 </template>
               </el-table-column>
-              <el-table-column prop="onlineStatus" label="在线状态" header-align="center" align="center" width="90" sortable="custom">
+              <el-table-column prop="onlineStatus" label="在线状态" header-align="center" align="center" min-width="60">
                 <template v-slot="scope">
                   <el-tag v-if="scope.row.onlineStatus === true" size="small" type="success">在线</el-tag>
                   <el-tag v-else-if="scope.row.onlineStatus === false" size="small" type="danger">不在线</el-tag>
                   <el-tag v-else size="small" type="info">检测中</el-tag>
                 </template>
               </el-table-column>
-            <el-table-column label="操作" fixed="right" header-align="center" align="center" width="150">
+            <el-table-column label="操作" fixed="right" header-align="center" align="center" width="260">
         <template v-slot="scope">
           <el-button v-if="state.hasPermission('ops:businesssystem:update')" type="primary" link @click="addOrUpdateHandle(scope.row.id)">修改</el-button>
           <el-button v-if="state.hasPermission('ops:businesssystem:save')" type="primary" link @click="cloneHandle(scope.row)">克隆</el-button>
@@ -127,6 +133,7 @@ const view = reactive({
     siteLocation: "",
     areaName: "",
     status: "" as string | number,
+    onlineStatus: "" as string | number,
     menuName: ""
   }
 });
@@ -151,6 +158,7 @@ const activeFilterCount = computed(() => {
   if (state.dataForm.areaName) count++;
   if (state.dataForm.name) count++;
   if (state.dataForm.status !== "" && state.dataForm.status !== null && state.dataForm.status !== undefined) count++;
+  if (state.dataForm.onlineStatus !== "" && state.dataForm.onlineStatus !== null && state.dataForm.onlineStatus !== undefined) count++;
   if (state.dataForm.menuName) count++;
   return count;
 });
@@ -164,6 +172,7 @@ const handleFilterReset = () => {
   state.dataForm.siteLocation = "";
   state.dataForm.areaName = "";
   state.dataForm.status = "";
+  state.dataForm.onlineStatus = "";
   state.dataForm.menuName = "";
 };
 

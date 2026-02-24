@@ -24,8 +24,6 @@ import net.leoch.common.integration.security.SecurityUser;
 import net.leoch.common.utils.excel.ExcelUtils;
 import net.leoch.common.utils.ops.MetricsUtils;
 import net.leoch.common.utils.ops.OpsQueryUtils;
-import net.leoch.common.utils.redis.RedisKeys;
-import net.leoch.common.utils.redis.RedisUtils;
 import net.leoch.modules.ops.entity.WindowHostEntity;
 import net.leoch.modules.ops.mapper.WindowHostMapper;
 import net.leoch.modules.ops.service.IWindowHostService;
@@ -47,8 +45,6 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowHostEntity> implements IWindowHostService {
-
-    private final RedisUtils redisUtils;
 
     @Override
     public PageData<WindowHostRsp> page(WindowHostPageReq request) {
@@ -121,9 +117,8 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
     @Override
     public OpsHostStatusSummaryRsp summary(WindowHostPageReq request) {
         LambdaQueryWrapper<WindowHostEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(WindowHostEntity::getInstance, WindowHostEntity::getStatus);
+        wrapper.select(WindowHostEntity::getInstance, WindowHostEntity::getStatus, WindowHostEntity::getOnlineStatus);
         List<WindowHostEntity> list = this.list(wrapper);
-        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getWindowHostOnlineKey());
         OpsHostStatusSummaryRsp summary = new OpsHostStatusSummaryRsp();
         summary.setTotalCount((long) list.size());
         for (WindowHostEntity item : list) {
@@ -136,7 +131,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
             } else if (Integer.valueOf(0).equals(status)) {
                 summary.setDisabledCount(summary.getDisabledCount() + 1);
             }
-            Boolean onlineStatus = OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(item.getInstance()));
+            Boolean onlineStatus = item.getOnlineStatus();
             if (Boolean.TRUE.equals(onlineStatus)) {
                 summary.setOnlineCount(summary.getOnlineCount() + 1);
             } else if (Boolean.FALSE.equals(onlineStatus)) {
@@ -188,14 +183,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
 
 
     private void fillOnlineStatus(List<WindowHostRsp> list) {
-        if (list == null || list.isEmpty()) {
-            return;
-        }
-        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getWindowHostOnlineKey());
-        for (WindowHostRsp dto : list) {
-            String instance = dto.getInstance();
-            dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
-        }
+        // online_status 已落库到 tb_window_host，BeanUtil 复制时会带上该字段
     }
 
     private void applyCommonFilters(LambdaQueryWrapper<WindowHostEntity> wrapper, WindowHostPageReq request) {
@@ -204,6 +192,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
         wrapper.eq(StrUtil.isNotBlank(request.getSiteLocation()), WindowHostEntity::getSiteLocation, request.getSiteLocation());
         wrapper.eq(StrUtil.isNotBlank(request.getAreaName()), WindowHostEntity::getAreaName, request.getAreaName());
         wrapper.eq(StrUtil.isNotBlank(request.getStatus()), WindowHostEntity::getStatus, request.getStatus());
+        wrapper.eq(StrUtil.isNotBlank(request.getOnlineStatus()), WindowHostEntity::getOnlineStatus, request.getOnlineStatus());
         wrapper.eq(StrUtil.isNotBlank(request.getMenuName()), WindowHostEntity::getMenuName, request.getMenuName());
         wrapper.eq(StrUtil.isNotBlank(request.getType()), WindowHostEntity::getType, request.getType());
     }

@@ -23,8 +23,6 @@ import net.leoch.common.integration.excel.BackupAgentExcel;
 import net.leoch.common.integration.excel.template.BackupAgentImportExcel;
 import net.leoch.common.integration.security.SecurityUser;
 import net.leoch.common.utils.excel.ExcelUtils;
-import net.leoch.common.utils.redis.RedisKeys;
-import net.leoch.common.utils.redis.RedisUtils;
 import net.leoch.framework.config.ops.OnlineStatusConfig;
 import net.leoch.modules.ops.entity.BackupAgentEntity;
 import net.leoch.modules.ops.entity.DeviceBackupEntity;
@@ -65,14 +63,11 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     };
 
     private final DeviceBackupMapper deviceBackupMapper;
-    private final RedisUtils redisUtils;
     private final OnlineStatusConfig properties;
 
     public BackupAgentServiceImpl(DeviceBackupMapper deviceBackupMapper,
-                                  RedisUtils redisUtils,
                                   OnlineStatusConfig properties) {
         this.deviceBackupMapper = deviceBackupMapper;
-        this.redisUtils = redisUtils;
         this.properties = properties;
     }
 
@@ -85,6 +80,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
                         .like(StrUtil.isNotBlank(request.getName()), BackupAgentEntity::getName, request.getName())
                         .eq(StrUtil.isNotBlank(request.getAreaName()), BackupAgentEntity::getAreaName, request.getAreaName())
                         .eq(StrUtil.isNotBlank(request.getStatus()), BackupAgentEntity::getStatus, request.getStatus())
+                        .eq(StrUtil.isNotBlank(request.getOnlineStatus()), BackupAgentEntity::getOnlineStatus, request.getOnlineStatus())
         );
         List<BackupAgentRsp> list = BeanUtil.copyToList(result.getRecords(), BackupAgentRsp.class);
         fillOnlineStatus(list);
@@ -160,9 +156,8 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     @Override
     public OpsHostStatusSummaryRsp summary(BackupAgentPageReq request) {
         LambdaQueryWrapper<BackupAgentEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.select(BackupAgentEntity::getInstance, BackupAgentEntity::getStatus);
+        wrapper.select(BackupAgentEntity::getInstance, BackupAgentEntity::getStatus, BackupAgentEntity::getOnlineStatus);
         List<BackupAgentEntity> list = this.list(wrapper);
-        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBackupAgentOnlineKey());
         OpsHostStatusSummaryRsp summary = new OpsHostStatusSummaryRsp();
         summary.setTotalCount((long) list.size());
         for (BackupAgentEntity item : list) {
@@ -175,7 +170,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
             } else if (Integer.valueOf(0).equals(status)) {
                 summary.setDisabledCount(summary.getDisabledCount() + 1);
             }
-            Boolean onlineStatus = OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(item.getInstance()));
+            Boolean onlineStatus = item.getOnlineStatus();
             if (Boolean.TRUE.equals(onlineStatus)) {
                 summary.setOnlineCount(summary.getOnlineCount() + 1);
             } else if (Boolean.FALSE.equals(onlineStatus)) {
@@ -336,14 +331,7 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
     }
 
     private void fillOnlineStatus(List<BackupAgentRsp> list) {
-        if (list == null || list.isEmpty()) {
-            return;
-        }
-        Map<String, Object> statusMap = redisUtils.hGetAll(RedisKeys.getBackupAgentOnlineKey());
-        for (BackupAgentRsp dto : list) {
-            String instance = dto.getInstance();
-            dto.setOnlineStatus(OnlineStatusSupport.resolveOnlineStatus(statusMap == null ? null : statusMap.get(instance)));
-        }
+        // online_status 已落库到 tb_backup_agent，BeanUtil 复制时会带上该字段
     }
 
     private void maskToken(BackupAgentRsp dto) {

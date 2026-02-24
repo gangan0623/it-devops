@@ -113,9 +113,9 @@ public class DashboardServiceImpl implements IDashboardService {
     private List<DashboardAlertSummaryRsp> buildRecentAlerts() {
         List<AlertRecordEntity> alerts = alertRecordMapper.selectList(
                 new LambdaQueryWrapper<AlertRecordEntity>()
-                        .select(AlertRecordEntity::getAlertName, AlertRecordEntity::getInstance, AlertRecordEntity::getStartsAt,
+                        .select(AlertRecordEntity::getAlertName, AlertRecordEntity::getInstance, AlertRecordEntity::getCreateDate,
                                 AlertRecordEntity::getSeverity, AlertRecordEntity::getStatus)
-                        .orderByDesc(AlertRecordEntity::getStartsAt)
+                        .orderByDesc(AlertRecordEntity::getCreateDate)
                         .last("limit 10")
         );
         Map<String, String> hostMap = loadHostMap();
@@ -125,7 +125,7 @@ public class DashboardServiceImpl implements IDashboardService {
             item.setAlertName(alert.getAlertName());
             item.setInstance(alert.getInstance());
             item.setHostName(hostMap.get(normalizeInstance(alert.getInstance())));
-            item.setTime(alert.getStartsAt());
+            item.setTime(alert.getCreateDate());
             item.setSeverity(alert.getSeverity());
             item.setStatus(alert.getStatus());
             recentAlerts.add(item);

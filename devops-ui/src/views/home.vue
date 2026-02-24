@@ -43,7 +43,7 @@
           <span class="card-link" @click="goProblem">查看详情</span>
         </div>
         <el-table :data="summary.recentAlerts" border class="alert-table" max-height="520">
-          <el-table-column prop="time" label="时间" header-align="center" align="center" width="165" />
+          <el-table-column prop="time" label="记录时间" header-align="center" align="center" width="165" />
           <el-table-column label="严重性" header-align="center" align="center" width="90">
             <template #default="scope">
               <span :class="severityClass(scope.row)">{{ formatSeverity(scope.row.severity) }}</span>

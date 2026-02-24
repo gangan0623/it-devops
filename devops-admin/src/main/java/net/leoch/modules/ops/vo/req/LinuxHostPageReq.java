@@ -33,4 +33,7 @@ public class LinuxHostPageReq extends BasePage {
 
     @Schema(description = "Status")
     private String status;
+
+    @Schema(description = "Online status")
+    private String onlineStatus;
 }
