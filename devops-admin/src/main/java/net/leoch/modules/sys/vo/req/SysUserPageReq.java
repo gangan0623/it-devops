@@ -19,6 +19,4 @@ public class SysUserPageReq extends BasePage {
     @Schema(description = "性别")
     private String gender;
 
-    @Schema(description = "部门ID")
-    private String deptId;
 }

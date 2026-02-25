@@ -1,5 +1,4 @@
 import "@/assets/icons/iconfont/iconfont.js";
-import RenDeptTree from "@/components/ren-dept-tree";
 import RenRadioGroup from "@/components/ren-radio-group";
 import RenRegionTree from "@/components/ren-region-tree";
 import RenSelect from "@/components/ren-select";
@@ -26,7 +25,6 @@ app
   .use(router)
   .use(RenRadioGroup)
   .use(RenSelect)
-  .use(RenDeptTree)
   .use(RenRegionTree)
   .use(ElementPlus, { size: "default", locale: locale })
   .mount("#app");

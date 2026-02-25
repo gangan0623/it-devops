@@ -15,8 +15,6 @@ export const useAppStore = defineStore("useAppStore", {
       permissions: [], //权限集合
       user: {
         createDate: "",
-        deptId: "",
-        deptName: "",
         email: "",
         gender: 0,
         headUrl: "",

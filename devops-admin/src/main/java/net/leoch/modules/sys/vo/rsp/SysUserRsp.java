@@ -63,10 +63,6 @@ public class SysUserRsp implements Serializable  {
 	@Schema(title = "手机号")
 	private String mobile;
 
-	@Schema(title = "部门ID")
-	@NotNull(message="{sysuser.deptId.require}", groups = DefaultGroup.class)
-	private Long deptId;
-
 	@Schema(title = "状态  0：停用    1：正常")
 	@Range(min=0, max=1, message = "{sysuser.status.range}", groups = DefaultGroup.class)
 	private Integer status;
@@ -81,8 +77,5 @@ public class SysUserRsp implements Serializable  {
 
 	@Schema(title = "角色ID列表")
 	private List<Long> roleIdList;
-
-	@Schema(title = "部门名称")
-	private String deptName;
 
 }

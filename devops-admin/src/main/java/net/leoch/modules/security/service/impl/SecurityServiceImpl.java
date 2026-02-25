@@ -28,7 +28,6 @@ import net.leoch.modules.security.service.ISecurityService;
 import net.leoch.modules.security.vo.req.LoginReq;
 import net.leoch.modules.sys.entity.SysUserEntity;
 import net.leoch.modules.sys.mapper.SysMenuMapper;
-import net.leoch.modules.sys.mapper.SysRoleDataScopeMapper;
 import net.leoch.modules.sys.mapper.SysUserMapper;
 import net.leoch.modules.sys.service.ISysUserService;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
@@ -43,7 +42,6 @@ import java.util.*;
 public class SecurityServiceImpl implements ISecurityService {
     private final SysMenuMapper sysMenuMapper;
     private final SysUserMapper sysUserMapper;
-    private final SysRoleDataScopeMapper sysRoleDataScopeMapper;
     private final ISysUserService sysUserService;
     private final ICaptchaService captchaService;
     private final ISysLogLoginService sysLogLoginService;
@@ -76,11 +74,6 @@ public class SecurityServiceImpl implements ISecurityService {
     @Override
     public SysUserEntity getUser(Long userId) {
         return sysUserMapper.selectById(userId);
-    }
-
-    @Override
-    public List<Long> getDataScopeList(Long userId) {
-        return sysRoleDataScopeMapper.getDataScopeList(userId);
     }
 
     @Override
@@ -135,7 +128,6 @@ public class SecurityServiceImpl implements ISecurityService {
 
         // 存储用户信息到 session
         UserDetail userDetail = BeanUtil.copyProperties(user, UserDetail.class);
-        userDetail.setDeptIdList(sysRoleDataScopeMapper.getDataScopeList(user.getId()));
         StpUtil.getSession().set("user", userDetail);
 
         Map<String, Object> map = new HashMap<>(2);

@@ -58,16 +58,6 @@ public interface ISysUserService extends IService<SysUserEntity> {
 	SysUserRsp getCurrentUserInfo();
 
 	/**
-	 * 根据部门ID，查询用户数
-	 */
-	int getCountByDeptId(Long deptId);
-
-	/**
-	 * 根据部门ID,查询用户Id列表
-	 */
-	List<Long> getUserIdListByDeptId(List<Long> deptIdList);
-
-	/**
 	 * 强制用户下线
 	 * @param ids 用户ID数组
 	 */

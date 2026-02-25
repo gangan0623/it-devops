@@ -7,6 +7,7 @@ import net.leoch.modules.ops.entity.WindowHostEntity;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import net.leoch.modules.ops.vo.rsp.WindowHostRsp;
+import net.leoch.modules.ops.vo.rsp.OpsDeleteCascadeRsp;
 
 /**
  * Windows主机表
@@ -36,7 +37,7 @@ public interface IWindowHostService extends IService<WindowHostEntity> {
 
     void export(WindowHostPageReq request, HttpServletResponse response) throws Exception;
 
-    void delete(WindowHostDeleteReq request);
+    OpsDeleteCascadeRsp delete(WindowHostDeleteReq request);
 
     void updateStatus(Long[] ids, Integer status);
 

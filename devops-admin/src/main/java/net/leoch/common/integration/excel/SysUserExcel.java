@@ -28,8 +28,6 @@ public class SysUserExcel {
     private String email;
     @ExcelProperty("手机号")
     private String mobile;
-    @ExcelProperty("部门名称")
-    private String deptName;
     @ExcelProperty(value = "状态", converter = StatusConverter.class)
     private Integer status;
     @ExcelProperty("备注")

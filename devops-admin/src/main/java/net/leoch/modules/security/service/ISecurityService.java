@@ -8,7 +8,6 @@ import net.leoch.common.integration.security.UserDetail;
 import net.leoch.modules.security.vo.req.LoginReq;
 import net.leoch.modules.sys.entity.SysUserEntity;
 
-import java.util.List;
 import java.util.Set;
 
 /**
@@ -27,13 +26,6 @@ public interface ISecurityService {
      * @param userId 用户ID
      */
     SysUserEntity getUser(Long userId);
-
-    /**
-     * 获取用户对应的部门数据权限
-     * @param userId  用户ID
-     * @return        返回部门ID列表
-     */
-    List<Long> getDataScopeList(Long userId);
 
     /**
      * 用户登录

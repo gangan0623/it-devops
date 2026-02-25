@@ -8,14 +8,9 @@
         <el-input v-model="dataForm.remark" placeholder="备注"></el-input>
       </el-form-item>
       <el-row>
-        <el-col :span="12">
+        <el-col :span="24">
           <el-form-item size="small" label="菜单授权">
             <el-tree :data="menuList" :props="{ label: 'name', children: 'children' }" node-key="id" ref="menuListTree" accordion show-checkbox> </el-tree>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item size="small" label="数据授权">
-            <el-tree :data="deptList" :props="{ label: 'name', children: 'children' }" node-key="id" ref="deptListTree" accordion show-checkbox> </el-tree>
           </el-form-item>
         </el-col>
       </el-row>
@@ -37,16 +32,13 @@ const emit = defineEmits(["refreshDataList"]);
 
 const visible = ref(false);
 const menuList = ref([]);
-const deptList = ref([]);
 const dataFormRef = ref();
 const menuListTree = ref();
-const deptListTree = ref();
 
 const dataForm = reactive({
   id: "",
   name: "",
   menuIdList: [] as IObject[],
-  deptIdList: [],
   remark: ""
 });
 
@@ -68,11 +60,7 @@ const init = (id?: number) => {
       menuListTree.value.setCheckedKeys([]);
     }
 
-    if (deptListTree.value) {
-      deptListTree.value.setCheckedKeys([]);
-    }
-
-    Promise.all([getMenuList(), getDeptList()]).then(() => {
+    Promise.all([getMenuList()]).then(() => {
       if (id) {
         getInfo(id);
       }
@@ -87,20 +75,12 @@ const getMenuList = () => {
   });
 };
 
-// 获取部门列表
-const getDeptList = () => {
-  return baseService.get("/sys/dept/list").then((res) => {
-    deptList.value = res.data;
-  });
-};
-
 // 获取信息
 const getInfo = (id: number) => {
   baseService.get(`/sys/role/${id}`).then((res) => {
     Object.assign(dataForm, res.data);
 
     dataForm.menuIdList.forEach((item: IObject) => menuListTree.value.setChecked(item, true));
-    deptListTree.value.setCheckedKeys(dataForm.deptIdList);
   });
 };
 
@@ -111,7 +91,6 @@ const dataFormSubmitHandle = () => {
       return false;
     }
     dataForm.menuIdList = [...menuListTree.value.getHalfCheckedKeys(), ...menuListTree.value.getCheckedKeys()];
-    dataForm.deptIdList = deptListTree.value.getCheckedKeys();
     (!dataForm.id ? baseService.post : baseService.put)("/sys/role", dataForm).then((res) => {
       ElMessage.success({
         message: "成功",

@@ -7,6 +7,7 @@ import net.leoch.modules.ops.entity.DeviceBackupEntity;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.DeviceBackupRsp;
 import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
+import net.leoch.modules.ops.vo.rsp.OpsDeleteCascadeRsp;
 
 /**
  * 设备备份表
@@ -36,7 +37,7 @@ public interface IDeviceBackupService extends IService<DeviceBackupEntity> {
 
     void export(DeviceBackupPageReq request, HttpServletResponse response) throws Exception;
 
-    void delete(DeviceBackupDeleteReq request);
+    OpsDeleteCascadeRsp delete(DeviceBackupDeleteReq request);
 
     void updateStatus(Long[] ids, Integer status);
 

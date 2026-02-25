@@ -41,7 +41,16 @@ public final class AlertPayloadUtils {
         context.put("alertname", getLabelValue(labels, commonLabels, "alertname"));
         String severity = getLabelValue(labels, commonLabels, "severity", severityFromPath);
         context.put("severity", toSeverityZh(severity));
-        context.put("instance", getLabelValue(labels, commonLabels, "instance", getLabelValue(labels, commonLabels, "service")));
+        String instance = getLabelValue(labels, commonLabels, "instance", getLabelValue(labels, commonLabels, "service"));
+        context.put("instance", instance);
+        context.put("name", firstNonBlank(
+                getLabelValue(labels, commonLabels, "name"),
+                getLabelValue(labels, commonLabels, "hostname"),
+                getLabelValue(labels, commonLabels, "host"),
+                getLabelValue(labels, commonLabels, "service"),
+                instance,
+                getLabelValue(labels, commonLabels, "alertname")
+        ));
         context.put("summary", getLabelValue(annotations, commonAnnotations, "summary"));
         context.put("description", getLabelValue(annotations, commonAnnotations, "description"));
         context.put("startsAt", alert == null ? null : alert.get("startsAt"));
@@ -82,5 +91,17 @@ public final class AlertPayloadUtils {
             return value;
         }
         return extraFallback;
+    }
+
+    private static String firstNonBlank(String... values) {
+        if (values == null) {
+            return null;
+        }
+        for (String value : values) {
+            if (StrUtil.isNotBlank(value)) {
+                return value;
+            }
+        }
+        return null;
     }
 }

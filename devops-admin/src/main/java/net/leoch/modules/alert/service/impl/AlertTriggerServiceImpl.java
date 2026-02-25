@@ -352,7 +352,16 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
         context.put("alertname", getLabelValue(labels, toMap(payload.get("commonLabels")), "alertname"));
         String severity = StrUtil.isNotBlank(severityFromPath) ? severityFromPath : getLabelValue(labels, toMap(payload.get("commonLabels")), "severity");
         context.put("severity", AlertPayloadUtils.toSeverityZh(severity));
-        context.put("instance", getLabelValue(labels, toMap(payload.get("commonLabels")), "instance", getLabelValue(labels, toMap(payload.get("commonLabels")), "service")));
+        String instance = getLabelValue(labels, toMap(payload.get("commonLabels")), "instance", getLabelValue(labels, toMap(payload.get("commonLabels")), "service"));
+        context.put("instance", instance);
+        context.put("name", firstNonBlank(
+                getLabelValue(labels, toMap(payload.get("commonLabels")), "name"),
+                getLabelValue(labels, toMap(payload.get("commonLabels")), "hostname"),
+                getLabelValue(labels, toMap(payload.get("commonLabels")), "host"),
+                getLabelValue(labels, toMap(payload.get("commonLabels")), "service"),
+                instance,
+                getLabelValue(labels, toMap(payload.get("commonLabels")), "alertname")
+        ));
         context.put("summary", getLabelValue(annotations, toMap(payload.get("commonAnnotations")), "summary"));
         context.put("description", getLabelValue(annotations, toMap(payload.get("commonAnnotations")), "description"));
         context.put("startsAt", alert.get("startsAt"));
@@ -479,6 +488,18 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
             return value;
         }
         return extraFallback;
+    }
+
+    private String firstNonBlank(String... values) {
+        if (values == null) {
+            return null;
+        }
+        for (String value : values) {
+            if (StrUtil.isNotBlank(value)) {
+                return value;
+            }
+        }
+        return null;
     }
 
     private void normalizeReceiverIds(AlertTriggerReq dto) {

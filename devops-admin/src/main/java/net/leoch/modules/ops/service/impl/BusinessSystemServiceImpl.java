@@ -29,6 +29,7 @@ import net.leoch.modules.ops.mapper.BusinessSystemMapper;
 import net.leoch.modules.ops.service.IBusinessSystemService;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.BusinessSystemRsp;
+import net.leoch.modules.ops.vo.rsp.OpsDeleteCascadeRsp;
 import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper, BusinessSystemEntity> implements IBusinessSystemService {
+    private final OpsDeleteCascadeService opsDeleteCascadeService;
 
     @Override
     public PageData<BusinessSystemRsp> page(BusinessSystemPageReq request) {
@@ -198,11 +200,17 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(BusinessSystemDeleteReq request) {
+    public OpsDeleteCascadeRsp delete(BusinessSystemDeleteReq request) {
+        OpsDeleteCascadeRsp rsp = new OpsDeleteCascadeRsp();
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
-            return;
+            return rsp;
         }
-        this.removeByIds(Arrays.asList(request.getIds()));
+        List<BusinessSystemEntity> deleteList = this.listByIds(Arrays.asList(request.getIds()));
+        rsp = opsDeleteCascadeService.deleteAlertRecordsByInstances(
+                deleteList.stream().map(BusinessSystemEntity::getInstance).toList()
+        );
+        rsp.setDeletedDevices(this.removeByIds(Arrays.asList(request.getIds())) ? deleteList.size() : 0);
+        return rsp;
     }
 
     @Override

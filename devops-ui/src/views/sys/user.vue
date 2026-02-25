@@ -12,9 +12,6 @@
             </el-select>
           </el-form-item>
       <el-form-item>
-        <ren-dept-tree v-model="state.dataForm.deptId" placeholder="选择部门" :query="true"></ren-dept-tree>
-      </el-form-item>
-      <el-form-item>
         <el-button @click="state.getDataList()">查询</el-button>
       </el-form-item>
       <el-form-item>
@@ -33,7 +30,6 @@
     <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" @sort-change="state.dataListSortChangeHandle" class="sys-user-table" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
       <el-table-column prop="username" label="用户名" sortable="custom" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="deptName" label="所属部门" header-align="center" align="center"></el-table-column>
       <el-table-column prop="email" label="邮箱" header-align="center" align="center"></el-table-column>
       <el-table-column prop="mobile" label="手机号" sortable="custom" header-align="center" align="center"></el-table-column>
       <el-table-column prop="gender" label="性别" sortable="custom" header-align="center" align="center">
@@ -79,7 +75,6 @@ const view = reactive({
   exportURL: "/sys/user/export",
   dataForm: {
     username: "",
-    deptId: "",
     postId: "",
     gender: ""
   }

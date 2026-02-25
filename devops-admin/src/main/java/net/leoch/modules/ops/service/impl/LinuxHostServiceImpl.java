@@ -29,6 +29,7 @@ import net.leoch.modules.ops.mapper.LinuxHostMapper;
 import net.leoch.modules.ops.service.ILinuxHostService;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.LinuxHostRsp;
+import net.leoch.modules.ops.vo.rsp.OpsDeleteCascadeRsp;
 import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHostEntity> implements ILinuxHostService {
+    private final OpsDeleteCascadeService opsDeleteCascadeService;
 
     @Override
     public PageData<LinuxHostRsp> page(LinuxHostPageReq request) {
@@ -227,11 +229,17 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(LinuxHostDeleteReq request) {
+    public OpsDeleteCascadeRsp delete(LinuxHostDeleteReq request) {
+        OpsDeleteCascadeRsp rsp = new OpsDeleteCascadeRsp();
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
-            return;
+            return rsp;
         }
-        this.removeByIds(Arrays.asList(request.getIds()));
+        List<LinuxHostEntity> deleteList = this.listByIds(Arrays.asList(request.getIds()));
+        rsp = opsDeleteCascadeService.deleteAlertRecordsByInstances(
+                deleteList.stream().map(LinuxHostEntity::getInstance).toList()
+        );
+        rsp.setDeletedDevices(this.removeByIds(Arrays.asList(request.getIds())) ? deleteList.size() : 0);
+        return rsp;
     }
 
     @Override

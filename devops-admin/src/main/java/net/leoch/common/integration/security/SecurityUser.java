@@ -44,7 +44,6 @@ public class SecurityUser {
             }
 
             user = BeanUtil.copyProperties(userEntity, UserDetail.class);
-            user.setDeptIdList(securityService.getDataScopeList(user.getId()));
             StpUtil.getSession().set("user", user);
             return user;
         } catch (Exception e) {
@@ -65,10 +64,4 @@ public class SecurityUser {
         }
     }
 
-    /**
-     * 获取部门ID
-     */
-    public static Long getDeptId() {
-        return getUser().getDeptId();
-    }
 }

@@ -39,6 +39,4 @@ public class SysRoleReq implements Serializable {
     @Schema(title = "菜单ID列表")
     private List<Long> menuIdList;
 
-    @Schema(title = "部门ID列表")
-    private List<Long> deptIdList;
 }

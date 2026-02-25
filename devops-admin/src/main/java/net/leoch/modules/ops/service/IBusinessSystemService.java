@@ -7,6 +7,7 @@ import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.BusinessSystemRsp;
 import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
+import net.leoch.modules.ops.vo.rsp.OpsDeleteCascadeRsp;
 
 /**
  * 业务系统表
@@ -36,7 +37,7 @@ public interface IBusinessSystemService extends IService<BusinessSystemEntity> {
 
     void export(BusinessSystemPageReq request, HttpServletResponse response) throws Exception;
 
-    void delete(BusinessSystemDeleteReq request);
+    OpsDeleteCascadeRsp delete(BusinessSystemDeleteReq request);
 
     void updateStatus(Long[] ids, Integer status);
 

@@ -16,6 +16,7 @@ import net.leoch.common.data.result.Result;
 import net.leoch.modules.ops.service.ILinuxHostService;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.LinuxHostRsp;
+import net.leoch.modules.ops.vo.rsp.OpsDeleteCascadeRsp;
 import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import org.springframework.web.bind.annotation.*;
 
@@ -122,8 +123,12 @@ public class LinuxHostController {
     @LogOperation("删除")
     @SaCheckPermission("ops:linuxhost:delete")
     public Result<Object> delete(@RequestBody Long[] ids) {
-        linuxHostService.delete(LinuxHostDeleteReq.of(ids));
-        return new Result<>();
+        OpsDeleteCascadeRsp data = linuxHostService.delete(LinuxHostDeleteReq.of(ids));
+        Result<Object> result = new Result<>();
+        result.setMsg(String.format("删除成功：设备%d，告警记录%d，告警动作%d",
+                data.getDeletedDevices(), data.getDeletedAlertRecords(), data.getDeletedAlertActions()));
+        result.setData(data);
+        return result;
     }
 
     @GetMapping("export")

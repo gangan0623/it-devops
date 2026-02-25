@@ -31,11 +31,6 @@ public class SysRoleEntity extends BaseEntity {
 	 */
 	private String remark;
 	/**
-	 * 部门ID
-	 */
-	@TableField(fill = FieldFill.INSERT)
-	private Long deptId;
-	/**
 	 * 更新者
 	 */
 	@TableField(fill = FieldFill.INSERT_UPDATE)

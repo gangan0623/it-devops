@@ -22,7 +22,6 @@ import net.leoch.common.integration.security.UserDetail;
 import net.leoch.common.utils.security.PasswordUtils;
 import net.leoch.modules.sys.entity.SysUserEntity;
 import net.leoch.modules.sys.mapper.SysUserMapper;
-import net.leoch.modules.sys.service.ISysDeptService;
 import net.leoch.modules.sys.service.ISysRoleUserService;
 import net.leoch.modules.sys.service.ISysUserService;
 import net.leoch.modules.sys.vo.req.PasswordReq;
@@ -48,7 +47,6 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity> implements ISysUserService {
     private final ISysRoleUserService sysRoleUserService;
-    private final ISysDeptService sysDeptService;
 
     @Override
     public PageData<SysUserRsp> page(SysUserPageReq request) {
@@ -58,19 +56,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
         if (StrUtil.isNotBlank(request.getUsername())) {
             params.put("username", "%" + request.getUsername() + "%");
         }
-        if (StrUtil.isNotBlank(request.getDeptId())) {
-            params.put("deptId", request.getDeptId());
-        }
-
         //分页
         IPage<SysUserEntity> page = request.buildPage();
         params.put("page", page);
-
-        //普通管理员，只能查询所属部门及子部门的数据
-        UserDetail user = SecurityUser.getUser();
-        if (user.getSuperAdmin() == SuperAdminEnum.NO.value()) {
-            params.put("deptIdList", sysDeptService.getSubDeptIdList(user.getDeptId()));
-        }
 
         //查询
         List<SysUserEntity> list = this.getBaseMapper().getList(params);
@@ -85,16 +73,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
         if (StrUtil.isNotBlank(request.getUsername())) {
             params.put("username", "%" + request.getUsername() + "%");
         }
-        if (StrUtil.isNotBlank(request.getDeptId())) {
-            params.put("deptId", request.getDeptId());
-        }
-
-        //普通管理员，只能查询所属部门及子部门的数据
-        UserDetail user = SecurityUser.getUser();
-        if (user.getSuperAdmin() == SuperAdminEnum.NO.value()) {
-            params.put("deptIdList", sysDeptService.getSubDeptIdList(user.getDeptId()));
-        }
-
         List<SysUserEntity> entityList = this.getBaseMapper().getList(params);
 
         return BeanUtil.copyToList(entityList, SysUserRsp.class);
@@ -226,16 +204,6 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
     @Override
     public SysUserRsp getCurrentUserInfo() {
         return BeanUtil.copyProperties(SecurityUser.getUser(), SysUserRsp.class);
-    }
-
-    @Override
-    public int getCountByDeptId(Long deptId) {
-        return this.getBaseMapper().getCountByDeptId(deptId);
-    }
-
-    @Override
-    public List<Long> getUserIdListByDeptId(List<Long> deptIdList) {
-        return this.getBaseMapper().getUserIdListByDeptId(deptIdList);
     }
 
 }

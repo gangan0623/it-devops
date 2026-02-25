@@ -50,15 +50,7 @@
       </el-table-column>
     </el-table>
 
-    <el-pagination
-      :current-page="state.page"
-      :page-sizes="[10, 20, 50, 100]"
-      :page-size="state.limit"
-      :total="state.total"
-      layout="total, sizes, prev, pager, next, jumper"
-      @size-change="state.pageSizeChangeHandle"
-      @current-change="state.pageCurrentChangeHandle"
-    ></el-pagination>
+    <el-pagination :current-page="state.page" :page-sizes="[10, 20, 50, 100]" :page-size="state.limit" :total="state.total" layout="total, sizes, prev, pager, next, jumper" @size-change="state.pageSizeChangeHandle" @current-change="state.pageCurrentChangeHandle"></el-pagination>
 
     <add-or-update ref="addOrUpdateRef" @refreshDataList="queryList"></add-or-update>
 
@@ -121,10 +113,10 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {computed, reactive, ref, toRefs} from "vue";
+import { computed, reactive, ref, toRefs } from "vue";
 import AddOrUpdate from "./template-add-or-update.vue";
 import baseService from "@/service/baseService";
-import {ElMessage} from "element-plus";
+import { ElMessage } from "element-plus";
 
 const view = reactive({
   deleteIsBatch: true,
@@ -144,7 +136,65 @@ const previewLoading = ref(false);
 const sendLoading = ref(false);
 const templateOptions = ref<any[]>([]);
 const triggerOptions = ref<any[]>([]);
-const sampleRawJson = `{\"receiver\":\"web.hook.prometheusalert\",\"status\":\"resolved\",\"alerts\":[{\"status\":\"resolved\",\"labels\":{\"alertname\":\"MerchantServiceHighErrorRate\",\"method\":\"check\",\"service\":\"merchant_service\",\"severity\":\"warning\",\"util_class\":\"ShanDaiMiao11Util\"},\"annotations\":{\"description\":\"工具类 ShanDaiMiao11Util 的 check 方法10分钟内错误率为 5.556%，超过5%阈值\",\"summary\":\"机构服务错误率过高\"},\"startsAt\":\"2026-01-22T10:46:17.966Z\",\"endsAt\":\"2026-01-22T10:55:02.966Z\",\"generatorURL\":\"http://build:9090/graph?g0.expr=(sum+by+(util_class,+method)+(increase(merchant_service_method_calls_total{status=\\\"error\\\"}[10m]))+/+sum+by+(util_class,+method)+(increase(merchant_service_method_calls_total[10m])))+>+0.05+and+sum+by+(util_class,+method)+(increase(merchant_service_method_calls_total[10m]))+>+0&g0.tab=1\",\"fingerprint\":\"fb2ce429827b0ff3\"}],\"groupLabels\":{},\"commonLabels\":{\"alertname\":\"MerchantServiceHighErrorRate\",\"method\":\"check\",\"service\":\"merchant_service\",\"severity\":\"warning\",\"util_class\":\"ShanDaiMiao11Util\"},\"commonAnnotations\":{\"description\":\"工具类 ShanDaiMiao11Util 的 check 方法10分钟内错误率为 5.556%，超过5%阈值\",\"summary\":\"机构服务错误率过高\"},\"externalURL\":\"http://gitlab:9093\",\"version\":\"4\",\"groupKey\":\"{}:{}\",\"truncatedAlerts\":0}`;
+// const sampleRawJson = `{\"receiver\":\"web.hook.prometheusalert\",\"status\":\"resolved\",\"alerts\":[{\"status\":\"resolved\",\"labels\":{\"alertname\":\"MerchantServiceHighErrorRate\",\"method\":\"check\",\"service\":\"merchant_service\",\"severity\":\"warning\",\"util_class\":\"ShanDaiMiao11Util\"},\"annotations\":{\"description\":\"工具类 ShanDaiMiao11Util 的 check 方法10分钟内错误率为 5.556%，超过5%阈值\",\"summary\":\"机构服务错误率过高\"},\"startsAt\":\"2026-01-22T10:46:17.966Z\",\"endsAt\":\"2026-01-22T10:55:02.966Z\",\"generatorURL\":\"http://build:9090/graph?g0.expr=(sum+by+(util_class,+method)+(increase(merchant_service_method_calls_total{status=\\\"error\\\"}[10m]))+/+sum+by+(util_class,+method)+(increase(merchant_service_method_calls_total[10m])))+>+0.05+and+sum+by+(util_class,+method)+(increase(merchant_service_method_calls_total[10m]))+>+0&g0.tab=1\",\"fingerprint\":\"fb2ce429827b0ff3\"}],\"groupLabels\":{},\"commonLabels\":{\"alertname\":\"MerchantServiceHighErrorRate\",\"method\":\"check\",\"service\":\"merchant_service\",\"severity\":\"warning\",\"util_class\":\"ShanDaiMiao11Util\"},\"commonAnnotations\":{\"description\":\"工具类 ShanDaiMiao11Util 的 check 方法10分钟内错误率为 5.556%，超过5%阈值\",\"summary\":\"机构服务错误率过高\"},\"externalURL\":\"http://gitlab:9093\",\"version\":\"4\",\"groupKey\":\"{}:{}\",\"truncatedAlerts\":0}`;
+const sampleRawJson = `{
+  "receiver": "webhook",
+  "status": "firing",
+  "alerts": [
+    {
+      "status": "firing",
+      "labels": {
+        "alertgroup": "linux_exporter",
+        "alertname": "Linux目标宕机",
+        "area_name": "安徽",
+        "base_site_location": "安徽理士",
+        "instance": "192.168.144.50",
+        "job": "linux",
+        "menu_name": "04.供应链",
+        "name": "ahl-c144050-供应商管理",
+        "severity": "critical",
+        "sub_menu_name": "供应商管理",
+        "target_type": "linux",
+        "type": "虚拟"
+      },
+      "annotations": {
+        "description": "Linux 目标 192.168.144.50 无法采集",
+        "summary": "Linux 监控目标宕机"
+      },
+      "startsAt": "2026-02-25T09:50:00+08:00",
+      "endsAt": "0001-01-01T00:00:00Z",
+      "generatorURL": "http://192.168.17.121:8880/vmalert/alert?group_id=9861526287326671995&alert_id=13374744084712640642",
+      "fingerprint": "a9b7a93a7b718b0e"
+    }
+  ],
+  "groupLabels": {
+    "alertname": "Linux目标宕机",
+    "instance": "192.168.144.50",
+    "job": "linux"
+  },
+  "commonLabels": {
+    "alertgroup": "linux_exporter",
+    "alertname": "Linux目标宕机",
+    "area_name": "安徽",
+    "base_site_location": "安徽理士",
+    "instance": "192.168.144.50",
+    "job": "linux",
+    "menu_name": "04.供应链",
+    "name": "ahl-c144050-供应商管理",
+    "severity": "critical",
+    "sub_menu_name": "供应商管理",
+    "target_type": "linux",
+    "type": "虚拟"
+  },
+  "commonAnnotations": {
+    "description": "Linux 目标 192.168.144.50 无法采集",
+    "summary": "Linux 监控目标宕机"
+  },
+  "externalURL": "http://ubuntu-server:9093",
+  "version": "4",
+  "groupKey": "{}:{alertname=\\"Linux目标宕机\\", instance=\\"192.168.144.50\\", job=\\"linux\\"}",
+  "truncatedAlerts": 0
+}`;
 const testForm = reactive({
   templateId: "",
   rawJson: sampleRawJson,

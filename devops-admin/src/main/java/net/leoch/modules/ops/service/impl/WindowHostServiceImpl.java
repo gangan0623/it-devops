@@ -29,6 +29,7 @@ import net.leoch.modules.ops.mapper.WindowHostMapper;
 import net.leoch.modules.ops.service.IWindowHostService;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
+import net.leoch.modules.ops.vo.rsp.OpsDeleteCascadeRsp;
 import net.leoch.modules.ops.vo.rsp.WindowHostRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,7 @@ import java.util.*;
 @Service
 @RequiredArgsConstructor
 public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowHostEntity> implements IWindowHostService {
+    private final OpsDeleteCascadeService opsDeleteCascadeService;
 
     @Override
     public PageData<WindowHostRsp> page(WindowHostPageReq request) {
@@ -226,11 +228,17 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(WindowHostDeleteReq request) {
+    public OpsDeleteCascadeRsp delete(WindowHostDeleteReq request) {
+        OpsDeleteCascadeRsp rsp = new OpsDeleteCascadeRsp();
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
-            return;
+            return rsp;
         }
-        this.removeByIds(Arrays.asList(request.getIds()));
+        List<WindowHostEntity> deleteList = this.listByIds(Arrays.asList(request.getIds()));
+        rsp = opsDeleteCascadeService.deleteAlertRecordsByInstances(
+                deleteList.stream().map(WindowHostEntity::getInstance).toList()
+        );
+        rsp.setDeletedDevices(this.removeByIds(Arrays.asList(request.getIds())) ? deleteList.size() : 0);
+        return rsp;
     }
 
     @Override

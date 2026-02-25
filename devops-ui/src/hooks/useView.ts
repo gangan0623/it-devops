@@ -178,9 +178,10 @@ const useView = (props: IViewHooksOptions | IObject): IViewHooks => {
                   : {}
               )
               .then((res) => {
+                const successMsg = res?.msg || "成功";
                 ElMessage.success({
-                  message: "成功",
-                  duration: 500,
+                  message: successMsg,
+                  duration: 1500,
                   onClose: () => {
                     viewFns.query();
                     resolve(true);

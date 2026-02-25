@@ -16,6 +16,7 @@ import net.leoch.common.data.result.Result;
 import net.leoch.modules.ops.service.IDeviceBackupService;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.DeviceBackupRsp;
+import net.leoch.modules.ops.vo.rsp.OpsDeleteCascadeRsp;
 import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import org.springframework.web.bind.annotation.*;
 
@@ -123,8 +124,12 @@ public class DeviceBackupController {
     @LogOperation("删除")
     @SaCheckPermission("ops:devicebackup:delete")
     public Result<Object> delete(@RequestBody Long[] ids){
-        deviceBackupService.delete(DeviceBackupDeleteReq.of(ids));
-        return new Result<>();
+        OpsDeleteCascadeRsp data = deviceBackupService.delete(DeviceBackupDeleteReq.of(ids));
+        Result<Object> result = new Result<>();
+        result.setMsg(String.format("删除成功：设备%d，备份记录%d，备份历史%d，MinIO文件%d",
+                data.getDeletedDevices(), data.getDeletedBackupRecords(), data.getDeletedBackupHistories(), data.getDeletedMinioTxtFiles()));
+        result.setData(data);
+        return result;
     }
 
     @GetMapping("export")

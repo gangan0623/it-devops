@@ -131,15 +131,30 @@
           </el-tooltip>
         </template>
       </el-table-column>
-      <el-table-column prop="startsAt" label="开始时间" header-align="center" align="center" width="180"></el-table-column>
-      <el-table-column label="持续时间" header-align="center" align="center" width="120">
+      <el-table-column label="时间" header-align="center" align="center" width="180">
         <template v-slot="scope">
-          {{ formatDuration(scope.row) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="恢复时间" header-align="center" align="center" width="180">
-        <template v-slot="scope">
-          {{ formatEndTime(scope.row) }}
+          <el-tooltip placement="top" effect="light" :show-after="250">
+            <template #content>
+              <div class="event-tip">
+                <div class="event-tip__title">时间信息</div>
+                <div class="event-tip__group">
+                  <div class="event-tip__row">
+                    <span class="event-tip__key">开始时间</span>
+                    <span class="event-tip__value">{{ scope.row.startsAt || "-" }}</span>
+                  </div>
+                  <div class="event-tip__row">
+                    <span class="event-tip__key">持续时间</span>
+                    <span class="event-tip__value">{{ formatDuration(scope.row) }}</span>
+                  </div>
+                  <div class="event-tip__row">
+                    <span class="event-tip__key">恢复时间</span>
+                    <span class="event-tip__value">{{ formatEndTime(scope.row) }}</span>
+                  </div>
+                </div>
+              </div>
+            </template>
+            <span>{{ scope.row.startsAt || "-" }}</span>
+          </el-tooltip>
         </template>
       </el-table-column>
       <el-table-column label="操作" fixed="right" header-align="center" align="center" width="210">

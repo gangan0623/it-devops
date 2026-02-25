@@ -50,10 +50,6 @@ public class SysUserEntity extends BaseEntity {
 	 */
 	private String mobile;
 	/**
-	 * 部门ID
-	 */
-	private Long deptId;
-	/**
 	 * 超级管理员   0：否   1：是
 	 */
 	private Integer superAdmin;
@@ -71,10 +67,4 @@ public class SysUserEntity extends BaseEntity {
 	 */
 	@TableField(fill = FieldFill.INSERT_UPDATE)
 	private Date updateDate;
-	/**
-	 * 部门名称
-	 */
-	@TableField(exist=false)
-	private String deptName;
-
 }

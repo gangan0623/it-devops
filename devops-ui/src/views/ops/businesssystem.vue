@@ -59,23 +59,23 @@
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
               <el-table-column prop="instance" label="地址" header-align="center" align="center" min-width="180"></el-table-column>
               <el-table-column prop="name" label="名称" header-align="center" align="center" min-width="180"></el-table-column>
-              <el-table-column label="区域名称" header-align="center" align="center" min-width="60">
+              <el-table-column label="区域名称" header-align="center" align="center" min-width="100">
                 <template v-slot="scope">{{ state.getDictValueByLabel("area_name_type", scope.row.areaName) }}</template>
               </el-table-column>
-              <el-table-column label="站点位置" header-align="center" align="center" min-width="60">
+              <el-table-column label="站点位置" header-align="center" align="center" min-width="120">
                 <template v-slot="scope">{{ state.getDictValueByLabel("base_site_location", scope.row.siteLocation) }}</template>
               </el-table-column>
-              <el-table-column label="分组名称" header-align="center" align="center" min-width="60">
+              <el-table-column label="分组名称" header-align="center" align="center" min-width="140">
                 <template v-slot="scope">{{ state.getDictValueByLabel("server_host_group", scope.row.menuName) }}</template>
               </el-table-column>
-              <el-table-column prop="subMenuName" label="子组名称" header-align="center" align="center" min-width="60"></el-table-column>
-              <el-table-column prop="status" label="状态" header-align="center" align="center" min-width="60">
+              <el-table-column prop="subMenuName" label="子组名称" header-align="center" align="center" min-width="140"></el-table-column>
+              <el-table-column prop="status" label="状态" header-align="center" align="center" min-width="80">
                 <template v-slot="scope">
                   <el-tag v-if="scope.row.status === 0" size="small" type="danger">禁用</el-tag>
                   <el-tag v-else size="small" type="success">启用</el-tag>
                 </template>
               </el-table-column>
-              <el-table-column prop="onlineStatus" label="在线状态" header-align="center" align="center" min-width="60">
+              <el-table-column prop="onlineStatus" label="在线状态" header-align="center" align="center" min-width="90">
                 <template v-slot="scope">
                   <el-tag v-if="scope.row.onlineStatus === true" size="small" type="success">在线</el-tag>
                   <el-tag v-else-if="scope.row.onlineStatus === false" size="small" type="danger">不在线</el-tag>
@@ -107,6 +107,13 @@
 <style scoped>
 .ops-table-nowrap :deep(.cell) {
   white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.ops-table-nowrap :deep(.el-table__header-wrapper .cell) {
+  overflow: visible;
+  text-overflow: clip;
 }
 </style>
 

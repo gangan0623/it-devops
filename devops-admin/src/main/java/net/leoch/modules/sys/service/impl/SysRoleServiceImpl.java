@@ -13,9 +13,6 @@ import net.leoch.common.data.validator.ValidatorUtils;
 import net.leoch.common.data.validator.group.AddGroup;
 import net.leoch.common.data.validator.group.DefaultGroup;
 import net.leoch.common.data.validator.group.UpdateGroup;
-import net.leoch.common.enums.SuperAdminEnum;
-import net.leoch.common.integration.security.SecurityUser;
-import net.leoch.common.integration.security.UserDetail;
 import net.leoch.modules.sys.entity.SysRoleEntity;
 import net.leoch.modules.sys.mapper.SysRoleMapper;
 import net.leoch.modules.sys.service.*;
@@ -38,9 +35,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity> implements ISysRoleService {
     private final ISysRoleMenuService sysRoleMenuService;
-    private final ISysRoleDataScopeService sysRoleDataScopeService;
     private final ISysRoleUserService sysRoleUserService;
-    private final ISysDeptService sysDeptService;
 
     @Override
     public PageData<SysRoleRsp> page(SysRolePageReq request) {
@@ -65,13 +60,6 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
         QueryWrapper<SysRoleEntity> wrapper = new QueryWrapper<>();
         wrapper.like(StrUtil.isNotBlank(name), "name", name);
 
-        //普通管理员，只能查询所属部门及子部门的数据
-        UserDetail user = SecurityUser.getUser();
-        if (user.getSuperAdmin() == SuperAdminEnum.NO.value()) {
-            List<Long> deptIdList = sysDeptService.getSubDeptIdList(user.getDeptId());
-            wrapper.in(deptIdList != null, "dept_id", deptIdList);
-        }
-
         return wrapper;
     }
 
@@ -87,7 +75,6 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
         SysRoleRsp role = this.get(id);
         if (role != null) {
             role.setMenuIdList(sysRoleMenuService.getMenuIdList(id));
-            role.setDeptIdList(sysRoleDataScopeService.getDeptIdList(id));
         }
         return role;
     }
@@ -104,8 +91,6 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
         //保存角色菜单关系
         sysRoleMenuService.saveOrUpdate(entity.getId(), dto.getMenuIdList());
 
-        //保存角色数据权限关系
-        sysRoleDataScopeService.saveOrUpdate(entity.getId(), dto.getDeptIdList());
     }
 
     @Override
@@ -120,8 +105,6 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
         //更新角色菜单关系
         sysRoleMenuService.saveOrUpdate(entity.getId(), dto.getMenuIdList());
 
-        //更新角色数据权限关系
-        sysRoleDataScopeService.saveOrUpdate(entity.getId(), dto.getDeptIdList());
     }
 
     @Override
@@ -137,8 +120,6 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRoleEntity
         //删除角色菜单关系
         sysRoleMenuService.deleteByRoleIds(ids);
 
-        //删除角色数据权限关系
-        sysRoleDataScopeService.deleteByRoleIds(ids);
     }
 
 }

@@ -32,6 +32,7 @@ import net.leoch.modules.ops.mapper.DeviceBackupMapper;
 import net.leoch.modules.ops.service.IDeviceBackupService;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.DeviceBackupRsp;
+import net.leoch.modules.ops.vo.rsp.OpsDeleteCascadeRsp;
 import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -56,11 +57,14 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
 
     private final BackupAgentMapper backupAgentMapper;
     private final OnlineStatusConfig properties;
+    private final OpsDeleteCascadeService opsDeleteCascadeService;
 
     public DeviceBackupServiceImpl(BackupAgentMapper backupAgentMapper,
-                                   OnlineStatusConfig properties) {
+                                   OnlineStatusConfig properties,
+                                   OpsDeleteCascadeService opsDeleteCascadeService) {
         this.backupAgentMapper = backupAgentMapper;
         this.properties = properties;
+        this.opsDeleteCascadeService = opsDeleteCascadeService;
     }
 
     @Override
@@ -243,11 +247,16 @@ public class DeviceBackupServiceImpl extends ServiceImpl<DeviceBackupMapper, Dev
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void delete(DeviceBackupDeleteReq request) {
+    public OpsDeleteCascadeRsp delete(DeviceBackupDeleteReq request) {
+        OpsDeleteCascadeRsp rsp = new OpsDeleteCascadeRsp();
         if (request == null || request.getIds() == null || request.getIds().length == 0) {
-            return;
+            return rsp;
         }
-        this.removeByIds(Arrays.asList(request.getIds()));
+        List<DeviceBackupEntity> deleteList = this.listByIds(Arrays.asList(request.getIds()));
+        List<String> instances = deleteList.stream().map(DeviceBackupEntity::getInstance).toList();
+        rsp = opsDeleteCascadeService.deleteDeviceBackupRecordsAndFilesByIps(instances);
+        rsp.setDeletedDevices(this.removeByIds(Arrays.asList(request.getIds())) ? deleteList.size() : 0);
+        return rsp;
     }
 
     @Override
