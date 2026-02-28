@@ -27,6 +27,7 @@ import net.leoch.modules.sys.service.ISysUserService;
 import net.leoch.modules.sys.vo.req.PasswordReq;
 import net.leoch.modules.sys.vo.req.SysUserPageReq;
 import net.leoch.modules.sys.vo.req.SysUserReq;
+import net.leoch.modules.sys.vo.req.UserProfileUpdateReq;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -204,6 +205,34 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
     @Override
     public SysUserRsp getCurrentUserInfo() {
         return BeanUtil.copyProperties(SecurityUser.getUser(), SysUserRsp.class);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateCurrentUserProfile(UserProfileUpdateReq dto) {
+        UserDetail user = SecurityUser.getUser();
+
+        if (!PasswordUtils.matches(dto.getPassword(), user.getPassword())) {
+            log.warn("[用户信息] 原密码错误, userId={}", user.getId());
+            throw new ServiceException(ErrorCode.PASSWORD_ERROR);
+        }
+
+        SysUserEntity entity = new SysUserEntity();
+        entity.setId(user.getId());
+        entity.setRealName(dto.getRealName());
+        entity.setGender(dto.getGender());
+        entity.setEmail(dto.getEmail());
+        entity.setMobile(dto.getMobile());
+        entity.setPassword(PasswordUtils.encode(dto.getNewPassword()));
+        this.updateById(entity);
+
+        // 同步会话中的用户缓存，避免刷新前端后展示旧信息
+        user.setRealName(dto.getRealName());
+        user.setGender(dto.getGender());
+        user.setEmail(dto.getEmail());
+        user.setMobile(dto.getMobile());
+        user.setPassword(entity.getPassword());
+        StpUtil.getSession().set("user", user);
     }
 
 }

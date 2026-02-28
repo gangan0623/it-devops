@@ -8,10 +8,9 @@ import {toValidRoutes} from "@/utils/router";
 import {getThemeConfigCacheByKey} from "@/utils/theme";
 import {useWindowSize} from "@vueuse/core";
 import {defineComponent, onMounted, reactive, ref, watch} from "vue";
-import {RouteRecordRaw, useRoute, useRouter} from "vue-router";
+import {RouteRecordRaw, useRoute} from "vue-router";
 import {useAppStore} from "@/store";
 import SidebarMenusItems from "./sidebar-menus-items.vue";
-import {getValueByKeys} from "@/utils/utils";
 
 /**
  * 侧边栏导航菜单
@@ -29,7 +28,6 @@ export default defineComponent({
   },
   setup(props) {
     const route = useRoute();
-    const router = useRouter();
     const win = useWindowSize();
     const store = useAppStore();
     const defaultMenus = toValidRoutes((props.menus ?? store.state.routes) as RouteRecordRaw[]);
@@ -98,8 +96,7 @@ export default defineComponent({
     watch(
       () => route.path,
       (vl) => {
-        const matchedRoute = getValueByKeys(getValueByKeys(router.currentRoute.value.meta, "matched", [])[0], "path", "");
-        if (!route.query.pop && matchedRoute) {
+        if (!route.query.pop) {
           setTimeout(() => {
             state.currRoute = vl;
           }, 10);

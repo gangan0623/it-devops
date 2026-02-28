@@ -25,9 +25,9 @@ import net.leoch.common.integration.security.SecurityUser;
 import net.leoch.common.utils.excel.ExcelUtils;
 import net.leoch.framework.config.ops.OnlineStatusConfig;
 import net.leoch.modules.ops.entity.BackupAgentEntity;
-import net.leoch.modules.ops.entity.DeviceBackupEntity;
+import net.leoch.modules.ops.entity.NetworkBackupDeviceEntity;
 import net.leoch.modules.ops.mapper.BackupAgentMapper;
-import net.leoch.modules.ops.mapper.DeviceBackupMapper;
+import net.leoch.modules.ops.mapper.NetworkBackupDeviceMapper;
 import net.leoch.modules.ops.service.IBackupAgentService;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.BackupAgentRsp;
@@ -62,12 +62,12 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
             "\"status\": \"ok\""
     };
 
-    private final DeviceBackupMapper deviceBackupMapper;
+    private final NetworkBackupDeviceMapper networkBackupDeviceMapper;
     private final OnlineStatusConfig properties;
 
-    public BackupAgentServiceImpl(DeviceBackupMapper deviceBackupMapper,
+    public BackupAgentServiceImpl(NetworkBackupDeviceMapper networkBackupDeviceMapper,
                                   OnlineStatusConfig properties) {
-        this.deviceBackupMapper = deviceBackupMapper;
+        this.networkBackupDeviceMapper = networkBackupDeviceMapper;
         this.properties = properties;
     }
 
@@ -243,9 +243,9 @@ public class BackupAgentServiceImpl extends ServiceImpl<BackupAgentMapper, Backu
             return;
         }
         Long[] ids = request.getIds();
-        LambdaQueryWrapper<DeviceBackupEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(DeviceBackupEntity::getAgentId, Arrays.asList(ids));
-        int used = Math.toIntExact(deviceBackupMapper.selectCount(wrapper));
+        LambdaQueryWrapper<NetworkBackupDeviceEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(NetworkBackupDeviceEntity::getAgentId, Arrays.asList(ids));
+        int used = Math.toIntExact(networkBackupDeviceMapper.selectCount(wrapper));
         if (used > 0) {
             throw new ServiceException("存在绑定的备份设备，无法删除");
         }

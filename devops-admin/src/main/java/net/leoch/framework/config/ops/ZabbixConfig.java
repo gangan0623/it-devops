@@ -12,8 +12,10 @@ import java.util.List;
 @Setter
 @Getter
 public class ZabbixConfig {
+    private String name;
     private String url;
     private String username;
+    private Integer status;
     private String password;
     private List<String> templates = new ArrayList<>();
 

@@ -55,6 +55,23 @@ export const useAppStore = defineStore("useAppStore", {
       }
       return routes;
     },
+    filterUnsupportedMenus(routes: IObject[]): IObject[] {
+      const loop = (items: IObject[]): IObject[] => {
+        if (!Array.isArray(items)) {
+          return [];
+        }
+        return items
+          .filter((item) => item.path !== "/sys/oss")
+          .map((item) => {
+            if (Array.isArray(item.children) && item.children.length) {
+              item.children = loop(item.children);
+            }
+            return item;
+          })
+          .filter(Boolean);
+      };
+      return loop(routes);
+    },
     updateState(data: IObject) {
       Object.keys(data).forEach((x: string) => {
         this.state[x] = data[x];
@@ -71,7 +88,7 @@ export const useAppStore = defineStore("useAppStore", {
           console.error("初始化用户数据错误", user.msg);
         }
         const [routes, routeToMeta] = mergeServerRoute(menus.data || [], getSysRouteMap());
-        const normalizedRoutes = this.moveProblemMenuUnderWorkbench(routes as IObject[]);
+        const normalizedRoutes = this.filterUnsupportedMenus(this.moveProblemMenuUnderWorkbench(routes as IObject[]));
         this.updateState({
           permissions: permissions.data || [],
           user: user.data || {},

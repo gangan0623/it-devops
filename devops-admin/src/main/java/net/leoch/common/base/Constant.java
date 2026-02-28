@@ -66,6 +66,18 @@ public interface Constant {
      * Zabbix配置KEY
      */
     String ZABBIX_CONFIG_KEY = "ZABBIX_CONFIG";
+    /**
+     * MinIO配置KEY（统一放sys_params）
+     */
+    String MINIO_CONFIG_KEY = "MINIO_CONFIG";
+    /**
+     * AI配置KEY（统一放sys_params）
+     */
+    String AI_CONFIG_KEY = "AI_CONFIG";
+    /**
+     * Zabbix网络设备映射配置KEY（统一放sys_params）
+     */
+    String ZABBIX_NETWORK_DEVICE_MAPPING_KEY = "ZABBIX_NETWORK_DEVICE_MAPPING";
 
     /**
      * 定时任务状态

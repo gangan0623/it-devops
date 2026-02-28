@@ -3,12 +3,13 @@ package net.leoch.common.integration.schedule.service;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import cn.hutool.json.JSONUtil;
 import net.leoch.modules.ops.mapper.BackupAgentMapper;
-import net.leoch.modules.ops.mapper.DeviceBackupMapper;
+import net.leoch.modules.ops.mapper.NetworkBackupDeviceMapper;
 import net.leoch.modules.ops.vo.req.BackupCallbackItemReq;
 import net.leoch.modules.ops.entity.BackupAgentEntity;
-import net.leoch.modules.ops.entity.DeviceBackupEntity;
+import net.leoch.modules.ops.entity.NetworkBackupDeviceEntity;
 import net.leoch.modules.ops.service.IDeviceBackupHistoryService;
 import net.leoch.modules.ops.service.IDeviceBackupRecordService;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,6 @@ import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 设备备份定时任务
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 @Service("deviceBackupJobService")
 @RequiredArgsConstructor
 public class DeviceBackupJobService {
-    private final DeviceBackupMapper deviceBackupMapper;
+    private final NetworkBackupDeviceMapper networkBackupDeviceMapper;
     private final BackupAgentMapper backupAgentMapper;
     private final IDeviceBackupRecordService deviceBackupRecordService;
     private final IDeviceBackupHistoryService deviceBackupHistoryService;
@@ -52,20 +52,23 @@ public class DeviceBackupJobService {
             if (agent == null || agent.getId() == null) {
                 continue;
             }
-            List<DeviceBackupEntity> devices = deviceBackupMapper.selectList(
-                new LambdaQueryWrapper<DeviceBackupEntity>()
-                    .eq(DeviceBackupEntity::getAgentId, agent.getId())
-                    .eq(DeviceBackupEntity::getStatus, 1)
+            List<NetworkBackupDeviceEntity> networkDevices = networkBackupDeviceMapper.selectList(
+                    new LambdaQueryWrapper<NetworkBackupDeviceEntity>()
+                            .eq(NetworkBackupDeviceEntity::getAgentId, agent.getId())
+                            .eq(NetworkBackupDeviceEntity::getStatus, 1)
+                            .eq(NetworkBackupDeviceEntity::getBackupEnabled, 1)
             );
-            if (CollUtil.isEmpty(devices)) {
-                log.debug("[设备备份] 代理{}({})无设备", agent.getName(), agent.getInstance());
+            if (CollUtil.isEmpty(networkDevices)) {
+                log.debug("[设备备份] 代理{}({})无网络设备", agent.getName(), agent.getInstance());
                 continue;
             }
-            log.info("[设备备份] 代理{}({})有{}个设备", agent.getName(), agent.getInstance(), devices.size());
-            totalDevices += devices.size();
-            List<Map<String, Object>> requestList = buildRequest(devices);
-            triggerAgentBackup(agent, requestList);
-            successAgents++;
+            List<Map<String, Object>> networkRequestList = buildNetworkRequest(networkDevices);
+            if (CollUtil.isNotEmpty(networkRequestList)) {
+                totalDevices += networkRequestList.size();
+                log.info("[设备备份] 代理{}({})网络设备数={}", agent.getName(), agent.getInstance(), networkRequestList.size());
+                triggerAgentBackup(agent, networkRequestList);
+                successAgents++;
+            }
         }
         long elapsedTime = System.currentTimeMillis() - startTime;
         log.info("[设备备份] 任务执行完成, 触发代理数={}, 设备总数={}, 耗时={}ms", successAgents, totalDevices, elapsedTime);
@@ -76,7 +79,7 @@ public class DeviceBackupJobService {
             log.warn("[设备备份] 回调参数无效, token={}, itemsSize={}", token, items != null ? items.size() : 0);
             return false;
         }
-        log.info("[设备备份] 收到备份回调, token={}***, 数量={}", token != null && token.length() > 4 ? token.substring(0, 4) : "****", items.size());
+        log.info("[设备备份] 收到备份回调, token={}***, 数量={}", token.length() > 4 ? token.substring(0, 4) : "****", items.size());
         BackupAgentEntity agent = backupAgentMapper.selectOne(
             new LambdaQueryWrapper<BackupAgentEntity>().eq(BackupAgentEntity::getToken, token).last("limit 1")
         );
@@ -85,21 +88,30 @@ public class DeviceBackupJobService {
             return false;
         }
         log.info("[设备备份] 找到回调代理: {}({})", agent.getName(), agent.getInstance());
-        List<DeviceBackupEntity> devices = deviceBackupMapper.selectList(
-            new LambdaQueryWrapper<DeviceBackupEntity>().eq(DeviceBackupEntity::getAgentId, agent.getId()).eq(DeviceBackupEntity::getStatus, 1)
+        List<NetworkBackupDeviceEntity> networkDevices = networkBackupDeviceMapper.selectList(
+                new LambdaQueryWrapper<NetworkBackupDeviceEntity>()
+                        .eq(NetworkBackupDeviceEntity::getAgentId, agent.getId())
+                        .eq(NetworkBackupDeviceEntity::getStatus, 1)
+                        .eq(NetworkBackupDeviceEntity::getBackupEnabled, 1)
         );
-        Map<String, DeviceBackupEntity> deviceMap = devices == null ? Collections.emptyMap()
-            : devices.stream()
-                .filter(item -> item != null && StrUtil.isNotBlank(item.getInstance()))
-                .collect(Collectors.toMap(DeviceBackupEntity::getInstance, item -> item, (a, b) -> a));
+        Map<String, NetworkBackupDeviceEntity> networkDeviceMap = new HashMap<>();
+        if (networkDevices != null) {
+            for (NetworkBackupDeviceEntity item : networkDevices) {
+                if (item == null || StrUtil.isBlank(item.getInstance())) {
+                    continue;
+                }
+                networkDeviceMap.putIfAbsent(item.getInstance(), item);
+            }
+        }
         int successCount = 0;
         int failCount = 0;
+        Date now = new Date();
         for (BackupCallbackItemReq item : items) {
             if (item == null || StrUtil.isBlank(item.getInstance())) {
                 continue;
             }
-            DeviceBackupEntity device = deviceMap.get(item.getInstance());
-            String name = device == null ? item.getInstance() : device.getName();
+            NetworkBackupDeviceEntity networkDevice = networkDeviceMap.get(item.getInstance());
+            String name = networkDevice == null ? item.getInstance() : networkDevice.getName();
             String url = item.getUrl() == null ? "" : item.getUrl();
             boolean success = StrUtil.isNotBlank(url);
             if (success) {
@@ -111,24 +123,33 @@ public class DeviceBackupJobService {
             }
             deviceBackupRecordService.upsertRecord(name, item.getInstance(), url, success);
             deviceBackupHistoryService.saveHistory(name, item.getInstance(), url, success ? 1 : 0);
+            if (networkDevice != null) {
+                networkBackupDeviceMapper.update(null, new LambdaUpdateWrapper<NetworkBackupDeviceEntity>()
+                        .eq(NetworkBackupDeviceEntity::getId, networkDevice.getId())
+                        .set(NetworkBackupDeviceEntity::getLastBackupTime, now)
+                        .set(NetworkBackupDeviceEntity::getLastBackupStatus, success ? 1 : 0)
+                        .set(NetworkBackupDeviceEntity::getLastBackupMessage, success ? "OK" : "备份失败"));
+            }
         }
         log.info("[设备备份] 回调处理完成, 代理={}, 成功={}, 失败={}", agent.getName(), successCount, failCount);
         return true;
     }
 
-    private List<Map<String, Object>> buildRequest(List<DeviceBackupEntity> devices) {
+    private List<Map<String, Object>> buildNetworkRequest(List<NetworkBackupDeviceEntity> networkDevices) {
         List<Map<String, Object>> list = new ArrayList<>();
-        for (DeviceBackupEntity device : devices) {
-            if (device == null || StrUtil.isBlank(device.getInstance())) {
-                continue;
+        if (networkDevices != null) {
+            for (NetworkBackupDeviceEntity device : networkDevices) {
+                if (device == null || StrUtil.isBlank(device.getInstance())) {
+                    continue;
+                }
+                Map<String, Object> item = new HashMap<>();
+                item.put("instance", device.getInstance());
+                item.put("name", device.getName());
+                item.put("username", device.getUsername());
+                item.put("password", device.getPassword());
+                item.put("model", device.getDeviceModel());
+                list.add(item);
             }
-            Map<String, Object> item = new HashMap<>();
-            item.put("instance", device.getInstance());
-            item.put("name", device.getName());
-            item.put("username", device.getUsername());
-            item.put("password", device.getPassword());
-            item.put("model", device.getDeviceModel());
-            list.add(item);
         }
         return list;
     }

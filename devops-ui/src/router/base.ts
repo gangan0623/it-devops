@@ -32,9 +32,19 @@ const routes: Array<RouteRecordRaw> = [
     meta: { title: "登录", isNavigationMenu: false }
   },
   {
-    path: "/user/password",
+    path: "/user/profile",
     component: () => import("@/views/sys/user-update-password.vue"),
-    meta: { title: "修改密码", requiresAuth: true, isNavigationMenu: false }
+    meta: { title: "更改个人信息", requiresAuth: true, isNavigationMenu: false }
+  },
+  {
+    path: "/user/password",
+    redirect: "/user/profile",
+    meta: { isNavigationMenu: false }
+  },
+  {
+    path: "/alert/problem",
+    redirect: "/problem",
+    meta: { isNavigationMenu: false }
   },
   {
     path: "/iframe/:id?",

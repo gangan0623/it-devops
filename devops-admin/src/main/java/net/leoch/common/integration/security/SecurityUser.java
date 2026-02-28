@@ -2,6 +2,7 @@
 
 package net.leoch.common.integration.security;
 
+import cn.dev33.satoken.exception.NotWebContextException;
 import cn.dev33.satoken.session.SaSession;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.bean.BeanUtil;
@@ -17,6 +18,7 @@ import net.leoch.modules.sys.entity.SysUserEntity;
  */
 @Slf4j
 public class SecurityUser {
+    private static final long SYSTEM_USER_ID = 0L;
 
     /**
      * 获取用户信息
@@ -46,6 +48,9 @@ public class SecurityUser {
             user = BeanUtil.copyProperties(userEntity, UserDetail.class);
             StpUtil.getSession().set("user", user);
             return user;
+        } catch (NotWebContextException e) {
+            // 定时任务/异步线程没有 HTTP 上下文，回退系统用户
+            return systemUser();
         } catch (Exception e) {
             log.warn("[安全] 获取用户信息失败", e);
             return new UserDetail();
@@ -58,10 +63,20 @@ public class SecurityUser {
     public static Long getUserId() {
         try {
             return StpUtil.getLoginIdAsLong();
+        } catch (NotWebContextException e) {
+            // 定时任务/异步线程没有 HTTP 上下文，回退系统用户
+            return SYSTEM_USER_ID;
         } catch (Exception e) {
             log.warn("[安全] 获取用户ID失败", e);
-            return null;
+            return SYSTEM_USER_ID;
         }
     }
 
+    private static UserDetail systemUser() {
+        UserDetail user = new UserDetail();
+        user.setId(SYSTEM_USER_ID);
+        user.setUsername("system");
+        user.setRealName("系统任务");
+        return user;
+    }
 }

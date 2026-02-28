@@ -6,15 +6,22 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
 import net.leoch.modules.alert.mapper.AlertRecordMapper;
-import net.leoch.modules.ops.entity.*;
-import net.leoch.modules.ops.mapper.*;
+import net.leoch.modules.ops.entity.BusinessSystemEntity;
+import net.leoch.modules.ops.entity.LinuxHostEntity;
+import net.leoch.modules.ops.entity.MonitorComponentEntity;
+import net.leoch.modules.ops.entity.NetworkHostEntity;
+import net.leoch.modules.ops.entity.WindowHostEntity;
+import net.leoch.modules.ops.mapper.BusinessSystemMapper;
+import net.leoch.modules.ops.mapper.DeviceBackupRecordMapper;
+import net.leoch.modules.ops.mapper.LinuxHostMapper;
+import net.leoch.modules.ops.mapper.MonitorComponentMapper;
+import net.leoch.modules.ops.mapper.NetworkHostMapper;
+import net.leoch.modules.ops.mapper.WindowHostMapper;
 import net.leoch.modules.ops.service.IDashboardService;
-import net.leoch.modules.ops.service.ZabbixClient;
 import net.leoch.modules.ops.vo.rsp.*;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 工作台统计
@@ -27,18 +34,16 @@ public class DashboardServiceImpl implements IDashboardService {
     private final WindowHostMapper windowHostMapper;
     private final LinuxHostMapper linuxHostMapper;
     private final BusinessSystemMapper businessSystemMapper;
-    private final DeviceBackupMapper deviceBackupMapper;
+    private final NetworkHostMapper networkHostMapper;
     private final DeviceBackupRecordMapper deviceBackupRecordMapper;
     private final MonitorComponentMapper monitorComponentMapper;
     private final AlertRecordMapper alertRecordMapper;
-    private final ZabbixClient zabbixClient;
 
     @Override
     public DashboardSummaryRsp summary() {
         DashboardSummaryRsp data = new DashboardSummaryRsp();
         data.setHostCounts(buildHostCounts());
         data.setBackupStats(buildBackupStats());
-        data.setDeviceDiff(buildDeviceDiff());
         data.setRecentAlerts(buildRecentAlerts());
         data.setMonitorComponents(buildMonitorComponents());
         return data;
@@ -46,9 +51,118 @@ public class DashboardServiceImpl implements IDashboardService {
 
     private DashboardHostCountsRsp buildHostCounts() {
         DashboardHostCountsRsp hostCounts = new DashboardHostCountsRsp();
-        hostCounts.setWindows(windowHostMapper.selectCount(new LambdaQueryWrapper<>()));
-        hostCounts.setLinux(linuxHostMapper.selectCount(new LambdaQueryWrapper<>()));
-        hostCounts.setBusiness(businessSystemMapper.selectCount(new LambdaQueryWrapper<>()));
+
+        List<WindowHostEntity> windows = windowHostMapper.selectList(
+                new LambdaQueryWrapper<WindowHostEntity>()
+                        .select(WindowHostEntity::getType, WindowHostEntity::getOnlineStatus)
+        );
+        List<LinuxHostEntity> linuxes = linuxHostMapper.selectList(
+                new LambdaQueryWrapper<LinuxHostEntity>()
+                        .select(LinuxHostEntity::getType, LinuxHostEntity::getOnlineStatus)
+        );
+        List<BusinessSystemEntity> businesses = businessSystemMapper.selectList(
+                new LambdaQueryWrapper<BusinessSystemEntity>()
+                        .select(BusinessSystemEntity::getOnlineStatus)
+        );
+        List<NetworkHostEntity> networks = networkHostMapper.selectList(
+                new LambdaQueryWrapper<NetworkHostEntity>()
+                        .select(NetworkHostEntity::getOnlineStatus)
+        );
+
+        long windowsOnline = 0L;
+        long windowsOffline = 0L;
+        long linuxOnline = 0L;
+        long linuxOffline = 0L;
+        long businessOnline = 0L;
+        long businessOffline = 0L;
+        long networkOnline = 0L;
+        long networkOffline = 0L;
+        long physicalOnline = 0L;
+        long physicalOffline = 0L;
+        long vmOnline = 0L;
+        long vmOffline = 0L;
+
+        for (WindowHostEntity item : windows) {
+            if (Boolean.TRUE.equals(item.getOnlineStatus())) {
+                windowsOnline++;
+            } else {
+                windowsOffline++;
+            }
+            if ("Physical".equalsIgnoreCase(StrUtil.blankToDefault(item.getType(), ""))) {
+                if (Boolean.TRUE.equals(item.getOnlineStatus())) {
+                    physicalOnline++;
+                } else {
+                    physicalOffline++;
+                }
+            } else if ("VM".equalsIgnoreCase(StrUtil.blankToDefault(item.getType(), ""))) {
+                if (Boolean.TRUE.equals(item.getOnlineStatus())) {
+                    vmOnline++;
+                } else {
+                    vmOffline++;
+                }
+            }
+        }
+
+        for (LinuxHostEntity item : linuxes) {
+            if (Boolean.TRUE.equals(item.getOnlineStatus())) {
+                linuxOnline++;
+            } else {
+                linuxOffline++;
+            }
+            if ("Physical".equalsIgnoreCase(StrUtil.blankToDefault(item.getType(), ""))) {
+                if (Boolean.TRUE.equals(item.getOnlineStatus())) {
+                    physicalOnline++;
+                } else {
+                    physicalOffline++;
+                }
+            } else if ("VM".equalsIgnoreCase(StrUtil.blankToDefault(item.getType(), ""))) {
+                if (Boolean.TRUE.equals(item.getOnlineStatus())) {
+                    vmOnline++;
+                } else {
+                    vmOffline++;
+                }
+            }
+        }
+
+        for (BusinessSystemEntity item : businesses) {
+            if (Boolean.TRUE.equals(item.getOnlineStatus())) {
+                businessOnline++;
+            } else {
+                businessOffline++;
+            }
+        }
+        for (NetworkHostEntity item : networks) {
+            if (item != null && Integer.valueOf(1).equals(item.getOnlineStatus())) {
+                networkOnline++;
+            } else {
+                networkOffline++;
+            }
+        }
+
+        hostCounts.setWindows((long) windows.size());
+        hostCounts.setWindowsOnline(windowsOnline);
+        hostCounts.setWindowsOffline(windowsOffline);
+
+        hostCounts.setLinux((long) linuxes.size());
+        hostCounts.setLinuxOnline(linuxOnline);
+        hostCounts.setLinuxOffline(linuxOffline);
+
+        hostCounts.setBusiness((long) businesses.size());
+        hostCounts.setBusinessOnline(businessOnline);
+        hostCounts.setBusinessOffline(businessOffline);
+
+        hostCounts.setNetwork((long) networks.size());
+        hostCounts.setNetworkOnline(networkOnline);
+        hostCounts.setNetworkOffline(networkOffline);
+        hostCounts.setAssetTotal((long) windows.size() + linuxes.size() + businesses.size() + networks.size());
+
+        hostCounts.setPhysical(physicalOnline + physicalOffline);
+        hostCounts.setPhysicalOnline(physicalOnline);
+        hostCounts.setPhysicalOffline(physicalOffline);
+
+        hostCounts.setVm(vmOnline + vmOffline);
+        hostCounts.setVmOnline(vmOnline);
+        hostCounts.setVmOffline(vmOffline);
         return hostCounts;
     }
 
@@ -58,56 +172,6 @@ public class DashboardServiceImpl implements IDashboardService {
         log.debug("[看板] 备份统计, total={}, success={}, fail={}, round={}",
                 backupStats.getTotal(), backupStats.getSuccess(), backupStats.getFail(), backupStats.getRound());
         return backupStats;
-    }
-
-    private DashboardDeviceDiffRsp buildDeviceDiff() {
-        List<Map<String, String>> zabbixHosts = zabbixClient.getHostsByTemplates();
-        List<DeviceBackupEntity> backupDevices = deviceBackupMapper.selectList(
-                new LambdaQueryWrapper<DeviceBackupEntity>()
-                        .select(DeviceBackupEntity::getInstance, DeviceBackupEntity::getName)
-        );
-
-        // 使用 Stream API 构建 IP 集合，提升代码可读性
-        Set<String> zabbixIps = zabbixHosts.stream()
-                .map(host -> host.get("ip"))
-                .filter(StrUtil::isNotBlank)
-                .collect(Collectors.toSet());
-
-        Set<String> backupIps = backupDevices.stream()
-                .filter(device -> device != null && StrUtil.isNotBlank(device.getInstance()))
-                .map(DeviceBackupEntity::getInstance)
-                .collect(Collectors.toSet());
-
-        // 找出只在 Zabbix 中的设备（差集运算 O(n)）
-        List<DashboardDeviceDiffItemRsp> zabbixOnly = zabbixHosts.stream()
-                .filter(host -> StrUtil.isNotBlank(host.get("ip")) && !backupIps.contains(host.get("ip")))
-                .map(host -> {
-                    DashboardDeviceDiffItemRsp item = new DashboardDeviceDiffItemRsp();
-                    item.setIp(host.get("ip"));
-                    item.setName(host.get("name"));
-                    return item;
-                })
-                .collect(Collectors.toList());
-
-        // 找出只在备份中的设备（差集运算 O(n)）
-        List<DashboardDeviceDiffItemRsp> backupOnly = backupDevices.stream()
-                .filter(device -> device != null && StrUtil.isNotBlank(device.getInstance()))
-                .filter(device -> !zabbixIps.contains(device.getInstance()))
-                .map(device -> {
-                    DashboardDeviceDiffItemRsp item = new DashboardDeviceDiffItemRsp();
-                    item.setIp(device.getInstance());
-                    item.setName(device.getName());
-                    return item;
-                })
-                .collect(Collectors.toList());
-
-        log.debug("[看板] 设备差异分析, zabbix={}, backup={}, zabbixOnly={}, backupOnly={}",
-                zabbixHosts.size(), backupDevices.size(), zabbixOnly.size(), backupOnly.size());
-
-        DashboardDeviceDiffRsp diff = new DashboardDeviceDiffRsp();
-        diff.setZabbixOnly(zabbixOnly);
-        diff.setBackupOnly(backupOnly);
-        return diff;
     }
 
     private List<DashboardAlertSummaryRsp> buildRecentAlerts() {

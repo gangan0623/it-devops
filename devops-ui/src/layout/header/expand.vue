@@ -5,7 +5,6 @@ import {useFullscreen} from "@vueuse/core";
 import {defineComponent} from "vue";
 import {useRouter} from "vue-router";
 import {useAppStore} from "@/store";
-import userLogo from "@/assets/images/user.png";
 import "@/assets/css/header.less";
 import {ElMessageBox} from "element-plus";
 
@@ -50,7 +49,6 @@ export default defineComponent({
       props,
       store,
       isFullscreen,
-      userLogo,
       onClickUserMenus,
       toggle
     };
@@ -65,11 +63,10 @@ export default defineComponent({
       </span>
     </div>
     <div style="display: flex; justify-content: center; align-items: center">
-      <img :src="userLogo" :alt="props.userName" style="width: 30px; height: 30px; border-radius: 50%; margin-top: 3px; margin-right: 5px" />
       <el-dropdown @command="onClickUserMenus">
         <template #dropdown>
           <el-dropdown-menu>
-            <el-dropdown-item icon="lock" command="/user/password"> 修改密码 </el-dropdown-item>
+            <el-dropdown-item icon="user" command="/user/profile"> 更改个人信息 </el-dropdown-item>
             <el-dropdown-item icon="switch-button" divided command="/login"> 退出登录 </el-dropdown-item>
           </el-dropdown-menu>
         </template>

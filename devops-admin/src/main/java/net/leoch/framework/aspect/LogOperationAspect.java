@@ -94,7 +94,14 @@ public class LogOperationAspect {
         //请求参数
         Object[] args = joinPoint.getArgs();
         try {
-            String params = JSONUtil.toJsonStr(args[0]);
+            String params;
+            if (args == null || args.length == 0) {
+                params = "{}";
+            } else if (args.length == 1) {
+                params = JSONUtil.toJsonStr(args[0]);
+            } else {
+                params = JSONUtil.toJsonStr(args);
+            }
             log.setRequestParams(params);
         } catch (Exception e) {
             LogOperationAspect.log.warn("[操作日志] 序列化请求参数失败", e);

@@ -4,22 +4,22 @@ package net.leoch.common.integration.storage;
 
 import net.leoch.common.exception.ServiceException;
 import net.leoch.common.utils.context.SpringContextUtils;
-import net.leoch.modules.oss.service.ISysOssConfigService;
+import net.leoch.modules.sys.service.StorageConfigService;
 
 /**
  * 文件上传Factory
  * @author Taohongqiang
  */
 public final class OSSFactory {
-    private static ISysOssConfigService sysOssConfigService;
+    private static StorageConfigService storageConfigService;
 
     static {
-        OSSFactory.sysOssConfigService = SpringContextUtils.getBean(ISysOssConfigService.class);
+        OSSFactory.storageConfigService = SpringContextUtils.getBean(StorageConfigService.class);
     }
 
     public static AbstractCloudStorageService build(){
         //获取云存储配置信息
-        CloudStorageConfig config = sysOssConfigService.getConfig();
+        CloudStorageConfig config = storageConfigService.getConfig();
         if (config == null) {
             throw new ServiceException("云存储配置不存在");
         }

@@ -12,8 +12,6 @@ import "@wangeditor/editor/dist/css/style.css";
 import {onBeforeUnmount, shallowRef} from "vue";
 import {Editor, Toolbar} from "@wangeditor/editor-for-vue";
 import {IDomEditor, IEditorConfig} from "@wangeditor/editor";
-import app from "@/constants/app";
-import {getToken} from "@/utils/cache";
 
 const props = defineProps({
   modelValue: {
@@ -41,24 +39,10 @@ const props = defineProps({
 // 编辑器实例，必须用 shallowRef
 const editorRef = shallowRef();
 
-type InsertFnType = (url: string, alt: string, href: string) => void;
-
 // 编辑器配置
 const editorConfig: Partial<IEditorConfig> = {
   placeholder: props.placeholder,
-  readOnly: props.disabled,
-  MENU_CONF: {
-    uploadImage: {
-      server: `${app.api}/sys/oss/upload?token=${getToken()}`, // 上传地址
-      fieldName: "file",
-      // 自定义插入图片
-      customInsert(res: any, insertFn: InsertFnType) {
-        // res 即服务端的返回结果
-        // 从 res 中找到 url alt href ，然后插图图片
-        insertFn(res.data.src, "", "");
-      }
-    }
-  }
+  readOnly: props.disabled
 };
 
 // 组件销毁时，也及时销毁编辑器

@@ -18,7 +18,7 @@ import net.leoch.modules.ops.entity.DeviceBackupRecordEntity;
 import net.leoch.modules.ops.mapper.DeviceBackupHistoryMapper;
 import net.leoch.modules.ops.mapper.DeviceBackupRecordMapper;
 import net.leoch.modules.ops.vo.rsp.OpsDeleteCascadeRsp;
-import net.leoch.modules.oss.service.ISysOssConfigService;
+import net.leoch.modules.sys.service.StorageConfigService;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -34,7 +34,7 @@ public class OpsDeleteCascadeService {
     private final AlertRecordActionMapper alertRecordActionMapper;
     private final DeviceBackupRecordMapper deviceBackupRecordMapper;
     private final DeviceBackupHistoryMapper deviceBackupHistoryMapper;
-    private final ISysOssConfigService sysOssConfigService;
+    private final StorageConfigService storageConfigService;
 
     public OpsDeleteCascadeRsp deleteAlertRecordsByInstances(Collection<String> instances) {
         OpsDeleteCascadeRsp rsp = new OpsDeleteCascadeRsp();
@@ -98,7 +98,7 @@ public class OpsDeleteCascadeService {
     }
 
     private int deleteMinioTxtFiles(List<String> urls) {
-        CloudStorageConfig config = sysOssConfigService.getConfig();
+        CloudStorageConfig config = storageConfigService.getConfig();
         if (config == null || !Objects.equals(config.getType(), Constant.CloudService.MINIO.getValue())) {
             log.info("[删除联动] 当前非MinIO存储，跳过对象删除");
             return 0;

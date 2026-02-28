@@ -26,4 +26,5 @@ public class AdminApplication extends SpringBootServletInitializer {
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
 		return application.sources(AdminApplication.class);
 	}
+
 }

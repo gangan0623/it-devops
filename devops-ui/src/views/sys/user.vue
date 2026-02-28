@@ -1,117 +1,26 @@
 <template>
-  <div class="mod-sys__user">
-    <el-form :inline="true" :model="state.dataForm" @keyup.enter="state.getDataList()">
-      <el-form-item>
-        <el-input v-model="state.dataForm.username" placeholder="用户名" clearable></el-input>
-      </el-form-item>
-          <el-form-item>
-            <el-select v-model="state.dataForm.gender" placeholder="性别" clearable>
-              <el-option label="男" :value="0"></el-option>
-              <el-option label="女" :value="1"></el-option>
-              <el-option label="保密" :value="2"></el-option>
-            </el-select>
-          </el-form-item>
-      <el-form-item>
-        <el-button @click="state.getDataList()">查询</el-button>
-      </el-form-item>
-      <el-form-item>
-        <el-button v-if="state.hasPermission('sys:user:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
-      </el-form-item>
-      <el-form-item>
-        <el-button v-if="state.hasPermission('sys:user:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
-      </el-form-item>
-      <el-form-item>
-        <el-button v-if="state.hasPermission('sys:user:kickout')" type="warning" @click="kickoutHandle()">强制下线</el-button>
-      </el-form-item>
-      <el-form-item>
-        <el-button v-if="state.hasPermission('sys:user:export')" type="info" @click="state.exportHandle()">导出</el-button>
-      </el-form-item>
-    </el-form>
-    <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" @sort-change="state.dataListSortChangeHandle" class="sys-user-table" style="width: 100%">
-      <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
-      <el-table-column prop="username" label="用户名" sortable="custom" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="email" label="邮箱" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="mobile" label="手机号" sortable="custom" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="gender" label="性别" sortable="custom" header-align="center" align="center">
-        <template v-slot="scope">
-                <span v-if="scope.row.gender === 0">男</span>
-                <span v-else-if="scope.row.gender === 1">女</span>
-                <span v-else>保密</span>
-        </template>
-      </el-table-column>
-      <el-table-column prop="status" label="状态" sortable="custom" header-align="center" align="center">
-        <template v-slot="scope">
-          <el-tag v-if="scope.row.status === 0" size="small" type="danger">停用</el-tag>
-          <el-tag v-else size="small" type="success">正常</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column prop="createDate" label="创建时间" sortable="custom" header-align="center" align="center" width="180"></el-table-column>
-      <el-table-column label="操作" fixed="right" header-align="center" align="center" width="250">
-        <template v-slot="scope">
-          <el-button v-if="state.hasPermission('sys:user:update')" type="primary" link @click="addOrUpdateHandle(scope.row.id)">修改</el-button>
-          <el-button v-if="state.hasPermission('sys:user:kickout')" type="warning" link @click="kickoutHandle(scope.row.id)">下线</el-button>
-          <el-button v-if="state.hasPermission('sys:user:delete')" type="primary" link @click="state.deleteHandle(scope.row.id)">删除</el-button>
-        </template>
-      </el-table-column>
-    </el-table>
-    <el-pagination :current-page="state.page" :page-sizes="[10, 20, 50, 100]" :page-size="state.limit" :total="state.total" layout="total, sizes, prev, pager, next, jumper" @size-change="state.pageSizeChangeHandle" @current-change="state.pageCurrentChangeHandle"> </el-pagination>
-    <!-- 弹窗, 新增 / 修改 -->
-    <add-or-update ref="addOrUpdateRef" @refreshDataList="state.getDataList"></add-or-update>
+  <div class="mod-sys__permission">
+    <el-tabs v-model="activeTab">
+      <el-tab-pane label="用户管理" name="user">
+        <user-management />
+      </el-tab-pane>
+      <el-tab-pane label="角色管理" name="role">
+        <role-management />
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 
 <script lang="ts" setup>
-import useView from "@/hooks/useView";
-import {reactive, ref, toRefs} from "vue";
-import AddOrUpdate from "./user-add-or-update.vue";
-import baseService from "@/service/baseService";
-import {ElMessage, ElMessageBox} from "element-plus";
+import { ref } from "vue";
+import UserManagement from "./user-management.vue";
+import RoleManagement from "./role.vue";
 
-const view = reactive({
-  getDataListURL: "/sys/user/page",
-  getDataListIsPage: true,
-  deleteURL: "/sys/user",
-  deleteIsBatch: true,
-  exportURL: "/sys/user/export",
-  dataForm: {
-    username: "",
-    postId: "",
-    gender: ""
-  }
-});
-
-const state = reactive({ ...useView(view), ...toRefs(view) });
-
-const addOrUpdateRef = ref();
-const addOrUpdateHandle = (id?: number) => {
-  addOrUpdateRef.value.init(id);
-};
-
-const kickoutHandle = (id?: number) => {
-  const ids = id ? [id] : state.dataListSelections?.map((item: any) => item.id);
-  if (!ids || ids.length === 0) {
-    ElMessage.warning("请选择要下线的用户");
-    return;
-  }
-  ElMessageBox.confirm("确定要强制下线选中的用户吗？", "提示", {
-    confirmButtonText: "确定",
-    cancelButtonText: "取消",
-    type: "warning"
-  }).then(() => {
-    baseService.post("/sys/user/kickout", ids).then((res) => {
-      if (res.code === 0) {
-        ElMessage.success("操作成功");
-      }
-    });
-  }).catch(() => {});
-};
+const activeTab = ref("user");
 </script>
 
 <style scoped>
-.sys-user-table :deep(.cell) {
-  white-space: nowrap;
-}
-.sys-user-table :deep(.el-button) {
-  text-overflow: clip;
+.mod-sys__permission {
+  padding: 8px;
 }
 </style>

@@ -4,7 +4,10 @@
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
           <el-form-item>
-            <el-input v-model="state.dataForm.ip" class="query-input" placeholder="IP" clearable></el-input>
+            <el-input v-model="state.dataForm.ip" class="query-input" placeholder="地址(模糊)" clearable></el-input>
+          </el-form-item>
+          <el-form-item>
+            <el-input v-model="state.dataForm.name" class="query-input" placeholder="名称(模糊)" clearable></el-input>
           </el-form-item>
           <el-form-item>
             <el-button class="query-btn" :loading="state.dataListLoading" @click="queryList()">查询</el-button>
@@ -34,9 +37,6 @@
 
     <el-drawer v-model="filterDrawer" title="筛选条件" size="360px" :append-to-body="true">
       <el-form label-position="top" class="filter-form">
-        <el-form-item label="名称(模糊)">
-          <el-input v-model="state.dataForm.name" clearable></el-input>
-        </el-form-item>
         <el-form-item label="类型">
           <ren-select v-model="state.dataForm.type" dict-type="monitor_component_type" placeholder="全部"></ren-select>
         </el-form-item>
@@ -126,7 +126,6 @@ const addOrUpdateRef = ref();
 const detectLoading = ref(false);
 const activeFilterCount = computed(() => {
   let count = 0;
-  if (state.dataForm.name) count++;
   if (state.dataForm.type) count++;
   return count;
 });

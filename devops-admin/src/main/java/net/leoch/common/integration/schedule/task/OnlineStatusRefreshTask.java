@@ -35,20 +35,17 @@ public class OnlineStatusRefreshTask implements ITask {
     private final WindowHostMapper windowHostMapper;
     private final BusinessSystemMapper businessSystemMapper;
     private final BackupAgentMapper backupAgentMapper;
-    private final DeviceBackupMapper deviceBackupMapper;
     private final OnlineStatusConfig properties;
 
     public OnlineStatusRefreshTask(LinuxHostMapper linuxHostMapper,
                                    WindowHostMapper windowHostMapper,
                                    BusinessSystemMapper businessSystemMapper,
                                    BackupAgentMapper backupAgentMapper,
-                                   DeviceBackupMapper deviceBackupMapper,
                                    OnlineStatusConfig properties) {
         this.linuxHostMapper = linuxHostMapper;
         this.windowHostMapper = windowHostMapper;
         this.businessSystemMapper = businessSystemMapper;
         this.backupAgentMapper = backupAgentMapper;
-        this.deviceBackupMapper = deviceBackupMapper;
         this.properties = properties;
     }
 
@@ -59,7 +56,6 @@ public class OnlineStatusRefreshTask implements ITask {
         refreshWindows();
         refreshBusinessSystems();
         refreshBackupAgents();
-        refreshDeviceBackups();
         logger.info("[在线状态刷新] 完成, 耗时={}ms", System.currentTimeMillis() - start);
     }
 
@@ -92,14 +88,6 @@ public class OnlineStatusRefreshTask implements ITask {
                 .select(BackupAgentEntity::getInstance));
         Map<String, Object> statusMap = refreshWithThreads(list, BackupAgentEntity::getInstance, this::checkBackupAgentHealth);
         refreshTableStatus(backupAgentMapper, BackupAgentEntity::getOnlineStatus, BackupAgentEntity::getInstance, statusMap);
-    }
-
-    private void refreshDeviceBackups() {
-        List<DeviceBackupEntity> list = deviceBackupMapper.selectList(new LambdaQueryWrapper<DeviceBackupEntity>()
-                .select(DeviceBackupEntity::getInstance));
-        Map<String, Object> statusMap = refreshWithThreads(list, DeviceBackupEntity::getInstance,
-                instance -> PingUtils.isReachable(instance, properties.getOnlineStatus().getTimeout().getDevice()));
-        refreshTableStatus(deviceBackupMapper, DeviceBackupEntity::getOnlineStatus, DeviceBackupEntity::getInstance, statusMap);
     }
 
     private static final int UPDATE_BATCH_SIZE = 500;

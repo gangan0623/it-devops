@@ -22,9 +22,6 @@ public class DashboardSummaryRsp implements Serializable  {
     @Schema(description = "备份统计")
     private DashboardBackupStatsRsp backupStats;
 
-    @Schema(description = "设备差异")
-    private DashboardDeviceDiffRsp deviceDiff;
-
     @Schema(description = "实时告警")
     private List<DashboardAlertSummaryRsp> recentAlerts;
 

@@ -5,6 +5,7 @@ import net.leoch.common.data.page.PageData;
 import net.leoch.modules.sys.entity.SysUserEntity;
 import net.leoch.modules.sys.vo.req.SysUserPageReq;
 import net.leoch.modules.sys.vo.req.SysUserReq;
+import net.leoch.modules.sys.vo.req.UserProfileUpdateReq;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 
 import java.util.List;
@@ -56,6 +57,12 @@ public interface ISysUserService extends IService<SysUserEntity> {
 	 * @return 当前用户信息
 	 */
 	SysUserRsp getCurrentUserInfo();
+
+	/**
+	 * 修改当前用户个人信息（含密码）
+	 * @param dto 个人信息修改请求
+	 */
+	void updateCurrentUserProfile(UserProfileUpdateReq dto);
 
 	/**
 	 * 强制用户下线

@@ -15,6 +15,7 @@ import net.leoch.modules.sys.service.ISysUserService;
 import net.leoch.modules.sys.vo.req.PasswordReq;
 import net.leoch.modules.sys.vo.req.SysUserPageReq;
 import net.leoch.modules.sys.vo.req.SysUserReq;
+import net.leoch.modules.sys.vo.req.UserProfileUpdateReq;
 import net.leoch.modules.sys.vo.rsp.SysUserRsp;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,6 +49,14 @@ public class SysUserController {
     @Operation(summary = "登录用户信息")
     public Result<SysUserRsp> info() {
         return new Result<SysUserRsp>().ok(sysUserService.getCurrentUserInfo());
+    }
+
+    @PutMapping("profile")
+    @Operation(summary = "修改当前用户个人信息")
+    @LogOperation("修改个人信息")
+    public Result<Object> profile(@Valid @RequestBody UserProfileUpdateReq dto) {
+        sysUserService.updateCurrentUserProfile(dto);
+        return new Result<>();
     }
 
     @PutMapping("password")
