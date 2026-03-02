@@ -15,6 +15,8 @@ import net.leoch.modules.log.entity.SysLogErrorEntity;
 import net.leoch.modules.log.service.ISysLogErrorService;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -63,12 +65,25 @@ public class ServiceExceptionHandler {
     }
 
     @ExceptionHandler(Exception.class)
-    public Result<Object> handleException(Exception ex) {
+    public Object handleException(Exception ex) {
         log.error(ex.getMessage(), ex);
 
         saveLog(ex);
 
+        HttpServletRequest request = HttpContextUtils.getHttpServletRequest();
+        if (isSseRequest(request)) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+
         return new Result<>().error();
+    }
+
+    private boolean isSseRequest(HttpServletRequest request) {
+        if (request == null) {
+            return false;
+        }
+        String accept = request.getHeader(HttpHeaders.ACCEPT);
+        return accept != null && accept.contains("text/event-stream");
     }
 
     /**

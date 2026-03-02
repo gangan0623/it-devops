@@ -1,6 +1,6 @@
 import Layout from "@/layout/layout.vue";
 import Error from "@/views/error.vue";
-import {RouteRecordRaw} from "vue-router";
+import { RouteRecordRaw } from "vue-router";
 import Login from "@/views/login.vue";
 import Iframe from "@/views/iframe.vue";
 
@@ -23,6 +23,21 @@ const routes: Array<RouteRecordRaw> = [
         path: "/problem",
         component: () => import("@/views/problem.vue"),
         meta: { title: "问题", icon: "icon-notification" }
+      },
+      {
+        path: "/workbench/network-report",
+        component: () => import("@/views/alert/zabbix-report.vue"),
+        meta: { title: "网络设备报告", icon: "icon-filedone" }
+      },
+      {
+        path: "/workbench/server-report",
+        component: () => import("@/views/alert/server-report.vue"),
+        meta: { title: "服务主机报告", icon: "icon-desktop" }
+      },
+      {
+        path: "/workbench/http-report",
+        component: () => import("@/views/alert/http-report.vue"),
+        meta: { title: "网络站点报告", icon: "icon-file-text" }
       }
     ]
   },
@@ -44,6 +59,21 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: "/alert/problem",
     redirect: "/problem",
+    meta: { isNavigationMenu: false }
+  },
+  {
+    path: "/alert/zabbix/report",
+    redirect: "/workbench/network-report",
+    meta: { isNavigationMenu: false }
+  },
+  {
+    path: "/alert/prometheus/report/server",
+    redirect: "/workbench/server-report",
+    meta: { isNavigationMenu: false }
+  },
+  {
+    path: "/alert/prometheus/report/http",
+    redirect: "/workbench/http-report",
     meta: { isNavigationMenu: false }
   },
   {

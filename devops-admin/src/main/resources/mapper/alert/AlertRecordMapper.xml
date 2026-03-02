@@ -14,6 +14,8 @@
         <result property="startsAt" column="starts_at"/>
         <result property="endsAt" column="ends_at"/>
         <result property="receiver" column="receiver"/>
+        <result property="alertGroup" column="alert_group"/>
+        <result property="fingerprint" column="fingerprint"/>
         <result property="rawJson" column="raw_json"/>
         <result property="closed" column="closed"/>
         <result property="suppressedUntil" column="suppressed_until"/>

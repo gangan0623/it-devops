@@ -108,18 +108,18 @@
               <span>当前无活跃告警</span>
             </div>
           </template>
-          <el-table-column prop="time" label="记录时间" header-align="center" align="center" width="165" />
-          <el-table-column label="严重性" header-align="center" align="center" width="90">
+          <el-table-column prop="time" label="记录时间" header-align="center" align="center" min-width="140" />
+          <el-table-column label="严重性" header-align="center" align="center" min-width="72">
             <template #default="scope">
               <span :class="severityClass(scope.row)">{{ formatSeverity(scope.row.severity) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="状态" header-align="center" align="center" width="90">
+          <el-table-column label="状态" header-align="center" align="center" min-width="72">
             <template #default="scope">
               <span :class="statusClass(scope.row.status)">{{ formatStatus(scope.row.status) }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="hostName" label="主机名" header-align="center" align="center" min-width="160">
+          <el-table-column prop="hostName" label="主机名" header-align="center" align="center" min-width="120" show-overflow-tooltip>
             <template #default="scope">
               <el-tooltip placement="top" effect="light" :show-after="250">
                 <template #content>
@@ -141,7 +141,7 @@
               </el-tooltip>
             </template>
           </el-table-column>
-          <el-table-column prop="alertName" label="告警名称" header-align="center" align="center" min-width="200">
+          <el-table-column prop="alertName" label="告警名称" header-align="center" align="center" min-width="160" show-overflow-tooltip>
             <template #default="scope">
               <el-tooltip placement="top" effect="light" :show-after="250">
                 <template #content>
@@ -703,9 +703,6 @@ onBeforeUnmount(() => {
 }
 
 /* 告警表格 */
-.alert-table :deep(.cell) {
-  white-space: nowrap;
-}
 
 .alert-table :deep(.alert-row--critical) td {
   background: #fff5f5 !important;

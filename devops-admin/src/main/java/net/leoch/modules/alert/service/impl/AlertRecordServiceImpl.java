@@ -165,6 +165,19 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             if ("firing".equalsIgnoreCase(alertStatus) && isSuppressed(alertName, instance)) {
                 continue;
             }
+            // fingerprint 去重：同一个 fingerprint 只保留最新一条（upsert 语义）
+            String fingerprint = toStr(alert.get("fingerprint"));
+            if (StrUtil.isNotBlank(fingerprint)) {
+                LambdaUpdateWrapper<AlertRecordEntity> dedup = new LambdaUpdateWrapper<>();
+                dedup.eq(AlertRecordEntity::getFingerprint, fingerprint);
+                dedup.set(AlertRecordEntity::getStatus, alertStatus);
+                dedup.set(AlertRecordEntity::getEndsAt, TimeUtils.parseDate(ParseUtils.toStr(alert.get("endsAt"))));
+                dedup.set(AlertRecordEntity::getRawJson, rawJson);
+                if (this.update(dedup)) {
+                    saved = true;
+                    continue;
+                }
+            }
             AlertRecordEntity entity = new AlertRecordEntity();
             entity.setAlertName(alertName);
             entity.setStatus(alertStatus);
@@ -175,6 +188,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             entity.setStartsAt(TimeUtils.parseDate(ParseUtils.toStr(alert.get("startsAt"))));
             entity.setEndsAt(TimeUtils.parseDate(ParseUtils.toStr(alert.get("endsAt"))));
             entity.setReceiver(receiver);
+            entity.setAlertGroup(getValue(labels, commonLabels, "alertgroup"));
+            entity.setFingerprint(fingerprint);
             entity.setRawJson(rawJson);
             entity.setClosed(0);
             this.getBaseMapper().insert(entity);

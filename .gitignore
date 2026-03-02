@@ -96,3 +96,5 @@ devops-ui/node_modules/
 devops-ui/dist/
 devops-ui/.vite/
 
+/.skillkit/**
+/skillkit.yaml

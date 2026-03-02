@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.leoch.modules.alert.mapper.PrometheusAlertAiReportMapper">
+
+    <resultMap type="net.leoch.modules.alert.entity.PrometheusAlertAiReportEntity" id="prometheusAlertAiReportMap">
+        <result property="id" column="id"/>
+        <result property="reportType" column="report_type"/>
+        <result property="periodType" column="period_type"/>
+        <result property="periodStart" column="period_start"/>
+        <result property="periodEnd" column="period_end"/>
+        <result property="modelName" column="model_name"/>
+        <result property="reportStatus" column="report_status"/>
+        <result property="summary" column="summary"/>
+        <result property="inputJson" column="input_json"/>
+        <result property="reportJson" column="report_json"/>
+        <result property="reportMarkdown" column="report_markdown"/>
+        <result property="errorMessage" column="error_message"/>
+        <result property="createDate" column="create_date"/>
+    </resultMap>
+
+</mapper>

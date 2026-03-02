@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.data.result.Result;
 import net.leoch.modules.alert.service.AlertWebhookService;
+import net.leoch.modules.alert.service.ZabbixAlertIngestService;
 import net.leoch.modules.alert.service.ZabbixWebhookLogService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,6 +24,7 @@ public class AlertWebhookController {
 
     private final AlertWebhookService alertWebhookService;
     private final ZabbixWebhookLogService zabbixWebhookLogService;
+    private final ZabbixAlertIngestService zabbixAlertIngestService;
 
     @PostMapping("/auto")
     @Operation(summary = "Webhook接收")
@@ -34,7 +36,8 @@ public class AlertWebhookController {
     @PostMapping("/zabbix")
     @Operation(summary = "Zabbix Webhook接收（仅落库）")
     public Result<Object> zabbixWebhook(HttpServletRequest request, @RequestBody(required = false) String payload) {
-        zabbixWebhookLogService.receiveAndStore(request, payload);
+        Long logId = zabbixWebhookLogService.receiveAndStore(request, payload);
+        zabbixAlertIngestService.ingest(payload, logId);
         return new Result<>();
     }
 }

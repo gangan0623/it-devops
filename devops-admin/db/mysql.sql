@@ -999,6 +999,73 @@ UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+
+DROP TABLE IF EXISTS `tb_zabbix_alert_ai_report`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tb_zabbix_alert_ai_report` (
+  `id` bigint NOT NULL,
+  `period_type` varchar(20) DEFAULT NULL COMMENT '周期类型 week/month',
+  `period_start` datetime DEFAULT NULL COMMENT '周期开始',
+  `period_end` datetime DEFAULT NULL COMMENT '周期结束',
+  `model_name` varchar(100) DEFAULT NULL COMMENT '模型名',
+  `report_status` tinyint DEFAULT NULL COMMENT '1成功 2失败',
+  `summary` varchar(500) DEFAULT NULL COMMENT '摘要',
+  `input_json` longtext COMMENT '送给AI的统计JSON',
+  `report_json` longtext COMMENT 'AI返回JSON',
+  `report_markdown` longtext COMMENT '渲染后Markdown',
+  `error_message` varchar(500) DEFAULT NULL COMMENT '异常信息',
+  `create_date` datetime DEFAULT NULL COMMENT '创建时间',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Zabbix告警AI报告';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tb_zabbix_alert_ai_report`
+--
+
+LOCK TABLES `tb_zabbix_alert_ai_report` WRITE;
+/*!40000 ALTER TABLE `tb_zabbix_alert_ai_report` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_zabbix_alert_ai_report` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `tb_prometheus_alert_ai_report`
+--
+
+DROP TABLE IF EXISTS `tb_prometheus_alert_ai_report`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `tb_prometheus_alert_ai_report` (
+  `id` bigint NOT NULL,
+  `report_type` varchar(20) NOT NULL COMMENT '报告类型 server/http',
+  `period_type` varchar(20) DEFAULT NULL COMMENT '周期类型 week/month',
+  `period_start` datetime DEFAULT NULL COMMENT '周期开始',
+  `period_end` datetime DEFAULT NULL COMMENT '周期结束',
+  `model_name` varchar(100) DEFAULT NULL COMMENT '模型名',
+  `report_status` tinyint DEFAULT NULL COMMENT '1成功 2失败',
+  `summary` varchar(500) DEFAULT NULL COMMENT '摘要',
+  `input_json` longtext COMMENT '送给AI的统计JSON',
+  `report_json` longtext COMMENT 'AI返回JSON',
+  `report_markdown` longtext COMMENT '渲染后Markdown',
+  `error_message` varchar(500) DEFAULT NULL COMMENT '异常信息',
+  `create_date` datetime DEFAULT NULL COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_report_type` (`report_type`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='Prometheus告警AI报告';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tb_prometheus_alert_ai_report`
+--
+
+LOCK TABLES `tb_prometheus_alert_ai_report` WRITE;
+/*!40000 ALTER TABLE `tb_prometheus_alert_ai_report` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tb_prometheus_alert_ai_report` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
 /*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
 /*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

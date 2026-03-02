@@ -68,6 +68,16 @@ public class AlertRecordEntity {
     private String receiver;
 
     /**
+     * 告警组(alertgroup标签)
+     */
+    private String alertGroup;
+
+    /**
+     * Alertmanager fingerprint
+     */
+    private String fingerprint;
+
+    /**
      * rawJson
      */
     private String rawJson;
