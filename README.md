@@ -122,7 +122,7 @@ docker-compose down -v
 - Nginx 日志：`./docker/nginx/logs/`
 
 ### 注意事项
-- MySQL 会在首次启动时自动执行 `devops-admin/db/mysql.sql` 进行数据库初始化
+- MySQL 会在首次启动时自动执行 `devops-admin/db/devops_dev.sql` 进行数据库初始化
 - 服务启动有依赖顺序：MySQL/Redis 健康检查通过后才会启动 devops-admin，devops-admin 启动后才会启动 nginx
 - 如需修改数据库或 Redis 密码，请同步修改 `docker-compose.yaml` 中对应服务的环境变量
 

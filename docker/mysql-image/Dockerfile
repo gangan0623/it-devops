@@ -2,4 +2,4 @@ FROM mysql:8.0
 ENV TZ=Asia/Shanghai
 
 # Initialize schema/data on first container start.
-COPY devops-admin/db/devops.sql /docker-entrypoint-initdb.d/init.sql
+COPY devops-admin/db/devops_dev.sql /docker-entrypoint-initdb.d/init.sql

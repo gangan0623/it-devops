@@ -11,7 +11,7 @@ services:
       - "3306:3306"
     volumes:
       - ./docker/mysql:/var/lib/mysql
-      - ./devops-admin/db/mysql.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./devops-admin/db/devops_dev.sql:/docker-entrypoint-initdb.d/init.sql:ro
     healthcheck:
       test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-p$$MYSQL_ROOT_PASSWORD"]
       interval: 5s
