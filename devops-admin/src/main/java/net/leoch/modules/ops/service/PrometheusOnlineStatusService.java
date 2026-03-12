@@ -11,12 +11,15 @@ import org.springframework.stereotype.Service;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
+import java.net.URI;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -40,17 +43,14 @@ public class PrometheusOnlineStatusService {
     }
 
     public boolean isOnline(String job, String instance) {
-        String normalizedInstance = normalizeInstance(instance);
-        if (StrUtil.isBlank(job) || StrUtil.isBlank(normalizedInstance)) {
+        if (StrUtil.isBlank(job) || StrUtil.isBlank(instance)) {
             return false;
         }
-        String body = executeQuery("up{job=\"" + escapePromQl(job) + "\",instance=\"" + escapePromQl(normalizedInstance) + "\"}");
-        if (body == null) {
+        BatchStatusResult result = queryJobStatus(job);
+        if (!result.success()) {
             return false;
         }
-        Map<String, Boolean> statusMap = parseStatusMap(body);
-        Boolean status = statusMap.get(normalizedInstance);
-        return Boolean.TRUE.equals(status);
+        return matchesOnline(result.statusMap(), job, instance);
     }
 
     private Map<String, Boolean> parseStatusMap(String body) {
@@ -79,7 +79,7 @@ public class PrometheusOnlineStatusService {
                 if (metric == null) {
                     continue;
                 }
-                String instance = normalizeInstance(metric.getStr("instance"));
+                String instance = StrUtil.trim(metric.getStr("instance"));
                 if (StrUtil.isBlank(instance)) {
                     continue;
                 }
@@ -128,25 +128,117 @@ public class PrometheusOnlineStatusService {
         }
     }
 
-    private String normalizeInstance(String instance) {
-        String value = StrUtil.trim(instance);
-        if (StrUtil.isBlank(value)) {
-            return null;
-        }
-        if (StrUtil.startWithIgnoreCase(value, "http://")) {
-            value = value.substring(7);
-        } else if (StrUtil.startWithIgnoreCase(value, "https://")) {
-            value = value.substring(8);
-        }
-        int slashIndex = value.indexOf('/');
-        if (slashIndex >= 0) {
-            value = value.substring(0, slashIndex);
-        }
-        return StrUtil.trim(value);
-    }
-
     private String escapePromQl(String value) {
         return StrUtil.nullToEmpty(value).replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    public boolean matchesOnline(Map<String, Boolean> statusMap, String job, String instance) {
+        if (statusMap == null || statusMap.isEmpty() || StrUtil.isBlank(job) || StrUtil.isBlank(instance)) {
+            return false;
+        }
+        Set<String> expectedKeys = buildMatchKeys(job, instance);
+        if (expectedKeys.isEmpty()) {
+            return false;
+        }
+        for (Map.Entry<String, Boolean> entry : statusMap.entrySet()) {
+            if (!Boolean.TRUE.equals(entry.getValue())) {
+                continue;
+            }
+            Set<String> actualKeys = buildMatchKeys(job, entry.getKey());
+            for (String key : actualKeys) {
+                if (expectedKeys.contains(key)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private Set<String> buildMatchKeys(String job, String instance) {
+        String value = StrUtil.trim(instance);
+        if (StrUtil.isBlank(value)) {
+            return Collections.emptySet();
+        }
+        return JOB_HTTP_PROBE.equalsIgnoreCase(job) ? buildHttpProbeKeys(value) : buildHostKeys(value);
+    }
+
+    private Set<String> buildHostKeys(String instance) {
+        LinkedHashSet<String> keys = new LinkedHashSet<>();
+        String trimmed = StrUtil.trim(instance);
+        if (StrUtil.isBlank(trimmed)) {
+            return keys;
+        }
+        keys.add(trimmed);
+        String withoutScheme = StrUtil.removePrefixIgnoreCase(StrUtil.removePrefixIgnoreCase(trimmed, "http://"), "https://");
+        if (StrUtil.isNotBlank(withoutScheme)) {
+            keys.add(withoutScheme);
+        }
+        String withoutPath = substringBeforeSlash(withoutScheme);
+        if (StrUtil.isNotBlank(withoutPath)) {
+            keys.add(withoutPath);
+            String hostOnly = substringBeforeColon(withoutPath);
+            if (StrUtil.isNotBlank(hostOnly)) {
+                keys.add(hostOnly);
+            }
+        }
+        return keys;
+    }
+
+    private Set<String> buildHttpProbeKeys(String instance) {
+        LinkedHashSet<String> keys = new LinkedHashSet<>();
+        String trimmed = StrUtil.trim(instance);
+        if (StrUtil.isBlank(trimmed)) {
+            return keys;
+        }
+        keys.add(trimmed);
+        keys.add(removeTrailingSlash(trimmed));
+        try {
+            URI uri = URI.create(trimmed);
+            String scheme = StrUtil.blankToDefault(uri.getScheme(), "http");
+            String host = uri.getHost();
+            int port = uri.getPort();
+            String path = StrUtil.blankToDefault(uri.getPath(), "");
+            String base = host == null ? trimmed : scheme + "://" + host + (port > 0 ? ":" + port : "");
+            keys.add(base);
+            keys.add(removeTrailingSlash(base + path));
+            if (host != null) {
+                keys.add(host);
+                if (port > 0) {
+                    keys.add(host + ":" + port);
+                }
+            }
+        } catch (Exception ignore) {
+            keys.add(substringBeforeSlash(StrUtil.removePrefixIgnoreCase(StrUtil.removePrefixIgnoreCase(trimmed, "http://"), "https://")));
+        }
+        keys.removeIf(StrUtil::isBlank);
+        return keys;
+    }
+
+    private String substringBeforeSlash(String value) {
+        if (StrUtil.isBlank(value)) {
+            return value;
+        }
+        int slashIndex = value.indexOf('/');
+        return slashIndex >= 0 ? value.substring(0, slashIndex) : value;
+    }
+
+    private String substringBeforeColon(String value) {
+        if (StrUtil.isBlank(value)) {
+            return value;
+        }
+        int colonIndex = value.indexOf(':');
+        return colonIndex >= 0 ? value.substring(0, colonIndex) : value;
+    }
+
+    private String removeTrailingSlash(String value) {
+        if (StrUtil.isBlank(value)) {
+            return value;
+        }
+        String result = value;
+        while (result.endsWith("/")) {
+            result = result.substring(0, result.length() - 1);
+        }
+        return result;
     }
 
     public record BatchStatusResult(boolean success, Map<String, Boolean> statusMap) {

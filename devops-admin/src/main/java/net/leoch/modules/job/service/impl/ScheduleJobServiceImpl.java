@@ -38,7 +38,7 @@ public class ScheduleJobServiceImpl extends ServiceImpl<ScheduleJobMapper, Sched
     public PageData<ScheduleJobRsp> page(ScheduleJobPageReq request) {
         IPage<ScheduleJobEntity> page = this.page(request.buildPage(),
             new LambdaQueryWrapper<ScheduleJobEntity>()
-                .like(StrUtil.isNotBlank(request.getBeanName()), ScheduleJobEntity::getBeanName, request.getBeanName())
+                .like(StrUtil.isNotBlank(request.getRemark()), ScheduleJobEntity::getRemark, request.getRemark())
                 .orderByDesc(ScheduleJobEntity::getCreateDate)
         );
         return new PageData<>(BeanUtil.copyToList(page.getRecords(), ScheduleJobRsp.class), page.getTotal());

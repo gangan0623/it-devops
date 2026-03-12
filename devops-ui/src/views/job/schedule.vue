@@ -2,7 +2,7 @@
   <div class="mod-job__schedule">
     <el-form :inline="true" :model="state.dataForm" @keyup.enter="state.getDataList()">
       <el-form-item>
-        <el-input v-model="state.dataForm.beanName" placeholder="bean名称" clearable></el-input>
+        <el-input v-model="state.dataForm.remark" placeholder="备注" clearable></el-input>
       </el-form-item>
       <el-form-item>
         <el-button @click="state.getDataList()">查询</el-button>
@@ -28,10 +28,12 @@
     </el-form>
     <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" @sort-change="state.dataListSortChangeHandle" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
-      <el-table-column prop="beanName" label="bean名称" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="params" label="参数" show-overflow-tooltip header-align="center" align="center"></el-table-column>
-      <el-table-column prop="cronExpression" label="cron表达式" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="remark" label="备注" show-overflow-tooltip header-align="center" align="center"></el-table-column>
+      <el-table-column prop="remark" label="名称" show-overflow-tooltip header-align="center" align="center" min-width="220"></el-table-column>
+      <el-table-column label="执行周期" header-align="center" align="center" min-width="180">
+        <template v-slot="scope">
+          <span>{{ formatCron(scope.row.cronExpression) }}</span>
+        </template>
+      </el-table-column>
       <el-table-column prop="status" label="状态" sortable="custom" header-align="center" align="center">
         <template v-slot="scope">
           <el-tag v-if="scope.row.status === 1" size="small">正常</el-tag>
@@ -75,7 +77,7 @@ const view = reactive({
   deleteURL: "/sys/schedule",
   deleteIsBatch: true,
   dataForm: {
-    beanName: ""
+    remark: ""
   }
 });
 
@@ -179,5 +181,32 @@ const logHandle = () => {
 const addOrUpdateRef = ref();
 const addOrUpdateHandle = (id?: number) => {
   addOrUpdateRef.value.init(id);
+};
+
+const formatCron = (cron?: string) => {
+  const value = String(cron || "").trim();
+  if (!value) {
+    return "-";
+  }
+  if (value === "0 0 12 ? * FRI" || value === "0 0 12 * * 5") {
+    return "每周五12点";
+  }
+  if (value === "0 */5 * * * ?") {
+    return "每5分钟";
+  }
+  if (value === "0 */10 * * * ?") {
+    return "每10分钟";
+  }
+  if (value === "0 0 10 * * ?") {
+    return "每天10点";
+  }
+  const parts = value.split(/\s+/);
+  if (parts.length >= 6) {
+    const [sec, min, hour, day, month, week] = parts;
+    if (sec === "0" && min === "0" && /^\d+$/.test(hour) && day === "*" && month === "*" && week === "?") {
+      return `每天${hour}点`;
+    }
+  }
+  return value;
 };
 </script>

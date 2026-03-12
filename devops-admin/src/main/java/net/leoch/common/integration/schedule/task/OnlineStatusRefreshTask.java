@@ -67,8 +67,8 @@ public class OnlineStatusRefreshTask implements ITask {
             logger.warn("[在线状态刷新] Linux Prometheus 查询失败，跳过本轮状态覆盖");
             return;
         }
-        Map<String, Object> statusMap = new HashMap<>(result.statusMap());
-        refreshTableStatus(linuxHostMapper, LinuxHostEntity::getOnlineStatus, LinuxHostEntity::getInstance, statusMap);
+        refreshTableStatus(linuxHostMapper, LinuxHostEntity::getOnlineStatus, LinuxHostEntity::getInstance,
+                LinuxHostEntity::getInstance, result.statusMap(), PrometheusOnlineStatusService.JOB_LINUX);
     }
 
     private void refreshWindows() {
@@ -78,8 +78,8 @@ public class OnlineStatusRefreshTask implements ITask {
             logger.warn("[在线状态刷新] Windows Prometheus 查询失败，跳过本轮状态覆盖");
             return;
         }
-        Map<String, Object> statusMap = new HashMap<>(result.statusMap());
-        refreshTableStatus(windowHostMapper, WindowHostEntity::getOnlineStatus, WindowHostEntity::getInstance, statusMap);
+        refreshTableStatus(windowHostMapper, WindowHostEntity::getOnlineStatus, WindowHostEntity::getInstance,
+                WindowHostEntity::getInstance, result.statusMap(), PrometheusOnlineStatusService.JOB_WINDOWS);
     }
 
     private void refreshBusinessSystems() {
@@ -89,8 +89,8 @@ public class OnlineStatusRefreshTask implements ITask {
             logger.warn("[在线状态刷新] BusinessSystem Prometheus 查询失败，跳过本轮状态覆盖");
             return;
         }
-        Map<String, Object> statusMap = new HashMap<>(result.statusMap());
-        refreshTableStatus(businessSystemMapper, BusinessSystemEntity::getOnlineStatus, BusinessSystemEntity::getInstance, statusMap);
+        refreshTableStatus(businessSystemMapper, BusinessSystemEntity::getOnlineStatus, BusinessSystemEntity::getInstance,
+                BusinessSystemEntity::getInstance, result.statusMap(), PrometheusOnlineStatusService.JOB_HTTP_PROBE);
     }
 
     private void refreshBackupAgents() {
@@ -105,6 +105,34 @@ public class OnlineStatusRefreshTask implements ITask {
     private <T> void refreshTableStatus(BaseMapper<T> mapper,
                                         SFunction<T, ?> onlineStatusColumn,
                                         SFunction<T, ?> instanceColumn,
+                                        Function<T, String> instanceGetter,
+                                        Map<String, Boolean> statusMap,
+                                        String job) {
+        mapper.update(null, new LambdaUpdateWrapper<T>()
+                .set(onlineStatusColumn, false)
+                .isNotNull(instanceColumn));
+        if (statusMap == null || statusMap.isEmpty()) {
+            return;
+        }
+        List<T> entities = mapper.selectList(new LambdaQueryWrapper<T>()
+                .select(instanceColumn)
+                .isNotNull(instanceColumn));
+        List<String> onlineInstances = new ArrayList<>();
+        for (T entity : entities) {
+            String instance = instanceGetter.apply(entity);
+            if (StrUtil.isBlank(instance)) {
+                continue;
+            }
+            if (prometheusOnlineStatusService.matchesOnline(statusMap, job, instance)) {
+                onlineInstances.add(instance);
+            }
+        }
+        batchUpdateByInstances(mapper, onlineStatusColumn, instanceColumn, onlineInstances, true);
+    }
+
+    private <T> void refreshTableStatus(BaseMapper<T> mapper,
+                                        SFunction<T, ?> onlineStatusColumn,
+                                        SFunction<T, ?> instanceColumn,
                                         Map<String, Object> statusMap) {
         mapper.update(null, new LambdaUpdateWrapper<T>()
                 .set(onlineStatusColumn, false)
@@ -114,13 +142,12 @@ public class OnlineStatusRefreshTask implements ITask {
         }
         List<String> onlineInstances = new ArrayList<>();
         for (Map.Entry<String, Object> entry : statusMap.entrySet()) {
-            String instance = entry.getKey();
-            if (StrUtil.isBlank(instance)) {
+            if (StrUtil.isBlank(entry.getKey())) {
                 continue;
             }
-            Integer dbStatus = toDbStatus(entry.getValue());
-            if (Integer.valueOf(1).equals(dbStatus)) {
-                onlineInstances.add(instance);
+            Object value = entry.getValue();
+            if (Boolean.TRUE.equals(value)) {
+                onlineInstances.add(entry.getKey());
             }
         }
         batchUpdateByInstances(mapper, onlineStatusColumn, instanceColumn, onlineInstances, true);
@@ -140,26 +167,6 @@ public class OnlineStatusRefreshTask implements ITask {
                     .set(onlineStatusColumn, status)
                     .in(instanceColumn, batch));
         }
-    }
-
-    private Integer toDbStatus(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof Boolean bool) {
-            return bool ? 1 : 0;
-        }
-        if (value instanceof Number number) {
-            return number.intValue() == 0 ? 0 : 1;
-        }
-        String str = String.valueOf(value);
-        if ("true".equalsIgnoreCase(str) || "1".equals(str)) {
-            return 1;
-        }
-        if ("false".equalsIgnoreCase(str) || "0".equals(str)) {
-            return 0;
-        }
-        return null;
     }
 
     private <T> Map<String, Object> refreshWithThreads(List<T> list,

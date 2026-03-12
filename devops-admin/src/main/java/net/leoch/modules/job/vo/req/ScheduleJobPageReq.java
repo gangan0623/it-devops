@@ -13,6 +13,6 @@ import net.leoch.common.data.page.BasePage;
 @Schema(name = "ScheduleJobPageReq")
 public class ScheduleJobPageReq extends BasePage {
 
-    @Schema(description = "beanName")
-    private String beanName;
+    @Schema(description = "备注")
+    private String remark;
 }
