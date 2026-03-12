@@ -39,9 +39,6 @@ public class WindowHostRsp implements Serializable  {
 	@SchemaProperty(name = "分组名称")
 	private String menuName;
 
-	@SchemaProperty(name = "子组名称")
-	private String subMenuName;
-
 	@SchemaProperty(name = "主机类型")
 	private String type;
 

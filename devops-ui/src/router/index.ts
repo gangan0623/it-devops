@@ -76,6 +76,10 @@ router.beforeEach((to, from, next) => {
             store.updateState({ appIsRender: true, appIsLogin: true });
           }, 600);
           next({ ...to, replace: true });
+        }).catch(() => {
+          store.logout();
+          store.updateState({ appIsReady: true, appIsRender: true });
+          next("/login");
         });
       } else {
         if (isPop) {

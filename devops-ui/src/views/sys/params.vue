@@ -1,6 +1,6 @@
 <template>
   <div class="mod-sys__config-center">
-    <el-tabs v-model="activeTab" class="config-tabs">
+    <el-tabs v-model="activeTab">
       <el-tab-pane label="存储配置" name="storage">
         <div class="config-grid config-grid--storage">
           <el-card shadow="never" class="panel-card">
@@ -899,34 +899,6 @@ onMounted(() => {
   padding: 8px;
 }
 
-.config-shell {
-  margin-bottom: 10px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #eff6ff 0%, #f8fafc 45%, #ffffff 100%);
-  border: 1px solid #dbeafe;
-  padding: 14px 16px;
-}
-
-.config-shell__title {
-  font-size: 16px;
-  font-weight: 700;
-  color: #0f172a;
-  line-height: 1.2;
-}
-
-.config-shell__desc {
-  margin-top: 6px;
-  color: #475569;
-  font-size: 13px;
-}
-
-.config-tabs {
-  border-radius: 14px;
-  background: #fff;
-  border: 1px solid #e5e7eb;
-  padding: 10px 12px 14px;
-}
-
 .config-grid {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr);
@@ -1225,20 +1197,6 @@ onMounted(() => {
   color: #67c23a;
 }
 
-:deep(.config-tabs .el-tabs__header) {
-  margin-bottom: 14px;
-}
-
-:deep(.config-tabs .el-tabs__nav-wrap::after) {
-  background-color: #e5e7eb;
-}
-
-:deep(.config-tabs .el-tabs__item) {
-  height: 38px;
-  line-height: 38px;
-  font-weight: 600;
-}
-
 @media (max-width: 960px) {
   .config-grid,
   .config-grid--storage {
@@ -1255,14 +1213,6 @@ onMounted(() => {
 
   .mapping-rules-card :deep(.el-card__body) {
     padding-top: 10px;
-  }
-
-  .config-tabs {
-    padding: 8px;
-  }
-
-  .config-shell {
-    padding: 12px;
   }
 
   .mapping-rule-row {

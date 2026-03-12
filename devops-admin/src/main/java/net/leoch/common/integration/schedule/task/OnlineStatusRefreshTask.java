@@ -2,13 +2,11 @@ package net.leoch.common.integration.schedule.task;
 
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
-import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
-import net.leoch.common.utils.ops.MetricsUtils;
-import net.leoch.common.utils.ops.PingUtils;
 import net.leoch.framework.config.ops.OnlineStatusConfig;
+import net.leoch.modules.ops.service.PrometheusOnlineStatusService;
 import net.leoch.modules.ops.entity.*;
 import net.leoch.modules.ops.mapper.*;
 import org.slf4j.Logger;
@@ -36,17 +34,20 @@ public class OnlineStatusRefreshTask implements ITask {
     private final BusinessSystemMapper businessSystemMapper;
     private final BackupAgentMapper backupAgentMapper;
     private final OnlineStatusConfig properties;
+    private final PrometheusOnlineStatusService prometheusOnlineStatusService;
 
     public OnlineStatusRefreshTask(LinuxHostMapper linuxHostMapper,
                                    WindowHostMapper windowHostMapper,
                                    BusinessSystemMapper businessSystemMapper,
                                    BackupAgentMapper backupAgentMapper,
-                                   OnlineStatusConfig properties) {
+                                   OnlineStatusConfig properties,
+                                   PrometheusOnlineStatusService prometheusOnlineStatusService) {
         this.linuxHostMapper = linuxHostMapper;
         this.windowHostMapper = windowHostMapper;
         this.businessSystemMapper = businessSystemMapper;
         this.backupAgentMapper = backupAgentMapper;
         this.properties = properties;
+        this.prometheusOnlineStatusService = prometheusOnlineStatusService;
     }
 
     @Override
@@ -60,26 +61,35 @@ public class OnlineStatusRefreshTask implements ITask {
     }
 
     private void refreshLinux() {
-        List<LinuxHostEntity> list = linuxHostMapper.selectList(new LambdaQueryWrapper<LinuxHostEntity>()
-                .select(LinuxHostEntity::getInstance));
-        Map<String, Object> statusMap = refreshWithThreads(list, LinuxHostEntity::getInstance,
-                instance -> MetricsUtils.metricsOk(instance, properties.getOnlineStatus().getTimeout().getMetrics()));
+        PrometheusOnlineStatusService.BatchStatusResult result =
+                prometheusOnlineStatusService.queryJobStatus(PrometheusOnlineStatusService.JOB_LINUX);
+        if (!result.success()) {
+            logger.warn("[在线状态刷新] Linux Prometheus 查询失败，跳过本轮状态覆盖");
+            return;
+        }
+        Map<String, Object> statusMap = new HashMap<>(result.statusMap());
         refreshTableStatus(linuxHostMapper, LinuxHostEntity::getOnlineStatus, LinuxHostEntity::getInstance, statusMap);
     }
 
     private void refreshWindows() {
-        List<WindowHostEntity> list = windowHostMapper.selectList(new LambdaQueryWrapper<WindowHostEntity>()
-                .select(WindowHostEntity::getInstance));
-        Map<String, Object> statusMap = refreshWithThreads(list, WindowHostEntity::getInstance,
-                instance -> MetricsUtils.metricsOk(instance, properties.getOnlineStatus().getTimeout().getMetrics()));
+        PrometheusOnlineStatusService.BatchStatusResult result =
+                prometheusOnlineStatusService.queryJobStatus(PrometheusOnlineStatusService.JOB_WINDOWS);
+        if (!result.success()) {
+            logger.warn("[在线状态刷新] Windows Prometheus 查询失败，跳过本轮状态覆盖");
+            return;
+        }
+        Map<String, Object> statusMap = new HashMap<>(result.statusMap());
         refreshTableStatus(windowHostMapper, WindowHostEntity::getOnlineStatus, WindowHostEntity::getInstance, statusMap);
     }
 
     private void refreshBusinessSystems() {
-        List<BusinessSystemEntity> list = businessSystemMapper.selectList(new LambdaQueryWrapper<BusinessSystemEntity>()
-                .select(BusinessSystemEntity::getInstance));
-        Map<String, Object> statusMap = refreshWithThreads(list, BusinessSystemEntity::getInstance,
-                instance -> PingUtils.isReachable(instance, properties.getOnlineStatus().getTimeout().getPing()));
+        PrometheusOnlineStatusService.BatchStatusResult result =
+                prometheusOnlineStatusService.queryJobStatus(PrometheusOnlineStatusService.JOB_HTTP_PROBE);
+        if (!result.success()) {
+            logger.warn("[在线状态刷新] BusinessSystem Prometheus 查询失败，跳过本轮状态覆盖");
+            return;
+        }
+        Map<String, Object> statusMap = new HashMap<>(result.statusMap());
         refreshTableStatus(businessSystemMapper, BusinessSystemEntity::getOnlineStatus, BusinessSystemEntity::getInstance, statusMap);
     }
 

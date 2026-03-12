@@ -42,10 +42,6 @@ public class LinuxHostEntity {
      */
 	private String menuName;
     /**
-     * 子组名称
-     */
-	private String subMenuName;
-    /**
      * 主机类型
      */
     private String type;

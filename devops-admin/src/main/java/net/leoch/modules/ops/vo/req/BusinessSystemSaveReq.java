@@ -42,9 +42,6 @@ public class BusinessSystemSaveReq implements Serializable {
     @Schema(title = "分组名称")
     private String menuName;
 
-    @Schema(title = "子组名称")
-    private String subMenuName;
-
     @Schema(title = "状态 0禁用 1启用")
     private Integer status;
 }

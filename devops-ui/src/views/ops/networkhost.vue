@@ -74,7 +74,7 @@
       style="width: 100%"
     >
       <el-table-column prop="instance" label="IP地址" min-width="140" header-align="center" align="center" sortable="custom" />
-      <el-table-column prop="name" label="主机名" min-width="180" header-align="center" align="center" />
+      <el-table-column prop="name" label="主机名" min-width="180" header-align="center" align="center" show-overflow-tooltip />
       <el-table-column label="区域" min-width="100" header-align="center" align="center">
         <template #default="scope">{{ state.getDictValueByLabel("area_name_type", scope.row.areaName) }}</template>
       </el-table-column>
@@ -869,6 +869,8 @@ onBeforeUnmount(() => {
 <style scoped>
 .ops-table-nowrap :deep(.cell) {
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .host-stats {

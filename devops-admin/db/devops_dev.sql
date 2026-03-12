@@ -71,6 +71,9 @@ CREATE TABLE `schedule_job`  (
 INSERT INTO `schedule_job` VALUES (2016429000000000201, 'deviceBackupTask', '', '0 0 10 * * ?', 1, '网络设备备份每天10点', 1067246875800000001, '2026-01-29 15:36:19', 1067246875800000001, '2026-02-26 10:51:39');
 INSERT INTO `schedule_job` VALUES (2016429000000000202, 'onlineStatusRefreshTask', '', '0 */5 * * * ?', 1, '在线状态刷新(5分钟)', 1067246875800000001, '2026-02-02 12:00:00', 1067246875800000001, '2026-02-02 12:00:00');
 INSERT INTO `schedule_job` VALUES (2026022600010000101, 'zabbixNetworkHostSyncTask', '', '0 */10 * * * ?', 1, 'Zabbix网络设备同步(10分钟)', 1067246875800000001, '2026-02-27 00:22:34', 1067246875800000001, '2026-02-27 00:22:34');
+INSERT INTO `schedule_job` VALUES (2026031200010000101, 'zabbixAlertAiWeeklyReportTask', '', '0 0 12 ? * FRI', 1, '网络设备周报每周五12点', 1067246875800000001, '2026-03-12 12:00:00', 1067246875800000001, '2026-03-12 12:00:00');
+INSERT INTO `schedule_job` VALUES (2026031200010000102, 'prometheusServerWeeklyReportTask', '', '0 0 12 ? * FRI', 1, '服务主机周报每周五12点', 1067246875800000001, '2026-03-12 12:00:00', 1067246875800000001, '2026-03-12 12:00:00');
+INSERT INTO `schedule_job` VALUES (2026031200010000103, 'prometheusHttpWeeklyReportTask', '', '0 0 12 ? * FRI', 1, '网络站点周报每周五12点', 1067246875800000001, '2026-03-12 12:00:00', 1067246875800000001, '2026-03-12 12:00:00');
 
 -- ----------------------------
 -- Table structure for schedule_job_log
@@ -778,7 +781,6 @@ CREATE TABLE `tb_business_system`  (
   `area_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '区域名称',
   `site_location` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '站点位置',
   `menu_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '分组名称',
-  `sub_menu_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '子组名称',
   `status` tinyint NOT NULL DEFAULT 1 COMMENT '状态 0禁用 1启用',
   `creator` bigint NOT NULL COMMENT '创建者',
   `create_date` datetime NOT NULL COMMENT '创建时间',
@@ -840,7 +842,6 @@ CREATE TABLE `tb_linux_host`  (
   `area_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '区域名称',
   `site_location` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '站点位置',
   `menu_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '分组名称',
-  `sub_menu_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '子组名称',
   `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '主机类型',
   `status` tinyint NOT NULL DEFAULT 1 COMMENT '状态 0禁用 1启用',
   `creator` bigint NOT NULL COMMENT '创建者',
@@ -991,7 +992,6 @@ CREATE TABLE `tb_window_host`  (
   `area_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '区域名称',
   `site_location` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '站点位置',
   `menu_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '分组名称',
-  `sub_menu_name` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '子组名称',
   `type` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '主机类型',
   `status` tinyint NOT NULL DEFAULT 1 COMMENT '状态 0禁用 1启用',
   `creator` bigint NOT NULL COMMENT '创建者',

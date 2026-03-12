@@ -56,7 +56,7 @@
     <el-table v-loading="state.dataListLoading" :data="state.dataList" border @selection-change="state.dataListSelectionChangeHandle" @sort-change="state.dataListSortChangeHandle" class="ops-table-nowrap" style="width: 100%">
       <el-table-column type="selection" header-align="center" align="center" width="50"></el-table-column>
               <el-table-column prop="instance" label="地址" header-align="center" align="center" min-width="180"></el-table-column>
-              <el-table-column prop="name" label="名称" header-align="center" align="center" min-width="180"></el-table-column>
+              <el-table-column prop="name" label="名称" header-align="center" align="center" min-width="180" show-overflow-tooltip></el-table-column>
               <el-table-column label="区域名称" header-align="center" align="center" min-width="100">
                 <template v-slot="scope">{{ state.getDictValueByLabel("area_name_type", scope.row.areaName) }}</template>
               </el-table-column>
@@ -66,7 +66,6 @@
               <el-table-column label="分组名称" header-align="center" align="center" min-width="140">
                 <template v-slot="scope">{{ state.getDictValueByLabel("server_host_group", scope.row.menuName) }}</template>
               </el-table-column>
-              <el-table-column prop="subMenuName" label="子组名称" header-align="center" align="center" min-width="140"></el-table-column>
               <el-table-column prop="status" label="状态" header-align="center" align="center" min-width="80">
                 <template v-slot="scope">
                   <el-tag v-if="scope.row.status === 0" size="small" type="danger">禁用</el-tag>
@@ -96,6 +95,7 @@
           <el-button type="primary">选择文件</el-button>
         </el-upload>
       </div>
+      <div class="import-tip">模板字段：地址、名称、区域名称、站点位置、分组名称、状态</div>
     </el-dialog>
     <!-- 弹窗, 新增 / 修改 -->
     <add-or-update ref="addOrUpdateRef" @refreshDataList="queryList">确定</add-or-update>
@@ -105,13 +105,20 @@
 <style scoped>
 .ops-table-nowrap :deep(.cell) {
   white-space: nowrap;
-  overflow: visible;
-  text-overflow: clip;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .ops-table-nowrap :deep(.el-table__header-wrapper .cell) {
-  overflow: visible;
-  text-overflow: clip;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.import-tip {
+  margin-top: 12px;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
 }
 </style>
 
@@ -215,6 +222,7 @@ const handleImportSuccess = (res: IObject) => {
   if (res.code !== 0) {
     return ElMessage.error(res.msg);
   }
+  importDialogVisible.value = false;
   ElMessage.success({
     message: "成功",
       duration: 500,

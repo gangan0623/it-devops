@@ -41,7 +41,7 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
         }
         DictMaps dictMaps = loadDictMaps();
         List<LinuxHostEntity> list = linuxHostMapper.selectList(new LambdaQueryWrapper<LinuxHostEntity>()
-                .select(LinuxHostEntity::getInstance, LinuxHostEntity::getName, LinuxHostEntity::getSiteLocation, LinuxHostEntity::getAreaName, LinuxHostEntity::getMenuName, LinuxHostEntity::getSubMenuName, LinuxHostEntity::getType)
+                .select(LinuxHostEntity::getInstance, LinuxHostEntity::getName, LinuxHostEntity::getSiteLocation, LinuxHostEntity::getAreaName, LinuxHostEntity::getMenuName, LinuxHostEntity::getType)
                 .eq(LinuxHostEntity::getStatus, 1)
                 .eq(LinuxHostEntity::getAreaName, areaName)
         );
@@ -54,7 +54,6 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
                 LinuxHostEntity::getSiteLocation,
                 LinuxHostEntity::getAreaName,
                 LinuxHostEntity::getMenuName,
-                LinuxHostEntity::getSubMenuName,
                 LinuxHostEntity::getType
         );
     }
@@ -67,7 +66,7 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
         }
         DictMaps dictMaps = loadDictMaps();
         List<WindowHostEntity> list = windowHostMapper.selectList(new LambdaQueryWrapper<WindowHostEntity>()
-                .select(WindowHostEntity::getInstance, WindowHostEntity::getName, WindowHostEntity::getSiteLocation, WindowHostEntity::getAreaName, WindowHostEntity::getMenuName, WindowHostEntity::getSubMenuName, WindowHostEntity::getType)
+                .select(WindowHostEntity::getInstance, WindowHostEntity::getName, WindowHostEntity::getSiteLocation, WindowHostEntity::getAreaName, WindowHostEntity::getMenuName, WindowHostEntity::getType)
                 .eq(WindowHostEntity::getStatus, 1)
                 .eq(WindowHostEntity::getAreaName, areaName)
         );
@@ -80,7 +79,6 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
                 WindowHostEntity::getSiteLocation,
                 WindowHostEntity::getAreaName,
                 WindowHostEntity::getMenuName,
-                WindowHostEntity::getSubMenuName,
                 WindowHostEntity::getType
         );
     }
@@ -93,7 +91,7 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
         }
         DictMaps dictMaps = loadDictMaps();
         List<BusinessSystemEntity> list = businessSystemMapper.selectList(new LambdaQueryWrapper<BusinessSystemEntity>()
-                .select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName, BusinessSystemEntity::getSiteLocation, BusinessSystemEntity::getAreaName, BusinessSystemEntity::getMenuName, BusinessSystemEntity::getSubMenuName)
+                .select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName, BusinessSystemEntity::getSiteLocation, BusinessSystemEntity::getAreaName, BusinessSystemEntity::getMenuName)
                 .eq(BusinessSystemEntity::getStatus, 1)
                 .eq(BusinessSystemEntity::getAreaName, areaName)
         );
@@ -106,7 +104,6 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
                 BusinessSystemEntity::getSiteLocation,
                 BusinessSystemEntity::getAreaName,
                 BusinessSystemEntity::getMenuName,
-                BusinessSystemEntity::getSubMenuName,
                 item -> null
         );
     }
@@ -183,7 +180,6 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
             Function<T, String> siteLocationFn,
             Function<T, String> areaNameFn,
             Function<T, String> menuNameFn,
-            Function<T, String> subMenuNameFn,
             Function<T, String> machineTypeFn) {
         return toTargets(list.stream()
                 .filter(item -> {
@@ -197,12 +193,11 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
                         convertDictValue(dictMaps.areaNameMap, areaNameFn.apply(item)),
                         type,
                         convertDictValue(dictMaps.menuNameMap, menuNameFn.apply(item)),
-                        subMenuNameFn.apply(item),
                         convertDictValue(dictMaps.machineTypeMap, machineTypeFn.apply(item))))
                 .collect(Collectors.toList()));
     }
 
-    private PrometheusSdRsp buildTarget(String instance, String name, String siteLocation, String areaName, String targetType, String menuName, String subMenuName, String machineType) {
+    private PrometheusSdRsp buildTarget(String instance, String name, String siteLocation, String areaName, String targetType, String menuName, String machineType) {
         Map<String, Object> labels = new HashMap<>();
         labels.put("base_site_location", siteLocation);
         if (areaName != null && !areaName.isEmpty()) {
@@ -213,9 +208,6 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
         }
         if (menuName != null && !menuName.isEmpty()) {
             labels.put("menu_name", menuName);
-        }
-        if (subMenuName != null && !subMenuName.isEmpty()) {
-            labels.put("sub_menu_name", subMenuName);
         }
         labels.put("instance", resolveLabelInstance(instance, targetType));
         labels.put("target_type", targetType);

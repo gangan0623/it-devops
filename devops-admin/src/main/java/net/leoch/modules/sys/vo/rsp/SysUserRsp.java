@@ -67,6 +67,9 @@ public class SysUserRsp implements Serializable  {
 	@Range(min=0, max=1, message = "{sysuser.status.range}", groups = DefaultGroup.class)
 	private Integer status;
 
+	@Schema(title = "在线状态  0：离线    1：在线")
+	private Integer onlineStatus;
+
 	@Schema(title = "创建时间")
 	@JsonProperty(access = JsonProperty.Access.READ_ONLY)
 	private Date createDate;

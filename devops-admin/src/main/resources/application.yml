@@ -52,8 +52,6 @@ devops:
   online-status:
     # 在线状态探测超时配置（单位：毫秒）
     timeout:
-      metrics: 3000      # Linux/Windows主机指标检查超时
-      ping: 2000         # 业务系统Ping超时
       agent: 2000        # 备份代理健康检查超时
       device: 2000       # 设备备份在线检测超时
       future: 2000       # 异步任务Future等待超时
@@ -85,6 +83,11 @@ devops:
   sse:
     emitter-timeout: 0                    # SSE连接超时（0表示无限制，单位：毫秒）
     batch-size-limit: 50                  # SSE批量推送上限（防止单次推送过多数据）
+  # Prometheus 查询配置
+  prometheus:
+    query-base-url: http://192.168.17.121:8428/prometheus/api/v1/query
+    connect-timeout: 3000
+    read-timeout: 5000
 
 # Springdoc OpenAPI 3.0 配置 (Apifox 标准规范)
 springdoc:

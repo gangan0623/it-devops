@@ -23,10 +23,10 @@ import net.leoch.common.integration.excel.template.BusinessSystemImportExcel;
 import net.leoch.common.integration.security.SecurityUser;
 import net.leoch.common.utils.excel.ExcelUtils;
 import net.leoch.common.utils.ops.OpsQueryUtils;
-import net.leoch.common.utils.ops.PingUtils;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.mapper.BusinessSystemMapper;
 import net.leoch.modules.ops.service.IBusinessSystemService;
+import net.leoch.modules.ops.service.PrometheusOnlineStatusService;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.BusinessSystemRsp;
 import net.leoch.modules.ops.vo.rsp.OpsDeleteCascadeRsp;
@@ -47,6 +47,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper, BusinessSystemEntity> implements IBusinessSystemService {
     private final OpsDeleteCascadeService opsDeleteCascadeService;
+    private final PrometheusOnlineStatusService prometheusOnlineStatusService;
 
     @Override
     public PageData<BusinessSystemRsp> page(BusinessSystemPageReq request) {
@@ -114,7 +115,7 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
         if (request == null || StrUtil.isBlank(request.getInstance())) {
             return false;
         }
-        return PingUtils.isReachable(request.getInstance(), 2000);
+        return prometheusOnlineStatusService.isOnline(PrometheusOnlineStatusService.JOB_HTTP_PROBE, request.getInstance());
     }
 
     @Override
@@ -262,7 +263,6 @@ public class BusinessSystemServiceImpl extends ServiceImpl<BusinessSystemMapper,
         entity.setAreaName(item.getAreaName());
         entity.setSiteLocation(item.getSiteLocation());
         entity.setMenuName(item.getMenuName());
-        entity.setSubMenuName(item.getSubMenuName());
         entity.setStatus(item.getStatus());
         return entity;
     }

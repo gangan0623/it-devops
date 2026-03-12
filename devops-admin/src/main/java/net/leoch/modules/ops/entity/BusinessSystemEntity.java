@@ -42,10 +42,6 @@ public class BusinessSystemEntity {
      */
 	private String menuName;
     /**
-     * 子组名称
-     */
-	private String subMenuName;
-    /**
      * 状态 0禁用 1启用
      */
 	private Integer status;

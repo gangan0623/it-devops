@@ -39,9 +39,6 @@ public class BusinessSystemRsp implements Serializable  {
 	@SchemaProperty(name = "分组名称")
 	private String menuName;
 
-	@SchemaProperty(name = "子组名称")
-	private String subMenuName;
-
 	@SchemaProperty(name = "状态 0禁用 1启用")
 	private Integer status;
 

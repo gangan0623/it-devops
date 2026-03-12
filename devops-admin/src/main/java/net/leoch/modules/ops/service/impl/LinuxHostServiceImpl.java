@@ -22,11 +22,11 @@ import net.leoch.common.integration.excel.LinuxHostExcel;
 import net.leoch.common.integration.excel.template.LinuxHostImportExcel;
 import net.leoch.common.integration.security.SecurityUser;
 import net.leoch.common.utils.excel.ExcelUtils;
-import net.leoch.common.utils.ops.MetricsUtils;
 import net.leoch.common.utils.ops.OpsQueryUtils;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.mapper.LinuxHostMapper;
 import net.leoch.modules.ops.service.ILinuxHostService;
+import net.leoch.modules.ops.service.PrometheusOnlineStatusService;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.LinuxHostRsp;
 import net.leoch.modules.ops.vo.rsp.OpsDeleteCascadeRsp;
@@ -47,6 +47,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHostEntity> implements ILinuxHostService {
     private final OpsDeleteCascadeService opsDeleteCascadeService;
+    private final PrometheusOnlineStatusService prometheusOnlineStatusService;
 
     @Override
     public PageData<LinuxHostRsp> page(LinuxHostPageReq request) {
@@ -114,7 +115,7 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
         if (request == null || StrUtil.isBlank(request.getInstance())) {
             return false;
         }
-        return MetricsUtils.metricsOk(request.getInstance(), 3000);
+        return prometheusOnlineStatusService.isOnline(PrometheusOnlineStatusService.JOB_LINUX, request.getInstance());
     }
 
     @Override
@@ -207,7 +208,6 @@ public class LinuxHostServiceImpl extends ServiceImpl<LinuxHostMapper, LinuxHost
         entity.setAreaName(item.getAreaName());
         entity.setSiteLocation(item.getSiteLocation());
         entity.setMenuName(item.getMenuName());
-        entity.setSubMenuName(item.getSubMenuName());
         entity.setType(item.getType());
         entity.setStatus(item.getStatus());
         return entity;

@@ -1,6 +1,7 @@
 import app from "@/constants/app";
 import {IHttpResponse, IObject} from "@/types/interface";
 import router from "@/router";
+import {useAppStore} from "@/store";
 import axios, {AxiosRequestConfig} from "axios";
 import qs from "qs";
 import {getToken} from "./cache";
@@ -11,6 +12,8 @@ const http = axios.create({
   baseURL: app.api,
   timeout: app.requestTimeout
 });
+
+let isRedirectingLogin = false;
 
 http.interceptors.request.use(
   function (config: any) {
@@ -75,8 +78,17 @@ http.interceptors.response.use(
 );
 
 const redirectLogin = () => {
+  if (isRedirectingLogin) {
+    return;
+  }
+  isRedirectingLogin = true;
+  const store = useAppStore();
+  store.logout();
+  store.updateState({ appIsReady: true, appIsRender: true });
   router.replace("/login");
-  return;
+  setTimeout(() => {
+    isRedirectingLogin = false;
+  }, 300);
 };
 
 export default (o: AxiosRequestConfig): Promise<IHttpResponse> => {

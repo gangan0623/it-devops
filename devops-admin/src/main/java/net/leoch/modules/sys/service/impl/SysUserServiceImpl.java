@@ -63,8 +63,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
 
         //查询
         List<SysUserEntity> list = this.getBaseMapper().getList(params);
-
-        return new PageData<>(BeanUtil.copyToList(list, SysUserRsp.class), page.getTotal());
+        List<SysUserRsp> rspList = BeanUtil.copyToList(list, SysUserRsp.class);
+        fillOnlineStatus(rspList);
+        return new PageData<>(rspList, page.getTotal());
     }
 
     @Override
@@ -75,8 +76,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
             params.put("username", "%" + request.getUsername() + "%");
         }
         List<SysUserEntity> entityList = this.getBaseMapper().getList(params);
-
-        return BeanUtil.copyToList(entityList, SysUserRsp.class);
+        List<SysUserRsp> rspList = BeanUtil.copyToList(entityList, SysUserRsp.class);
+        fillOnlineStatus(rspList);
+        return rspList;
     }
 
     @Override
@@ -233,6 +235,28 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUserEntity
         user.setMobile(dto.getMobile());
         user.setPassword(entity.getPassword());
         StpUtil.getSession().set("user", user);
+    }
+
+    private void fillOnlineStatus(List<SysUserRsp> users) {
+        if (users == null || users.isEmpty()) {
+            return;
+        }
+        for (SysUserRsp user : users) {
+            if (user == null || user.getId() == null) {
+                continue;
+            }
+            user.setOnlineStatus(isUserOnline(user.getId()) ? 1 : 0);
+        }
+    }
+
+    private boolean isUserOnline(Long userId) {
+        try {
+            List<String> tokenList = StpUtil.getTokenValueListByLoginId(userId);
+            return tokenList != null && !tokenList.isEmpty();
+        } catch (Exception e) {
+            log.debug("[用户管理] 查询在线状态失败, userId={}", userId, e);
+            return false;
+        }
     }
 
 }

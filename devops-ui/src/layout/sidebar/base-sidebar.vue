@@ -149,7 +149,7 @@ export default defineComponent({
     :mode="props.mode"
     :collapse="props.isMobile ? false : props.mode === 'vertical' && state.collapseSidebar"
     :router="props.router"
-    :unique-opened="state.uniqueOpened"
+    :unique-opened="props.mode === 'vertical' ? false : state.uniqueOpened"
     :onSelect="props.onSelect"
     :collapse-transition="false"
     class="rr-sidebar-menu"

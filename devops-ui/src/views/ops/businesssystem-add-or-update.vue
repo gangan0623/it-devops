@@ -36,9 +36,6 @@
           placeholder="分组名称"
         ></ren-select>
       </el-form-item>
-          <el-form-item label="子组名称" prop="subMenuName">
-        <el-input v-model="dataForm.subMenuName" placeholder="子组名称"></el-input>
-      </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-select v-model="dataForm.status" placeholder="请选择状态">
           <el-option label="启用" :value="1"></el-option>
@@ -73,7 +70,6 @@ const dataForm = reactive({
   areaName: "",
   siteLocation: "",
   menuName: "",
-  subMenuName: "",
   status: ""
 });
 
@@ -114,9 +110,6 @@ const rules = ref({
     ],
           menuName: [
       { required: true, message: '必填项不能为空', trigger: 'change' }
-    ],
-          subMenuName: [
-      { required: true, message: '必填项不能为空', trigger: 'blur' }
     ],
           status: [
       { required: true, message: '必填项不能为空', trigger: 'change' }

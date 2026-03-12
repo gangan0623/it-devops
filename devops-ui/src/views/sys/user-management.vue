@@ -45,6 +45,12 @@
           <el-tag v-else size="small" type="success">正常</el-tag>
         </template>
       </el-table-column>
+      <el-table-column prop="onlineStatus" label="在线状态" header-align="center" align="center" width="100">
+        <template v-slot="scope">
+          <el-tag v-if="scope.row.onlineStatus === 1" size="small" type="success">在线</el-tag>
+          <el-tag v-else size="small" type="info">离线</el-tag>
+        </template>
+      </el-table-column>
       <el-table-column prop="createDate" label="创建时间" sortable="custom" header-align="center" align="center" width="180"></el-table-column>
       <el-table-column label="操作" fixed="right" header-align="center" align="center" width="250">
         <template v-slot="scope">

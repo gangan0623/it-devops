@@ -39,6 +39,11 @@ public class OnlineStatusConfig {
      */
     private Sse sse = new Sse();
 
+    /**
+     * Prometheus配置
+     */
+    private Prometheus prometheus = new Prometheus();
+
     @Data
     public static class OnlineStatus {
         /**
@@ -54,16 +59,6 @@ public class OnlineStatusConfig {
 
     @Data
     public static class Timeout {
-        /**
-         * Linux/Windows主机指标检查超时（毫秒）
-         */
-        private int metrics = 3000;
-
-        /**
-         * 业务系统Ping超时（毫秒）
-         */
-        private int ping = 2000;
-
         /**
          * 备份代理健康检查超时（毫秒）
          */
@@ -186,5 +181,23 @@ public class OnlineStatusConfig {
          * SSE批量推送上限（防止单次推送过多数据）
          */
         private int batchSizeLimit = 50;
+    }
+
+    @Data
+    public static class Prometheus {
+        /**
+         * Prometheus instant query API 地址
+         */
+        private String queryBaseUrl = "http://192.168.17.121:8428/prometheus/api/v1/query";
+
+        /**
+         * 连接超时（毫秒）
+         */
+        private int connectTimeout = 3000;
+
+        /**
+         * 读取超时（毫秒）
+         */
+        private int readTimeout = 5000;
     }
 }

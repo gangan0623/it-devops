@@ -153,7 +153,6 @@ const sampleRawJson = `{
         "menu_name": "04.供应链",
         "name": "ahl-c144050-供应商管理",
         "severity": "critical",
-        "sub_menu_name": "供应商管理",
         "target_type": "linux",
         "type": "虚拟"
       },
@@ -182,7 +181,6 @@ const sampleRawJson = `{
     "menu_name": "04.供应链",
     "name": "ahl-c144050-供应商管理",
     "severity": "critical",
-    "sub_menu_name": "供应商管理",
     "target_type": "linux",
     "type": "虚拟"
   },

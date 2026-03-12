@@ -49,9 +49,6 @@
           placeholder="主机类型"
         ></ren-select>
       </el-form-item>
-          <el-form-item label="子组名称" prop="subMenuName">
-        <el-input v-model="dataForm.subMenuName" placeholder="子组名称"></el-input>
-      </el-form-item>
       <el-form-item label="状态" prop="status">
         <el-select v-model="dataForm.status" placeholder="请选择状态">
           <el-option label="启用" :value="1"></el-option>
@@ -88,7 +85,6 @@ const dataForm = reactive({
   areaName: "",
   siteLocation: "",
   menuName: "",
-  subMenuName: "",
   type: "",
   status: ""
 });
@@ -96,6 +92,11 @@ const dataForm = reactive({
 const duplicateFlags = reactive({
   instance: false,
   name: false
+});
+
+const originalValues = reactive({
+  instance: "",
+  name: ""
 });
 
 const validateInstance = (_rule: any, value: string, callback: (error?: Error) => void) => {
@@ -134,9 +135,6 @@ const rules = ref({
           type: [
       { required: true, message: '必填项不能为空', trigger: 'change' }
     ],
-          subMenuName: [
-      { required: true, message: '必填项不能为空', trigger: 'blur' }
-    ],
           status: [
       { required: true, message: '必填项不能为空', trigger: 'change' }
     ],
@@ -150,6 +148,8 @@ const init = (id?: number) => {
   dataForm.port = "9182";
   duplicateFlags.instance = false;
   duplicateFlags.name = false;
+  originalValues.instance = "";
+  originalValues.name = "";
 
   // 重置表单数据
   if (dataFormRef.value) {
@@ -168,6 +168,8 @@ const getInfo = (id: number) => {
     const parsed = parseInstance(dataForm.instance);
     dataForm.ip = parsed.ip;
     dataForm.port = parsed.port;
+    originalValues.instance = dataForm.instance || "";
+    originalValues.name = dataForm.name || "";
     duplicateFlags.instance = false;
     duplicateFlags.name = false;
   });
@@ -182,6 +184,13 @@ const checkUnique = (field: "instance" | "name") => {
   const value = field === "instance" ? buildInstance() : dataForm[field];
   if (!value) {
     duplicateFlags[field] = false;
+    return;
+  }
+  if (dataForm.id && value === originalValues[field]) {
+    duplicateFlags[field] = false;
+    if (dataFormRef.value) {
+      dataFormRef.value.validateField(field);
+    }
     return;
   }
   const params: Record<string, any> = { id: dataForm.id };
@@ -242,6 +251,8 @@ defineExpose({
     dataForm.ip = parsed.ip;
     dataForm.port = parsed.port;
     dataForm.id = "";
+    originalValues.instance = "";
+    originalValues.name = "";
     duplicateFlags.instance = false;
     duplicateFlags.name = false;
   }

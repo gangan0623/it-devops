@@ -22,11 +22,11 @@ import net.leoch.common.integration.excel.WindowHostExcel;
 import net.leoch.common.integration.excel.template.WindowHostImportExcel;
 import net.leoch.common.integration.security.SecurityUser;
 import net.leoch.common.utils.excel.ExcelUtils;
-import net.leoch.common.utils.ops.MetricsUtils;
 import net.leoch.common.utils.ops.OpsQueryUtils;
 import net.leoch.modules.ops.entity.WindowHostEntity;
 import net.leoch.modules.ops.mapper.WindowHostMapper;
 import net.leoch.modules.ops.service.IWindowHostService;
+import net.leoch.modules.ops.service.PrometheusOnlineStatusService;
 import net.leoch.modules.ops.vo.req.*;
 import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import net.leoch.modules.ops.vo.rsp.OpsDeleteCascadeRsp;
@@ -47,6 +47,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowHostEntity> implements IWindowHostService {
     private final OpsDeleteCascadeService opsDeleteCascadeService;
+    private final PrometheusOnlineStatusService prometheusOnlineStatusService;
 
     @Override
     public PageData<WindowHostRsp> page(WindowHostPageReq request) {
@@ -113,7 +114,7 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
         if (request == null || StrUtil.isBlank(request.getInstance())) {
             return false;
         }
-        return MetricsUtils.metricsOk(request.getInstance(), 3000);
+        return prometheusOnlineStatusService.isOnline(PrometheusOnlineStatusService.JOB_WINDOWS, request.getInstance());
     }
 
     @Override
@@ -206,7 +207,6 @@ public class WindowHostServiceImpl extends ServiceImpl<WindowHostMapper, WindowH
         entity.setAreaName(item.getAreaName());
         entity.setSiteLocation(item.getSiteLocation());
         entity.setMenuName(item.getMenuName());
-        entity.setSubMenuName(item.getSubMenuName());
         entity.setType(item.getType());
         entity.setStatus(item.getStatus());
         return entity;
