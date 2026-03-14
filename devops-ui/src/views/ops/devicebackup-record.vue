@@ -27,7 +27,7 @@
             <span class="record-stats__item record-stats__item--ok">已完成 {{ successCount }}</span>
             <span class="record-stats__item record-stats__item--bad">异常 {{ failCount }}</span>
           </div>
-          <el-button v-if="state.hasPermission('ops:devicebackuprecord:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
+          <el-button v-if="state.hasPermission('ops:network-device-backup-record:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
         </div>
       </div>
     </el-form>
@@ -47,10 +47,10 @@
       <el-table-column prop="backupNum" label="备份次数" header-align="center" align="center"></el-table-column>
       <el-table-column label="操作" fixed="right" header-align="center" align="center" width="240">
         <template v-slot="scope">
-          <el-button v-if="state.hasPermission('ops:devicebackuprecord:preview')" type="primary" link @click="openPreview(scope.row.url)">预览</el-button>
+          <el-button v-if="state.hasPermission('ops:network-device-backup-record:preview')" type="primary" link @click="openPreview(scope.row.url)">预览</el-button>
           <el-button type="primary" link @click="downloadFile(scope.row.url)">下载</el-button>
-          <el-button v-if="state.hasPermission('ops:devicebackuprecord:history')" type="primary" link @click="openHistory(scope.row)">历史</el-button>
-          <el-button v-if="state.hasPermission('ops:devicebackuprecord:delete')" type="primary" link @click="state.deleteHandle(scope.row.id)">删除</el-button>
+          <el-button v-if="state.hasPermission('ops:network-device-backup-record:history')" type="primary" link @click="openHistory(scope.row)">历史</el-button>
+          <el-button v-if="state.hasPermission('ops:network-device-backup-record:delete')" type="primary" link @click="state.deleteHandle(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -75,7 +75,7 @@
           <el-date-picker v-model="historyDateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD" size="small" style="width: 260px" @change="historyPage = 1"></el-date-picker>
           <el-switch v-model="showOnlyFailed" inline-prompt active-text="仅异常" inactive-text="全部" @change="historyPage = 1"></el-switch>
         </div>
-        <el-button v-if="state.hasPermission('ops:devicebackuprecord:diff')" type="primary" @click="handleDiff" :disabled="historySelections.length !== 1">对比</el-button>
+        <el-button v-if="state.hasPermission('ops:network-device-backup-record:diff')" type="primary" @click="handleDiff" :disabled="historySelections.length !== 1">对比</el-button>
       </div>
       <el-table v-loading="historyLoading" :data="pagedHistoryList" border @selection-change="handleHistorySelectionChange" max-height="420" style="width: 100%">
         <el-table-column type="selection" width="50" header-align="center" align="center"></el-table-column>
@@ -91,7 +91,7 @@
         </el-table-column>
         <el-table-column label="操作" header-align="center" align="center" width="140">
           <template v-slot="scope">
-            <el-button v-if="state.hasPermission('ops:devicebackuprecord:preview')" type="primary" link @click="openPreview(scope.row.url)">预览</el-button>
+            <el-button v-if="state.hasPermission('ops:network-device-backup-record:preview')" type="primary" link @click="openPreview(scope.row.url)">预览</el-button>
             <el-button type="primary" link @click="downloadFile(scope.row.url)">下载</el-button>
           </template>
         </el-table-column>
@@ -164,9 +164,9 @@ import {ElMessage} from "element-plus";
 
 const view = reactive({
   deleteIsBatch: true,
-  getDataListURL: "/ops/devicebackuprecord/page",
+  getDataListURL: "/ops/network-device-backup-record/page",
   getDataListIsPage: true,
-  deleteURL: "/ops/devicebackuprecord",
+  deleteURL: "/ops/network-device-backup-record",
   dataForm: {
     name: "",
     ip: "",
@@ -236,7 +236,7 @@ const openHistory = (row: any) => {
   historyDateRange.value = null;
   historyPage.value = 1;
   baseService
-    .get("/ops/devicebackuprecord/history", { ip: row.ip, limit: 200 })
+    .get("/ops/network-device-backup-record/history", { ip: row.ip, limit: 200 })
     .then((res) => {
       historyList.value = res.data || [];
     })
@@ -256,7 +256,7 @@ const handleDiff = () => {
   const [history] = historySelections.value;
   diffVisible.value = true;
   diffLines.value = [];
-  baseService.get("/ops/devicebackuprecord/diff-current", { ip: currentIp.value, historyId: history.id }).then((res) => {
+  baseService.get("/ops/network-device-backup-record/diff-current", { ip: currentIp.value, historyId: history.id }).then((res) => {
     diffLines.value = res.data || [];
     nextTick(() => {
       setupDiffSync();
@@ -271,7 +271,7 @@ const openPreview = (url: string) => {
   previewVisible.value = true;
   previewContent.value = "加载中...";
   baseService
-    .get("/ops/devicebackuprecord/preview", { url })
+    .get("/ops/network-device-backup-record/preview", { url })
     .then((res) => {
       previewContent.value = res.data || "";
       nextTick(() => {
@@ -288,7 +288,7 @@ const downloadFile = (url: string) => {
     return ElMessage.warning("URL为空");
   }
   const token = getToken();
-  const downloadUrl = `${app.api}/ops/devicebackuprecord/download?url=${encodeURIComponent(url)}&token=${encodeURIComponent(token)}`;
+  const downloadUrl = `${app.api}/ops/network-device-backup-record/download?url=${encodeURIComponent(url)}&token=${encodeURIComponent(token)}`;
   window.open(downloadUrl, "_blank");
 };
 

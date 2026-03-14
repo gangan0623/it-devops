@@ -12,7 +12,7 @@ import net.leoch.modules.ops.entity.MonitorComponentEntity;
 import net.leoch.modules.ops.entity.NetworkHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
 import net.leoch.modules.ops.mapper.BusinessSystemMapper;
-import net.leoch.modules.ops.mapper.DeviceBackupRecordMapper;
+import net.leoch.modules.ops.mapper.NetworkDeviceBackupRecordMapper;
 import net.leoch.modules.ops.mapper.LinuxHostMapper;
 import net.leoch.modules.ops.mapper.MonitorComponentMapper;
 import net.leoch.modules.ops.mapper.NetworkHostMapper;
@@ -35,7 +35,7 @@ public class DashboardServiceImpl implements IDashboardService {
     private final LinuxHostMapper linuxHostMapper;
     private final BusinessSystemMapper businessSystemMapper;
     private final NetworkHostMapper networkHostMapper;
-    private final DeviceBackupRecordMapper deviceBackupRecordMapper;
+    private final NetworkDeviceBackupRecordMapper deviceBackupRecordMapper;
     private final MonitorComponentMapper monitorComponentMapper;
     private final AlertRealtimeViewService alertRealtimeViewService;
 

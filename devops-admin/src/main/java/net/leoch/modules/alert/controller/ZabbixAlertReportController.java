@@ -8,7 +8,7 @@ import net.leoch.common.data.result.Result;
 import net.leoch.modules.alert.service.AlertReportAsyncService;
 import net.leoch.modules.alert.service.ZabbixAlertReportService;
 import net.leoch.modules.alert.vo.req.ZabbixAlertReportGenerateReq;
-import net.leoch.modules.alert.vo.rsp.ZabbixAlertAiReportRsp;
+import net.leoch.modules.alert.vo.rsp.AlertAiReportZabbixRsp;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -31,26 +31,26 @@ public class ZabbixAlertReportController {
     @GetMapping("latest")
     @Operation(summary = "最新报告列表")
     @SaCheckPermission("alert:record:page")
-    public Result<List<ZabbixAlertAiReportRsp>> latest(@RequestParam(value = "size", required = false, defaultValue = "20") Integer size) {
-        return new Result<List<ZabbixAlertAiReportRsp>>().ok(zabbixAlertReportService.latest(size));
+    public Result<List<AlertAiReportZabbixRsp>> latest(@RequestParam(value = "size", required = false, defaultValue = "20") Integer size) {
+        return new Result<List<AlertAiReportZabbixRsp>>().ok(zabbixAlertReportService.latest(size));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "报告详情")
     @SaCheckPermission("alert:record:page")
-    public Result<ZabbixAlertAiReportRsp> get(@PathVariable("id") Long id) {
-        return new Result<ZabbixAlertAiReportRsp>().ok(zabbixAlertReportService.getById(id));
+    public Result<AlertAiReportZabbixRsp> get(@PathVariable("id") Long id) {
+        return new Result<AlertAiReportZabbixRsp>().ok(zabbixAlertReportService.getById(id));
     }
 
     @PostMapping("generate")
     @Operation(summary = "生成报告")
     @SaCheckPermission("alert:record:page")
-    public Result<ZabbixAlertAiReportRsp> generate(@RequestBody(required = false) ZabbixAlertReportGenerateReq req) {
+    public Result<AlertAiReportZabbixRsp> generate(@RequestBody(required = false) ZabbixAlertReportGenerateReq req) {
         ZabbixAlertReportGenerateReq request = req == null ? new ZabbixAlertReportGenerateReq() : req;
-        ZabbixAlertAiReportRsp rsp = zabbixAlertReportService.submitGenerate(
+        AlertAiReportZabbixRsp rsp = zabbixAlertReportService.submitGenerate(
                 request.getPeriodType(), request.getPeriodStart(), request.getPeriodEnd()
         );
         alertReportAsyncService.generateZabbixReport(rsp.getId());
-        return new Result<ZabbixAlertAiReportRsp>().ok(rsp);
+        return new Result<AlertAiReportZabbixRsp>().ok(rsp);
     }
 }

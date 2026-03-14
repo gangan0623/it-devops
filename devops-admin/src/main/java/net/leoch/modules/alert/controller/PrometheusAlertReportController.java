@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
 import net.leoch.common.data.result.Result;
 import net.leoch.modules.alert.service.AlertReportAsyncService;
 import net.leoch.modules.alert.service.PrometheusAlertReportService;
-import net.leoch.modules.alert.vo.rsp.PrometheusAlertAiReportRsp;
+import net.leoch.modules.alert.vo.rsp.AlertAiReportPrometheusRsp;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,28 +29,28 @@ public class PrometheusAlertReportController {
     @GetMapping("latest")
     @Operation(summary = "最新报告列表")
     @SaCheckPermission("alert:record:page")
-    public Result<List<PrometheusAlertAiReportRsp>> latest(
+    public Result<List<AlertAiReportPrometheusRsp>> latest(
             @RequestParam(value = "reportType", required = false) String reportType,
             @RequestParam(value = "size", required = false, defaultValue = "20") Integer size) {
-        return new Result<List<PrometheusAlertAiReportRsp>>().ok(
+        return new Result<List<AlertAiReportPrometheusRsp>>().ok(
                 prometheusAlertReportService.latest(reportType, size));
     }
 
     @GetMapping("{id}")
     @Operation(summary = "报告详情")
     @SaCheckPermission("alert:record:page")
-    public Result<PrometheusAlertAiReportRsp> get(@PathVariable("id") Long id) {
-        return new Result<PrometheusAlertAiReportRsp>().ok(prometheusAlertReportService.getById(id));
+    public Result<AlertAiReportPrometheusRsp> get(@PathVariable("id") Long id) {
+        return new Result<AlertAiReportPrometheusRsp>().ok(prometheusAlertReportService.getById(id));
     }
 
     @PostMapping("generate")
     @Operation(summary = "生成报告")
     @SaCheckPermission("alert:record:page")
-    public Result<PrometheusAlertAiReportRsp> generate(
+    public Result<AlertAiReportPrometheusRsp> generate(
             @RequestParam(value = "reportType", required = false, defaultValue = "server") String reportType,
             @RequestParam(value = "periodType", required = false, defaultValue = "week") String periodType) {
-        PrometheusAlertAiReportRsp rsp = prometheusAlertReportService.submitGenerate(reportType, periodType, null, null);
+        AlertAiReportPrometheusRsp rsp = prometheusAlertReportService.submitGenerate(reportType, periodType, null, null);
         alertReportAsyncService.generatePrometheusReport(rsp.getId());
-        return new Result<PrometheusAlertAiReportRsp>().ok(rsp);
+        return new Result<AlertAiReportPrometheusRsp>().ok(rsp);
     }
 }

@@ -11,10 +11,10 @@ import net.leoch.common.base.Constant;
 import net.leoch.common.data.page.PageData;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.framework.config.ops.ZabbixConfig;
-import net.leoch.modules.ops.entity.BackupAgentEntity;
+import net.leoch.modules.ops.entity.NetworkBackupAgentEntity;
 import net.leoch.modules.ops.entity.NetworkBackupDeviceEntity;
 import net.leoch.modules.ops.entity.NetworkHostEntity;
-import net.leoch.modules.ops.mapper.BackupAgentMapper;
+import net.leoch.modules.ops.mapper.NetworkBackupAgentMapper;
 import net.leoch.modules.ops.mapper.NetworkBackupDeviceMapper;
 import net.leoch.modules.ops.mapper.NetworkHostMapper;
 import net.leoch.modules.ops.service.INetworkHostService;
@@ -57,7 +57,7 @@ public class NetworkHostServiceImpl extends ServiceImpl<NetworkHostMapper, Netwo
     private final ZabbixConfigService zabbixConfigService;
     private final ZabbixClient zabbixClient;
     private final NetworkBackupDeviceMapper networkBackupDeviceMapper;
-    private final BackupAgentMapper backupAgentMapper;
+    private final NetworkBackupAgentMapper backupAgentMapper;
 
     @Override
     public PageData<NetworkHostRsp> page(NetworkHostPageReq request) {
@@ -152,7 +152,7 @@ public class NetworkHostServiceImpl extends ServiceImpl<NetworkHostMapper, Netwo
             rsp.setLastBackupStatus(backup.getLastBackupStatus());
             rsp.setLastBackupMessage(backup.getLastBackupMessage());
             if (backup.getAgentId() != null) {
-                BackupAgentEntity agent = backupAgentMapper.selectById(backup.getAgentId());
+                NetworkBackupAgentEntity agent = backupAgentMapper.selectById(backup.getAgentId());
                 rsp.setBackupAgentName(agent == null ? "" : agent.getName());
             }
         } else {
@@ -398,8 +398,8 @@ public class NetworkHostServiceImpl extends ServiceImpl<NetworkHostMapper, Netwo
                 .collect(Collectors.toList());
         Map<Long, String> agentNameMap = new HashMap<>();
         if (!agentIds.isEmpty()) {
-            List<BackupAgentEntity> agents = backupAgentMapper.selectBatchIds(agentIds);
-            for (BackupAgentEntity agent : agents) {
+            List<NetworkBackupAgentEntity> agents = backupAgentMapper.selectBatchIds(agentIds);
+            for (NetworkBackupAgentEntity agent : agents) {
                 if (agent != null && agent.getId() != null) {
                     agentNameMap.put(agent.getId(), agent.getName());
                 }

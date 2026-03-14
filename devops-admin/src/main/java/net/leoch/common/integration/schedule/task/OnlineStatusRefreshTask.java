@@ -32,14 +32,14 @@ public class OnlineStatusRefreshTask implements ITask {
     private final LinuxHostMapper linuxHostMapper;
     private final WindowHostMapper windowHostMapper;
     private final BusinessSystemMapper businessSystemMapper;
-    private final BackupAgentMapper backupAgentMapper;
+    private final NetworkBackupAgentMapper backupAgentMapper;
     private final OnlineStatusConfig properties;
     private final PrometheusOnlineStatusService prometheusOnlineStatusService;
 
     public OnlineStatusRefreshTask(LinuxHostMapper linuxHostMapper,
                                    WindowHostMapper windowHostMapper,
                                    BusinessSystemMapper businessSystemMapper,
-                                   BackupAgentMapper backupAgentMapper,
+                                   NetworkBackupAgentMapper backupAgentMapper,
                                    OnlineStatusConfig properties,
                                    PrometheusOnlineStatusService prometheusOnlineStatusService) {
         this.linuxHostMapper = linuxHostMapper;
@@ -94,10 +94,10 @@ public class OnlineStatusRefreshTask implements ITask {
     }
 
     private void refreshBackupAgents() {
-        List<BackupAgentEntity> list = backupAgentMapper.selectList(new LambdaQueryWrapper<BackupAgentEntity>()
-                .select(BackupAgentEntity::getInstance));
-        Map<String, Object> statusMap = refreshWithThreads(list, BackupAgentEntity::getInstance, this::checkBackupAgentHealth);
-        refreshTableStatus(backupAgentMapper, BackupAgentEntity::getOnlineStatus, BackupAgentEntity::getInstance, statusMap);
+        List<NetworkBackupAgentEntity> list = backupAgentMapper.selectList(new LambdaQueryWrapper<NetworkBackupAgentEntity>()
+                .select(NetworkBackupAgentEntity::getInstance));
+        Map<String, Object> statusMap = refreshWithThreads(list, NetworkBackupAgentEntity::getInstance, this::checkBackupAgentHealth);
+        refreshTableStatus(backupAgentMapper, NetworkBackupAgentEntity::getOnlineStatus, NetworkBackupAgentEntity::getInstance, statusMap);
     }
 
     private static final int UPDATE_BATCH_SIZE = 500;

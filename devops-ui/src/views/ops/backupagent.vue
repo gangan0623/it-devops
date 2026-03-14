@@ -18,11 +18,11 @@
             <span class="agent-stats__item agent-stats__item--online">在线 {{ onlineCount }}</span>
             <span class="agent-stats__item agent-stats__item--filter">离线 {{ offlineCount }}</span>
           </div>
-          <el-button v-if="state.hasPermission('ops:backupagent:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
-          <el-button v-if="state.hasPermission('ops:backupagent:update')" type="success" @click="handleBatchToggle">启用/禁用</el-button>
-          <el-button v-if="state.hasPermission('ops:backupagent:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
-          <el-button v-if="state.hasPermission('ops:backupagent:export')" type="info" @click="state.exportHandle()">导出</el-button>
-          <el-button v-if="state.hasPermission('ops:backupagent:import')" type="primary" @click="importDialogVisible = true">导入</el-button>
+          <el-button v-if="state.hasPermission('ops:network-backup-agent:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
+          <el-button v-if="state.hasPermission('ops:network-backup-agent:update')" type="success" @click="handleBatchToggle">启用/禁用</el-button>
+          <el-button v-if="state.hasPermission('ops:network-backup-agent:delete')" type="danger" @click="state.deleteHandle()">删除</el-button>
+          <el-button v-if="state.hasPermission('ops:network-backup-agent:export')" type="info" @click="state.exportHandle()">导出</el-button>
+          <el-button v-if="state.hasPermission('ops:network-backup-agent:import')" type="primary" @click="importDialogVisible = true">导入</el-button>
         </div>
       </div>
     </div>
@@ -76,17 +76,17 @@
       </el-table-column>
       <el-table-column label="操作" fixed="right" header-align="center" align="center" width="260">
         <template v-slot="scope">
-          <el-button v-if="state.hasPermission('ops:backupagent:update')" type="primary" link @click="addOrUpdateHandle(scope.row.id)">修改</el-button>
-          <el-button v-if="state.hasPermission('ops:backupagent:save')" type="primary" link @click="cloneHandle(scope.row)">克隆</el-button>
-          <el-button v-if="state.hasPermission('ops:backupagent:delete')" type="primary" link @click="state.deleteHandle(scope.row.id)">删除</el-button>
+          <el-button v-if="state.hasPermission('ops:network-backup-agent:update')" type="primary" link @click="addOrUpdateHandle(scope.row.id)">修改</el-button>
+          <el-button v-if="state.hasPermission('ops:network-backup-agent:save')" type="primary" link @click="cloneHandle(scope.row)">克隆</el-button>
+          <el-button v-if="state.hasPermission('ops:network-backup-agent:delete')" type="primary" link @click="state.deleteHandle(scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
     <el-pagination :current-page="state.page" :page-sizes="[10, 20, 50, 100]" :page-size="state.limit" :total="state.total" layout="total, sizes, prev, pager, next, jumper" @size-change="state.pageSizeChangeHandle" @current-change="state.pageCurrentChangeHandle"> </el-pagination>
     <el-dialog v-model="importDialogVisible" title="导入" width="420px">
       <div class="import-actions">
-        <el-button v-if="state.hasPermission('ops:backupagent:template')" type="info" @click="handleTemplateDownload">下载示例表格</el-button>
-        <el-upload v-if="state.hasPermission('ops:backupagent:import')" :action="importUrl" :headers="uploadHeaders" :show-file-list="false" :before-upload="beforeImportUpload" :on-success="handleImportSuccess" accept=".xls,.xlsx">
+        <el-button v-if="state.hasPermission('ops:network-backup-agent:template')" type="info" @click="handleTemplateDownload">下载示例表格</el-button>
+        <el-upload v-if="state.hasPermission('ops:network-backup-agent:import')" :action="importUrl" :headers="uploadHeaders" :show-file-list="false" :before-upload="beforeImportUpload" :on-success="handleImportSuccess" accept=".xls,.xlsx">
           <el-button type="primary">选择文件</el-button>
         </el-upload>
       </div>
@@ -109,10 +109,10 @@ import { IObject } from "@/types/interface";
 
 const view = reactive({
   deleteIsBatch: true,
-  getDataListURL: "/ops/backupagent/page",
+  getDataListURL: "/ops/network-backup-agent/page",
   getDataListIsPage: true,
-  exportURL: "/ops/backupagent/export",
-  deleteURL: "/ops/backupagent",
+  exportURL: "/ops/network-backup-agent/export",
+  deleteURL: "/ops/network-backup-agent",
   dataForm: {
     instance: "",
     name: "",
@@ -172,8 +172,8 @@ const cloneHandle = (row: any) => {
   addOrUpdateRef.value.initClone(row);
 };
 
-const importUrl = `${app.api}/ops/backupagent/import?token=${getToken()}`;
-const templateUrl = `${app.api}/ops/backupagent/template?token=${getToken()}`;
+const importUrl = `${app.api}/ops/network-backup-agent/import?token=${getToken()}`;
+const templateUrl = `${app.api}/ops/network-backup-agent/template?token=${getToken()}`;
 const uploadHeaders = {
   token: getToken()
 };
@@ -205,7 +205,7 @@ const handleTemplateDownload = () => {
 
 const loadStatusSummary = () => {
   baseService
-    .get("/ops/backupagent/summary")
+    .get("/ops/network-backup-agent/summary")
     .then((res) => {
       statusSummary.value = {
         enabledCount: Number(res.data?.enabledCount || 0),
@@ -269,7 +269,7 @@ const updateStatusHandle = (status: number) => {
     cancelButtonText: "取消",
     type: "warning"
   }).then(() => {
-    baseService.put("/ops/backupagent/status", { ids, status }).then(() => {
+    baseService.put("/ops/network-backup-agent/status", { ids, status }).then(() => {
       ElMessage.success({
         message: "成功",
         duration: 500,

@@ -124,7 +124,7 @@ const init = (id?: number) => {
 
 // 获取信息
 const getInfo = (id: number) => {
-  baseService.get("/ops/backupagent/" + id).then((res) => {
+  baseService.get("/ops/network-backup-agent/" + id).then((res) => {
     Object.assign(dataForm, res.data);
     duplicateFlags.instance = false;
     duplicateFlags.name = false;
@@ -139,7 +139,7 @@ const checkUnique = (field: "instance" | "name") => {
   }
   const params: Record<string, any> = { id: dataForm.id };
   params[field] = value;
-  baseService.get("/ops/backupagent/check", params).then((res) => {
+  baseService.get("/ops/network-backup-agent/check", params).then((res) => {
     duplicateFlags[field] = !!res.data;
     if (duplicateFlags[field]) {
       ElMessage.error(field === "instance" ? "地址已存在" : "名称已存在");
@@ -165,7 +165,7 @@ const dataFormSubmitHandle = () => {
     delete submitData.updater;
     delete submitData.updateDate;
     submitLoading.value = true;
-    (!dataForm.id ? baseService.post : baseService.put)("/ops/backupagent", submitData)
+    (!dataForm.id ? baseService.post : baseService.put)("/ops/network-backup-agent", submitData)
       .then(() => {
         ElMessage.success({
           message: "成功",

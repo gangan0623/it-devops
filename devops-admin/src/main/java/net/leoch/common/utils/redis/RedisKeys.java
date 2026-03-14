@@ -71,11 +71,11 @@ public class RedisKeys {
         return "ops:online:businesssystem";
     }
 
-    public static String getBackupAgentOnlineKey() {
-        return "ops:online:backupagent";
+    public static String getNetworkBackupAgentOnlineKey() {
+        return "ops:online:network-backup-agent";
     }
 
-    public static String getDeviceBackupOnlineKey() {
-        return "ops:online:devicebackup";
+    public static String getNetworkDeviceBackupOnlineKey() {
+        return "ops:online:network-device-backup";
     }
 }

@@ -9,11 +9,11 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ServiceException;
-import net.leoch.modules.alert.entity.ZabbixAlertAiReportEntity;
+import net.leoch.modules.alert.entity.AlertAiReportZabbixEntity;
 import net.leoch.modules.alert.entity.ZabbixAlertEventHistoryEntity;
-import net.leoch.modules.alert.mapper.ZabbixAlertAiReportMapper;
+import net.leoch.modules.alert.mapper.AlertAiReportZabbixMapper;
 import net.leoch.modules.alert.mapper.ZabbixAlertEventHistoryMapper;
-import net.leoch.modules.alert.vo.rsp.ZabbixAlertAiReportRsp;
+import net.leoch.modules.alert.vo.rsp.AlertAiReportZabbixRsp;
 import net.leoch.modules.sys.service.AiConfigService;
 import net.leoch.modules.sys.vo.rsp.SysAiConfigRsp;
 import org.springframework.stereotype.Service;
@@ -84,15 +84,15 @@ public class ZabbixAlertReportService {
             """;
 
     private final ZabbixAlertEventHistoryMapper historyMapper;
-    private final ZabbixAlertAiReportMapper reportMapper;
+    private final AlertAiReportZabbixMapper reportMapper;
     private final AiConfigService aiConfigService;
 
-    public ZabbixAlertAiReportRsp submitGenerate(String periodType, Date start, Date end) {
+    public AlertAiReportZabbixRsp submitGenerate(String periodType, Date start, Date end) {
         Date periodEnd = end == null ? new Date() : end;
         Date periodStart = start == null ? defaultStart(periodEnd, periodType) : start;
         String resolvedPeriodType = StrUtil.blankToDefault(periodType, "week");
 
-        ZabbixAlertAiReportEntity report = new ZabbixAlertAiReportEntity();
+        AlertAiReportZabbixEntity report = new AlertAiReportZabbixEntity();
         report.setPeriodType(resolvedPeriodType);
         report.setPeriodStart(periodStart);
         report.setPeriodEnd(periodEnd);
@@ -109,11 +109,11 @@ public class ZabbixAlertReportService {
             log.warn("[ZabbixAIReport] load ai config failed before submit", e);
         }
         reportMapper.insert(report);
-        return BeanUtil.copyProperties(report, ZabbixAlertAiReportRsp.class);
+        return BeanUtil.copyProperties(report, AlertAiReportZabbixRsp.class);
     }
 
-    public ZabbixAlertAiReportRsp generate(String periodType, Date start, Date end) {
-        ZabbixAlertAiReportRsp rsp = submitGenerate(periodType, start, end);
+    public AlertAiReportZabbixRsp generate(String periodType, Date start, Date end) {
+        AlertAiReportZabbixRsp rsp = submitGenerate(periodType, start, end);
         processReport(rsp.getId());
         return getById(rsp.getId());
     }
@@ -122,7 +122,7 @@ public class ZabbixAlertReportService {
         if (reportId == null) {
             return;
         }
-        ZabbixAlertAiReportEntity report = reportMapper.selectById(reportId);
+        AlertAiReportZabbixEntity report = reportMapper.selectById(reportId);
         if (report == null) {
             return;
         }
@@ -159,20 +159,20 @@ public class ZabbixAlertReportService {
         reportMapper.updateById(report);
     }
 
-    public List<ZabbixAlertAiReportRsp> latest(int size) {
+    public List<AlertAiReportZabbixRsp> latest(int size) {
         int limit = size <= 0 ? 20 : Math.min(size, 200);
-        List<ZabbixAlertAiReportEntity> list = reportMapper.selectList(
-                new QueryWrapper<ZabbixAlertAiReportEntity>().orderByDesc("id").last("limit " + limit)
+        List<AlertAiReportZabbixEntity> list = reportMapper.selectList(
+                new QueryWrapper<AlertAiReportZabbixEntity>().orderByDesc("id").last("limit " + limit)
         );
-        return BeanUtil.copyToList(list, ZabbixAlertAiReportRsp.class);
+        return BeanUtil.copyToList(list, AlertAiReportZabbixRsp.class);
     }
 
-    public ZabbixAlertAiReportRsp getById(Long id) {
+    public AlertAiReportZabbixRsp getById(Long id) {
         if (id == null) {
             return null;
         }
-        ZabbixAlertAiReportEntity entity = reportMapper.selectById(id);
-        return entity == null ? null : BeanUtil.copyProperties(entity, ZabbixAlertAiReportRsp.class);
+        AlertAiReportZabbixEntity entity = reportMapper.selectById(id);
+        return entity == null ? null : BeanUtil.copyProperties(entity, AlertAiReportZabbixRsp.class);
     }
 
     private Date defaultStart(Date end, String periodType) {

@@ -10,10 +10,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
-import net.leoch.modules.alert.entity.PrometheusAlertAiReportEntity;
+import net.leoch.modules.alert.entity.AlertAiReportPrometheusEntity;
 import net.leoch.modules.alert.mapper.AlertRecordMapper;
-import net.leoch.modules.alert.mapper.PrometheusAlertAiReportMapper;
-import net.leoch.modules.alert.vo.rsp.PrometheusAlertAiReportRsp;
+import net.leoch.modules.alert.mapper.AlertAiReportPrometheusMapper;
+import net.leoch.modules.alert.vo.rsp.AlertAiReportPrometheusRsp;
 import net.leoch.modules.sys.service.AiConfigService;
 import net.leoch.modules.sys.vo.rsp.SysAiConfigRsp;
 import org.springframework.stereotype.Service;
@@ -94,17 +94,17 @@ public class PrometheusAlertReportService {
             """;
 
     private final AlertRecordMapper alertRecordMapper;
-    private final PrometheusAlertAiReportMapper reportMapper;
+    private final AlertAiReportPrometheusMapper reportMapper;
     private final AiConfigService aiConfigService;
 
-    public PrometheusAlertAiReportRsp submitGenerate(String reportType, String periodType, Date start, Date end) {
+    public AlertAiReportPrometheusRsp submitGenerate(String reportType, String periodType, Date start, Date end) {
         String resolvedReportType = StrUtil.blankToDefault(reportType, "server");
         String resolvedPeriodType = StrUtil.blankToDefault(periodType, "week");
         Date now = new Date();
         Date periodEnd = end == null ? now : end;
         Date periodStart = start == null ? defaultStart(periodEnd, resolvedPeriodType) : start;
 
-        PrometheusAlertAiReportEntity report = new PrometheusAlertAiReportEntity();
+        AlertAiReportPrometheusEntity report = new AlertAiReportPrometheusEntity();
         report.setReportType(resolvedReportType);
         report.setPeriodType(resolvedPeriodType);
         report.setPeriodStart(periodStart);
@@ -123,11 +123,11 @@ public class PrometheusAlertReportService {
         }
 
         reportMapper.insert(report);
-        return BeanUtil.copyProperties(report, PrometheusAlertAiReportRsp.class);
+        return BeanUtil.copyProperties(report, AlertAiReportPrometheusRsp.class);
     }
 
-    public PrometheusAlertAiReportRsp generate(String reportType, String periodType, Date start, Date end) {
-        PrometheusAlertAiReportRsp rsp = submitGenerate(reportType, periodType, start, end);
+    public AlertAiReportPrometheusRsp generate(String reportType, String periodType, Date start, Date end) {
+        AlertAiReportPrometheusRsp rsp = submitGenerate(reportType, periodType, start, end);
         processReport(rsp.getId());
         return getById(rsp.getId());
     }
@@ -136,7 +136,7 @@ public class PrometheusAlertReportService {
         if (reportId == null) {
             return;
         }
-        PrometheusAlertAiReportEntity report = reportMapper.selectById(reportId);
+        AlertAiReportPrometheusEntity report = reportMapper.selectById(reportId);
         if (report == null) {
             return;
         }
@@ -173,23 +173,23 @@ public class PrometheusAlertReportService {
         reportMapper.updateById(report);
     }
 
-    public List<PrometheusAlertAiReportRsp> latest(String reportType, int size) {
+    public List<AlertAiReportPrometheusRsp> latest(String reportType, int size) {
         int limit = size <= 0 ? 20 : Math.min(size, 200);
-        QueryWrapper<PrometheusAlertAiReportEntity> wrapper = new QueryWrapper<PrometheusAlertAiReportEntity>()
+        QueryWrapper<AlertAiReportPrometheusEntity> wrapper = new QueryWrapper<AlertAiReportPrometheusEntity>()
                 .orderByDesc("id")
                 .last("limit " + limit);
         if (StrUtil.isNotBlank(reportType)) {
             wrapper.eq("report_type", reportType);
         }
-        return BeanUtil.copyToList(reportMapper.selectList(wrapper), PrometheusAlertAiReportRsp.class);
+        return BeanUtil.copyToList(reportMapper.selectList(wrapper), AlertAiReportPrometheusRsp.class);
     }
 
-    public PrometheusAlertAiReportRsp getById(Long id) {
+    public AlertAiReportPrometheusRsp getById(Long id) {
         if (id == null) {
             return null;
         }
-        PrometheusAlertAiReportEntity entity = reportMapper.selectById(id);
-        return entity == null ? null : BeanUtil.copyProperties(entity, PrometheusAlertAiReportRsp.class);
+        AlertAiReportPrometheusEntity entity = reportMapper.selectById(id);
+        return entity == null ? null : BeanUtil.copyProperties(entity, AlertAiReportPrometheusRsp.class);
     }
 
     private Map<String, Object> buildStats(String reportType, Date start, Date end) {

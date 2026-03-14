@@ -38,8 +38,8 @@ CREATE TABLE `bak_device_backup`  (
   `update_date` datetime NOT NULL COMMENT '更新时间',
   `online_status` tinyint NULL DEFAULT NULL COMMENT '在线状态 0离线 1在线',
   PRIMARY KEY (`id`) USING BTREE,
-  INDEX `fk_device_backup_agent`(`agent_id` ASC) USING BTREE,
-  CONSTRAINT `fk_device_backup_agent` FOREIGN KEY (`agent_id`) REFERENCES `tb_backup_agent` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
+  INDEX `fk_network_backup_agent`(`agent_id` ASC) USING BTREE,
+  CONSTRAINT `fk_network_backup_agent` FOREIGN KEY (`agent_id`) REFERENCES `tb_network_backup_agent` (`id`) ON DELETE RESTRICT ON UPDATE RESTRICT
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '设备备份表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
@@ -349,12 +349,12 @@ INSERT INTO `sys_menu` VALUES (2016424054654828547, 2016424054654828545, '新增
 INSERT INTO `sys_menu` VALUES (2016424054654828548, 2016424054654828545, '修改', NULL, 'ops:windowhost:update', 1, NULL, 2, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:19:01');
 INSERT INTO `sys_menu` VALUES (2016424054654828549, 2016424054654828545, '删除', NULL, 'ops:windowhost:delete', 1, NULL, 3, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:19:01');
 INSERT INTO `sys_menu` VALUES (2016424054654828550, 2016424054654828545, '导出', NULL, 'ops:windowhost:export', 1, NULL, 4, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:19:01');
-INSERT INTO `sys_menu` VALUES (2016424054856155138, 2016429000000000301, '备份节点管理', 'ops/backupagent', NULL, 0, 'icon-sisternode', 0, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:53:21');
-INSERT INTO `sys_menu` VALUES (2016424054856155139, 2016424054856155138, '查看', NULL, 'ops:backupagent:page,ops:backupagent:info', 1, NULL, 0, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:19:01');
-INSERT INTO `sys_menu` VALUES (2016424054856155140, 2016424054856155138, '新增', NULL, 'ops:backupagent:save', 1, NULL, 1, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:19:01');
-INSERT INTO `sys_menu` VALUES (2016424054856155141, 2016424054856155138, '修改', NULL, 'ops:backupagent:update', 1, NULL, 2, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:19:01');
-INSERT INTO `sys_menu` VALUES (2016424054856155142, 2016424054856155138, '删除', NULL, 'ops:backupagent:delete', 1, NULL, 3, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:19:01');
-INSERT INTO `sys_menu` VALUES (2016424054856155143, 2016424054856155138, '导出', NULL, 'ops:backupagent:export', 1, NULL, 4, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:19:01');
+INSERT INTO `sys_menu` VALUES (2016424054856155138, 2016429000000000301, '网络备份节点管理', 'ops/backupagent', NULL, 0, 'icon-sisternode', 0, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:53:21');
+INSERT INTO `sys_menu` VALUES (2016424054856155139, 2016424054856155138, '查看', NULL, 'ops:network-backup-agent:page,ops:network-backup-agent:info', 1, NULL, 0, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:19:01');
+INSERT INTO `sys_menu` VALUES (2016424054856155140, 2016424054856155138, '新增', NULL, 'ops:network-backup-agent:save', 1, NULL, 1, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:19:01');
+INSERT INTO `sys_menu` VALUES (2016424054856155141, 2016424054856155138, '修改', NULL, 'ops:network-backup-agent:update', 1, NULL, 2, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:19:01');
+INSERT INTO `sys_menu` VALUES (2016424054856155142, 2016424054856155138, '删除', NULL, 'ops:network-backup-agent:delete', 1, NULL, 3, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:19:01');
+INSERT INTO `sys_menu` VALUES (2016424054856155143, 2016424054856155138, '导出', NULL, 'ops:network-backup-agent:export', 1, NULL, 4, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:19:01');
 INSERT INTO `sys_menu` VALUES (2016424054986178562, 2016426590938480641, '网络站点管理', 'ops/businesssystem', NULL, 0, 'icon-file-text', 3, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-02-28 14:10:44');
 INSERT INTO `sys_menu` VALUES (2016424054986178563, 2016424054986178562, '查看', NULL, 'ops:businesssystem:page,ops:businesssystem:info', 1, NULL, 0, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:19:01');
 INSERT INTO `sys_menu` VALUES (2016424054986178564, 2016424054986178562, '新增', NULL, 'ops:businesssystem:save', 1, NULL, 1, 1067246875800000001, '2026-01-28 16:19:01', 1067246875800000001, '2026-01-28 16:19:01');
@@ -374,15 +374,15 @@ INSERT INTO `sys_menu` VALUES (2016427449415434250, 2016427449415434242, '导入
 INSERT INTO `sys_menu` VALUES (2016427449415434251, 2016427449415434242, '下载模板', NULL, 'ops:linuxhost:template', 1, NULL, 6, 1067246875800000001, '2026-01-28 17:37:22', 1067246875800000001, '2026-01-28 17:37:22');
 INSERT INTO `sys_menu` VALUES (2016427449415434252, 2016424054986178562, '导入', NULL, 'ops:businesssystem:import', 1, NULL, 5, 1067246875800000001, '2026-01-28 17:37:22', 1067246875800000001, '2026-01-28 17:37:22');
 INSERT INTO `sys_menu` VALUES (2016427449415434253, 2016424054986178562, '下载模板', NULL, 'ops:businesssystem:template', 1, NULL, 6, 1067246875800000001, '2026-01-28 17:37:22', 1067246875800000001, '2026-01-28 17:37:22');
-INSERT INTO `sys_menu` VALUES (2016427449415434256, 2016424054856155138, '导入', NULL, 'ops:backupagent:import', 1, NULL, 5, 1067246875800000001, '2026-01-28 17:37:22', 1067246875800000001, '2026-01-28 17:37:22');
-INSERT INTO `sys_menu` VALUES (2016427449415434257, 2016424054856155138, '下载模板', NULL, 'ops:backupagent:template', 1, NULL, 6, 1067246875800000001, '2026-01-28 17:37:22', 1067246875800000001, '2026-01-28 17:37:22');
-INSERT INTO `sys_menu` VALUES (2016429000000000001, 2016429000000000301, '备份记录', 'ops/devicebackup-record', NULL, 0, 'icon-filedone', 2, 1067246875800000001, '2026-01-29 15:31:45', 1067246875800000001, '2026-01-29 15:31:45');
-INSERT INTO `sys_menu` VALUES (2016429000000000101, 2016429000000000001, '查看', NULL, 'ops:devicebackuprecord:page,ops:devicebackuprecord:info', 1, NULL, 0, 1067246875800000001, '2026-01-29 15:31:45', 1067246875800000001, '2026-01-29 15:31:45');
-INSERT INTO `sys_menu` VALUES (2016429000000000102, 2016429000000000001, '删除', NULL, 'ops:devicebackuprecord:delete', 1, NULL, 1, 1067246875800000001, '2026-01-29 15:31:45', 1067246875800000001, '2026-01-29 15:31:45');
-INSERT INTO `sys_menu` VALUES (2016429000000000103, 2016429000000000001, '历史', NULL, 'ops:devicebackuprecord:history', 1, NULL, 2, 1067246875800000001, '2026-01-29 18:16:58', 1067246875800000001, '2026-01-29 18:16:58');
-INSERT INTO `sys_menu` VALUES (2016429000000000104, 2016429000000000001, '对比', NULL, 'ops:devicebackuprecord:diff', 1, NULL, 3, 1067246875800000001, '2026-01-29 18:16:58', 1067246875800000001, '2026-01-29 18:16:58');
-INSERT INTO `sys_menu` VALUES (2016429000000000105, 2016429000000000001, '预览', NULL, 'ops:devicebackuprecord:preview', 1, NULL, 4, 1067246875800000001, '2026-01-29 18:24:15', 1067246875800000001, '2026-01-29 18:24:15');
-INSERT INTO `sys_menu` VALUES (2016429000000000106, 2016429000000000001, '下载', NULL, 'ops:devicebackuprecord:download', 1, NULL, 5, 1067246875800000001, '2026-01-29 19:32:40', 1067246875800000001, '2026-01-29 19:32:40');
+INSERT INTO `sys_menu` VALUES (2016427449415434256, 2016424054856155138, '导入', NULL, 'ops:network-backup-agent:import', 1, NULL, 5, 1067246875800000001, '2026-01-28 17:37:22', 1067246875800000001, '2026-01-28 17:37:22');
+INSERT INTO `sys_menu` VALUES (2016427449415434257, 2016424054856155138, '下载模板', NULL, 'ops:network-backup-agent:template', 1, NULL, 6, 1067246875800000001, '2026-01-28 17:37:22', 1067246875800000001, '2026-01-28 17:37:22');
+INSERT INTO `sys_menu` VALUES (2016429000000000001, 2016429000000000301, '网络设备备份记录', 'ops/devicebackup-record', NULL, 0, 'icon-filedone', 2, 1067246875800000001, '2026-01-29 15:31:45', 1067246875800000001, '2026-01-29 15:31:45');
+INSERT INTO `sys_menu` VALUES (2016429000000000101, 2016429000000000001, '查看', NULL, 'ops:network-device-backup-record:page,ops:network-device-backup-record:info', 1, NULL, 0, 1067246875800000001, '2026-01-29 15:31:45', 1067246875800000001, '2026-01-29 15:31:45');
+INSERT INTO `sys_menu` VALUES (2016429000000000102, 2016429000000000001, '删除', NULL, 'ops:network-device-backup-record:delete', 1, NULL, 1, 1067246875800000001, '2026-01-29 15:31:45', 1067246875800000001, '2026-01-29 15:31:45');
+INSERT INTO `sys_menu` VALUES (2016429000000000103, 2016429000000000001, '历史', NULL, 'ops:network-device-backup-record:history', 1, NULL, 2, 1067246875800000001, '2026-01-29 18:16:58', 1067246875800000001, '2026-01-29 18:16:58');
+INSERT INTO `sys_menu` VALUES (2016429000000000104, 2016429000000000001, '对比', NULL, 'ops:network-device-backup-record:diff', 1, NULL, 3, 1067246875800000001, '2026-01-29 18:16:58', 1067246875800000001, '2026-01-29 18:16:58');
+INSERT INTO `sys_menu` VALUES (2016429000000000105, 2016429000000000001, '预览', NULL, 'ops:network-device-backup-record:preview', 1, NULL, 4, 1067246875800000001, '2026-01-29 18:24:15', 1067246875800000001, '2026-01-29 18:24:15');
+INSERT INTO `sys_menu` VALUES (2016429000000000106, 2016429000000000001, '下载', NULL, 'ops:network-device-backup-record:download', 1, NULL, 5, 1067246875800000001, '2026-01-29 19:32:40', 1067246875800000001, '2026-01-29 19:32:40');
 INSERT INTO `sys_menu` VALUES (2016429000000000301, 0, '备份管理', NULL, NULL, 0, 'icon-filesync', 2, 1067246875800000001, '2026-01-29 15:52:39', 1067246875800000001, '2026-01-29 15:56:48');
 INSERT INTO `sys_menu` VALUES (2026022600010000001, 2016426590938480641, '网络设备管理', 'ops/networkhost', NULL, 0, 'icon-Partition', 5, 1067246875800000001, '2026-02-27 00:21:55', 1067246875800000001, '2026-02-27 08:52:50');
 INSERT INTO `sys_menu` VALUES (2026022600010000002, 2026022600010000001, '查看', NULL, 'ops:networkhost:page', 1, NULL, 0, 1067246875800000001, '2026-02-27 00:21:56', 1067246875800000001, '2026-02-27 00:21:56');
@@ -748,10 +748,10 @@ CREATE TABLE `tb_alert_trigger`  (
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for tb_backup_agent
+-- Table structure for tb_network_backup_agent
 -- ----------------------------
-DROP TABLE IF EXISTS `tb_backup_agent`;
-CREATE TABLE `tb_backup_agent`  (
+DROP TABLE IF EXISTS `tb_network_backup_agent`;
+CREATE TABLE `tb_network_backup_agent`  (
   `id` bigint NOT NULL COMMENT '主键ID',
   `instance` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '地址',
   `name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '名称',
@@ -764,10 +764,10 @@ CREATE TABLE `tb_backup_agent`  (
   `update_date` datetime NOT NULL COMMENT '更新时间',
   `online_status` tinyint NULL DEFAULT NULL COMMENT '在线状态 0离线 1在线',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '备份节点表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '网络备份节点表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of tb_backup_agent
+-- Records of tb_network_backup_agent
 -- ----------------------------
 
 -- ----------------------------
@@ -795,10 +795,10 @@ CREATE TABLE `tb_business_system`  (
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for tb_device_backup_history
+-- Table structure for tb_network_device_backup_history
 -- ----------------------------
-DROP TABLE IF EXISTS `tb_device_backup_history`;
-CREATE TABLE `tb_device_backup_history`  (
+DROP TABLE IF EXISTS `tb_network_device_backup_history`;
+CREATE TABLE `tb_network_device_backup_history`  (
   `id` bigint NOT NULL COMMENT '主键',
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '主机名',
   `ip` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT 'IP',
@@ -806,17 +806,17 @@ CREATE TABLE `tb_device_backup_history`  (
   `backup_time` datetime NOT NULL COMMENT '备份时间',
   `backup_status` int NOT NULL COMMENT '备份状态（1已完成/0异常）',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '设备备份历史表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '网络设备备份历史表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of tb_device_backup_history
+-- Records of tb_network_device_backup_history
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for tb_device_backup_record
+-- Table structure for tb_network_device_backup_record
 -- ----------------------------
-DROP TABLE IF EXISTS `tb_device_backup_record`;
-CREATE TABLE `tb_device_backup_record`  (
+DROP TABLE IF EXISTS `tb_network_device_backup_record`;
+CREATE TABLE `tb_network_device_backup_record`  (
   `id` bigint NOT NULL COMMENT '主键',
   `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '主机名',
   `ip` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT 'IP',
@@ -825,10 +825,10 @@ CREATE TABLE `tb_device_backup_record`  (
   `last_backup_status` int NOT NULL COMMENT '最后备份状态（1已完成/0异常）',
   `backup_num` int NULL DEFAULT 0 COMMENT '备份次数',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '设备备份信息表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '网络设备备份信息表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of tb_device_backup_record
+-- Records of tb_network_device_backup_record
 -- ----------------------------
 
 -- ----------------------------
@@ -955,10 +955,10 @@ CREATE TABLE `tb_network_host`  (
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for tb_prometheus_alert_ai_report
+-- Table structure for tb_alert_ai_report_prometheus
 -- ----------------------------
-DROP TABLE IF EXISTS `tb_prometheus_alert_ai_report`;
-CREATE TABLE `tb_prometheus_alert_ai_report`  (
+DROP TABLE IF EXISTS `tb_alert_ai_report_prometheus`;
+CREATE TABLE `tb_alert_ai_report_prometheus`  (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `report_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '报告类型 server/http',
   `period_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '周期类型 week/month',
@@ -978,7 +978,7 @@ CREATE TABLE `tb_prometheus_alert_ai_report`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 2029814005104181250 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = 'Prometheus告警AI报告' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of tb_prometheus_alert_ai_report
+-- Records of tb_alert_ai_report_prometheus
 -- ----------------------------
 
 -- ----------------------------
@@ -1007,10 +1007,10 @@ CREATE TABLE `tb_window_host`  (
 -- ----------------------------
 
 -- ----------------------------
--- Table structure for tb_zabbix_alert_ai_report
+-- Table structure for tb_alert_ai_report_zabbix
 -- ----------------------------
-DROP TABLE IF EXISTS `tb_zabbix_alert_ai_report`;
-CREATE TABLE `tb_zabbix_alert_ai_report`  (
+DROP TABLE IF EXISTS `tb_alert_ai_report_zabbix`;
+CREATE TABLE `tb_alert_ai_report_zabbix`  (
   `id` bigint NOT NULL AUTO_INCREMENT,
   `period_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL,
   `period_start` datetime NOT NULL,
@@ -1029,7 +1029,7 @@ CREATE TABLE `tb_zabbix_alert_ai_report`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 2029813705341468674 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
--- Records of tb_zabbix_alert_ai_report
+-- Records of tb_alert_ai_report_zabbix
 -- ----------------------------
 
 -- ----------------------------

@@ -13,10 +13,10 @@ import net.leoch.modules.alert.entity.AlertRecordActionEntity;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
 import net.leoch.modules.alert.mapper.AlertRecordActionMapper;
 import net.leoch.modules.alert.mapper.AlertRecordMapper;
-import net.leoch.modules.ops.entity.DeviceBackupHistoryEntity;
-import net.leoch.modules.ops.entity.DeviceBackupRecordEntity;
-import net.leoch.modules.ops.mapper.DeviceBackupHistoryMapper;
-import net.leoch.modules.ops.mapper.DeviceBackupRecordMapper;
+import net.leoch.modules.ops.entity.NetworkDeviceBackupHistoryEntity;
+import net.leoch.modules.ops.entity.NetworkDeviceBackupRecordEntity;
+import net.leoch.modules.ops.mapper.NetworkDeviceBackupHistoryMapper;
+import net.leoch.modules.ops.mapper.NetworkDeviceBackupRecordMapper;
 import net.leoch.modules.ops.vo.rsp.OpsDeleteCascadeRsp;
 import net.leoch.modules.sys.service.StorageConfigService;
 import org.springframework.stereotype.Service;
@@ -32,8 +32,8 @@ public class OpsDeleteCascadeService {
 
     private final AlertRecordMapper alertRecordMapper;
     private final AlertRecordActionMapper alertRecordActionMapper;
-    private final DeviceBackupRecordMapper deviceBackupRecordMapper;
-    private final DeviceBackupHistoryMapper deviceBackupHistoryMapper;
+    private final NetworkDeviceBackupRecordMapper deviceBackupRecordMapper;
+    private final NetworkDeviceBackupHistoryMapper deviceBackupHistoryMapper;
     private final StorageConfigService storageConfigService;
 
     public OpsDeleteCascadeRsp deleteAlertRecordsByInstances(Collection<String> instances) {
@@ -73,13 +73,13 @@ public class OpsDeleteCascadeService {
             return rsp;
         }
 
-        List<DeviceBackupHistoryEntity> histories = deviceBackupHistoryMapper.selectList(
-                new LambdaQueryWrapper<DeviceBackupHistoryEntity>()
-                        .select(DeviceBackupHistoryEntity::getId, DeviceBackupHistoryEntity::getIp, DeviceBackupHistoryEntity::getUrl)
-                        .in(DeviceBackupHistoryEntity::getIp, validIps)
+        List<NetworkDeviceBackupHistoryEntity> histories = deviceBackupHistoryMapper.selectList(
+                new LambdaQueryWrapper<NetworkDeviceBackupHistoryEntity>()
+                        .select(NetworkDeviceBackupHistoryEntity::getId, NetworkDeviceBackupHistoryEntity::getIp, NetworkDeviceBackupHistoryEntity::getUrl)
+                        .in(NetworkDeviceBackupHistoryEntity::getIp, validIps)
         );
         List<String> urls = histories.stream()
-                .map(DeviceBackupHistoryEntity::getUrl)
+                .map(NetworkDeviceBackupHistoryEntity::getUrl)
                 .filter(StrUtil::isNotBlank)
                 .toList();
 
@@ -87,10 +87,10 @@ public class OpsDeleteCascadeService {
             rsp.setDeletedMinioTxtFiles(deleteMinioTxtFiles(urls));
         }
 
-        int historyDeleted = deviceBackupHistoryMapper.delete(new LambdaQueryWrapper<DeviceBackupHistoryEntity>()
-                .in(DeviceBackupHistoryEntity::getIp, validIps));
-        int recordDeleted = deviceBackupRecordMapper.delete(new LambdaQueryWrapper<DeviceBackupRecordEntity>()
-                .in(DeviceBackupRecordEntity::getIp, validIps));
+        int historyDeleted = deviceBackupHistoryMapper.delete(new LambdaQueryWrapper<NetworkDeviceBackupHistoryEntity>()
+                .in(NetworkDeviceBackupHistoryEntity::getIp, validIps));
+        int recordDeleted = deviceBackupRecordMapper.delete(new LambdaQueryWrapper<NetworkDeviceBackupRecordEntity>()
+                .in(NetworkDeviceBackupRecordEntity::getIp, validIps));
         rsp.setDeletedBackupHistories(historyDeleted);
         rsp.setDeletedBackupRecords(recordDeleted);
         log.info("[删除联动] 已删除备份记录, ips={}, history={}, record={}", validIps.size(), historyDeleted, recordDeleted);

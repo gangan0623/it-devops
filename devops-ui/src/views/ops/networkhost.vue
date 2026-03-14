@@ -409,7 +409,7 @@ const loadStatusSummary = () => {
 };
 
 const loadBackupAgents = () => {
-  baseService.get("/ops/backupagent/page", { page: 1, limit: 1000 }).then((res) => {
+  baseService.get("/ops/network-backup-agent/page", { page: 1, limit: 1000 }).then((res) => {
     const list = res.data?.list || [];
     backupAgentOptions.value = list.map((item: any) => ({
       id: item.id,

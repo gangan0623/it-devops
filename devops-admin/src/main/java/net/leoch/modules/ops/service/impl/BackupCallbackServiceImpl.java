@@ -2,7 +2,7 @@ package net.leoch.modules.ops.service.impl;
 
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.data.result.Result;
-import net.leoch.common.integration.schedule.service.DeviceBackupJobService;
+import net.leoch.common.integration.schedule.service.NetworkDeviceBackupJobService;
 import net.leoch.modules.ops.service.IBackupCallbackService;
 import net.leoch.modules.ops.vo.req.BackupCallbackReq;
 import org.springframework.stereotype.Service;
@@ -14,9 +14,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class BackupCallbackServiceImpl implements IBackupCallbackService {
 
-    private final DeviceBackupJobService deviceBackupJobService;
+    private final NetworkDeviceBackupJobService deviceBackupJobService;
 
-    public BackupCallbackServiceImpl(DeviceBackupJobService deviceBackupJobService) {
+    public BackupCallbackServiceImpl(NetworkDeviceBackupJobService deviceBackupJobService) {
         this.deviceBackupJobService = deviceBackupJobService;
     }
 
