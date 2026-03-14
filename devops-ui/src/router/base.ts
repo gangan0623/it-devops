@@ -25,19 +25,9 @@ const routes: Array<RouteRecordRaw> = [
         meta: { title: "问题", icon: "icon-notification" }
       },
       {
-        path: "/workbench/network-report",
-        component: () => import("@/views/alert/zabbix-report.vue"),
-        meta: { title: "网络设备报告", icon: "icon-filedone" }
-      },
-      {
-        path: "/workbench/server-report",
-        component: () => import("@/views/alert/server-report.vue"),
-        meta: { title: "服务主机报告", icon: "icon-desktop" }
-      },
-      {
-        path: "/workbench/http-report",
-        component: () => import("@/views/alert/http-report.vue"),
-        meta: { title: "网络站点报告", icon: "icon-file-text" }
+        path: "/workbench/report",
+        component: () => import("@/views/alert/report.vue"),
+        meta: { title: "报告", icon: "icon-filedone" }
       }
     ]
   },
@@ -63,17 +53,32 @@ const routes: Array<RouteRecordRaw> = [
   },
   {
     path: "/alert/zabbix/report",
-    redirect: "/workbench/network-report",
+    redirect: "/workbench/report?type=zabbix",
     meta: { isNavigationMenu: false }
   },
   {
     path: "/alert/prometheus/report/server",
-    redirect: "/workbench/server-report",
+    redirect: "/workbench/report?type=server",
     meta: { isNavigationMenu: false }
   },
   {
     path: "/alert/prometheus/report/http",
-    redirect: "/workbench/http-report",
+    redirect: "/workbench/report?type=http",
+    meta: { isNavigationMenu: false }
+  },
+  {
+    path: "/workbench/network-report",
+    redirect: "/workbench/report?type=zabbix",
+    meta: { isNavigationMenu: false }
+  },
+  {
+    path: "/workbench/server-report",
+    redirect: "/workbench/report?type=server",
+    meta: { isNavigationMenu: false }
+  },
+  {
+    path: "/workbench/http-report",
+    redirect: "/workbench/report?type=http",
     meta: { isNavigationMenu: false }
   },
   {

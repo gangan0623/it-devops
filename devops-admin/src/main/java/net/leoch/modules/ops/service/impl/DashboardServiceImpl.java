@@ -4,8 +4,8 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.modules.alert.entity.AlertRecordEntity;
-import net.leoch.modules.alert.mapper.AlertRecordMapper;
+import net.leoch.modules.alert.service.AlertRealtimeViewService;
+import net.leoch.modules.alert.vo.rsp.AlertRealtimeRsp;
 import net.leoch.modules.ops.entity.BusinessSystemEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
@@ -37,7 +37,7 @@ public class DashboardServiceImpl implements IDashboardService {
     private final NetworkHostMapper networkHostMapper;
     private final DeviceBackupRecordMapper deviceBackupRecordMapper;
     private final MonitorComponentMapper monitorComponentMapper;
-    private final AlertRecordMapper alertRecordMapper;
+    private final AlertRealtimeViewService alertRealtimeViewService;
 
     @Override
     public DashboardSummaryRsp summary() {
@@ -174,27 +174,8 @@ public class DashboardServiceImpl implements IDashboardService {
         return backupStats;
     }
 
-    private List<DashboardAlertSummaryRsp> buildRecentAlerts() {
-        List<AlertRecordEntity> alerts = alertRecordMapper.selectList(
-                new LambdaQueryWrapper<AlertRecordEntity>()
-                        .select(AlertRecordEntity::getAlertName, AlertRecordEntity::getInstance, AlertRecordEntity::getCreateDate,
-                                AlertRecordEntity::getSeverity, AlertRecordEntity::getStatus)
-                        .orderByDesc(AlertRecordEntity::getCreateDate)
-                        .last("limit 10")
-        );
-        Map<String, String> hostMap = loadHostMap();
-        List<DashboardAlertSummaryRsp> recentAlerts = new ArrayList<>();
-        for (AlertRecordEntity alert : alerts) {
-            DashboardAlertSummaryRsp item = new DashboardAlertSummaryRsp();
-            item.setAlertName(alert.getAlertName());
-            item.setInstance(alert.getInstance());
-            item.setHostName(hostMap.get(normalizeInstance(alert.getInstance())));
-            item.setTime(alert.getCreateDate());
-            item.setSeverity(alert.getSeverity());
-            item.setStatus(alert.getStatus());
-            recentAlerts.add(item);
-        }
-        return recentAlerts;
+    private List<AlertRealtimeRsp> buildRecentAlerts() {
+        return alertRealtimeViewService.recentAlerts(10);
     }
 
     private List<DashboardMonitorComponentItemRsp> buildMonitorComponents() {
@@ -214,49 +195,4 @@ public class DashboardServiceImpl implements IDashboardService {
         return monitorItems;
     }
 
-    private Map<String, String> loadHostMap() {
-        Map<String, String> map = new HashMap<>();
-        List<LinuxHostEntity> linuxList = linuxHostMapper.selectList(new LambdaQueryWrapper<LinuxHostEntity>().select(LinuxHostEntity::getInstance, LinuxHostEntity::getName));
-        for (LinuxHostEntity item : linuxList) {
-            putHost(map, item.getInstance(), item.getName());
-        }
-        List<WindowHostEntity> winList = windowHostMapper.selectList(new LambdaQueryWrapper<WindowHostEntity>().select(WindowHostEntity::getInstance, WindowHostEntity::getName));
-        for (WindowHostEntity item : winList) {
-            putHost(map, item.getInstance(), item.getName());
-        }
-        List<BusinessSystemEntity> businessList = businessSystemMapper.selectList(new LambdaQueryWrapper<BusinessSystemEntity>().select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName));
-        for (BusinessSystemEntity item : businessList) {
-            putHost(map, item.getInstance(), item.getName());
-        }
-        return map;
-    }
-
-    private void putHost(Map<String, String> map, String instance, String name) {
-        String key = normalizeInstance(instance);
-        if (StrUtil.isBlank(key)) {
-            return;
-        }
-        map.put(key, StrUtil.blankToDefault(name, key));
-    }
-
-    private String normalizeInstance(String instance) {
-        if (StrUtil.isBlank(instance)) {
-            return null;
-        }
-        String value = instance.trim();
-        if (value.startsWith("http://")) {
-            value = value.substring(7);
-        } else if (value.startsWith("https://")) {
-            value = value.substring(8);
-        }
-        int slash = value.indexOf('/');
-        if (slash > -1) {
-            value = value.substring(0, slash);
-        }
-        int colon = value.indexOf(':');
-        if (colon > -1) {
-            value = value.substring(0, colon);
-        }
-        return value.trim();
-    }
 }

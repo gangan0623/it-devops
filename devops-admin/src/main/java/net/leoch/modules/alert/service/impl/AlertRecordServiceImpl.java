@@ -337,8 +337,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
     }
 
     private void applyRealtimeFilters(LambdaQueryWrapper<AlertRecordEntity> wrapper, String statusFilter) {
-        Date recent12h = Date.from(Instant.now().minusSeconds(12L * 3600));
-        wrapper.ge(AlertRecordEntity::getStartsAt, recent12h);
+        Date recent24h = Date.from(Instant.now().minusSeconds(24L * 3600));
+        wrapper.ge(AlertRecordEntity::getStartsAt, recent24h);
         if ("problem".equalsIgnoreCase(statusFilter)) {
             wrapper.eq(AlertRecordEntity::getStatus, "firing")
                 .and(w -> w.isNull(AlertRecordEntity::getClosed).or().eq(AlertRecordEntity::getClosed, 0))

@@ -1,27 +1,16 @@
 package net.leoch.modules.alert.service.impl;
 
-import cn.hutool.core.util.StrUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.framework.config.ops.OnlineStatusConfig;
-import net.leoch.modules.alert.entity.AlertRecordEntity;
-import net.leoch.modules.alert.mapper.AlertRecordMapper;
+import net.leoch.modules.alert.service.AlertRealtimeViewService;
 import net.leoch.modules.alert.service.IAlertSseService;
 import net.leoch.modules.alert.vo.rsp.AlertRealtimeRsp;
-import net.leoch.modules.ops.entity.BusinessSystemEntity;
-import net.leoch.modules.ops.entity.LinuxHostEntity;
-import net.leoch.modules.ops.entity.WindowHostEntity;
-import net.leoch.modules.ops.mapper.BusinessSystemMapper;
-import net.leoch.modules.ops.mapper.LinuxHostMapper;
-import net.leoch.modules.ops.mapper.WindowHostMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -31,22 +20,13 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @Service
 public class AlertSseServiceImpl implements IAlertSseService {
 
-    private final AlertRecordMapper alertRecordMapper;
-    private final LinuxHostMapper linuxHostMapper;
-    private final WindowHostMapper windowHostMapper;
-    private final BusinessSystemMapper businessSystemMapper;
+    private final AlertRealtimeViewService alertRealtimeViewService;
     private final OnlineStatusConfig properties;
     private final CopyOnWriteArrayList<SseEmitter> emitters = new CopyOnWriteArrayList<>();
 
-    public AlertSseServiceImpl(AlertRecordMapper alertRecordMapper,
-                               LinuxHostMapper linuxHostMapper,
-                               WindowHostMapper windowHostMapper,
-                               BusinessSystemMapper businessSystemMapper,
+    public AlertSseServiceImpl(AlertRealtimeViewService alertRealtimeViewService,
                                OnlineStatusConfig properties) {
-        this.alertRecordMapper = alertRecordMapper;
-        this.linuxHostMapper = linuxHostMapper;
-        this.windowHostMapper = windowHostMapper;
-        this.businessSystemMapper = businessSystemMapper;
+        this.alertRealtimeViewService = alertRealtimeViewService;
         this.properties = properties;
     }
 
@@ -78,28 +58,7 @@ public class AlertSseServiceImpl implements IAlertSseService {
 
     @Override
     public List<AlertRealtimeRsp> recentAlerts() {
-        List<AlertRecordEntity> list = alertRecordMapper.selectList(
-            new LambdaQueryWrapper<AlertRecordEntity>()
-                .select(AlertRecordEntity::getAlertName, AlertRecordEntity::getInstance, AlertRecordEntity::getSeverity,
-                    AlertRecordEntity::getStatus, AlertRecordEntity::getCreateDate)
-                .and(wrapper -> wrapper.isNull(AlertRecordEntity::getClosed).or().eq(AlertRecordEntity::getClosed, 0))
-                .and(wrapper -> wrapper.isNull(AlertRecordEntity::getSuppressedUntil).or().le(AlertRecordEntity::getSuppressedUntil, new java.util.Date()))
-                .orderByDesc(AlertRecordEntity::getCreateDate)
-                .last("limit 10")
-        );
-        Map<String, String> hostMap = loadHostMap();
-        List<AlertRealtimeRsp> result = new ArrayList<>();
-        for (AlertRecordEntity entity : list) {
-            AlertRealtimeRsp dto = new AlertRealtimeRsp();
-            dto.setAlertName(entity.getAlertName());
-            dto.setInstance(entity.getInstance());
-            dto.setHostName(hostMap.get(normalizeInstance(entity.getInstance())));
-            dto.setSeverity(entity.getSeverity());
-            dto.setStatus(entity.getStatus());
-            dto.setTime(entity.getCreateDate());
-            result.add(dto);
-        }
-        return result;
+        return alertRealtimeViewService.recentAlerts(10);
     }
 
     @Override
@@ -127,50 +86,4 @@ public class AlertSseServiceImpl implements IAlertSseService {
         }
     }
 
-    private Map<String, String> loadHostMap() {
-        // 预分配容量：假设 Linux/Windows/业务系统各50台，总共150台
-        Map<String, String> map = new HashMap<>(150);
-        List<LinuxHostEntity> linuxList = linuxHostMapper.selectList(new LambdaQueryWrapper<LinuxHostEntity>().select(LinuxHostEntity::getInstance, LinuxHostEntity::getName));
-        for (LinuxHostEntity item : linuxList) {
-            putHost(map, item.getInstance(), item.getName());
-        }
-        List<WindowHostEntity> winList = windowHostMapper.selectList(new LambdaQueryWrapper<WindowHostEntity>().select(WindowHostEntity::getInstance, WindowHostEntity::getName));
-        for (WindowHostEntity item : winList) {
-            putHost(map, item.getInstance(), item.getName());
-        }
-        List<BusinessSystemEntity> businessList = businessSystemMapper.selectList(new LambdaQueryWrapper<BusinessSystemEntity>().select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName));
-        for (BusinessSystemEntity item : businessList) {
-            putHost(map, item.getInstance(), item.getName());
-        }
-        return map;
-    }
-
-    private void putHost(Map<String, String> map, String instance, String name) {
-        String key = normalizeInstance(instance);
-        if (StrUtil.isBlank(key)) {
-            return;
-        }
-        map.put(key, StrUtil.blankToDefault(name, key));
-    }
-
-    private String normalizeInstance(String instance) {
-        if (StrUtil.isBlank(instance)) {
-            return null;
-        }
-        String value = instance.trim();
-        if (value.startsWith("http://")) {
-            value = value.substring(7);
-        } else if (value.startsWith("https://")) {
-            value = value.substring(8);
-        }
-        int slash = value.indexOf('/');
-        if (slash > -1) {
-            value = value.substring(0, slash);
-        }
-        int colon = value.indexOf(':');
-        if (colon > -1) {
-            value = value.substring(0, colon);
-        }
-        return value.trim();
-    }
 }

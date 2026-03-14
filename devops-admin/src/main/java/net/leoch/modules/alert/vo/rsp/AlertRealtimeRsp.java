@@ -33,4 +33,22 @@ public class AlertRealtimeRsp implements Serializable  {
 
     @Schema(description = "记录时间")
     private Date time;
+
+    @Schema(description = "创建时间")
+    private Date createDate;
+
+    @Schema(description = "开始时间")
+    private Date startsAt;
+
+    @Schema(description = "恢复时间")
+    private Date endsAt;
+
+    @Schema(description = "问题")
+    private String problem;
+
+    @Schema(description = "摘要")
+    private String summary;
+
+    @Schema(description = "描述")
+    private String description;
 }

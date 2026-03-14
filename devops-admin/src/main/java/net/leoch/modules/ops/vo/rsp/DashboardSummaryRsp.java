@@ -2,6 +2,7 @@ package net.leoch.modules.ops.vo.rsp;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
+import net.leoch.modules.alert.vo.rsp.AlertRealtimeRsp;
 
 import java.io.Serial;
 import java.io.Serializable;
@@ -23,7 +24,7 @@ public class DashboardSummaryRsp implements Serializable  {
     private DashboardBackupStatsRsp backupStats;
 
     @Schema(description = "实时告警")
-    private List<DashboardAlertSummaryRsp> recentAlerts;
+    private List<AlertRealtimeRsp> recentAlerts;
 
     @Schema(description = "监控组件预览")
     private List<DashboardMonitorComponentItemRsp> monitorComponents;

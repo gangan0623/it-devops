@@ -105,43 +105,21 @@
           <template #empty>
             <div class="alert-empty">
               <span class="alert-empty__icon">✓</span>
-              <span>当前无活跃告警</span>
+              <span>近24小时无告警记录</span>
             </div>
           </template>
-          <el-table-column prop="time" label="记录时间" header-align="center" align="center" min-width="140" />
+          <el-table-column prop="createDate" label="记录时间" header-align="center" align="center" min-width="140" />
           <el-table-column label="严重性" header-align="center" align="center" min-width="72">
             <template #default="scope">
               <span :class="severityClass(scope.row)">{{ formatSeverity(scope.row.severity) }}</span>
             </template>
           </el-table-column>
-          <el-table-column label="状态" header-align="center" align="center" min-width="72">
+          <el-table-column label="状态" header-align="center" align="center" width="92">
             <template #default="scope">
-              <span :class="statusClass(scope.row.status)">{{ formatStatus(scope.row.status) }}</span>
+              <span :class="statusClass(scope.row.status)">{{ formatProblemStatus(scope.row.status) }}</span>
             </template>
           </el-table-column>
-          <el-table-column prop="hostName" label="主机名" header-align="center" align="center" min-width="120" show-overflow-tooltip>
-            <template #default="scope">
-              <el-tooltip placement="top" effect="light" :show-after="250">
-                <template #content>
-                  <div class="event-tip">
-                    <div class="event-tip__title">主机信息</div>
-                    <div class="event-tip__group">
-                      <div class="event-tip__row">
-                        <span class="event-tip__key">主机名</span>
-                        <span class="event-tip__value">{{ scope.row.hostName || "-" }}</span>
-                      </div>
-                      <div class="event-tip__row">
-                        <span class="event-tip__key">实例</span>
-                        <span class="event-tip__value">{{ scope.row.instance || "-" }}</span>
-                      </div>
-                    </div>
-                  </div>
-                </template>
-                <span>{{ scope.row.hostName || "-" }}</span>
-              </el-tooltip>
-            </template>
-          </el-table-column>
-          <el-table-column prop="alertName" label="告警名称" header-align="center" align="center" min-width="160" show-overflow-tooltip>
+          <el-table-column prop="problem" label="问题" header-align="center" align="center" min-width="190" show-overflow-tooltip>
             <template #default="scope">
               <el-tooltip placement="top" effect="light" :show-after="250">
                 <template #content>
@@ -153,13 +131,43 @@
                         <span class="event-tip__value">{{ scope.row.alertName || "-" }}</span>
                       </div>
                       <div class="event-tip__row">
-                        <span class="event-tip__key">实例</span>
-                        <span class="event-tip__value">{{ scope.row.instance || "-" }}</span>
+                        <span class="event-tip__key">摘要</span>
+                        <span class="event-tip__value">{{ scope.row.summary || scope.row.problem || "-" }}</span>
+                      </div>
+                      <div class="event-tip__row">
+                        <span class="event-tip__key">描述</span>
+                        <span class="event-tip__value">{{ scope.row.description || "-" }}</span>
                       </div>
                     </div>
                   </div>
                 </template>
-                <span>{{ scope.row.alertName || "-" }}</span>
+                <span>{{ scope.row.problem || "-" }}</span>
+              </el-tooltip>
+            </template>
+          </el-table-column>
+          <el-table-column label="时间" header-align="center" align="center" min-width="180">
+            <template #default="scope">
+              <el-tooltip placement="top" effect="light" :show-after="250">
+                <template #content>
+                  <div class="event-tip">
+                    <div class="event-tip__title">时间信息</div>
+                    <div class="event-tip__group">
+                      <div class="event-tip__row">
+                        <span class="event-tip__key">开始时间</span>
+                        <span class="event-tip__value">{{ scope.row.startsAt || "-" }}</span>
+                      </div>
+                      <div class="event-tip__row">
+                        <span class="event-tip__key">持续时间</span>
+                        <span class="event-tip__value">{{ formatDuration(scope.row) }}</span>
+                      </div>
+                      <div class="event-tip__row">
+                        <span class="event-tip__key">恢复时间</span>
+                        <span class="event-tip__value">{{ formatEndTime(scope.row) }}</span>
+                      </div>
+                    </div>
+                  </div>
+                </template>
+                <span>{{ scope.row.startsAt || "-" }}</span>
               </el-tooltip>
             </template>
           </el-table-column>
@@ -389,34 +397,60 @@ const formatSeverity = (value: string) => {
   return value;
 };
 
-const formatStatus = (value: string) => {
-  const s = String(value || "").toLowerCase();
-  if (s === "firing") return "告警";
-  if (s === "resolved") return "恢复";
-  return value;
-};
-
 const severityClass = (row: any) => {
   const status = String(row?.status || "").toLowerCase();
-  if (status === "resolved") return "severity-tag severity-tag--resolved";
+  if (status === "auto" || status === "manual" || status === "resolved") return "severity-tag severity-tag--resolved";
   const severity = String(row?.severity || "").toLowerCase();
   if (severity === "critical") return "severity-tag severity-tag--critical";
   if (severity === "warning") return "severity-tag severity-tag--warning";
   return "severity-tag severity-tag--info";
 };
 
+const formatProblemStatus = (value: string) => {
+  const s = String(value || "").toLowerCase();
+  if (s === "auto" || s === "manual" || s === "resolved") return "已解决";
+  return "问题";
+};
+
 const statusClass = (value: string) => {
   const s = String(value || "").toLowerCase();
-  if (s === "resolved") return "status-tag status-tag--ok";
+  if (s === "auto" || s === "manual" || s === "resolved") return "status-tag status-tag--ok";
   return "status-tag status-tag--bad";
 };
 
 const alertRowClass = ({ row }: { row: any }) => {
-  if (String(row?.status || "").toLowerCase() === "resolved") return "";
+  if (["auto", "manual", "resolved"].includes(String(row?.status || "").toLowerCase())) return "";
   const severity = String(row?.severity || "").toLowerCase();
   if (severity === "critical") return "alert-row--critical";
   if (severity === "warning") return "alert-row--warning";
   return "";
+};
+
+const formatDuration = (row: any) => {
+  const startsAt = row?.startsAt ? new Date(row.startsAt).getTime() : NaN;
+  const endsAt = row?.endsAt ? new Date(row.endsAt).getTime() : Date.now();
+  if (!Number.isFinite(startsAt) || !Number.isFinite(endsAt) || endsAt <= startsAt) {
+    return "-";
+  }
+  const diff = endsAt - startsAt;
+  const totalMinutes = Math.floor(diff / 60000);
+  const days = Math.floor(totalMinutes / (24 * 60));
+  const hours = Math.floor((totalMinutes % (24 * 60)) / 60);
+  const minutes = totalMinutes % 60;
+  if (days > 0) {
+    return `${days}天${hours}小时${minutes}分钟`;
+  }
+  if (hours > 0) {
+    return `${hours}小时${minutes}分钟`;
+  }
+  return `${minutes}分钟`;
+};
+
+const formatEndTime = (row: any) => {
+  if (["auto", "manual", "resolved"].includes(String(row?.status || "").toLowerCase())) {
+    return row?.endsAt || "-";
+  }
+  return "-";
 };
 
 const onlineClass = (v: number) => {
@@ -877,6 +911,29 @@ onBeforeUnmount(() => {
 .dot-tag--warn::before { background: #f59e0b; }
 .dot-tag--unknown { color: #94a3b8; }
 .dot-tag--unknown::before { background: #94a3b8; }
+
+.status-tag {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 56px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.status-tag--ok {
+  color: #047857;
+  background: #ecfdf5;
+}
+
+.status-tag--bad {
+  color: #b91c1c;
+  background: #fef2f2;
+}
 
 /* 事件提示框 */
 .event-tip {
