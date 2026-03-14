@@ -21,15 +21,15 @@
       <div
         v-for="item in list"
         :key="item.id"
-        :class="['rci', item.reportStatus != 1 && 'rci--failed']"
+        :class="['rci', item.reportStatus === 2 && 'rci--failed', item.reportStatus === 0 && 'rci--pending']"
         @click="openDetail(item.id)"
       >
         <div class="rci__head">
           <el-tag :type="item.periodType === 'month' ? '' : 'info'" size="small" effect="light">
             {{ periodLabel(item.periodType) }}
           </el-tag>
-          <el-tag :type="item.reportStatus == 1 ? 'success' : 'danger'" size="small" effect="dark" style="margin-left: 6px">
-            {{ item.reportStatus == 1 ? "成功" : "失败" }}
+          <el-tag :type="statusTagType(item.reportStatus)" size="small" effect="dark" style="margin-left: 6px">
+            {{ statusLabel(item.reportStatus) }}
           </el-tag>
           <span class="rci__time">{{ item.createDate }}</span>
         </div>
@@ -163,20 +163,24 @@
       </div>
 
       <div v-else class="raw-md">
-        <pre>{{ detail.reportMarkdown || "-" }}</pre>
+        <pre>{{ detail?.reportStatus === 0 ? "报告生成中，请稍后刷新查看。" : (detail.reportMarkdown || detail.errorMessage || "-") }}</pre>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, reactive, ref, onMounted } from "vue";
+import { computed, reactive, ref, onBeforeUnmount, onMounted } from "vue";
 import { ElMessage } from "element-plus";
 import baseService from "@/service/baseService";
+
+const REPORT_GENERATE_TIMEOUT = 300000;
+const PENDING_REFRESH_INTERVAL = 10000;
 
 const loading = ref(false);
 const generateLoading = ref(false);
 const list = ref<any[]>([]);
+let pendingRefreshTimer: number | null = null;
 
 const form = reactive({ periodType: "week" });
 
@@ -184,6 +188,8 @@ const detailVisible = ref(false);
 const detail = ref<any>(null);
 
 const periodLabel = (type: string) => (type === "month" ? "月报" : "周报");
+const statusLabel = (status: number) => (status === 1 ? "成功" : status === 2 ? "失败" : "处理中");
+const statusTagType = (status: number) => (status === 1 ? "success" : status === 2 ? "danger" : "warning");
 
 const fmtDate = (d: any) => {
   if (!d) return "-";
@@ -270,29 +276,65 @@ const issueTagType = (issue: string) => {
   return "info";
 };
 
-const fetchList = () => {
-  loading.value = true;
+const stopPendingRefresh = () => {
+  if (pendingRefreshTimer !== null) {
+    window.clearInterval(pendingRefreshTimer);
+    pendingRefreshTimer = null;
+  }
+};
+
+const refreshPendingDetail = () => {
+  if (!detailVisible.value || !detail.value?.id || Number(detail.value?.reportStatus) !== 0) {
+    return;
+  }
+  baseService.get(`/alert/prometheus/report/${detail.value.id}`).then((res) => {
+    detail.value = res.data || detail.value;
+  });
+};
+
+const syncPendingRefresh = () => {
+  const hasPending = list.value.some((item) => Number(item?.reportStatus) === 0);
+  if (!hasPending) {
+    stopPendingRefresh();
+    return;
+  }
+  if (pendingRefreshTimer !== null) {
+    return;
+  }
+  pendingRefreshTimer = window.setInterval(() => {
+    fetchList(true);
+    refreshPendingDetail();
+  }, PENDING_REFRESH_INTERVAL);
+};
+
+const fetchList = (silent = false) => {
+  if (!silent) {
+    loading.value = true;
+  }
   baseService
     .get("/alert/prometheus/report/latest", { reportType: "server", size: 50 })
     .then((res) => {
       list.value = res.data || [];
+      syncPendingRefresh();
     })
     .finally(() => {
-      loading.value = false;
+      if (!silent) {
+        loading.value = false;
+      }
     });
 };
 
 const generateReport = () => {
   generateLoading.value = true;
   baseService
-    .post(`/alert/prometheus/report/generate?reportType=server&periodType=${form.periodType}`)
-    .then((res) => {
-      const data = res.data || {};
-      if (Number(data.reportStatus) === 1) {
-        ElMessage.success("报告生成成功");
-      } else {
-        ElMessage.warning("报告生成失败，请查看详情");
-      }
+    .post(
+      `/alert/prometheus/report/generate?reportType=server&periodType=${form.periodType}`,
+      undefined,
+      undefined,
+      { timeout: REPORT_GENERATE_TIMEOUT }
+    )
+    .then(() => {
+      ElMessage.success("已提交生成任务，请稍后刷新查看");
       fetchList();
     })
     .finally(() => {
@@ -310,6 +352,10 @@ const openDetail = (id: number) => {
 
 onMounted(() => {
   fetchList();
+});
+
+onBeforeUnmount(() => {
+  stopPendingRefresh();
 });
 </script>
 
@@ -344,6 +390,11 @@ onMounted(() => {
     &--failed {
       background: #fff5f5;
       border-color: #fecaca;
+    }
+
+    &--pending {
+      background: #fffbeb;
+      border-color: #fcd34d;
     }
 
     &__head {

@@ -9,7 +9,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ServiceException;
-import net.leoch.framework.config.ops.HttpTimeoutConfig;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
 import net.leoch.modules.alert.entity.PrometheusAlertAiReportEntity;
 import net.leoch.modules.alert.mapper.AlertRecordMapper;
@@ -19,11 +18,6 @@ import net.leoch.modules.sys.service.AiConfigService;
 import net.leoch.modules.sys.vo.rsp.SysAiConfigRsp;
 import org.springframework.stereotype.Service;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
@@ -37,10 +31,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PrometheusAlertReportService {
 
-    private static final double DEFAULT_TEMPERATURE = 0.2D;
     private static final int DEFAULT_MAX_TOKENS = 65535;
-    private static final int AI_CONNECT_TIMEOUT_MS = 60_000;
-    private static final int AI_READ_TIMEOUT_MS = 300_000;
 
     private static final List<String> SERVER_GROUPS = List.of("linux_exporter", "windows_exporter");
     private static final List<String> HTTP_GROUPS   = List.of("blackbox_exporter");
@@ -105,46 +96,81 @@ public class PrometheusAlertReportService {
     private final AlertRecordMapper alertRecordMapper;
     private final PrometheusAlertAiReportMapper reportMapper;
     private final AiConfigService aiConfigService;
-    private final HttpTimeoutConfig httpTimeoutConfig;
 
-    public PrometheusAlertAiReportRsp generate(String reportType, String periodType, Date start, Date end) {
+    public PrometheusAlertAiReportRsp submitGenerate(String reportType, String periodType, Date start, Date end) {
         String resolvedReportType = StrUtil.blankToDefault(reportType, "server");
         String resolvedPeriodType = StrUtil.blankToDefault(periodType, "week");
         Date now = new Date();
         Date periodEnd = end == null ? now : end;
         Date periodStart = start == null ? defaultStart(periodEnd, resolvedPeriodType) : start;
 
-        Map<String, Object> stats = buildStats(resolvedReportType, periodStart, periodEnd);
-        String inputJson = JSONUtil.toJsonStr(stats);
-
         PrometheusAlertAiReportEntity report = new PrometheusAlertAiReportEntity();
         report.setReportType(resolvedReportType);
         report.setPeriodType(resolvedPeriodType);
         report.setPeriodStart(periodStart);
         report.setPeriodEnd(periodEnd);
-        report.setInputJson(inputJson);
         report.setCreateDate(now);
+        report.setReportStatus(0);
+        report.setSummary("报告生成中，请稍后查看");
+
+        try {
+            SysAiConfigRsp ai = aiConfigService.getConfig();
+            if (ai != null) {
+                report.setModelName(ai.getModel());
+            }
+        } catch (Exception e) {
+            log.warn("[PrometheusAIReport] load ai config failed before submit, reportType={}", resolvedReportType, e);
+        }
+
+        reportMapper.insert(report);
+        return BeanUtil.copyProperties(report, PrometheusAlertAiReportRsp.class);
+    }
+
+    public PrometheusAlertAiReportRsp generate(String reportType, String periodType, Date start, Date end) {
+        PrometheusAlertAiReportRsp rsp = submitGenerate(reportType, periodType, start, end);
+        processReport(rsp.getId());
+        return getById(rsp.getId());
+    }
+
+    public void processReport(Long reportId) {
+        if (reportId == null) {
+            return;
+        }
+        PrometheusAlertAiReportEntity report = reportMapper.selectById(reportId);
+        if (report == null) {
+            return;
+        }
 
         try {
             SysAiConfigRsp ai = aiConfigService.getConfig();
             if (ai == null || ai.getStatus() == null || ai.getStatus() != 1) {
                 throw new ServiceException("AI配置未启用");
             }
+
+            String reportType = StrUtil.blankToDefault(report.getReportType(), "server");
+            String periodType = StrUtil.blankToDefault(report.getPeriodType(), "week");
+            Date periodStart = report.getPeriodStart();
+            Date periodEnd = report.getPeriodEnd();
+            Map<String, Object> stats = buildStats(reportType, periodStart, periodEnd);
+            String inputJson = JSONUtil.toJsonStr(stats);
+
             report.setModelName(ai.getModel());
-            JSONObject reportJsonObj = invokeAi(ai, resolvedReportType, inputJson, periodStart, periodEnd, resolvedPeriodType);
+            report.setInputJson(inputJson);
+
+            JSONObject reportJsonObj = invokeAi(ai, reportType, inputJson, periodStart, periodEnd, periodType);
             report.setReportJson(reportJsonObj.toString());
-            report.setReportMarkdown(toMarkdown(reportJsonObj, resolvedReportType, resolvedPeriodType));
-            report.setSummary(buildSummary(stats, resolvedReportType));
+            report.setReportMarkdown(toMarkdown(reportJsonObj, reportType, periodType));
+            report.setSummary(buildSummary(stats, reportType));
             report.setReportStatus(1);
+            report.setErrorMessage(null);
         } catch (Exception e) {
             report.setReportStatus(2);
             report.setErrorMessage(e.getMessage());
             report.setSummary("AI报告生成失败");
-            log.warn("[PrometheusAIReport] generate failed, reportType={}", resolvedReportType, e);
+            log.warn("[PrometheusAIReport] generate failed, reportId={}, reportType={}", reportId, report.getReportType(), e);
         }
 
-        reportMapper.insert(report);
-        return BeanUtil.copyProperties(report, PrometheusAlertAiReportRsp.class);
+        reportMapper.updateById(report);
     }
 
     public List<PrometheusAlertAiReportRsp> latest(String reportType, int size) {
@@ -252,54 +278,13 @@ public class PrometheusAlertReportService {
 
     private JSONObject invokeAi(SysAiConfigRsp ai, String reportType, String inputJson,
                                 Date start, Date end, String periodType) {
-        HttpURLConnection connection = null;
         try {
-            String baseUrl = normalizeBaseUrl(ai.getBaseUrl());
-            URL url = new URL(baseUrl + "/v1/chat/completions");
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-            connection.setDoOutput(true);
-            connection.setConnectTimeout(Math.max(httpTimeoutConfig.getConnectTimeout(), AI_CONNECT_TIMEOUT_MS));
-            connection.setReadTimeout(Math.max(httpTimeoutConfig.getReadTimeout(), AI_READ_TIMEOUT_MS));
-            connection.setRequestProperty("Authorization", ai.getApiKey().trim());
-            connection.setRequestProperty("Content-Type", "application/json");
-
-            JSONObject body = new JSONObject();
-            body.set("model", ai.getModel());
-            body.set("temperature", DEFAULT_TEMPERATURE);
-            body.set("max_tokens", DEFAULT_MAX_TOKENS);
-            body.set("response_format", new JSONObject().set("type", "json_object"));
-            JSONArray messages = new JSONArray();
-            messages.add(new JSONObject().set("role", "system").set("content", SYSTEM_PROMPT));
-            messages.add(new JSONObject().set("role", "user").set("content",
-                    buildPrompt(reportType, inputJson, start, end, periodType)));
-            body.set("messages", messages);
-
-            try (OutputStream os = connection.getOutputStream()) {
-                os.write(body.toString().getBytes(StandardCharsets.UTF_8));
-            }
-
-            int code = connection.getResponseCode();
-            boolean success = code >= 200 && code < 300;
-            InputStream rawIn = success ? connection.getInputStream() : connection.getErrorStream();
-            String response;
-            try (InputStream in = rawIn) {
-                response = in != null ? new String(in.readAllBytes(), StandardCharsets.UTF_8) : "";
-            }
-            if (!success) {
-                throw new ServiceException("AI接口调用失败, code=" + code + ", body=" + response);
-            }
-
-            JSONObject json = JSONUtil.parseObj(response);
-            JSONArray choices = json.getJSONArray("choices");
-            if (choices == null || choices.isEmpty()) {
-                throw new ServiceException("AI返回内容为空");
-            }
-            JSONObject message = choices.getJSONObject(0).getJSONObject("message");
-            String content = message == null ? null : message.getStr("content");
-            if (StrUtil.isBlank(content)) {
-                throw new ServiceException("AI返回文本为空");
-            }
+            String content = aiConfigService.invokeText(
+                    ai,
+                    SYSTEM_PROMPT,
+                    buildPrompt(reportType, inputJson, start, end, periodType),
+                    DEFAULT_MAX_TOKENS
+            );
             JSONObject parsed = parseJsonContent(content);
             if (parsed == null) {
                 throw new ServiceException("AI返回非JSON内容，已拒绝入库");
@@ -309,10 +294,6 @@ public class PrometheusAlertReportService {
             throw e;
         } catch (Exception e) {
             throw new ServiceException("AI接口调用异常: " + e.getMessage());
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
         }
     }
 
@@ -422,11 +403,4 @@ public class PrometheusAlertReportService {
         sb.append("\n");
     }
 
-    private String normalizeBaseUrl(String baseUrl) {
-        String value = StrUtil.nullToEmpty(baseUrl).trim();
-        while (value.endsWith("/")) {
-            value = value.substring(0, value.length() - 1);
-        }
-        return value;
-    }
 }

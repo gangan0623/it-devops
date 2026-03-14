@@ -18,12 +18,13 @@ export default {
       method: "DELETE"
     });
   },
-  get(path: string, params?: IObject, headers?: IObject): Promise<IHttpResponse> {
+  get(path: string, params?: IObject, headers?: IObject, config?: IObject): Promise<IHttpResponse> {
     return new Promise((resolve, reject) => {
       http({
         url: path,
         params,
         headers,
+        ...config,
         method: "GET"
       })
         .then(resolve)
@@ -34,7 +35,7 @@ export default {
         });
     });
   },
-  put(path: string, params?: IObject, headers?: IObject): Promise<IHttpResponse> {
+  put(path: string, params?: IObject, headers?: IObject, config?: IObject): Promise<IHttpResponse> {
     return http({
       url: path,
       data: params,
@@ -42,6 +43,7 @@ export default {
         "Content-Type": "application/json;charset=UTF-8",
         ...headers
       },
+      ...config,
       method: "PUT"
     });
   },
@@ -51,7 +53,7 @@ export default {
    * @param body
    * @returns
    */
-  post(path: string, body?: IObject, headers?: IObject): Promise<IHttpResponse> {
+  post(path: string, body?: IObject, headers?: IObject, config?: IObject): Promise<IHttpResponse> {
     return http({
       url: path,
       method: "post",
@@ -59,7 +61,8 @@ export default {
         "Content-Type": "application/json;charset=UTF-8",
         ...headers
       },
-      data: body
+      data: body,
+      ...config
     });
   }
 };

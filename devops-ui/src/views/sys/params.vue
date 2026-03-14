@@ -311,13 +311,13 @@
             </template>
             <el-form ref="aiFormRef" :model="aiForm" :rules="aiRules" label-width="100px" class="config-form">
               <el-form-item label="Base URL" prop="baseUrl">
-                <el-input v-model="aiForm.baseUrl" placeholder="例如 https://api.openai.com/v1"></el-input>
+                <el-input v-model="aiForm.baseUrl" placeholder="例如 https://api.nightyu.com 或 https://api.nightyu.com/v1"></el-input>
               </el-form-item>
               <el-form-item label="API Key" prop="apiKey">
-                <el-input v-model="aiForm.apiKey" type="password" show-password placeholder="API Key"></el-input>
+                <el-input v-model="aiForm.apiKey" type="password" show-password placeholder="sk-xxx 或 Bearer sk-xxx"></el-input>
               </el-form-item>
               <el-form-item label="Model" prop="model">
-                <el-input v-model="aiForm.model" placeholder="例如 gpt-4o-mini"></el-input>
+                <el-input v-model="aiForm.model" placeholder="例如 gpt-5.4"></el-input>
               </el-form-item>
               <el-form-item label="状态" prop="status">
                 <el-radio-group v-model="aiForm.status">
@@ -365,7 +365,8 @@
               <div class="info-list">
                 <div class="info-list__title">提示</div>
                 <div class="info-list__item">修改任意字段后会重置“已测试”状态。</div>
-                <div class="info-list__item">测试接口会校验模型是否存在且当前 Key 有权限访问。</div>
+                <div class="info-list__item">测试接口会调用 <code>/v1/responses</code> 并校验是否能正常返回文本。</div>
+                <div class="info-list__item">API Key 支持直接填 <code>sk-xxx</code>，服务端会自动补齐 <code>Bearer</code> 前缀。</div>
               </div>
             </el-card>
           </div>

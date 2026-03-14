@@ -9,7 +9,6 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ServiceException;
-import net.leoch.framework.config.ops.HttpTimeoutConfig;
 import net.leoch.modules.alert.entity.ZabbixAlertAiReportEntity;
 import net.leoch.modules.alert.entity.ZabbixAlertEventHistoryEntity;
 import net.leoch.modules.alert.mapper.ZabbixAlertAiReportMapper;
@@ -19,11 +18,6 @@ import net.leoch.modules.sys.service.AiConfigService;
 import net.leoch.modules.sys.vo.rsp.SysAiConfigRsp;
 import org.springframework.stereotype.Service;
 
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Comparator;
@@ -41,10 +35,7 @@ import java.util.regex.Pattern;
 @Service
 @RequiredArgsConstructor
 public class ZabbixAlertReportService {
-    private static final double DEFAULT_TEMPERATURE = 0.2D;
     private static final int DEFAULT_MAX_TOKENS = 65535;
-    private static final int AI_CONNECT_TIMEOUT_MS = 60_000;
-    private static final int AI_READ_TIMEOUT_MS = 300_000;
     private static final BiFunction<Object, Object, Object> LONG_ADD = (a, b) -> (Long) a + (Long) b;
     private static final Pattern INTERFACE_PATTERN = Pattern.compile("接口\\s*([^：:]+?)\\s*[：:]");
     private static final Pattern SDWAN_INTERFACE_PATTERN = Pattern.compile("SD-WAN\\s*\\[([^]]+)]\\s*[：:]\\s*\\[([^]]+)]");
@@ -95,44 +86,77 @@ public class ZabbixAlertReportService {
     private final ZabbixAlertEventHistoryMapper historyMapper;
     private final ZabbixAlertAiReportMapper reportMapper;
     private final AiConfigService aiConfigService;
-    private final HttpTimeoutConfig httpTimeoutConfig;
 
-    public ZabbixAlertAiReportRsp generate(String periodType, Date start, Date end) {
+    public ZabbixAlertAiReportRsp submitGenerate(String periodType, Date start, Date end) {
         Date periodEnd = end == null ? new Date() : end;
         Date periodStart = start == null ? defaultStart(periodEnd, periodType) : start;
         String resolvedPeriodType = StrUtil.blankToDefault(periodType, "week");
-
-        Map<String, Object> stats = buildStats(periodStart, periodEnd);
-        String inputJson = JSONUtil.toJsonStr(stats);
 
         ZabbixAlertAiReportEntity report = new ZabbixAlertAiReportEntity();
         report.setPeriodType(resolvedPeriodType);
         report.setPeriodStart(periodStart);
         report.setPeriodEnd(periodEnd);
-        report.setInputJson(inputJson);
         report.setCreateDate(new Date());
+        report.setReportStatus(0);
+        report.setSummary("报告生成中，请稍后查看");
+
+        try {
+            SysAiConfigRsp ai = aiConfigService.getConfig();
+            if (ai != null) {
+                report.setModelName(ai.getModel());
+            }
+        } catch (Exception e) {
+            log.warn("[ZabbixAIReport] load ai config failed before submit", e);
+        }
+        reportMapper.insert(report);
+        return BeanUtil.copyProperties(report, ZabbixAlertAiReportRsp.class);
+    }
+
+    public ZabbixAlertAiReportRsp generate(String periodType, Date start, Date end) {
+        ZabbixAlertAiReportRsp rsp = submitGenerate(periodType, start, end);
+        processReport(rsp.getId());
+        return getById(rsp.getId());
+    }
+
+    public void processReport(Long reportId) {
+        if (reportId == null) {
+            return;
+        }
+        ZabbixAlertAiReportEntity report = reportMapper.selectById(reportId);
+        if (report == null) {
+            return;
+        }
 
         try {
             SysAiConfigRsp ai = aiConfigService.getConfig();
             if (ai == null || ai.getStatus() == null || ai.getStatus() != 1) {
                 throw new ServiceException("AI配置未启用");
             }
+
+            Date periodStart = report.getPeriodStart();
+            Date periodEnd = report.getPeriodEnd();
+            String periodType = StrUtil.blankToDefault(report.getPeriodType(), "week");
+            Map<String, Object> stats = buildStats(periodStart, periodEnd);
+            String inputJson = JSONUtil.toJsonStr(stats);
+
             report.setModelName(ai.getModel());
-            JSONObject reportJsonObj = invokeAi(ai, stats, periodStart, periodEnd, resolvedPeriodType);
+            report.setInputJson(inputJson);
+
+            JSONObject reportJsonObj = invokeAi(ai, stats, periodStart, periodEnd, periodType);
             String reportJson = reportJsonObj.toString();
             report.setReportJson(reportJson);
-            report.setReportMarkdown(toMarkdown(reportJsonObj, resolvedPeriodType));
+            report.setReportMarkdown(toMarkdown(reportJsonObj, periodType));
             report.setSummary(buildSummary(stats));
             report.setReportStatus(1);
+            report.setErrorMessage(null);
         } catch (Exception e) {
             report.setReportStatus(2);
             report.setErrorMessage(e.getMessage());
             report.setSummary("AI报告生成失败");
-            log.warn("[ZabbixAIReport] generate failed", e);
+            log.warn("[ZabbixAIReport] generate failed, reportId={}", reportId, e);
         }
 
-        reportMapper.insert(report);
-        return BeanUtil.copyProperties(report, ZabbixAlertAiReportRsp.class);
+        reportMapper.updateById(report);
     }
 
     public List<ZabbixAlertAiReportRsp> latest(int size) {
@@ -419,49 +443,13 @@ public class ZabbixAlertReportService {
     }
 
     private JSONObject invokeAi(SysAiConfigRsp ai, Map<String, Object> stats, Date start, Date end, String periodType) {
-        HttpURLConnection connection = null;
         try {
-            String baseUrl = normalizeBaseUrl(ai.getBaseUrl());
-            URL url = new URL(baseUrl + "/v1/chat/completions");
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("POST");
-            connection.setDoOutput(true);
-            connection.setConnectTimeout(Math.max(httpTimeoutConfig.getConnectTimeout(), AI_CONNECT_TIMEOUT_MS));
-            connection.setReadTimeout(Math.max(httpTimeoutConfig.getReadTimeout(), AI_READ_TIMEOUT_MS));
-            connection.setRequestProperty("Authorization", ai.getApiKey().trim());
-            connection.setRequestProperty("Content-Type", "application/json");
-
-            JSONObject body = new JSONObject();
-            body.set("model", ai.getModel());
-            body.set("temperature", DEFAULT_TEMPERATURE);
-            body.set("max_tokens", DEFAULT_MAX_TOKENS);
-            body.set("response_format", new JSONObject().set("type", "json_object"));
-            JSONArray messages = new JSONArray();
-            messages.add(new JSONObject().set("role", "system").set("content", SYSTEM_PROMPT));
-            messages.add(new JSONObject().set("role", "user").set("content", buildPrompt(stats, start, end, periodType)));
-            body.set("messages", messages);
-
-            try (OutputStream os = connection.getOutputStream()) {
-                os.write(body.toString().getBytes(StandardCharsets.UTF_8));
-            }
-
-            int code = connection.getResponseCode();
-            InputStream in = code >= 200 && code < 300 ? connection.getInputStream() : connection.getErrorStream();
-            String response = in != null ? new String(in.readAllBytes(), StandardCharsets.UTF_8) : "";
-            if (code < 200 || code >= 300) {
-                throw new ServiceException("AI接口调用失败, code=" + code + ", body=" + response);
-            }
-
-            JSONObject json = JSONUtil.parseObj(response);
-            JSONArray choices = json.getJSONArray("choices");
-            if (choices == null || choices.isEmpty()) {
-                throw new ServiceException("AI返回内容为空");
-            }
-            JSONObject message = choices.getJSONObject(0).getJSONObject("message");
-            String content = message == null ? null : message.getStr("content");
-            if (StrUtil.isBlank(content)) {
-                throw new ServiceException("AI返回文本为空");
-            }
+            String content = aiConfigService.invokeText(
+                    ai,
+                    SYSTEM_PROMPT,
+                    buildPrompt(stats, start, end, periodType),
+                    DEFAULT_MAX_TOKENS
+            );
             JSONObject parsed = parseJsonContent(content);
             if (parsed == null) {
                 throw new ServiceException("AI返回非JSON内容，已拒绝入库");
@@ -471,19 +459,7 @@ public class ZabbixAlertReportService {
             throw e;
         } catch (Exception e) {
             throw new ServiceException("AI接口调用异常: " + e.getMessage());
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
         }
-    }
-
-    private String normalizeBaseUrl(String baseUrl) {
-        String value = StrUtil.nullToEmpty(baseUrl).trim();
-        while (value.endsWith("/")) {
-            value = value.substring(0, value.length() - 1);
-        }
-        return value;
     }
 
     private String buildPrompt(Map<String, Object> stats, Date start, Date end, String periodType) {

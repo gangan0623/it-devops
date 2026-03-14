@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.data.result.Result;
+import net.leoch.modules.alert.service.AlertReportAsyncService;
 import net.leoch.modules.alert.service.ZabbixAlertReportService;
 import net.leoch.modules.alert.vo.req.ZabbixAlertReportGenerateReq;
 import net.leoch.modules.alert.vo.rsp.ZabbixAlertAiReportRsp;
@@ -25,6 +26,7 @@ import java.util.List;
 public class ZabbixAlertReportController {
 
     private final ZabbixAlertReportService zabbixAlertReportService;
+    private final AlertReportAsyncService alertReportAsyncService;
 
     @GetMapping("latest")
     @Operation(summary = "最新报告列表")
@@ -45,8 +47,10 @@ public class ZabbixAlertReportController {
     @SaCheckPermission("alert:record:page")
     public Result<ZabbixAlertAiReportRsp> generate(@RequestBody(required = false) ZabbixAlertReportGenerateReq req) {
         ZabbixAlertReportGenerateReq request = req == null ? new ZabbixAlertReportGenerateReq() : req;
-        return new Result<ZabbixAlertAiReportRsp>().ok(
-                zabbixAlertReportService.generate(request.getPeriodType(), request.getPeriodStart(), request.getPeriodEnd())
+        ZabbixAlertAiReportRsp rsp = zabbixAlertReportService.submitGenerate(
+                request.getPeriodType(), request.getPeriodStart(), request.getPeriodEnd()
         );
+        alertReportAsyncService.generateZabbixReport(rsp.getId());
+        return new Result<ZabbixAlertAiReportRsp>().ok(rsp);
     }
 }

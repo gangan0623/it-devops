@@ -31,7 +31,7 @@ public class PrometheusAlertAiReportRsp implements Serializable {
     @Schema(description = "模型")
     private String modelName;
 
-    @Schema(description = "状态 1成功 2失败")
+    @Schema(description = "状态 0处理中 1成功 2失败")
     private Integer reportStatus;
 
     @Schema(description = "摘要")

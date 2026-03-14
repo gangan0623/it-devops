@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.data.result.Result;
+import net.leoch.modules.alert.service.AlertReportAsyncService;
 import net.leoch.modules.alert.service.PrometheusAlertReportService;
 import net.leoch.modules.alert.vo.rsp.PrometheusAlertAiReportRsp;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,7 @@ import java.util.List;
 public class PrometheusAlertReportController {
 
     private final PrometheusAlertReportService prometheusAlertReportService;
+    private final AlertReportAsyncService alertReportAsyncService;
 
     @GetMapping("latest")
     @Operation(summary = "最新报告列表")
@@ -47,7 +49,8 @@ public class PrometheusAlertReportController {
     public Result<PrometheusAlertAiReportRsp> generate(
             @RequestParam(value = "reportType", required = false, defaultValue = "server") String reportType,
             @RequestParam(value = "periodType", required = false, defaultValue = "week") String periodType) {
-        return new Result<PrometheusAlertAiReportRsp>().ok(
-                prometheusAlertReportService.generate(reportType, periodType, null, null));
+        PrometheusAlertAiReportRsp rsp = prometheusAlertReportService.submitGenerate(reportType, periodType, null, null);
+        alertReportAsyncService.generatePrometheusReport(rsp.getId());
+        return new Result<PrometheusAlertAiReportRsp>().ok(rsp);
     }
 }

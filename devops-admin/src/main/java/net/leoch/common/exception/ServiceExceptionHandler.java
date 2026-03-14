@@ -66,6 +66,11 @@ public class ServiceExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public Object handleException(Exception ex) {
+        if (isClientAbortException(ex)) {
+            log.warn("[异常处理] 客户端连接已断开: {}", ex.getMessage());
+            return null;
+        }
+
         log.error(ex.getMessage(), ex);
 
         saveLog(ex);
@@ -84,6 +89,26 @@ public class ServiceExceptionHandler {
         }
         String accept = request.getHeader(HttpHeaders.ACCEPT);
         return accept != null && accept.contains("text/event-stream");
+    }
+
+    private boolean isClientAbortException(Throwable ex) {
+        Throwable current = ex;
+        while (current != null) {
+            String className = current.getClass().getName();
+            if ("org.apache.catalina.connector.ClientAbortException".equals(className)
+                    || "org.springframework.web.context.request.async.AsyncRequestNotUsableException".equals(className)) {
+                return true;
+            }
+            String message = current.getMessage();
+            if (message != null && (message.contains("Broken pipe")
+                    || message.contains("Connection reset by peer")
+                    || message.contains("ServletOutputStream failed to write")
+                    || message.contains("软件中止了一个已建立的连接"))) {
+                return true;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     /**

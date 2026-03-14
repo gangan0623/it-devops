@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -27,6 +28,9 @@ import java.nio.charset.StandardCharsets;
 @Service
 @RequiredArgsConstructor
 public class AiConfigService {
+    private static final int AI_CONNECT_TIMEOUT_MS = 60_000;
+    private static final int AI_READ_TIMEOUT_MS = 300_000;
+
     private final ISysParamsService sysParamsService;
     private final HttpTimeoutConfig httpTimeoutConfig;
 
@@ -59,35 +63,25 @@ public class AiConfigService {
 
     public void testConnection(SysAiConfigReq req) {
         validateReq(req);
-
-        HttpURLConnection connection = null;
         try {
-            String baseUrl = normalizeBaseUrl(req.getBaseUrl());
-            URL url = new URL(baseUrl + "/v1/models");
-            connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setConnectTimeout(httpTimeoutConfig.getConnectTimeout());
-            connection.setReadTimeout(httpTimeoutConfig.getReadTimeout());
-            connection.setRequestProperty("Authorization", req.getApiKey().trim());
-            connection.setRequestProperty("Content-Type", "application/json");
-            int code = connection.getResponseCode();
-            InputStream in = code >= 200 && code < 300 ? connection.getInputStream() : connection.getErrorStream();
-            String body = in != null ? new String(in.readAllBytes(), StandardCharsets.UTF_8) : "";
-            if (code < 200 || code >= 300) {
-                log.warn("[AI配置] 测试连接失败, code={}, body={}", code, body);
-                throw new ServiceException("AI连接测试失败，HTTP状态码: " + code);
+            String responseText = invokeText(req.getBaseUrl(), req.getApiKey(), req.getModel(),
+                    "You are a helpful assistant.", "请只回复：ok", 32);
+            if (StrUtil.isBlank(responseText)) {
+                throw new ServiceException("AI连接测试失败，未返回文本内容");
             }
-            ensureModelExists(req.getModel(), body);
         } catch (ServiceException e) {
             throw e;
         } catch (Exception e) {
             log.warn("[AI配置] 测试连接异常, baseUrl={}", req.getBaseUrl(), e);
             throw new ServiceException("AI连接测试失败");
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
         }
+    }
+
+    public String invokeText(SysAiConfigRsp config, String instructions, String input, Integer maxOutputTokens) {
+        if (config == null) {
+            throw new ServiceException("AI配置不能为空");
+        }
+        return invokeText(config.getBaseUrl(), config.getApiKey(), config.getModel(), instructions, input, maxOutputTokens);
     }
 
     private void validateReq(SysAiConfigReq req) {
@@ -110,27 +104,108 @@ public class AiConfigService {
         return value;
     }
 
-    private void ensureModelExists(String model, String body) {
-        if (StrUtil.isBlank(model)) {
-            throw new ServiceException("Model不能为空");
+    private String buildApiUrl(String baseUrl, String path) {
+        String value = normalizeBaseUrl(baseUrl);
+        if (value.endsWith("/v1") && path.startsWith("/v1/")) {
+            return value + path.substring(3);
         }
+        return value + path;
+    }
+
+    private String resolveAuthorizationHeader(String apiKey) {
+        String value = StrUtil.trim(apiKey);
+        if (StrUtil.startWithIgnoreCase(value, "Bearer ")) {
+            return value;
+        }
+        return "Bearer " + value;
+    }
+
+    private String invokeText(String baseUrl, String apiKey, String model,
+                              String instructions, String input, Integer maxOutputTokens) {
+        HttpURLConnection connection = null;
+        try {
+            URL url = new URL(buildApiUrl(baseUrl, "/v1/responses"));
+            connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("POST");
+            connection.setDoOutput(true);
+            connection.setConnectTimeout(Math.max(httpTimeoutConfig.getConnectTimeout(), AI_CONNECT_TIMEOUT_MS));
+            connection.setReadTimeout(Math.max(httpTimeoutConfig.getReadTimeout(), AI_READ_TIMEOUT_MS));
+            connection.setRequestProperty("Authorization", resolveAuthorizationHeader(apiKey));
+            connection.setRequestProperty("Content-Type", "application/json");
+
+            JSONObject body = new JSONObject();
+            body.set("model", StrUtil.trim(model));
+            body.set("input", StrUtil.blankToDefault(input, ""));
+            if (StrUtil.isNotBlank(instructions)) {
+                body.set("instructions", instructions);
+            }
+            if (maxOutputTokens != null && maxOutputTokens > 0) {
+                body.set("max_output_tokens", maxOutputTokens);
+            }
+
+            try (OutputStream os = connection.getOutputStream()) {
+                os.write(body.toString().getBytes(StandardCharsets.UTF_8));
+            }
+
+            int code = connection.getResponseCode();
+            InputStream rawIn = code >= 200 && code < 300 ? connection.getInputStream() : connection.getErrorStream();
+            String response;
+            try (InputStream in = rawIn) {
+                response = in != null ? new String(in.readAllBytes(), StandardCharsets.UTF_8) : "";
+            }
+            if (code < 200 || code >= 300) {
+                log.warn("[AI配置] AI调用失败, code={}, body={}", code, response);
+                throw new ServiceException("AI接口调用失败，HTTP状态码: " + code);
+            }
+            return extractOutputText(response);
+        } catch (ServiceException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new ServiceException("AI接口调用异常: " + e.getMessage());
+        } finally {
+            if (connection != null) {
+                connection.disconnect();
+            }
+        }
+    }
+
+    private String extractOutputText(String body) {
         if (StrUtil.isBlank(body) || !JSONUtil.isTypeJSON(body)) {
-            throw new ServiceException("AI连接测试失败，模型列表返回格式异常");
+            throw new ServiceException("AI返回格式异常");
         }
         JSONObject json = JSONUtil.parseObj(body);
-        Object dataObj = json.get("data");
-        if (!(dataObj instanceof JSONArray data)) {
-            throw new ServiceException("AI连接测试失败，未返回模型列表");
+        JSONArray output = json.getJSONArray("output");
+        if (output == null || output.isEmpty()) {
+            throw new ServiceException("AI返回内容为空");
         }
-        String target = model.trim();
-        boolean exists = data.stream().anyMatch(item -> {
-            if (!(item instanceof JSONObject obj)) {
-                return false;
+        StringBuilder text = new StringBuilder();
+        for (Object item : output) {
+            if (!(item instanceof JSONObject message)) {
+                continue;
             }
-            return target.equals(String.valueOf(obj.get("id")));
-        });
-        if (!exists) {
-            throw new ServiceException("模型不存在或当前API Key无权限访问该模型: " + target);
+            JSONArray content = message.getJSONArray("content");
+            if (content == null || content.isEmpty()) {
+                continue;
+            }
+            for (Object contentItem : content) {
+                if (!(contentItem instanceof JSONObject part)) {
+                    continue;
+                }
+                if (!"output_text".equals(part.getStr("type"))) {
+                    continue;
+                }
+                String value = part.getStr("text");
+                if (StrUtil.isNotBlank(value)) {
+                    if (!text.isEmpty()) {
+                        text.append('\n');
+                    }
+                    text.append(value.trim());
+                }
+            }
         }
+        if (text.isEmpty()) {
+            throw new ServiceException("AI返回文本为空");
+        }
+        return text.toString();
     }
 }
