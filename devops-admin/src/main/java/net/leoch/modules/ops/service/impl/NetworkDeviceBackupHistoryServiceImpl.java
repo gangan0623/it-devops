@@ -194,6 +194,7 @@ public class NetworkDeviceBackupHistoryServiceImpl extends ServiceImpl<NetworkDe
         if (max == 0) {
             return new ArrayList<>();
         }
+        final int MAX_DIFF_STEPS = Math.min(max, 2000);
         // v[k] = 在对角线 k 上能到达的最远 x 坐标
         int[] v = new int[2 * max + 2];
         // trace 记录每步的 v 快照，用于回溯
@@ -201,6 +202,27 @@ public class NetworkDeviceBackupHistoryServiceImpl extends ServiceImpl<NetworkDe
 
         outer:
         for (int d = 0; d <= max; d++) {
+            if (d > MAX_DIFF_STEPS) {
+                // 差异过大，降级为全量替换
+                List<Map<String, Object>> fallback = new ArrayList<>(m + n);
+                for (int fi = 0; fi < m; fi++) {
+                    Map<String, Object> line = new HashMap<>();
+                    line.put("type", "del");
+                    line.put("leftLineNo", fi + 1);
+                    line.put("rightLineNo", 0);
+                    line.put("content", leftRaw.get(fi));
+                    fallback.add(line);
+                }
+                for (int fi = 0; fi < n; fi++) {
+                    Map<String, Object> line = new HashMap<>();
+                    line.put("type", "add");
+                    line.put("leftLineNo", 0);
+                    line.put("rightLineNo", fi + 1);
+                    line.put("content", rightRaw.get(fi));
+                    fallback.add(line);
+                }
+                return fallback;
+            }
             trace.add(v.clone());
             for (int k = -d; k <= d; k += 2) {
                 int x;
