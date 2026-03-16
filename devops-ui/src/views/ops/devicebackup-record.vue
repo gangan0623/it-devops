@@ -202,7 +202,7 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {computed, nextTick, reactive, ref, toRefs} from "vue";
+import {computed, nextTick, reactive, ref, toRefs, watch} from "vue";
 import baseService from "@/service/baseService";
 import app from "@/constants/app";
 import {getToken} from "@/utils/cache";
@@ -534,13 +534,25 @@ const jumpDiff = (step: number) => {
 };
 
 const scrollToDiff = (anchor: number) => {
-  const left = document.querySelector(`.diff-side--left [data-diff-anchor="${anchor}"]`) as HTMLElement | null;
-  const right = document.querySelector(`.diff-side--right [data-diff-anchor="${anchor}"]`) as HTMLElement | null;
+  const list = displayDiffLines.value;
+  let rowIndex = -1;
+  for (let i = 0; i < list.length; i++) {
+    if (list[i].diffAnchor === anchor) {
+      rowIndex = i;
+      break;
+    }
+  }
+  if (rowIndex < 0) return;
+  const top = rowTops.value[rowIndex] ?? 0;
+  const left = leftPanelRef.value;
+  const right = rightPanelRef.value;
   if (left) {
-    left.scrollIntoView({ block: "center", behavior: "smooth" });
+    left.scrollTop = Math.max(0, top - 120);
+    leftScrollTop.value = Math.max(0, top - 120);
   }
   if (right) {
-    right.scrollIntoView({ block: "center", behavior: "smooth" });
+    right.scrollTop = Math.max(0, top - 120);
+    rightScrollTop.value = Math.max(0, top - 120);
   }
 };
 
@@ -587,7 +599,13 @@ const onRightScroll = (e: Event) => {
   rightScrollTop.value = (e.target as HTMLElement).scrollTop;
 };
 
+let diffScrollCleanup: (() => void) | null = null;
+
 const setupDiffSync = () => {
+  if (diffScrollCleanup) {
+    diffScrollCleanup();
+    diffScrollCleanup = null;
+  }
   const left = leftPanelRef.value;
   const right = rightPanelRef.value;
   const bar = document.querySelector(".diff-scrollbar") as HTMLElement | null;
@@ -623,9 +641,15 @@ const setupDiffSync = () => {
     syncing = false;
   };
 
-  bar.onscroll = syncFromBar;
-  left.onscroll = syncLeftRight;
-  right.onscroll = syncRightLeft;
+  bar.addEventListener("scroll", syncFromBar);
+  left.addEventListener("scroll", syncLeftRight);
+  right.addEventListener("scroll", syncRightLeft);
+
+  diffScrollCleanup = () => {
+    bar.removeEventListener("scroll", syncFromBar);
+    left.removeEventListener("scroll", syncLeftRight);
+    right.removeEventListener("scroll", syncRightLeft);
+  };
 };
 
 const setupPreviewSync = () => {
@@ -652,6 +676,13 @@ const setupPreviewSync = () => {
   bar.onscroll = syncFromBar;
   view.onscroll = syncFromView;
 };
+
+watch(diffVisible, (val) => {
+  if (!val && diffScrollCleanup) {
+    diffScrollCleanup();
+    diffScrollCleanup = null;
+  }
+});
 </script>
 
 <style lang="less" scoped>
