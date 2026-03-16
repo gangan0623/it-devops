@@ -203,6 +203,7 @@
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
 import {computed, nextTick, reactive, ref, toRefs, watch} from "vue";
+import { diffLines as jsDiffLines, diffChars } from "diff";
 import baseService from "@/service/baseService";
 import app from "@/constants/app";
 import {getToken} from "@/utils/cache";
@@ -413,6 +414,59 @@ const handleHistorySelectionChange = (rows: any[]) => {
   historySelections.value = rows || [];
 };
 
+const computeDiff = (leftText: string, rightText: string): any[] => {
+  const changes = jsDiffLines(leftText, rightText);
+  const result: any[] = [];
+  let leftNo = 1;
+  let rightNo = 1;
+
+  for (let i = 0; i < changes.length; i++) {
+    const change = changes[i];
+    const raw = change.value;
+    const lines = raw.endsWith("\n") ? raw.slice(0, -1).split("\n") : raw.split("\n");
+
+    if (!change.added && !change.removed) {
+      for (const line of lines) {
+        result.push({ type: "same", leftLineNo: leftNo++, rightLineNo: rightNo++, leftContent: line, rightContent: line });
+      }
+      continue;
+    }
+
+    if (change.removed) {
+      const removedLines = lines;
+      const next = changes[i + 1];
+      if (next && next.added) {
+        const addedRaw = next.value;
+        const addedLines = addedRaw.endsWith("\n") ? addedRaw.slice(0, -1).split("\n") : addedRaw.split("\n");
+        const size = Math.max(removedLines.length, addedLines.length);
+        for (let j = 0; j < size; j++) {
+          const left = j < removedLines.length ? removedLines[j] : null;
+          const right = j < addedLines.length ? addedLines[j] : null;
+          if (left !== null && right !== null) {
+            result.push({ type: "change", leftLineNo: leftNo++, rightLineNo: rightNo++, leftContent: left, rightContent: right });
+          } else if (left !== null) {
+            result.push({ type: "del", leftLineNo: leftNo++, rightLineNo: null, leftContent: left, rightContent: "" });
+          } else {
+            result.push({ type: "add", leftLineNo: null, rightLineNo: rightNo++, leftContent: "", rightContent: right as string });
+          }
+        }
+        i++;
+      } else {
+        for (const line of removedLines) {
+          result.push({ type: "del", leftLineNo: leftNo++, rightLineNo: null, leftContent: line, rightContent: "" });
+        }
+      }
+      continue;
+    }
+
+    for (const line of lines) {
+      result.push({ type: "add", leftLineNo: null, rightLineNo: rightNo++, leftContent: "", rightContent: line });
+    }
+  }
+
+  return result;
+};
+
 const handleDiff = () => {
   if (historySelections.value.length < 1 || historySelections.value.length > 2) {
     return ElMessage.warning("请选择一条或两条历史记录进行对比");
@@ -430,7 +484,8 @@ const handleDiff = () => {
     baseService
       .get("/ops/network-device-backup-record/diff-current", { ip: currentIp.value, historyId: history.id })
       .then((res) => {
-        diffLines.value = res.data || [];
+        const { leftContent, rightContent } = res.data || {};
+        diffLines.value = computeDiff(leftContent || "", rightContent || "");
         nextTick(() => { setupDiffSync(); scrollToFirstDiff(); });
       })
       .catch(() => ElMessage.error("加载对比数据失败"))
@@ -445,8 +500,9 @@ const handleDiff = () => {
   baseService
     .get("/ops/network-device-backup-record/diff", { leftId: left.id, rightId: right.id })
     .then((res) => {
-      diffLines.value = res.data || [];
-      nextTick(() => { setupDiffSync(); scrollToFirstDiff(); });
+        const { leftContent, rightContent } = res.data || {};
+        diffLines.value = computeDiff(leftContent || "", rightContent || "");
+        nextTick(() => { setupDiffSync(); scrollToFirstDiff(); });
     })
     .catch(() => ElMessage.error("加载对比数据失败"))
     .finally(() => { diffLoading.value = false; });
@@ -468,41 +524,24 @@ const rightPrefix = (line: any) => {
 };
 
 const renderDiffHtml = (line: any, side: "left" | "right") => {
-  const content = String(side === "left" ? line?.leftContent || "" : line?.rightContent || "");
+  const content = String(side === "left" ? line?.leftContent ?? "" : line?.rightContent ?? "");
   if (line?.type !== "change") {
     return escapeHtml(content);
   }
-  const left = String(line?.leftContent || "");
-  const right = String(line?.rightContent || "");
-  const [prefixLen, suffixLen] = diffBounds(left, right);
-  const target = side === "left" ? left : right;
-  const changedEnd = Math.max(prefixLen, target.length - suffixLen);
-  const before = target.slice(0, prefixLen);
-  const changed = target.slice(prefixLen, changedEnd);
-  const after = target.slice(changedEnd);
-  if (!changed) {
-    return escapeHtml(target);
+  const left = String(line?.leftContent ?? "");
+  const right = String(line?.rightContent ?? "");
+  const chars = diffChars(left, right);
+  let html = "";
+  for (const part of chars) {
+    if (side === "left" && part.removed) {
+      html += `<span class="diff-line__inline-change">${escapeHtml(part.value)}</span>`;
+    } else if (side === "right" && part.added) {
+      html += `<span class="diff-line__inline-change">${escapeHtml(part.value)}</span>`;
+    } else if (!part.added && !part.removed) {
+      html += escapeHtml(part.value);
+    }
   }
-  return `${escapeHtml(before)}<span class="diff-line__inline-change">${escapeHtml(changed)}</span>${escapeHtml(after)}`;
-};
-
-const diffBounds = (left: string, right: string) => {
-  let prefixLen = 0;
-  const minLen = Math.min(left.length, right.length);
-  while (prefixLen < minLen && left[prefixLen] === right[prefixLen]) {
-    prefixLen++;
-  }
-  let suffixLen = 0;
-  const leftRemain = left.length - prefixLen;
-  const rightRemain = right.length - prefixLen;
-  const suffixMax = Math.min(leftRemain, rightRemain);
-  while (
-    suffixLen < suffixMax &&
-    left[left.length - 1 - suffixLen] === right[right.length - 1 - suffixLen]
-  ) {
-    suffixLen++;
-  }
-  return [prefixLen, suffixLen];
+  return html;
 };
 
 const escapeHtml = (value: string) =>
