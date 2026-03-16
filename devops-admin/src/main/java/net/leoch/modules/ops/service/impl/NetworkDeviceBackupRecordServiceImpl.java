@@ -244,22 +244,4 @@ public class NetworkDeviceBackupRecordServiceImpl extends ServiceImpl<NetworkDev
         return BeanUtil.copyProperties(existing, NetworkDeviceBackupRecordRsp.class);
     }
 
-    private Integer toInt(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof Number) {
-            return ((Number) value).intValue();
-        }
-        try {
-            return Integer.parseInt(String.valueOf(value));
-        } catch (Exception e) {
-            log.warn("[设备备份记录] 整数解析失败, value={}", value, e);
-            return null;
-        }
-    }
-
-    private String toText(Object value) {
-        return value == null ? "" : String.valueOf(value);
-    }
 }
