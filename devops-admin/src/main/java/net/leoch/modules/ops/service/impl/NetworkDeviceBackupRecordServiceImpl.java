@@ -282,23 +282,39 @@ public class NetworkDeviceBackupRecordServiceImpl extends ServiceImpl<NetworkDev
         for (int i = 0; i < size; i++) {
             Map<String, Object> left = i < leftOnly.size() ? leftOnly.get(i) : null;
             Map<String, Object> right = i < rightOnly.size() ? rightOnly.get(i) : null;
-            NetworkDeviceBackupDiffLineRsp line = new NetworkDeviceBackupDiffLineRsp();
-            line.setLeftLineNo(left == null ? null : toInt(left.get("leftLineNo")));
-            line.setRightLineNo(right == null ? null : toInt(right.get("rightLineNo")));
-            line.setLeftContent(left == null ? "" : toText(left.get("content")));
-            line.setRightContent(right == null ? "" : toText(right.get("content")));
-            if (left != null && right != null && charOverlapRatio(line.getLeftContent(), line.getRightContent()) >= 0.3) {
+            String leftContent = left == null ? "" : toText(left.get("content"));
+            String rightContent = right == null ? "" : toText(right.get("content"));
+
+            if (left != null && right != null && charOverlapRatio(leftContent, rightContent) >= 0.3) {
+                // 相似度足够，合并为 change
+                NetworkDeviceBackupDiffLineRsp line = new NetworkDeviceBackupDiffLineRsp();
                 line.setType("change");
-            } else if (left != null) {
-                line.setType("del");
-                line.setRightContent("");
-                line.setRightLineNo(null);
+                line.setLeftLineNo(toInt(left.get("leftLineNo")));
+                line.setRightLineNo(toInt(right.get("rightLineNo")));
+                line.setLeftContent(leftContent);
+                line.setRightContent(rightContent);
+                target.add(line);
             } else {
-                line.setType("add");
-                line.setLeftContent("");
-                line.setLeftLineNo(null);
+                // 相似度不足或单侧，分别输出 del 和 add
+                if (left != null) {
+                    NetworkDeviceBackupDiffLineRsp delLine = new NetworkDeviceBackupDiffLineRsp();
+                    delLine.setType("del");
+                    delLine.setLeftLineNo(toInt(left.get("leftLineNo")));
+                    delLine.setRightLineNo(null);
+                    delLine.setLeftContent(leftContent);
+                    delLine.setRightContent("");
+                    target.add(delLine);
+                }
+                if (right != null) {
+                    NetworkDeviceBackupDiffLineRsp addLine = new NetworkDeviceBackupDiffLineRsp();
+                    addLine.setType("add");
+                    addLine.setLeftLineNo(null);
+                    addLine.setRightLineNo(toInt(right.get("rightLineNo")));
+                    addLine.setLeftContent("");
+                    addLine.setRightContent(rightContent);
+                    target.add(addLine);
+                }
             }
-            target.add(line);
         }
         return index;
     }

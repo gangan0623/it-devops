@@ -221,6 +221,7 @@ public class NetworkDeviceBackupHistoryServiceImpl extends ServiceImpl<NetworkDe
                     line.put("content", rightRaw.get(fi));
                     fallback.add(line);
                 }
+                trace.clear();
                 return fallback;
             }
             trace.add(v.clone());
