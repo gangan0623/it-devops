@@ -15,7 +15,7 @@ import net.leoch.common.data.page.PageData;
 import net.leoch.common.data.result.Result;
 import net.leoch.modules.ops.service.INetworkDeviceBackupRecordService;
 import net.leoch.modules.ops.vo.req.*;
-import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupDiffLineRsp;
+import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupDiffContentRsp;
 import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupHistoryRsp;
 import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupRecordRsp;
 import org.springframework.web.bind.annotation.*;
@@ -72,15 +72,15 @@ public class NetworkDeviceBackupRecordController {
     @GetMapping("diff")
     @Operation(summary = "网络设备备份历史对比")
     @SaCheckPermission("ops:network-device-backup-record:diff")
-    public Result<List<NetworkDeviceBackupDiffLineRsp>> diff(NetworkDeviceBackupRecordDiffReq request) {
-        return new Result<List<NetworkDeviceBackupDiffLineRsp>>().ok(deviceBackupRecordService.diff(request));
+    public Result<NetworkDeviceBackupDiffContentRsp> diff(NetworkDeviceBackupRecordDiffReq request) {
+        return new Result<NetworkDeviceBackupDiffContentRsp>().ok(deviceBackupRecordService.diff(request));
     }
 
     @GetMapping("diff-current")
     @Operation(summary = "网络设备备份历史对比当前")
     @SaCheckPermission("ops:network-device-backup-record:diff")
-    public Result<List<NetworkDeviceBackupDiffLineRsp>> diffCurrent(NetworkDeviceBackupRecordDiffCurrentReq request) {
-        return new Result<List<NetworkDeviceBackupDiffLineRsp>>().ok(deviceBackupRecordService.diffCurrent(request));
+    public Result<NetworkDeviceBackupDiffContentRsp> diffCurrent(NetworkDeviceBackupRecordDiffCurrentReq request) {
+        return new Result<NetworkDeviceBackupDiffContentRsp>().ok(deviceBackupRecordService.diffCurrent(request));
     }
 
     @GetMapping("preview")

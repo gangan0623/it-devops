@@ -5,7 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.data.page.PageData;
 import net.leoch.modules.ops.entity.NetworkDeviceBackupRecordEntity;
 import net.leoch.modules.ops.vo.req.*;
-import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupDiffLineRsp;
+import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupDiffContentRsp;
 import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupHistoryRsp;
 import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupRecordRsp;
 
@@ -26,9 +26,9 @@ public interface INetworkDeviceBackupRecordService extends IService<NetworkDevic
 
     List<NetworkDeviceBackupHistoryRsp> history(NetworkDeviceBackupRecordHistoryReq request);
 
-    List<NetworkDeviceBackupDiffLineRsp> diff(NetworkDeviceBackupRecordDiffReq request);
+    NetworkDeviceBackupDiffContentRsp diff(NetworkDeviceBackupRecordDiffReq request);
 
-    List<NetworkDeviceBackupDiffLineRsp> diffCurrent(NetworkDeviceBackupRecordDiffCurrentReq request);
+    NetworkDeviceBackupDiffContentRsp diffCurrent(NetworkDeviceBackupRecordDiffCurrentReq request);
 
     String preview(NetworkDeviceBackupRecordPreviewReq request);
 

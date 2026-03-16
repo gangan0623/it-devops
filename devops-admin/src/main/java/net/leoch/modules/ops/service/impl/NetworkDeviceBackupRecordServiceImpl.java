@@ -16,7 +16,7 @@ import net.leoch.modules.ops.mapper.NetworkDeviceBackupRecordMapper;
 import net.leoch.modules.ops.service.INetworkDeviceBackupHistoryService;
 import net.leoch.modules.ops.service.INetworkDeviceBackupRecordService;
 import net.leoch.modules.ops.vo.req.*;
-import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupDiffLineRsp;
+import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupDiffContentRsp;
 import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupHistoryRsp;
 import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupRecordRsp;
 import org.springframework.stereotype.Service;
@@ -90,18 +90,25 @@ public class NetworkDeviceBackupRecordServiceImpl extends ServiceImpl<NetworkDev
     }
 
     @Override
-    public List<NetworkDeviceBackupDiffLineRsp> diff(NetworkDeviceBackupRecordDiffReq request) {
+    public NetworkDeviceBackupDiffContentRsp diff(NetworkDeviceBackupRecordDiffReq request) {
         if (request == null) {
-            return new ArrayList<>();
+            return new NetworkDeviceBackupDiffContentRsp();
         }
-        List<Map<String, Object>> data = deviceBackupHistoryService.diffById(request.getLeftId(), request.getRightId());
-        return toDiffLines(data);
+        NetworkDeviceBackupHistoryRsp left = deviceBackupHistoryService.get(request.getLeftId());
+        NetworkDeviceBackupHistoryRsp right = deviceBackupHistoryService.get(request.getRightId());
+        if (left == null || right == null) {
+            throw new ServiceException("历史记录不存在");
+        }
+        NetworkDeviceBackupDiffContentRsp rsp = new NetworkDeviceBackupDiffContentRsp();
+        rsp.setLeftContent(deviceBackupHistoryService.previewByUrl(left.getUrl()));
+        rsp.setRightContent(deviceBackupHistoryService.previewByUrl(right.getUrl()));
+        return rsp;
     }
 
     @Override
-    public List<NetworkDeviceBackupDiffLineRsp> diffCurrent(NetworkDeviceBackupRecordDiffCurrentReq request) {
+    public NetworkDeviceBackupDiffContentRsp diffCurrent(NetworkDeviceBackupRecordDiffCurrentReq request) {
         if (request == null) {
-            return new ArrayList<>();
+            return new NetworkDeviceBackupDiffContentRsp();
         }
         NetworkDeviceBackupRecordRsp current = getByIp(request.getIp());
         if (current == null || current.getUrl() == null) {
@@ -111,8 +118,10 @@ public class NetworkDeviceBackupRecordServiceImpl extends ServiceImpl<NetworkDev
         if (history == null || history.getUrl() == null) {
             throw new ServiceException("历史记录不存在或URL为空");
         }
-        List<Map<String, Object>> data = deviceBackupHistoryService.diffByUrls(history.getUrl(), current.getUrl());
-        return toDiffLines(data);
+        NetworkDeviceBackupDiffContentRsp rsp = new NetworkDeviceBackupDiffContentRsp();
+        rsp.setLeftContent(deviceBackupHistoryService.previewByUrl(history.getUrl()));
+        rsp.setRightContent(deviceBackupHistoryService.previewByUrl(current.getUrl()));
+        return rsp;
     }
 
     @Override
@@ -233,140 +242,6 @@ public class NetworkDeviceBackupRecordServiceImpl extends ServiceImpl<NetworkDev
         wrapper.eq(NetworkDeviceBackupRecordEntity::getIp, ip).last("limit 1");
         NetworkDeviceBackupRecordEntity existing = this.getOne(wrapper);
         return BeanUtil.copyProperties(existing, NetworkDeviceBackupRecordRsp.class);
-    }
-
-    private List<NetworkDeviceBackupDiffLineRsp> toDiffLines(List<Map<String, Object>> data) {
-        if (data == null || data.isEmpty()) {
-            return new ArrayList<>();
-        }
-        List<NetworkDeviceBackupDiffLineRsp> list = new ArrayList<>(data.size());
-        int index = 0;
-        while (index < data.size()) {
-            Map<String, Object> item = data.get(index);
-            String type = item.get("type") == null ? "" : String.valueOf(item.get("type"));
-            if ("same".equals(type)) {
-                list.add(buildSameLine(item));
-                index++;
-                continue;
-            }
-            if ("del".equals(type) || "add".equals(type)) {
-                index = appendChangeBlock(data, index, list);
-                continue;
-            }
-            list.add(buildSingleSideLine(type, item));
-            index++;
-        }
-        return list;
-    }
-
-    private int appendChangeBlock(List<Map<String, Object>> data, int start, List<NetworkDeviceBackupDiffLineRsp> target) {
-        List<Map<String, Object>> leftOnly = new ArrayList<>();
-        List<Map<String, Object>> rightOnly = new ArrayList<>();
-        int index = start;
-        while (index < data.size()) {
-            Map<String, Object> item = data.get(index);
-            String type = item.get("type") == null ? "" : String.valueOf(item.get("type"));
-            if ("del".equals(type)) {
-                leftOnly.add(item);
-                index++;
-                continue;
-            }
-            if ("add".equals(type)) {
-                rightOnly.add(item);
-                index++;
-                continue;
-            }
-            break;
-        }
-        int size = Math.max(leftOnly.size(), rightOnly.size());
-        for (int i = 0; i < size; i++) {
-            Map<String, Object> left = i < leftOnly.size() ? leftOnly.get(i) : null;
-            Map<String, Object> right = i < rightOnly.size() ? rightOnly.get(i) : null;
-            String leftContent = left == null ? "" : toText(left.get("content"));
-            String rightContent = right == null ? "" : toText(right.get("content"));
-
-            if (left != null && right != null && charOverlapRatio(leftContent, rightContent) >= 0.3) {
-                // 相似度足够，合并为 change
-                NetworkDeviceBackupDiffLineRsp line = new NetworkDeviceBackupDiffLineRsp();
-                line.setType("change");
-                line.setLeftLineNo(toInt(left.get("leftLineNo")));
-                line.setRightLineNo(toInt(right.get("rightLineNo")));
-                line.setLeftContent(leftContent);
-                line.setRightContent(rightContent);
-                target.add(line);
-            } else {
-                // 相似度不足或单侧，分别输出 del 和 add
-                if (left != null) {
-                    NetworkDeviceBackupDiffLineRsp delLine = new NetworkDeviceBackupDiffLineRsp();
-                    delLine.setType("del");
-                    delLine.setLeftLineNo(toInt(left.get("leftLineNo")));
-                    delLine.setRightLineNo(null);
-                    delLine.setLeftContent(leftContent);
-                    delLine.setRightContent("");
-                    target.add(delLine);
-                }
-                if (right != null) {
-                    NetworkDeviceBackupDiffLineRsp addLine = new NetworkDeviceBackupDiffLineRsp();
-                    addLine.setType("add");
-                    addLine.setLeftLineNo(null);
-                    addLine.setRightLineNo(toInt(right.get("rightLineNo")));
-                    addLine.setLeftContent("");
-                    addLine.setRightContent(rightContent);
-                    target.add(addLine);
-                }
-            }
-        }
-        return index;
-    }
-
-    /**
-     * 计算两行字符重叠率：公共字符数 × 2 / (leftLen + rightLen)
-     * 基于字符频率统计，O(n) 复杂度。
-     * 用于判断两行是否足够相似，阈值 0.3 认为相关。
-     */
-    private double charOverlapRatio(String left, String right) {
-        if (left == null || right == null) return 0.0;
-        int totalLen = left.length() + right.length();
-        if (totalLen == 0) return 1.0;
-        Map<Character, Integer> freq = new HashMap<>();
-        for (char c : left.toCharArray()) {
-            freq.merge(c, 1, Integer::sum);
-        }
-        int common = 0;
-        for (char c : right.toCharArray()) {
-            int count = freq.getOrDefault(c, 0);
-            if (count > 0) {
-                common++;
-                freq.put(c, count - 1);
-            }
-        }
-        return common * 2.0 / totalLen;
-    }
-
-    private NetworkDeviceBackupDiffLineRsp buildSameLine(Map<String, Object> item) {
-        NetworkDeviceBackupDiffLineRsp line = new NetworkDeviceBackupDiffLineRsp();
-        line.setType("same");
-        line.setLeftLineNo(toInt(item.get("leftLineNo")));
-        line.setRightLineNo(toInt(item.get("rightLineNo")));
-        String content = toText(item.get("content"));
-        line.setLeftContent(content);
-        line.setRightContent(content);
-        return line;
-    }
-
-    private NetworkDeviceBackupDiffLineRsp buildSingleSideLine(String type, Map<String, Object> item) {
-        NetworkDeviceBackupDiffLineRsp line = new NetworkDeviceBackupDiffLineRsp();
-        line.setType(type);
-        if ("del".equals(type)) {
-            line.setLeftLineNo(toInt(item.get("leftLineNo")));
-            line.setLeftContent(toText(item.get("content")));
-            line.setRightContent("");
-        } else {
-            line.setRightLineNo(toInt(item.get("rightLineNo")));
-            line.setRightContent(toText(item.get("content")));
-            line.setLeftContent("");
-        }
-        return line;
     }
 
     private Integer toInt(Object value) {
