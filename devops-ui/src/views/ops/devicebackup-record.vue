@@ -128,33 +128,55 @@
       </div>
       <div v-else class="diff-wrap">
         <div class="diff-grid">
-          <div class="diff-side diff-side--left">
+          <div class="diff-side diff-side--left" ref="leftPanelRef" @scroll="onLeftScroll">
             <div class="diff-side__header">{{ diffLeftTitle }}</div>
-            <div v-for="(line, index) in displayDiffLines" :key="`left-${line._key || index}`" class="diff-line" :class="line.collapsed ? 'diff-line--collapsed' : `diff-line--${line.type}`" :data-diff-anchor="line.diffAnchor ? line.diffAnchor : null" :data-diff-active="line.diffAnchor && activeDiffIndex === line.diffAnchor - 1 ? '1' : null">
-              <template v-if="line.collapsed">
-                <button type="button" class="diff-line__fold" @click="expandCollapsed(line.groupId)">
-                  展开 {{ line.hiddenCount }} 行未变内容
-                </button>
-              </template>
-              <template v-else>
-                <span class="diff-line__num">{{ line.leftLineNo || "" }}</span>
-                <span class="diff-line__prefix">{{ leftPrefix(line) }}</span>
-                <span class="diff-line__text" v-html="renderDiffHtml(line, 'left')"></span>
+            <div :style="{ height: totalDiffHeight + 'px', position: 'relative' }">
+              <template v-for="(line, index) in displayDiffLines" :key="`left-${line._key || index}`">
+                <div
+                  v-if="index >= leftRange.start && index <= leftRange.end"
+                  class="diff-line"
+                  :class="line.collapsed ? 'diff-line--collapsed' : `diff-line--${line.type}`"
+                  :data-diff-anchor="line.diffAnchor ? line.diffAnchor : null"
+                  :data-diff-active="line.diffAnchor && activeDiffIndex === line.diffAnchor - 1 ? '1' : null"
+                  :style="{ position: 'absolute', top: rowTops[index] + 'px', width: '100%' }"
+                >
+                  <template v-if="line.collapsed">
+                    <button type="button" class="diff-line__fold" @click="expandCollapsed(line.groupId)">
+                      展开 {{ line.hiddenCount }} 行未变内容
+                    </button>
+                  </template>
+                  <template v-else>
+                    <span class="diff-line__num">{{ line.leftLineNo || "" }}</span>
+                    <span class="diff-line__prefix">{{ leftPrefix(line) }}</span>
+                    <span class="diff-line__text" v-html="renderDiffHtml(line, 'left')"></span>
+                  </template>
+                </div>
               </template>
             </div>
           </div>
-          <div class="diff-side diff-side--right">
+          <div class="diff-side diff-side--right" ref="rightPanelRef" @scroll="onRightScroll">
             <div class="diff-side__header">{{ diffRightTitle }}</div>
-            <div v-for="(line, index) in displayDiffLines" :key="`right-${line._key || index}`" class="diff-line" :class="line.collapsed ? 'diff-line--collapsed' : `diff-line--${line.type}`" :data-diff-anchor="line.diffAnchor ? line.diffAnchor : null" :data-diff-active="line.diffAnchor && activeDiffIndex === line.diffAnchor - 1 ? '1' : null">
-              <template v-if="line.collapsed">
-                <button type="button" class="diff-line__fold" @click="expandCollapsed(line.groupId)">
-                  展开 {{ line.hiddenCount }} 行未变内容
-                </button>
-              </template>
-              <template v-else>
-                <span class="diff-line__num">{{ line.rightLineNo || "" }}</span>
-                <span class="diff-line__prefix">{{ rightPrefix(line) }}</span>
-                <span class="diff-line__text" v-html="renderDiffHtml(line, 'right')"></span>
+            <div :style="{ height: totalDiffHeight + 'px', position: 'relative' }">
+              <template v-for="(line, index) in displayDiffLines" :key="`right-${line._key || index}`">
+                <div
+                  v-if="index >= rightRange.start && index <= rightRange.end"
+                  class="diff-line"
+                  :class="line.collapsed ? 'diff-line--collapsed' : `diff-line--${line.type}`"
+                  :data-diff-anchor="line.diffAnchor ? line.diffAnchor : null"
+                  :data-diff-active="line.diffAnchor && activeDiffIndex === line.diffAnchor - 1 ? '1' : null"
+                  :style="{ position: 'absolute', top: rowTops[index] + 'px', width: '100%' }"
+                >
+                  <template v-if="line.collapsed">
+                    <button type="button" class="diff-line__fold" @click="expandCollapsed(line.groupId)">
+                      展开 {{ line.hiddenCount }} 行未变内容
+                    </button>
+                  </template>
+                  <template v-else>
+                    <span class="diff-line__num">{{ line.rightLineNo || "" }}</span>
+                    <span class="diff-line__prefix">{{ rightPrefix(line) }}</span>
+                    <span class="diff-line__text" v-html="renderDiffHtml(line, 'right')"></span>
+                  </template>
+                </div>
               </template>
             </div>
           </div>
@@ -212,6 +234,14 @@ const historyPage = ref(1);
 const historyPageSize = ref(20);
 const diffVisible = ref(false);
 const diffLoading = ref(false);
+const ROW_HEIGHT = 26;
+const COLLAPSED_HEIGHT = 36;
+const VIRT_BUFFER = 20;
+
+const leftScrollTop = ref(0);
+const rightScrollTop = ref(0);
+const leftPanelRef = ref<HTMLElement | null>(null);
+const rightPanelRef = ref<HTMLElement | null>(null);
 const diffLines = ref<any[]>([]);
 const diffLeftTitle = ref("旧版本");
 const diffRightTitle = ref("当前版本");
@@ -300,6 +330,63 @@ const displayDiffLines = computed(() => {
   return result;
 });
 const diffAnchorCount = computed(() => displayDiffLines.value.filter((item: any) => item.diffAnchor).length);
+
+const rowTops = computed(() => {
+  const tops: number[] = [];
+  let acc = 0;
+  for (const line of displayDiffLines.value) {
+    tops.push(acc);
+    acc += line.collapsed ? COLLAPSED_HEIGHT : ROW_HEIGHT;
+  }
+  return tops;
+});
+
+const totalDiffHeight = computed(() => {
+  const list = displayDiffLines.value;
+  if (list.length === 0) return 0;
+  const last = list[list.length - 1];
+  return rowTops.value[list.length - 1] + (last.collapsed ? COLLAPSED_HEIGHT : ROW_HEIGHT);
+});
+
+const leftRange = computed(() => {
+  const tops = rowTops.value;
+  const list = displayDiffLines.value;
+  if (list.length === 0) return { start: 0, end: 0 };
+  const scrollTop = leftScrollTop.value;
+  const containerHeight = 600;
+  const targetTop = Math.max(0, scrollTop - VIRT_BUFFER * ROW_HEIGHT);
+  let lo = 0, hi = tops.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (tops[mid] < targetTop) lo = mid + 1;
+    else hi = mid;
+  }
+  const start = lo;
+  const endTop = scrollTop + containerHeight + VIRT_BUFFER * ROW_HEIGHT;
+  let end = start;
+  while (end < tops.length - 1 && tops[end] <= endTop) end++;
+  return { start, end };
+});
+
+const rightRange = computed(() => {
+  const tops = rowTops.value;
+  const list = displayDiffLines.value;
+  if (list.length === 0) return { start: 0, end: 0 };
+  const scrollTop = rightScrollTop.value;
+  const containerHeight = 600;
+  const targetTop = Math.max(0, scrollTop - VIRT_BUFFER * ROW_HEIGHT);
+  let lo = 0, hi = tops.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (tops[mid] < targetTop) lo = mid + 1;
+    else hi = mid;
+  }
+  const start = lo;
+  const endTop = scrollTop + containerHeight + VIRT_BUFFER * ROW_HEIGHT;
+  let end = start;
+  while (end < tops.length - 1 && tops[end] <= endTop) end++;
+  return { start, end };
+});
 
 const openHistory = (row: any) => {
   if (!row?.ip) {
@@ -494,6 +581,12 @@ const downloadFile = (url: string) => {
 };
 
 const setupDiffSync = () => {
+const onLeftScroll = (e: Event) => {
+  leftScrollTop.value = (e.target as HTMLElement).scrollTop;
+};
+const onRightScroll = (e: Event) => {
+  rightScrollTop.value = (e.target as HTMLElement).scrollTop;
+};
   const left = document.querySelector(".diff-side--left") as HTMLElement | null;
   const right = document.querySelector(".diff-side--right") as HTMLElement | null;
   const bar = document.querySelector(".diff-scrollbar") as HTMLElement | null;
