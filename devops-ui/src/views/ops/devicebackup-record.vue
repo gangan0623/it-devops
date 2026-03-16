@@ -580,50 +580,52 @@ const downloadFile = (url: string) => {
   window.open(downloadUrl, "_blank");
 };
 
-const setupDiffSync = () => {
 const onLeftScroll = (e: Event) => {
   leftScrollTop.value = (e.target as HTMLElement).scrollTop;
 };
 const onRightScroll = (e: Event) => {
   rightScrollTop.value = (e.target as HTMLElement).scrollTop;
 };
-  const left = document.querySelector(".diff-side--left") as HTMLElement | null;
-  const right = document.querySelector(".diff-side--right") as HTMLElement | null;
+
+const setupDiffSync = () => {
+  const left = leftPanelRef.value;
+  const right = rightPanelRef.value;
   const bar = document.querySelector(".diff-scrollbar") as HTMLElement | null;
   const spacer = document.querySelector(".diff-scrollbar__spacer") as HTMLElement | null;
-  if (!left || !right || !bar || !spacer) {
-    return;
-  }
+  if (!left || !right || !bar || !spacer) return;
+
   const maxScroll = Math.max(left.scrollWidth, right.scrollWidth);
   spacer.style.width = `${maxScroll}px`;
+
   let syncing = false;
+
   const syncFromBar = () => {
-    if (syncing) {
-      return;
-    }
+    if (syncing) return;
     syncing = true;
     left.scrollLeft = bar.scrollLeft;
     right.scrollLeft = bar.scrollLeft;
     syncing = false;
   };
-  const syncFromSide = (source: HTMLElement) => {
-    if (syncing) {
-      return;
-    }
+
+  const syncLeftRight = () => {
+    if (syncing) return;
     syncing = true;
-    bar.scrollLeft = source.scrollLeft;
-    if (source === left) {
-      right.scrollLeft = source.scrollLeft;
-      right.scrollTop = source.scrollTop;
-    } else {
-      left.scrollLeft = source.scrollLeft;
-      left.scrollTop = source.scrollTop;
-    }
+    bar.scrollLeft = left.scrollLeft;
+    right.scrollLeft = left.scrollLeft;
     syncing = false;
   };
+
+  const syncRightLeft = () => {
+    if (syncing) return;
+    syncing = true;
+    bar.scrollLeft = right.scrollLeft;
+    left.scrollLeft = right.scrollLeft;
+    syncing = false;
+  };
+
   bar.onscroll = syncFromBar;
-  left.onscroll = () => syncFromSide(left);
-  right.onscroll = () => syncFromSide(right);
+  left.onscroll = syncLeftRight;
+  right.onscroll = syncRightLeft;
 };
 
 const setupPreviewSync = () => {
