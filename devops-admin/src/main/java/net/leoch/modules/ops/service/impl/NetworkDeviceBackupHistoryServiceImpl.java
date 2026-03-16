@@ -82,7 +82,11 @@ public class NetworkDeviceBackupHistoryServiceImpl extends ServiceImpl<NetworkDe
                 throw new ServiceException("备份文件读取失败，HTTP " + code);
             }
             try (InputStream in = connection.getInputStream()) {
-                byte[] bytes = in.readAllBytes();
+                final int maxBytes = 10 * 1024 * 1024; // 10 MB
+                byte[] bytes = in.readNBytes(maxBytes);
+                if (in.read() != -1) {
+                    throw new ServiceException("备份文件过大（超过10MB），无法预览");
+                }
                 return new String(bytes, StandardCharsets.UTF_8);
             }
         } catch (Exception e) {
