@@ -75,7 +75,7 @@
           <el-date-picker v-model="historyDateRange" type="daterange" range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期" value-format="YYYY-MM-DD" size="small" style="width: 260px" @change="historyPage = 1"></el-date-picker>
           <el-switch v-model="showOnlyFailed" inline-prompt active-text="仅异常" inactive-text="全部" @change="historyPage = 1"></el-switch>
         </div>
-        <el-button v-if="state.hasPermission('ops:network-device-backup-record:diff')" type="primary" @click="handleDiff" :disabled="historySelections.length !== 1">对比</el-button>
+        <el-button v-if="state.hasPermission('ops:network-device-backup-record:diff')" type="primary" @click="handleDiff" :disabled="historySelections.length < 1 || historySelections.length > 2">对比</el-button>
       </div>
       <el-table v-loading="historyLoading" :data="pagedHistoryList" border @selection-change="handleHistorySelectionChange" max-height="420" style="width: 100%">
         <el-table-column type="selection" width="50" header-align="center" align="center"></el-table-column>
@@ -111,27 +111,51 @@
 
     <el-dialog v-model="diffVisible" title="备份对比" width="100%" top="2vh" class="diff-dialog">
       <div class="diff-summary">
+        <span class="diff-summary__mode">{{ diffModeText }}</span>
         <span class="diff-summary__total">共 {{ diffLines.length }} 行</span>
         <span class="diff-summary__same">未变 {{ diffSameCount }}</span>
+        <span class="diff-summary__change">~ 修改 {{ diffChangeCount }}</span>
         <span class="diff-summary__add">+ 新增 {{ diffAddCount }}</span>
         <span class="diff-summary__del">- 删除 {{ diffDelCount }}</span>
+        <div class="diff-summary__nav">
+          <button type="button" class="diff-nav-btn" @click="jumpDiff(-1)" :disabled="diffAnchorCount === 0">上一处差异</button>
+          <button type="button" class="diff-nav-btn" @click="jumpDiff(1)" :disabled="diffAnchorCount === 0">下一处差异</button>
+          <span class="diff-summary__index" v-if="diffAnchorCount > 0">{{ activeDiffIndex + 1 }}/{{ diffAnchorCount }}</span>
+        </div>
       </div>
-      <div class="diff-wrap">
+      <div v-if="diffLoading" class="diff-loading">
+        <div v-for="i in 10" :key="i" class="diff-loading__row"></div>
+      </div>
+      <div v-else class="diff-wrap">
         <div class="diff-grid">
           <div class="diff-side diff-side--left">
-            <div class="diff-side__header">旧版本</div>
-            <div v-for="(line, index) in diffLines" :key="`left-${index}`" class="diff-line" :class="`diff-line--${line.type}`">
-              <span class="diff-line__num">{{ line.leftLineNo || "" }}</span>
-              <span class="diff-line__prefix">{{ line.type === 'del' ? '-' : line.type === 'same' ? ' ' : '' }}</span>
-              <span class="diff-line__text">{{ line.type === 'add' ? '' : line.content }}</span>
+            <div class="diff-side__header">{{ diffLeftTitle }}</div>
+            <div v-for="(line, index) in displayDiffLines" :key="`left-${line._key || index}`" class="diff-line" :class="line.collapsed ? 'diff-line--collapsed' : `diff-line--${line.type}`" :data-diff-anchor="line.diffAnchor ? line.diffAnchor : null" :data-diff-active="line.diffAnchor && activeDiffIndex === line.diffAnchor - 1 ? '1' : null">
+              <template v-if="line.collapsed">
+                <button type="button" class="diff-line__fold" @click="expandCollapsed(line.groupId)">
+                  展开 {{ line.hiddenCount }} 行未变内容
+                </button>
+              </template>
+              <template v-else>
+                <span class="diff-line__num">{{ line.leftLineNo || "" }}</span>
+                <span class="diff-line__prefix">{{ leftPrefix(line) }}</span>
+                <span class="diff-line__text" v-html="renderDiffHtml(line, 'left')"></span>
+              </template>
             </div>
           </div>
           <div class="diff-side diff-side--right">
-            <div class="diff-side__header">当前版本</div>
-            <div v-for="(line, index) in diffLines" :key="`right-${index}`" class="diff-line" :class="`diff-line--${line.type}`">
-              <span class="diff-line__num">{{ line.rightLineNo || "" }}</span>
-              <span class="diff-line__prefix">{{ line.type === 'add' ? '+' : line.type === 'same' ? ' ' : '' }}</span>
-              <span class="diff-line__text">{{ line.type === 'del' ? '' : line.content }}</span>
+            <div class="diff-side__header">{{ diffRightTitle }}</div>
+            <div v-for="(line, index) in displayDiffLines" :key="`right-${line._key || index}`" class="diff-line" :class="line.collapsed ? 'diff-line--collapsed' : `diff-line--${line.type}`" :data-diff-anchor="line.diffAnchor ? line.diffAnchor : null" :data-diff-active="line.diffAnchor && activeDiffIndex === line.diffAnchor - 1 ? '1' : null">
+              <template v-if="line.collapsed">
+                <button type="button" class="diff-line__fold" @click="expandCollapsed(line.groupId)">
+                  展开 {{ line.hiddenCount }} 行未变内容
+                </button>
+              </template>
+              <template v-else>
+                <span class="diff-line__num">{{ line.rightLineNo || "" }}</span>
+                <span class="diff-line__prefix">{{ rightPrefix(line) }}</span>
+                <span class="diff-line__text" v-html="renderDiffHtml(line, 'right')"></span>
+              </template>
             </div>
           </div>
         </div>
@@ -187,10 +211,19 @@ const historyDateRange = ref<string[] | null>(null);
 const historyPage = ref(1);
 const historyPageSize = ref(20);
 const diffVisible = ref(false);
+const diffLoading = ref(false);
 const diffLines = ref<any[]>([]);
+const diffLeftTitle = ref("旧版本");
+const diffRightTitle = ref("当前版本");
 const diffAddCount = computed(() => diffLines.value.filter((l: any) => l.type === "add").length);
 const diffDelCount = computed(() => diffLines.value.filter((l: any) => l.type === "del").length);
 const diffSameCount = computed(() => diffLines.value.filter((l: any) => l.type === "same").length);
+const diffChangeCount = computed(() => diffLines.value.filter((l: any) => l.type === "change").length);
+const diffModeText = computed(() => `${diffLeftTitle.value} vs ${diffRightTitle.value}`);
+const expandedCollapsedGroups = ref<number[]>([]);
+const DIFF_CONTEXT_LINES = 3;
+const DIFF_COLLAPSE_THRESHOLD = 12;
+const activeDiffIndex = ref(0);
 const currentIp = ref("");
 const previewVisible = ref(false);
 const previewContent = ref("");
@@ -223,6 +256,50 @@ const pagedHistoryList = computed(() => {
   const start = (historyPage.value - 1) * historyPageSize.value;
   return filteredHistoryList.value.slice(start, start + historyPageSize.value);
 });
+const displayDiffLines = computed(() => {
+  const list = diffLines.value || [];
+  const result: any[] = [];
+  let sameStart = -1;
+  let groupId = 0;
+  let diffAnchor = 0;
+  const flushSameBlock = (endExclusive: number) => {
+    if (sameStart < 0) {
+      return;
+    }
+    const block = list.slice(sameStart, endExclusive);
+    if (block.length <= DIFF_COLLAPSE_THRESHOLD || expandedCollapsedGroups.value.includes(groupId)) {
+      block.forEach((item: any, idx: number) => result.push({ ...item, _key: `same-${sameStart + idx}` }));
+    } else {
+      const head = block.slice(0, DIFF_CONTEXT_LINES);
+      const tail = block.slice(-DIFF_CONTEXT_LINES);
+      head.forEach((item: any, idx: number) => result.push({ ...item, _key: `same-head-${sameStart + idx}` }));
+      result.push({
+        collapsed: true,
+        hiddenCount: block.length - head.length - tail.length,
+        groupId,
+        _key: `collapsed-${groupId}`
+      });
+      tail.forEach((item: any, idx: number) => result.push({ ...item, _key: `same-tail-${endExclusive - tail.length + idx}` }));
+    }
+    groupId++;
+    sameStart = -1;
+  };
+  for (let i = 0; i < list.length; i++) {
+    const item = list[i];
+    if (item?.type === "same") {
+      if (sameStart < 0) {
+        sameStart = i;
+      }
+      continue;
+    }
+    flushSameBlock(i);
+    diffAnchor++;
+    result.push({ ...item, diffAnchor, _key: `diff-${i}` });
+  }
+  flushSameBlock(list.length);
+  return result;
+});
+const diffAnchorCount = computed(() => displayDiffLines.value.filter((item: any) => item.diffAnchor).length);
 
 const openHistory = (row: any) => {
   if (!row?.ip) {
@@ -250,18 +327,142 @@ const handleHistorySelectionChange = (rows: any[]) => {
 };
 
 const handleDiff = () => {
-  if (historySelections.value.length !== 1) {
-    return ElMessage.warning("请选择一条历史记录进行对比");
+  if (historySelections.value.length < 1 || historySelections.value.length > 2) {
+    return ElMessage.warning("请选择一条或两条历史记录进行对比");
   }
-  const [history] = historySelections.value;
   diffVisible.value = true;
   diffLines.value = [];
-  baseService.get("/ops/network-device-backup-record/diff-current", { ip: currentIp.value, historyId: history.id }).then((res) => {
-    diffLines.value = res.data || [];
+  expandedCollapsedGroups.value = [];
+  activeDiffIndex.value = 0;
+  diffLoading.value = true;
+
+  if (historySelections.value.length === 1) {
+    const [history] = historySelections.value;
+    diffLeftTitle.value = formatHistoryTitle(history);
+    diffRightTitle.value = "当前版本";
+    baseService
+      .get("/ops/network-device-backup-record/diff-current", { ip: currentIp.value, historyId: history.id })
+      .then((res) => {
+        diffLines.value = res.data || [];
+        nextTick(() => { setupDiffSync(); scrollToFirstDiff(); });
+      })
+      .catch(() => ElMessage.error("加载对比数据失败"))
+      .finally(() => { diffLoading.value = false; });
+    return;
+  }
+  const [left, right] = [...historySelections.value].sort((a: any, b: any) => {
+    return new Date(a?.backupTime || 0).getTime() - new Date(b?.backupTime || 0).getTime();
+  });
+  diffLeftTitle.value = formatHistoryTitle(left);
+  diffRightTitle.value = formatHistoryTitle(right);
+  baseService
+    .get("/ops/network-device-backup-record/diff", { leftId: left.id, rightId: right.id })
+    .then((res) => {
+      diffLines.value = res.data || [];
+      nextTick(() => { setupDiffSync(); scrollToFirstDiff(); });
+    })
+    .catch(() => ElMessage.error("加载对比数据失败"))
+    .finally(() => { diffLoading.value = false; });
+};
+
+const formatHistoryTitle = (row: any) => {
+  const backupTime = row?.backupTime || "-";
+  return `历史版本 ${backupTime}`;
+};
+
+const leftPrefix = (line: any) => {
+  if (line?.type === "del" || line?.type === "change") return "-";
+  return "";
+};
+
+const rightPrefix = (line: any) => {
+  if (line?.type === "add" || line?.type === "change") return "+";
+  return "";
+};
+
+const renderDiffHtml = (line: any, side: "left" | "right") => {
+  const content = String(side === "left" ? line?.leftContent || "" : line?.rightContent || "");
+  if (line?.type !== "change") {
+    return escapeHtml(content);
+  }
+  const left = String(line?.leftContent || "");
+  const right = String(line?.rightContent || "");
+  const [prefixLen, suffixLen] = diffBounds(left, right);
+  const target = side === "left" ? left : right;
+  const changedEnd = Math.max(prefixLen, target.length - suffixLen);
+  const before = target.slice(0, prefixLen);
+  const changed = target.slice(prefixLen, changedEnd);
+  const after = target.slice(changedEnd);
+  if (!changed) {
+    return escapeHtml(target);
+  }
+  return `${escapeHtml(before)}<span class="diff-line__inline-change">${escapeHtml(changed)}</span>${escapeHtml(after)}`;
+};
+
+const diffBounds = (left: string, right: string) => {
+  let prefixLen = 0;
+  const minLen = Math.min(left.length, right.length);
+  while (prefixLen < minLen && left[prefixLen] === right[prefixLen]) {
+    prefixLen++;
+  }
+  let suffixLen = 0;
+  const leftRemain = left.length - prefixLen;
+  const rightRemain = right.length - prefixLen;
+  const suffixMax = Math.min(leftRemain, rightRemain);
+  while (
+    suffixLen < suffixMax &&
+    left[left.length - 1 - suffixLen] === right[right.length - 1 - suffixLen]
+  ) {
+    suffixLen++;
+  }
+  return [prefixLen, suffixLen];
+};
+
+const escapeHtml = (value: string) =>
+  value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll("\"", "&quot;")
+    .replaceAll("'", "&#39;");
+
+const expandCollapsed = (groupId: number) => {
+  if (!expandedCollapsedGroups.value.includes(groupId)) {
+    expandedCollapsedGroups.value = [...expandedCollapsedGroups.value, groupId];
     nextTick(() => {
       setupDiffSync();
     });
+  }
+};
+
+const jumpDiff = (step: number) => {
+  const total = diffAnchorCount.value;
+  if (total === 0) {
+    return;
+  }
+  activeDiffIndex.value = (activeDiffIndex.value + step + total) % total;
+  nextTick(() => {
+    scrollToDiff(activeDiffIndex.value + 1);
   });
+};
+
+const scrollToDiff = (anchor: number) => {
+  const left = document.querySelector(`.diff-side--left [data-diff-anchor="${anchor}"]`) as HTMLElement | null;
+  const right = document.querySelector(`.diff-side--right [data-diff-anchor="${anchor}"]`) as HTMLElement | null;
+  if (left) {
+    left.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+  if (right) {
+    right.scrollIntoView({ block: "center", behavior: "smooth" });
+  }
+};
+
+const scrollToFirstDiff = () => {
+  if (diffAnchorCount.value <= 0) {
+    return;
+  }
+  activeDiffIndex.value = 0;
+  scrollToDiff(1);
 };
 
 const openPreview = (url: string) => {
@@ -458,11 +659,49 @@ const setupPreviewSync = () => {
   border-radius: 4px;
 }
 
+.diff-summary__change {
+  color: #b45309;
+  padding: 2px 8px;
+  background: #fffbeb;
+  border-radius: 4px;
+}
+
 .diff-summary__del {
   color: #dc2626;
   padding: 2px 8px;
   background: #fef2f2;
   border-radius: 4px;
+}
+
+.diff-summary__nav {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+.diff-summary__index {
+  color: #64748b;
+}
+
+.diff-nav-btn {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.diff-nav-btn:hover:not(:disabled) {
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.diff-nav-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
 
 /* 版本标题 */
@@ -538,6 +777,36 @@ const setupPreviewSync = () => {
   min-width: max-content;
 }
 
+.diff-line__text :deep(.diff-line__inline-change) {
+  background: rgba(245, 158, 11, 0.22);
+  border-radius: 2px;
+}
+
+.diff-line--collapsed {
+  display: block;
+  padding: 0;
+  background: #f8fafc;
+}
+
+.diff-line__fold {
+  width: 100%;
+  padding: 8px 12px;
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+  font-size: 12px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.diff-line__fold:hover {
+  background: #eff6ff;
+}
+
+.diff-line[data-diff-active="1"] {
+  box-shadow: inset 0 0 0 1px rgba(59, 130, 246, 0.45);
+}
+
 .diff-scrollbar {
   height: 14px;
   overflow-x: auto;
@@ -558,12 +827,28 @@ const setupPreviewSync = () => {
   color: #10b981;
 }
 
+.diff-side--right .diff-line--change {
+  background: #fffbeb;
+}
+
+.diff-side--right .diff-line--change .diff-line__prefix {
+  color: #d97706;
+}
+
 .diff-side--left .diff-line--del {
   background: #fef2f2;
 }
 
 .diff-side--left .diff-line--del .diff-line__prefix {
   color: #ef4444;
+}
+
+.diff-side--left .diff-line--change {
+  background: #fffbeb;
+}
+
+.diff-side--left .diff-line--change .diff-line__prefix {
+  color: #d97706;
 }
 
 /* 预览视图 */
@@ -617,5 +902,36 @@ const setupPreviewSync = () => {
   flex-direction: column;
   height: calc(80vh - 140px);
   overflow: hidden;
+}
+
+/* loading 骨架屏 */
+.diff-loading {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px 16px;
+  background: #fff;
+  flex: 1;
+}
+
+.diff-loading__row {
+  height: 18px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+  margin-bottom: 10px;
+}
+
+.diff-loading__row:nth-child(odd) {
+  width: 85%;
+}
+
+.diff-loading__row:nth-child(even) {
+  width: 70%;
+}
+
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 </style>
