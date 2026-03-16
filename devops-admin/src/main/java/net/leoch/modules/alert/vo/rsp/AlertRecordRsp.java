@@ -23,6 +23,12 @@ public class AlertRecordRsp implements Serializable  {
     @SchemaProperty(name = "ID")
     private Long id;
 
+    @SchemaProperty(name = "事件ID")
+    private Long eventId;
+
+    @SchemaProperty(name = "当前态记录ID")
+    private Long recordId;
+
     @SchemaProperty(name = "告警名称")
     private String alertName;
 

@@ -10,8 +10,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ServiceException;
 import net.leoch.modules.alert.entity.AlertAiReportZabbixEntity;
+import net.leoch.modules.alert.entity.ZabbixAlertEventEntity;
 import net.leoch.modules.alert.entity.ZabbixAlertEventHistoryEntity;
 import net.leoch.modules.alert.mapper.AlertAiReportZabbixMapper;
+import net.leoch.modules.alert.mapper.ZabbixAlertEventMapper;
 import net.leoch.modules.alert.mapper.ZabbixAlertEventHistoryMapper;
 import net.leoch.modules.alert.vo.rsp.AlertAiReportZabbixRsp;
 import net.leoch.modules.sys.service.AiConfigService;
@@ -84,6 +86,7 @@ public class ZabbixAlertReportService {
             """;
 
     private final ZabbixAlertEventHistoryMapper historyMapper;
+    private final ZabbixAlertEventMapper eventMapper;
     private final AlertAiReportZabbixMapper reportMapper;
     private final AiConfigService aiConfigService;
 
@@ -190,7 +193,8 @@ public class ZabbixAlertReportService {
         Number total = toNumber(stats.get("total"));
         Number open = toNumber(stats.get("openCount"));
         Number resolved = toNumber(stats.get("resolvedCount"));
-        return "总告警" + total + "条，告警中" + open + "条，已恢复" + resolved + "条";
+        Number currentOpen = toNumber(stats.get("currentOpenCount"));
+        return "总告警" + total + "条，告警中" + open + "条，已恢复" + resolved + "条，当前遗留风险" + currentOpen + "条";
     }
 
     private Map<String, Object> buildStats(Date start, Date end) {
@@ -214,6 +218,7 @@ public class ZabbixAlertReportService {
         List<Map<String, Object>> allRows = deduplicateByEventId(allRowsRaw);
 
         mergeDetailedStats(stats, allRows);
+        stats.putAll(buildCurrentRiskSnapshot());
 
         List<Map<String, Object>> dailyTrend = historyMapper.selectMaps(baseWrapper(start, end)
                 .select("date(event_time) as day", "count(*) as count")
@@ -222,6 +227,33 @@ public class ZabbixAlertReportService {
         stats.put("dailyTrend", dailyTrend);
 
         return stats;
+    }
+
+    private Map<String, Object> buildCurrentRiskSnapshot() {
+        List<Map<String, Object>> rows = eventMapper.selectMaps(
+                new QueryWrapper<ZabbixAlertEventEntity>()
+                        .eq("status", "open")
+                        .select("host_ip", "hostname", "trigger_name", "severity_code", "severity_name")
+                        .orderByDesc("last_event_time")
+        );
+        Map<String, Object> snapshot = new HashMap<>();
+        snapshot.put("currentOpenCount", rows.size());
+
+        List<Map<String, Object>> currentRisks = rows.stream()
+                .limit(20)
+                .map(row -> {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put("host_ip", str(row, "host_ip", "-"));
+                    item.put("host_name", str(row, "hostname", "-"));
+                    item.put("trigger_name", str(row, "trigger_name", "-"));
+                    item.put("severity_code", str(row, "severity_code", ""));
+                    item.put("severity_name", str(row, "severity_name", ""));
+                    item.put("fault_point", classifyFaultType(str(row, "trigger_name", "").toLowerCase()));
+                    return item;
+                })
+                .toList();
+        snapshot.put("currentOpenRisks", currentRisks);
+        return snapshot;
     }
 
     private List<Map<String, Object>> deduplicateByEventId(List<Map<String, Object>> rows) {

@@ -78,11 +78,6 @@ public class AlertRecordEntity {
     private String fingerprint;
 
     /**
-     * rawJson
-     */
-    private String rawJson;
-
-    /**
      * closed
      */
     private Integer closed;
@@ -91,6 +86,26 @@ public class AlertRecordEntity {
      * suppressedUntil
      */
     private Date suppressedUntil;
+
+    /**
+     * 首次发现时间
+     */
+    private Date firstSeenAt;
+
+    /**
+     * 最后收到Webhook时间
+     */
+    private Date lastSeenAt;
+
+    /**
+     * 最后通知时间
+     */
+    private Date lastNotifiedAt;
+
+    /**
+     * 通知次数
+     */
+    private Integer notifyCount;
 
     @TableField(fill = FieldFill.INSERT)
     /**

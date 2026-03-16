@@ -507,10 +507,6 @@ const statusClass = (value: string) => {
 };
 
 const severityClass = (row: any) => {
-  const normalizedStatus = String(row?.status || "").toLowerCase();
-  if (normalizedStatus === "auto" || normalizedStatus === "manual" || normalizedStatus === "resolved") {
-    return "severity-tag severity-tag--resolved";
-  }
   const normalized = String(row?.severity || "").toLowerCase();
   if (normalized === "critical") return "severity-tag severity-tag--critical";
   if (normalized === "warning") return "severity-tag severity-tag--warning";

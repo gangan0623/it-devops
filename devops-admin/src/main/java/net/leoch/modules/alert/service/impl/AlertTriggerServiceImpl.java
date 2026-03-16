@@ -26,6 +26,7 @@ import net.leoch.modules.alert.mapper.AlertTriggerMapper;
 import net.leoch.modules.alert.service.AlertMailService;
 import net.leoch.modules.alert.service.IAlertNotifyLogService;
 import net.leoch.modules.alert.service.IAlertTriggerService;
+import net.leoch.modules.alert.service.dto.AlertWebhookRecordResult;
 import net.leoch.modules.alert.vo.req.AlertTriggerPageReq;
 import net.leoch.modules.alert.vo.req.AlertTriggerReq;
 import net.leoch.modules.alert.vo.rsp.AlertTriggerRsp;
@@ -199,6 +200,14 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
 
     @Override
     public void notifyFromWebhook(Map<String, Object> payload, String rawJson, String severity) {
+        notifyFromWebhook(payload, rawJson, severity, null);
+    }
+
+    @Override
+    public void notifyFromWebhook(Map<String, Object> payload,
+                                  String rawJson,
+                                  String severity,
+                                  List<AlertWebhookRecordResult> alertResults) {
         log.info("[告警触发] 开始处理Webhook告警, severity={}, payloadSize={}", severity, rawJson != null ? rawJson.length() : 0);
         if (payload == null) {
             log.warn("[告警触发] payload为空");
@@ -210,17 +219,18 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
             return;
         }
         log.info("[告警触发] 找到{}个可用触发器", triggers.size());
-        List<Map<String, Object>> alerts = getAlerts(payload);
-        if (CollUtil.isEmpty(alerts)) {
+        List<AlertWebhookRecordResult> results = normalizeAlertResults(payload, alertResults);
+        if (CollUtil.isEmpty(results)) {
             log.warn("[告警触发] payload中无告警数据");
             return;
         }
-        log.info("[告警触发] 解析到{}个告警", alerts.size());
+        log.info("[告警触发] 解析到{}个告警", results.size());
         int matchCount = 0;
         int sendCount = 0;
-        for (Map<String, Object> alert : alerts) {
+        for (AlertWebhookRecordResult result : results) {
+            Map<String, Object> alert = result.getAlert();
             String severityForAlert = resolveSeverity(payload, alert, severity);
-            Long recordId = findRecordId(payload, alert);
+            Long recordId = result.getRecord() == null ? findRecordId(payload, alert) : result.getRecord().getId();
             String alertName = String.valueOf(alert.getOrDefault("alertname", "unknown"));
             for (AlertTriggerEntity trigger : triggers) {
                 if (!matches(trigger, payload, alert, severityForAlert)) {
@@ -233,7 +243,7 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
                 sendCount++;
             }
         }
-        log.info("[告警触发] 处理完成, 告警数={}, 匹配数={}, 发送数={}", alerts.size(), matchCount, sendCount);
+        log.info("[告警触发] 处理完成, 告警数={}, 匹配数={}, 发送数={}", results.size(), matchCount, sendCount);
     }
 
     @Override
@@ -313,7 +323,36 @@ public class AlertTriggerServiceImpl extends ServiceImpl<AlertTriggerMapper, Ale
                       notifyLog.getAlertName(), notifyLog.getInstance(), elapsedTime, e);
         } finally {
             alertNotifyLogService.save(notifyLog);
+            updateNotifyMeta(notifyLog);
         }
+    }
+
+    private void updateNotifyMeta(AlertNotifyLogEntity notifyLog) {
+        if (notifyLog == null || notifyLog.getRecordId() == null) {
+            return;
+        }
+        AlertRecordEntity record = new AlertRecordEntity();
+        record.setId(notifyLog.getRecordId());
+        record.setLastNotifiedAt(notifyLog.getSendTime());
+        AlertRecordEntity current = alertRecordMapper.selectById(notifyLog.getRecordId());
+        int currentCount = current == null || current.getNotifyCount() == null ? 0 : current.getNotifyCount();
+        record.setNotifyCount(currentCount + 1);
+        alertRecordMapper.updateById(record);
+    }
+
+    private List<AlertWebhookRecordResult> normalizeAlertResults(Map<String, Object> payload, List<AlertWebhookRecordResult> alertResults) {
+        if (CollUtil.isNotEmpty(alertResults)) {
+            return alertResults;
+        }
+        List<Map<String, Object>> alerts = getAlerts(payload);
+        if (CollUtil.isEmpty(alerts)) {
+            return new ArrayList<>();
+        }
+        List<AlertWebhookRecordResult> results = new ArrayList<>(alerts.size());
+        for (Map<String, Object> alert : alerts) {
+            results.add(new AlertWebhookRecordResult(alert, null));
+        }
+        return results;
     }
 
     private boolean matches(AlertTriggerEntity trigger, Map<String, Object> payload, Map<String, Object> alert, String severityFromPath) {

@@ -14,9 +14,14 @@ import net.leoch.common.exception.ServiceException;
 import net.leoch.common.utils.common.ParseUtils;
 import net.leoch.common.utils.common.TimeUtils;
 import net.leoch.modules.alert.entity.AlertNotifyLogEntity;
+import net.leoch.modules.alert.entity.AlertEventEntity;
 import net.leoch.modules.alert.entity.AlertRecordActionEntity;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
+import net.leoch.modules.alert.entity.AlertWebhookEventEntity;
+import net.leoch.modules.alert.service.dto.AlertWebhookRecordResult;
+import net.leoch.modules.alert.mapper.AlertEventMapper;
 import net.leoch.modules.alert.mapper.AlertRecordMapper;
+import net.leoch.modules.alert.mapper.AlertWebhookEventMapper;
 import net.leoch.modules.alert.service.*;
 import net.leoch.modules.alert.vo.req.AlertProblemPageReq;
 import net.leoch.modules.alert.vo.req.AlertRecordPageReq;
@@ -53,6 +58,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
     private final AlertManagerService alertManagerService;
     private final IAlertTriggerService alertTriggerService;
     private final IAlertNotifyLogService alertNotifyLogService;
+    private final AlertEventMapper alertEventMapper;
+    private final AlertWebhookEventMapper alertWebhookEventMapper;
     private final SysUserMapper sysUserMapper;
     private final LinuxHostMapper linuxHostMapper;
     private final WindowHostMapper windowHostMapper;
@@ -63,6 +70,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
                                   AlertManagerService alertManagerService,
                                   IAlertTriggerService alertTriggerService,
                                   IAlertNotifyLogService alertNotifyLogService,
+                                  AlertEventMapper alertEventMapper,
+                                  AlertWebhookEventMapper alertWebhookEventMapper,
                                   SysUserMapper sysUserMapper,
                                   LinuxHostMapper linuxHostMapper,
                                   WindowHostMapper windowHostMapper,
@@ -72,6 +81,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         this.alertManagerService = alertManagerService;
         this.alertTriggerService = alertTriggerService;
         this.alertNotifyLogService = alertNotifyLogService;
+        this.alertEventMapper = alertEventMapper;
+        this.alertWebhookEventMapper = alertWebhookEventMapper;
         this.sysUserMapper = sysUserMapper;
         this.linuxHostMapper = linuxHostMapper;
         this.windowHostMapper = windowHostMapper;
@@ -80,6 +91,10 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
 
     @Override
     public PageData<AlertRecordRsp> page(AlertRecordPageReq request) {
+        return eventPage(request);
+    }
+
+    private PageData<AlertRecordRsp> eventPage(AlertRecordPageReq request) {
         String alertName = request.getAlertName();
         String instance = request.getInstance();
         String hostName = request.getHostName();
@@ -87,47 +102,99 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         String status = request.getStatus();
         String deviceType = request.getDeviceType();
 
-        LambdaQueryWrapper<AlertRecordEntity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.like(StrUtil.isNotBlank(alertName), AlertRecordEntity::getAlertName, alertName);
-        wrapper.like(StrUtil.isNotBlank(instance), AlertRecordEntity::getInstance, instance);
+        LambdaQueryWrapper<AlertEventEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.like(StrUtil.isNotBlank(alertName), AlertEventEntity::getAlertName, alertName);
+        wrapper.like(StrUtil.isNotBlank(instance), AlertEventEntity::getInstance, instance);
         if (StrUtil.isNotBlank(hostName)) {
             List<String> instancesByName = listInstancesByHostName(hostName, deviceType);
             if (instancesByName.isEmpty()) {
-                wrapper.eq(AlertRecordEntity::getId, -1L);
+                wrapper.eq(AlertEventEntity::getId, -1L);
             } else {
-                applyInstanceLikeFilter(wrapper, instancesByName);
+                applyEventInstanceLikeFilter(wrapper, instancesByName);
             }
         }
-        wrapper.eq(StrUtil.isNotBlank(severity), AlertRecordEntity::getSeverity, severity);
-        wrapper.eq(StrUtil.isNotBlank(status), AlertRecordEntity::getStatus, status);
+        wrapper.eq(StrUtil.isNotBlank(severity), AlertEventEntity::getSeverity, severity);
+        wrapper.eq(StrUtil.isNotBlank(status), AlertEventEntity::getStatus, status);
         if (StrUtil.isNotBlank(deviceType)) {
             List<String> instances = listInstancesByType(deviceType);
             if (instances.isEmpty()) {
-                wrapper.eq(AlertRecordEntity::getId, -1L);
+                wrapper.eq(AlertEventEntity::getId, -1L);
             } else {
-                applyInstanceLikeFilter(wrapper, instances);
+                applyEventInstanceLikeFilter(wrapper, instances);
             }
         }
-        wrapper.orderByDesc(AlertRecordEntity::getCreateDate);
+        wrapper.orderByDesc(AlertEventEntity::getEventTime)
+            .orderByDesc(AlertEventEntity::getCreateDate);
 
-        IPage<AlertRecordEntity> page = this.page(request.buildPage(), wrapper);
-        PageData<AlertRecordRsp> pageData = new PageData<>(BeanUtil.copyToList(page.getRecords(), AlertRecordRsp.class), page.getTotal());
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<AlertEventEntity> page =
+            alertEventMapper.selectPage(request.buildPage(), wrapper);
+
+        List<AlertEventEntity> events = page.getRecords();
+        Map<Long, AlertRecordEntity> recordMap = loadRecordMapByEvents(events);
+        Map<String, HostInfo> hostMap = loadHostInfoMap();
+        List<AlertRecordRsp> rows = new ArrayList<>(events.size());
+        for (AlertEventEntity event : events) {
+            AlertRecordEntity record = event.getRecordId() == null ? null : recordMap.get(event.getRecordId());
+            AlertRecordRsp dto = new AlertRecordRsp();
+            dto.setId(record == null ? event.getId() : record.getId());
+            dto.setEventId(event.getId());
+            dto.setRecordId(event.getRecordId());
+            dto.setAlertName(event.getAlertName());
+            dto.setStatus(resolveEventStatus(event, record));
+            dto.setSeverity(event.getSeverity());
+            dto.setInstance(event.getInstance());
+            dto.setSummary(event.getSummary());
+            dto.setDescription(event.getDescription());
+            dto.setStartsAt(event.getStartsAt());
+            dto.setEndsAt(event.getEndsAt());
+            dto.setReceiver(event.getReceiver());
+            dto.setClosed(record == null ? null : record.getClosed());
+            dto.setSuppressedUntil(record == null ? null : record.getSuppressedUntil());
+            dto.setCreator(event.getCreator());
+            dto.setCreateDate(event.getEventTime());
+            dto.setUpdater(record == null ? null : record.getUpdater());
+            dto.setUpdateDate(record == null ? null : record.getUpdateDate());
+            dto.setHostName(resolveHostName(event.getInstance(), hostMap));
+            rows.add(dto);
+        }
+        PageData<AlertRecordRsp> pageData = new PageData<>(rows, page.getTotal());
 
         if (pageData.getList() == null || pageData.getList().isEmpty()) {
             return pageData;
-        }
-        Map<String, HostInfo> hostMap = loadHostInfoMap();
-        for (AlertRecordRsp dto : pageData.getList()) {
-            if (dto == null) {
-                continue;
-            }
-            dto.setHostName(resolveHostName(dto.getInstance(), hostMap));
         }
         return pageData;
     }
 
     @Override
     public AlertRecordRsp get(Long id) {
+        AlertEventEntity event = alertEventMapper.selectById(id);
+        if (event != null) {
+            Map<Long, AlertRecordEntity> recordMap = loadRecordMapByEvents(Collections.singletonList(event));
+            AlertRecordEntity record = event.getRecordId() == null ? null : recordMap.get(event.getRecordId());
+            Map<String, HostInfo> hostMap = loadHostInfoMap();
+            AlertRecordRsp dto = new AlertRecordRsp();
+            dto.setId(record == null ? event.getId() : record.getId());
+            dto.setEventId(event.getId());
+            dto.setRecordId(event.getRecordId());
+            dto.setAlertName(event.getAlertName());
+            dto.setStatus(resolveEventStatus(event, record));
+            dto.setSeverity(event.getSeverity());
+            dto.setInstance(event.getInstance());
+            dto.setHostName(resolveHostName(event.getInstance(), hostMap));
+            dto.setSummary(event.getSummary());
+            dto.setDescription(event.getDescription());
+            dto.setStartsAt(event.getStartsAt());
+            dto.setEndsAt(event.getEndsAt());
+            dto.setReceiver(event.getReceiver());
+            dto.setRawJson(loadWebhookPayload(event.getWebhookEventId()));
+            dto.setClosed(record == null ? null : record.getClosed());
+            dto.setSuppressedUntil(record == null ? null : record.getSuppressedUntil());
+            dto.setCreator(event.getCreator());
+            dto.setCreateDate(event.getEventTime());
+            dto.setUpdater(record == null ? null : record.getUpdater());
+            dto.setUpdateDate(record == null ? null : record.getUpdateDate());
+            return dto;
+        }
         return BeanUtil.copyProperties(this.getById(id), AlertRecordRsp.class);
     }
 
@@ -141,14 +208,16 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
 
     @Transactional(rollbackFor = Exception.class)
     @Override
-    public void saveFromWebhook(Map<String, Object> payload, String rawJson, String severityFromPath) {
+    public List<AlertWebhookRecordResult> saveFromWebhook(Map<String, Object> payload, String rawJson, String severityFromPath) {
+        List<AlertWebhookRecordResult> results = new ArrayList<>();
         if (payload == null) {
-            return;
+            return results;
         }
         Object alertsObj = payload.get("alerts");
         if (!(alertsObj instanceof List)) {
-            return;
+            return results;
         }
+        Date now = new Date();
         String receiver = toStr(payload.get("receiver"));
         String status = toStr(payload.get("status"));
         Map<String, Object> commonLabels = toMap(payload.get("commonLabels"));
@@ -165,39 +234,46 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             if ("firing".equalsIgnoreCase(alertStatus) && isSuppressed(alertName, instance)) {
                 continue;
             }
-            // fingerprint 去重：同一个 fingerprint 只保留最新一条（upsert 语义）
+            Date startsAt = TimeUtils.parseDate(ParseUtils.toStr(alert.get("startsAt")));
+            Date endsAt = TimeUtils.parseDate(ParseUtils.toStr(alert.get("endsAt")));
             String fingerprint = toStr(alert.get("fingerprint"));
-            if (StrUtil.isNotBlank(fingerprint)) {
-                LambdaUpdateWrapper<AlertRecordEntity> dedup = new LambdaUpdateWrapper<>();
-                dedup.eq(AlertRecordEntity::getFingerprint, fingerprint);
-                dedup.set(AlertRecordEntity::getStatus, alertStatus);
-                dedup.set(AlertRecordEntity::getEndsAt, TimeUtils.parseDate(ParseUtils.toStr(alert.get("endsAt"))));
-                dedup.set(AlertRecordEntity::getRawJson, rawJson);
-                if (this.update(dedup)) {
-                    saved = true;
-                    continue;
-                }
+            AlertRecordEntity entity = findExistingRecord(fingerprint, alertName, instance, startsAt);
+            boolean isNew = entity == null;
+            if (isNew) {
+                entity = new AlertRecordEntity();
+                entity.setClosed(0);
+                entity.setFirstSeenAt(now);
             }
-            AlertRecordEntity entity = new AlertRecordEntity();
+            if (entity.getFirstSeenAt() == null) {
+                entity.setFirstSeenAt(startsAt == null ? now : startsAt);
+            }
             entity.setAlertName(alertName);
             entity.setStatus(alertStatus);
             entity.setSeverity(resolveSeverity(payload, alert, severityFromPath));
             entity.setInstance(instance);
             entity.setSummary(getValue(annotations, commonAnnotations, "summary"));
             entity.setDescription(getValue(annotations, commonAnnotations, "description"));
-            entity.setStartsAt(TimeUtils.parseDate(ParseUtils.toStr(alert.get("startsAt"))));
-            entity.setEndsAt(TimeUtils.parseDate(ParseUtils.toStr(alert.get("endsAt"))));
+            entity.setStartsAt(startsAt);
+            entity.setEndsAt(endsAt);
             entity.setReceiver(receiver);
             entity.setAlertGroup(getValue(labels, commonLabels, "alertgroup"));
             entity.setFingerprint(fingerprint);
-            entity.setRawJson(rawJson);
-            entity.setClosed(0);
-            this.getBaseMapper().insert(entity);
+            entity.setLastSeenAt(now);
+            if ("firing".equalsIgnoreCase(alertStatus)) {
+                entity.setClosed(0);
+            }
+            if (isNew) {
+                this.getBaseMapper().insert(entity);
+            } else {
+                this.updateById(entity);
+            }
             saved = true;
+            results.add(new AlertWebhookRecordResult(alert, entity));
         }
         if (saved) {
             alertSseService.publishRecentAlerts();
         }
+        return results;
     }
 
     @Override
@@ -283,114 +359,74 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
 
     @Override
     public PageData<AlertProblemRsp> problemPage(AlertProblemPageReq request) {
-        int page = parseInt(toStr(request.getPage()), 1);
-        int limit = parseInt(toStr(request.getLimit()), 10);
-
-        LambdaQueryWrapper<AlertRecordEntity> wrapper = buildProblemWrapper(request);
-
-        // 添加合理的上限保护，避免加载过多数据到内存（OOM 风险）
-        // 注意：由于需要内存过滤，此处使用较大的上限（10000），确保分页结果的完整性
-        // TODO: 未来可考虑将更多过滤条件下推到数据库层，彻底改为数据库分页
-        wrapper.last("LIMIT 10000");
-
-        List<AlertRecordEntity> records = this.list(wrapper);
-        log.debug("[告警记录] 问题分页查询, 数据库加载记录数={}", records.size());
-
-        List<AlertProblemRsp> filtered = enrichAndFilterProblemRecords(records, request);
-        log.debug("[告警记录] 问题分页查询, 内存过滤后记录数={}", filtered.size());
-
-        return paginateProblemResults(filtered, page, limit);
+        String category = toStr(request.getCategory(), "realtime");
+        if ("realtime".equalsIgnoreCase(category)) {
+            return recentProblemPage(request);
+        }
+        return historyProblemPage(request);
     }
 
-    private LambdaQueryWrapper<AlertRecordEntity> buildProblemWrapper(AlertProblemPageReq request) {
-        String category = toStr(request.getCategory(), "realtime");
+    private PageData<AlertProblemRsp> recentProblemPage(AlertProblemPageReq request) {
+        int page = parseInt(toStr(request.getPage()), 1);
+        int limit = parseInt(toStr(request.getLimit()), 10);
         List<String> severityList = parseSeverityList(toStr(request.getSeverity()));
         String deviceType = toStr(request.getDeviceType());
         String hostName = toStr(request.getHostName());
         String instance = toStr(request.getInstance());
+        String ackStatus = toStr(request.getAckStatus());
         String statusFilter = toStr(request.getStatusFilter());
-        Date startTime = TimeUtils.parseDate(ParseUtils.toStr(request.getStartTime()));
-        Date endTime = TimeUtils.parseDate(ParseUtils.toStr(request.getEndTime()));
 
+        Date now = new Date();
         LambdaQueryWrapper<AlertRecordEntity> wrapper = new LambdaQueryWrapper<AlertRecordEntity>()
             .in(!severityList.isEmpty(), AlertRecordEntity::getSeverity, severityList)
-            .orderByDesc(AlertRecordEntity::getCreateDate);
+            .eq(AlertRecordEntity::getStatus, "firing")
+            .and(w -> w.isNull(AlertRecordEntity::getClosed).or().eq(AlertRecordEntity::getClosed, 0))
+            .and(w -> w.isNull(AlertRecordEntity::getSuppressedUntil).or().lt(AlertRecordEntity::getSuppressedUntil, now));
 
         if (StrUtil.isNotBlank(hostName)) {
             List<String> instancesByName = listInstancesByHostName(hostName, deviceType);
             if (instancesByName.isEmpty()) {
                 wrapper.like(AlertRecordEntity::getInstance, hostName);
             } else {
-                applyInstanceLikeFilter(wrapper, instancesByName);
+                applyRecordInstanceLikeFilter(wrapper, instancesByName);
             }
         }
         if (StrUtil.isNotBlank(instance)) {
             wrapper.like(AlertRecordEntity::getInstance, instance);
         }
-
-        if ("realtime".equalsIgnoreCase(category)) {
-            applyRealtimeFilters(wrapper, statusFilter);
-        } else {
-            applyHistoryFilters(wrapper, startTime, endTime);
+        if (StrUtil.isNotBlank(deviceType)) {
+            List<String> instances = listInstancesByType(deviceType);
+            if (instances.isEmpty()) {
+                wrapper.eq(AlertRecordEntity::getId, -1L);
+            } else {
+                applyRecordInstanceLikeFilter(wrapper, instances);
+            }
         }
-        return wrapper;
-    }
 
-    private void applyRealtimeFilters(LambdaQueryWrapper<AlertRecordEntity> wrapper, String statusFilter) {
-        Date recent24h = Date.from(Instant.now().minusSeconds(24L * 3600));
-        wrapper.ge(AlertRecordEntity::getStartsAt, recent24h);
-        if ("problem".equalsIgnoreCase(statusFilter)) {
-            wrapper.eq(AlertRecordEntity::getStatus, "firing")
-                .and(w -> w.isNull(AlertRecordEntity::getClosed).or().eq(AlertRecordEntity::getClosed, 0))
-                .and(w -> w.isNull(AlertRecordEntity::getSuppressedUntil).or().le(AlertRecordEntity::getSuppressedUntil, new Date()));
-        } else if ("manual".equalsIgnoreCase(statusFilter)) {
-            wrapper.eq(AlertRecordEntity::getClosed, 1);
-        } else if ("auto".equalsIgnoreCase(statusFilter) || "resolved".equalsIgnoreCase(statusFilter)) {
-            wrapper.and(w -> w
-                    .eq(AlertRecordEntity::getStatus, "resolved")
-                    .or()
-                    .eq(AlertRecordEntity::getSeverity, "recover"))
-                .and(w -> w.isNull(AlertRecordEntity::getClosed).or().eq(AlertRecordEntity::getClosed, 0));
+        List<AlertRecordEntity> records = this.list(wrapper);
+        if (records.isEmpty()) {
+            return new PageData<>(new ArrayList<>(), 0);
         }
-        wrapper.last("limit 1000");
-    }
-
-    private void applyHistoryFilters(LambdaQueryWrapper<AlertRecordEntity> wrapper, Date startTime, Date endTime) {
-        Date effectiveStart = startTime;
-        if (effectiveStart == null) {
-            effectiveStart = Date.from(Instant.now().minusSeconds(7L * 24 * 3600));
+        records.sort(Comparator
+            .comparingInt((AlertRecordEntity item) -> severityWeight(item.getSeverity()))
+            .thenComparing((AlertRecordEntity item) -> preferredRecordTime(item), Comparator.nullsLast(Comparator.reverseOrder()))
+            .thenComparing(AlertRecordEntity::getStartsAt, Comparator.nullsLast(Comparator.reverseOrder())));
+        if (records.size() > 50) {
+            records = new ArrayList<>(records.subList(0, 50));
         }
-        wrapper.ge(AlertRecordEntity::getStartsAt, effectiveStart);
-        wrapper.le(endTime != null, AlertRecordEntity::getStartsAt, endTime);
-        wrapper.last("limit 5000");
-    }
-
-    private List<AlertProblemRsp> enrichAndFilterProblemRecords(List<AlertRecordEntity> records,
-                                                                AlertProblemPageReq request) {
-        String category = toStr(request.getCategory(), "realtime");
-        String deviceType = toStr(request.getDeviceType());
-        String hostName = toStr(request.getHostName());
-        String ackStatus = toStr(request.getAckStatus());
-        String statusFilter = toStr(request.getStatusFilter());
 
         Map<String, HostInfo> hostMap = loadHostInfoMap();
         List<Long> recordIds = records.stream().map(AlertRecordEntity::getId).collect(Collectors.toList());
         Map<Long, Boolean> ackMap = alertRecordActionService.loadAckMap(recordIds);
-        Map<Long, ActionMeta> actionMetaMap = loadActionMetaMap(records);
+        Map<Long, ActionMeta> actionMetaMap = loadActionMetaMapByIds(recordIds);
         Map<Long, AlertNotifyLogEntity> latestNotifyMap = alertNotifyLogService.loadLatestByRecordIds(recordIds);
-        Set<String> alertNames = records.stream().map(AlertRecordEntity::getAlertName).filter(StrUtil::isNotBlank).collect(Collectors.toSet());
-        Set<String> instanceSet = records.stream().map(AlertRecordEntity::getInstance).filter(StrUtil::isNotBlank).collect(Collectors.toSet());
-        Map<String, AlertNotifyLogEntity> latestNotifyByAlert = alertNotifyLogService.loadLatestByAlerts(new ArrayList<>(alertNames), new ArrayList<>(instanceSet));
 
         List<AlertProblemRsp> all = new ArrayList<>();
         for (AlertRecordEntity record : records) {
-            AlertNotifyLogEntity notifyLog = latestNotifyMap.get(record.getId());
-            if (notifyLog == null) {
-                notifyLog = latestNotifyByAlert.get(buildAlertKey(record.getAlertName(), record.getInstance()));
-            }
-            AlertProblemRsp dto = toProblemDTO(record, hostMap, ackMap.get(record.getId()), notifyLog, actionMetaMap.get(record.getId()));
-            if (!matchesCategory(dto, category, statusFilter)
-                || !matchesDeviceType(dto, deviceType)
+            Long recordId = record.getId();
+            AlertNotifyLogEntity notifyLog = latestNotifyMap.get(recordId);
+            AlertProblemRsp dto = toProblemRecordDTO(record, hostMap, ackMap.get(recordId), notifyLog, actionMetaMap.get(recordId));
+            if (!matchesDeviceType(dto, deviceType)
                 || !matchesHostName(dto, hostName)
                 || !matchesAck(dto, ackStatus)
                 || !matchesStatus(dto, statusFilter)) {
@@ -398,7 +434,83 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             }
             all.add(dto);
         }
-        return all;
+        return paginateProblemResults(all, page, limit);
+    }
+
+    private PageData<AlertProblemRsp> historyProblemPage(AlertProblemPageReq request) {
+        int page = parseInt(toStr(request.getPage()), 1);
+        int limit = parseInt(toStr(request.getLimit()), 10);
+        List<String> severityList = parseSeverityList(toStr(request.getSeverity()));
+        String deviceType = toStr(request.getDeviceType());
+        String hostName = toStr(request.getHostName());
+        String instance = toStr(request.getInstance());
+        String ackStatus = toStr(request.getAckStatus());
+        String statusFilter = toStr(request.getStatusFilter());
+        Date startTime = TimeUtils.parseDate(ParseUtils.toStr(request.getStartTime()));
+        Date endTime = TimeUtils.parseDate(ParseUtils.toStr(request.getEndTime()));
+        Date effectiveStart = startTime == null ? Date.from(Instant.now().minusSeconds(7L * 24 * 3600)) : startTime;
+
+        LambdaQueryWrapper<AlertEventEntity> wrapper = new LambdaQueryWrapper<AlertEventEntity>()
+            .in(!severityList.isEmpty(), AlertEventEntity::getSeverity, severityList)
+            .ge(AlertEventEntity::getEventTime, effectiveStart)
+            .le(endTime != null, AlertEventEntity::getEventTime, endTime)
+            .orderByDesc(AlertEventEntity::getEventTime)
+            .orderByDesc(AlertEventEntity::getCreateDate)
+            .last("limit 5000");
+
+        if (StrUtil.isNotBlank(hostName)) {
+            List<String> instancesByName = listInstancesByHostName(hostName, deviceType);
+            if (instancesByName.isEmpty()) {
+                wrapper.like(AlertEventEntity::getInstance, hostName);
+            } else {
+                applyEventInstanceLikeFilter(wrapper, instancesByName);
+            }
+        }
+        if (StrUtil.isNotBlank(instance)) {
+            wrapper.like(AlertEventEntity::getInstance, instance);
+        }
+        if (StrUtil.isNotBlank(deviceType)) {
+            List<String> instances = listInstancesByType(deviceType);
+            if (instances.isEmpty()) {
+                wrapper.eq(AlertEventEntity::getId, -1L);
+            } else {
+                applyEventInstanceLikeFilter(wrapper, instances);
+            }
+        }
+
+        List<AlertEventEntity> events = alertEventMapper.selectList(wrapper);
+        if (events.isEmpty()) {
+            return new PageData<>(new ArrayList<>(), 0);
+        }
+
+        Map<String, HostInfo> hostMap = loadHostInfoMap();
+        Map<Long, AlertRecordEntity> recordMap = loadRecordMapByEvents(events);
+        List<Long> recordIds = new ArrayList<>(recordMap.keySet());
+        Map<Long, Boolean> ackMap = alertRecordActionService.loadAckMap(recordIds);
+        Map<Long, ActionMeta> actionMetaMap = loadActionMetaMapByIds(recordIds);
+        Map<Long, AlertNotifyLogEntity> latestNotifyMap = alertNotifyLogService.loadLatestByRecordIds(recordIds);
+        Set<String> alertNames = events.stream().map(AlertEventEntity::getAlertName).filter(StrUtil::isNotBlank).collect(Collectors.toSet());
+        Set<String> instanceSet = events.stream().map(AlertEventEntity::getInstance).filter(StrUtil::isNotBlank).collect(Collectors.toSet());
+        Map<String, AlertNotifyLogEntity> latestNotifyByAlert = alertNotifyLogService.loadLatestByAlerts(new ArrayList<>(alertNames), new ArrayList<>(instanceSet));
+
+        List<AlertProblemRsp> all = new ArrayList<>();
+        for (AlertEventEntity event : events) {
+            AlertRecordEntity record = event.getRecordId() == null ? null : recordMap.get(event.getRecordId());
+            Long recordId = record == null ? event.getRecordId() : record.getId();
+            AlertNotifyLogEntity notifyLog = recordId == null ? null : latestNotifyMap.get(recordId);
+            if (notifyLog == null) {
+                notifyLog = latestNotifyByAlert.get(buildAlertKey(event.getAlertName(), event.getInstance()));
+            }
+            AlertProblemRsp dto = toProblemEventDTO(event, record, hostMap, recordId == null ? null : ackMap.get(recordId), notifyLog, recordId == null ? null : actionMetaMap.get(recordId));
+            if (!matchesDeviceType(dto, deviceType)
+                || !matchesHostName(dto, hostName)
+                || !matchesAck(dto, ackStatus)
+                || !matchesStatus(dto, statusFilter)) {
+                continue;
+            }
+            all.add(dto);
+        }
+        return paginateProblemResults(all, page, limit);
     }
 
     private PageData<AlertProblemRsp> paginateProblemResults(List<AlertProblemRsp> all, int page, int limit) {
@@ -594,12 +706,11 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         return info == null ? null : info.name;
     }
 
-    private Map<Long, ActionMeta> loadActionMetaMap(List<AlertRecordEntity> records) {
+    private Map<Long, ActionMeta> loadActionMetaMapByIds(List<Long> ids) {
         Map<Long, ActionMeta> result = new HashMap<>();
-        if (records == null || records.isEmpty()) {
+        if (ids == null || ids.isEmpty()) {
             return result;
         }
-        List<Long> ids = records.stream().map(AlertRecordEntity::getId).collect(Collectors.toList());
         List<AlertRecordActionEntity> actions = alertRecordActionService.list(
             new LambdaQueryWrapper<AlertRecordActionEntity>()
                 .select(AlertRecordActionEntity::getRecordId,
@@ -639,6 +750,37 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         return result;
     }
 
+    private Map<Long, AlertRecordEntity> loadRecordMapByEvents(List<AlertEventEntity> events) {
+        List<Long> recordIds = events.stream()
+            .map(AlertEventEntity::getRecordId)
+            .filter(Objects::nonNull)
+            .distinct()
+            .collect(Collectors.toList());
+        if (recordIds.isEmpty()) {
+            return new HashMap<>();
+        }
+        return this.listByIds(recordIds).stream()
+            .collect(Collectors.toMap(AlertRecordEntity::getId, item -> item, (a, b) -> a));
+    }
+
+    private String loadWebhookPayload(Long webhookEventId) {
+        if (webhookEventId == null) {
+            return null;
+        }
+        AlertWebhookEventEntity webhookEvent = alertWebhookEventMapper.selectById(webhookEventId);
+        return webhookEvent == null ? null : webhookEvent.getPayloadJson();
+    }
+
+    private String resolveEventStatus(AlertEventEntity event, AlertRecordEntity record) {
+        if (record != null && record.getClosed() != null && record.getClosed() == 1) {
+            return "manual";
+        }
+        if ("resolved".equalsIgnoreCase(event.getStatus()) || "recover".equalsIgnoreCase(event.getSeverity())) {
+            return "resolved";
+        }
+        return "firing";
+    }
+
     private Map<Long, String> loadUserMap(List<Long> userIds) {
         Map<Long, String> userMap = new HashMap<>();
         if (userIds == null || userIds.isEmpty()) {
@@ -662,37 +804,38 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         return alertName.trim() + "|" + instance.trim();
     }
 
-    private AlertProblemRsp toProblemDTO(AlertRecordEntity record,
-                                         Map<String, HostInfo> hostMap,
-                                         Boolean acked,
-                                         AlertNotifyLogEntity notifyLog,
-                                         ActionMeta actionMeta) {
+    private AlertProblemRsp toProblemEventDTO(AlertEventEntity event,
+                                              AlertRecordEntity record,
+                                              Map<String, HostInfo> hostMap,
+                                              Boolean acked,
+                                              AlertNotifyLogEntity notifyLog,
+                                              ActionMeta actionMeta) {
         AlertProblemRsp dto = new AlertProblemRsp();
-        dto.setId(record.getId());
-        dto.setCreateDate(record.getCreateDate());
-        dto.setStartsAt(record.getStartsAt());
-        dto.setEndsAt(record.getEndsAt());
-        dto.setSeverity(record.getSeverity());
-        dto.setInstance(record.getInstance());
-        dto.setAlertName(record.getAlertName());
-        dto.setSummary(record.getSummary());
-        dto.setDescription(record.getDescription());
-        dto.setProblem(StrUtil.blankToDefault(record.getDescription(), record.getSummary()));
-        dto.setDuration(TimeUtils.formatDurationZh(record.getStartsAt(), record.getEndsAt()));
+        dto.setId(record == null ? event.getRecordId() : record.getId());
+        dto.setCreateDate(event.getEventTime());
+        dto.setStartsAt(event.getStartsAt());
+        dto.setEndsAt(event.getEndsAt());
+        dto.setSeverity(event.getSeverity());
+        dto.setInstance(event.getInstance());
+        dto.setAlertName(event.getAlertName());
+        dto.setSummary(event.getSummary());
+        dto.setDescription(event.getDescription());
+        dto.setProblem(StrUtil.blankToDefault(event.getDescription(), event.getSummary()));
+        dto.setDuration(TimeUtils.formatDurationZh(event.getStartsAt(), event.getEndsAt()));
         dto.setAckStatus(Boolean.TRUE.equals(acked) ? "已确定" : "未确定");
 
-        HostInfo hostInfo = hostMap.get(normalizeInstance(record.getInstance()));
+        HostInfo hostInfo = hostMap.get(normalizeInstance(event.getInstance()));
         if (hostInfo == null) {
             dto.setHostType("unknown");
-            dto.setHostName(record.getInstance());
+            dto.setHostName(event.getInstance());
         } else {
             dto.setHostType(hostInfo.type);
             dto.setHostName(hostInfo.name);
         }
 
-        if (record.getClosed() != null && record.getClosed() == 1) {
+        if (record != null && record.getClosed() != null && record.getClosed() == 1) {
             dto.setStatus("manual");
-        } else if ("resolved".equalsIgnoreCase(record.getStatus()) || "recover".equalsIgnoreCase(record.getSeverity())) {
+        } else if ("resolved".equalsIgnoreCase(event.getStatus()) || "recover".equalsIgnoreCase(event.getSeverity())) {
             dto.setStatus("auto");
         } else {
             dto.setStatus("problem");
@@ -724,11 +867,59 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         return dto;
     }
 
-    private boolean matchesCategory(AlertProblemRsp dto, String category, String statusFilter) {
-        if ("history".equalsIgnoreCase(category)) {
-            return true;
+    private AlertProblemRsp toProblemRecordDTO(AlertRecordEntity record,
+                                               Map<String, HostInfo> hostMap,
+                                               Boolean acked,
+                                               AlertNotifyLogEntity notifyLog,
+                                               ActionMeta actionMeta) {
+        AlertProblemRsp dto = new AlertProblemRsp();
+        dto.setId(record.getId());
+        dto.setCreateDate(preferredRecordTime(record));
+        dto.setStartsAt(record.getStartsAt());
+        dto.setEndsAt(record.getEndsAt());
+        dto.setSeverity(record.getSeverity());
+        dto.setInstance(record.getInstance());
+        dto.setAlertName(record.getAlertName());
+        dto.setSummary(record.getSummary());
+        dto.setDescription(record.getDescription());
+        dto.setProblem(StrUtil.blankToDefault(record.getDescription(), record.getSummary()));
+        dto.setDuration(TimeUtils.formatDurationZh(record.getStartsAt(), record.getEndsAt()));
+        dto.setAckStatus(Boolean.TRUE.equals(acked) ? "已确定" : "未确定");
+        dto.setStatus("problem");
+
+        HostInfo hostInfo = hostMap.get(normalizeInstance(record.getInstance()));
+        if (hostInfo == null) {
+            dto.setHostType("unknown");
+            dto.setHostName(record.getInstance());
+        } else {
+            dto.setHostType(hostInfo.type);
+            dto.setHostName(hostInfo.name);
         }
-        return true;
+
+        if (notifyLog != null) {
+            String status = notifyLog.getSendStatus() != null && notifyLog.getSendStatus() == 1 ? "发送成功" : "发送失败";
+            String action = "时间:" + notifyLog.getSendTime()
+                + " 媒介:" + StrUtil.nullToEmpty(notifyLog.getMediaName())
+                + " 接收人:" + StrUtil.nullToEmpty(notifyLog.getReceivers())
+                + " 状态:" + status;
+            dto.setAction(action);
+            dto.setActionTime(notifyLog.getSendTime());
+            dto.setActionMedia(notifyLog.getMediaName());
+            dto.setActionReceivers(notifyLog.getReceivers());
+            dto.setActionSendStatus(status);
+        } else {
+            dto.setAction("暂无发送记录");
+            dto.setActionSendStatus("暂无发送记录");
+        }
+        if (actionMeta != null) {
+            dto.setAckOperator(actionMeta.ackOperator);
+            dto.setAckTime(actionMeta.ackTime);
+            dto.setAckMessage(actionMeta.ackMessage);
+            dto.setCloseOperator(actionMeta.closeOperator);
+            dto.setCloseTime(actionMeta.closeTime);
+            dto.setCloseMessage(actionMeta.closeMessage);
+        }
+        return dto;
     }
 
     private boolean matchesDeviceType(AlertProblemRsp dto, String deviceType) {
@@ -765,6 +956,30 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             return true;
         }
         return StrUtil.equalsIgnoreCase(status, dto.getStatus());
+    }
+
+    private int severityWeight(String severity) {
+        String value = StrUtil.blankToDefault(severity, "").toLowerCase();
+        if ("critical".equals(value)) {
+            return 0;
+        }
+        if ("warning".equals(value)) {
+            return 1;
+        }
+        if ("info".equals(value)) {
+            return 2;
+        }
+        return 3;
+    }
+
+    private Date preferredRecordTime(AlertRecordEntity record) {
+        if (record.getLastSeenAt() != null) {
+            return record.getLastSeenAt();
+        }
+        if (record.getStartsAt() != null) {
+            return record.getStartsAt();
+        }
+        return record.getCreateDate();
     }
 
     private int parseInt(String value, int defaultValue) {
@@ -859,7 +1074,26 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             .collect(Collectors.toList());
     }
 
-    private void applyInstanceLikeFilter(LambdaQueryWrapper<AlertRecordEntity> wrapper, List<String> instances) {
+    private void applyEventInstanceLikeFilter(LambdaQueryWrapper<AlertEventEntity> wrapper, List<String> instances) {
+        List<String> keys = buildInstanceLikeKeys(instances);
+        if (keys.isEmpty()) {
+            wrapper.eq(AlertEventEntity::getId, -1L);
+            return;
+        }
+        wrapper.and(w -> {
+            boolean first = true;
+            for (String key : keys) {
+                if (first) {
+                    w.like(AlertEventEntity::getInstance, key);
+                    first = false;
+                } else {
+                    w.or().like(AlertEventEntity::getInstance, key);
+                }
+            }
+        });
+    }
+
+    private void applyRecordInstanceLikeFilter(LambdaQueryWrapper<AlertRecordEntity> wrapper, List<String> instances) {
         List<String> keys = buildInstanceLikeKeys(instances);
         if (keys.isEmpty()) {
             wrapper.eq(AlertRecordEntity::getId, -1L);
@@ -952,6 +1186,30 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             return "recover";
         }
         return fallback;
+    }
+
+    private AlertRecordEntity findExistingRecord(String fingerprint, String alertName, String instance, Date startsAt) {
+        if (StrUtil.isNotBlank(fingerprint)) {
+            AlertRecordEntity byFingerprint = this.getOne(
+                new LambdaQueryWrapper<AlertRecordEntity>()
+                    .eq(AlertRecordEntity::getFingerprint, fingerprint)
+                    .orderByDesc(AlertRecordEntity::getCreateDate)
+                    .last("limit 1"),
+                false
+            );
+            if (byFingerprint != null) {
+                return byFingerprint;
+            }
+        }
+        return this.getOne(
+            new LambdaQueryWrapper<AlertRecordEntity>()
+                .eq(StrUtil.isNotBlank(alertName), AlertRecordEntity::getAlertName, alertName)
+                .eq(StrUtil.isNotBlank(instance), AlertRecordEntity::getInstance, instance)
+                .eq(startsAt != null, AlertRecordEntity::getStartsAt, startsAt)
+                .orderByDesc(AlertRecordEntity::getCreateDate)
+                .last("limit 1"),
+            false
+        );
     }
 
     private static String toStr(Object value) {

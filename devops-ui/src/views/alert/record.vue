@@ -160,8 +160,8 @@
       <el-table-column label="操作" fixed="right" header-align="center" align="center" width="210">
         <template v-slot="scope">
           <el-button v-if="state.hasPermission('alert:record:info')" type="primary" link @click="showUpdate(scope.row)">更新</el-button>
-          <el-button v-if="state.hasPermission('alert:record:info')" type="primary" link @click="showDetail(scope.row.id)">详情</el-button>
-          <el-button v-if="state.hasPermission('alert:record:delete')" type="primary" link @click="state.deleteHandle(scope.row.id)">删除</el-button>
+          <el-button v-if="state.hasPermission('alert:record:info')" type="primary" link @click="showDetail(scope.row.eventId || scope.row.id)">详情</el-button>
+          <el-button v-if="state.hasPermission('alert:record:delete')" type="primary" link @click="state.deleteHandle(scope.row.recordId || scope.row.id)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -354,7 +354,7 @@ const showDetail = (id: number) => {
 };
 
 const showUpdate = (row: any) => {
-  updateForm.id = row.id;
+  updateForm.id = row.recordId || row.id;
   updateForm.problem = [row.alertName, row.instance, row.description].filter((item) => !!item).join(" ");
   updateForm.targetSeverity = normalizeSeverityValue(row.severity);
   updateForm.suppressDays = 1;
@@ -495,10 +495,6 @@ const statusClass = (value: string) => {
 };
 
 const severityClass = (row: any) => {
-  const status = String(row?.status || "").toLowerCase();
-  if (status === "resolved") {
-    return "severity-tag severity-tag--resolved";
-  }
   const severity = String(row?.severity || "").toLowerCase();
   if (severity === "critical") {
     return "severity-tag severity-tag--critical";

@@ -105,7 +105,7 @@
           <template #empty>
             <div class="alert-empty">
               <span class="alert-empty__icon">✓</span>
-              <span>近24小时无告警记录</span>
+              <span>当前无活跃告警</span>
             </div>
           </template>
           <el-table-column prop="createDate" label="记录时间" header-align="center" align="center" min-width="140" />
@@ -398,8 +398,6 @@ const formatSeverity = (value: string) => {
 };
 
 const severityClass = (row: any) => {
-  const status = String(row?.status || "").toLowerCase();
-  if (status === "auto" || status === "manual" || status === "resolved") return "severity-tag severity-tag--resolved";
   const severity = String(row?.severity || "").toLowerCase();
   if (severity === "critical") return "severity-tag severity-tag--critical";
   if (severity === "warning") return "severity-tag severity-tag--warning";

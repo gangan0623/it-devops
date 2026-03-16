@@ -5,8 +5,10 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ServiceException;
+import net.leoch.modules.alert.service.dto.AlertWebhookRecordResult;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -18,10 +20,14 @@ public class AlertWebhookService {
 
     private final IAlertRecordService alertRecordService;
     private final IAlertTriggerService alertTriggerService;
+    private final AlertEventIngestService alertEventIngestService;
 
-    public AlertWebhookService(IAlertRecordService alertRecordService, IAlertTriggerService alertTriggerService) {
+    public AlertWebhookService(IAlertRecordService alertRecordService,
+                               IAlertTriggerService alertTriggerService,
+                               AlertEventIngestService alertEventIngestService) {
         this.alertRecordService = alertRecordService;
         this.alertTriggerService = alertTriggerService;
+        this.alertEventIngestService = alertEventIngestService;
     }
 
     public void handle(String severity, String rawJson) {
@@ -34,8 +40,9 @@ public class AlertWebhookService {
             Map<String, Object> payload = JSONUtil.toBean(rawJson, new TypeReference<Map<String, Object>>() {}, false);
             String actualSeverity = severityFromPayload(payload, severity);
             log.debug("[告警Webhook] 解析完成, actualSeverity={}, status={}", actualSeverity, payload.get("status"));
-            alertRecordService.saveFromWebhook(payload, rawJson, actualSeverity);
-            alertTriggerService.notifyFromWebhook(payload, rawJson, actualSeverity);
+            List<AlertWebhookRecordResult> alertResults = alertRecordService.saveFromWebhook(payload, rawJson, actualSeverity);
+            alertEventIngestService.persist(payload, rawJson, alertResults);
+            alertTriggerService.notifyFromWebhook(payload, rawJson, actualSeverity, alertResults);
             log.info("[告警Webhook] 处理完成, actualSeverity={}", actualSeverity);
         } catch (Exception e) {
             log.error("[告警Webhook] 处理失败, severity={}", severity, e);

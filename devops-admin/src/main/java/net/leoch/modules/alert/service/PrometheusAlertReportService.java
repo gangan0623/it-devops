@@ -9,10 +9,12 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.common.exception.ServiceException;
-import net.leoch.modules.alert.entity.AlertRecordEntity;
+import net.leoch.modules.alert.entity.AlertEventEntity;
 import net.leoch.modules.alert.entity.AlertAiReportPrometheusEntity;
-import net.leoch.modules.alert.mapper.AlertRecordMapper;
+import net.leoch.modules.alert.entity.AlertRecordEntity;
+import net.leoch.modules.alert.mapper.AlertEventMapper;
 import net.leoch.modules.alert.mapper.AlertAiReportPrometheusMapper;
+import net.leoch.modules.alert.mapper.AlertRecordMapper;
 import net.leoch.modules.alert.vo.rsp.AlertAiReportPrometheusRsp;
 import net.leoch.modules.sys.service.AiConfigService;
 import net.leoch.modules.sys.vo.rsp.SysAiConfigRsp;
@@ -93,6 +95,7 @@ public class PrometheusAlertReportService {
             {{statsJson}}
             """;
 
+    private final AlertEventMapper alertEventMapper;
     private final AlertRecordMapper alertRecordMapper;
     private final AlertAiReportPrometheusMapper reportMapper;
     private final AiConfigService aiConfigService;
@@ -197,10 +200,10 @@ public class PrometheusAlertReportService {
         List<String> groups = isHttp ? HTTP_GROUPS : SERVER_GROUPS;
 
         // 单次查询，Java 单次遍历完成所有聚合，避免 3 次重复扫表
-        List<Map<String, Object>> rows = alertRecordMapper.selectMaps(
-                new QueryWrapper<AlertRecordEntity>()
+        List<Map<String, Object>> rows = alertEventMapper.selectMaps(
+                new QueryWrapper<AlertEventEntity>()
                         .in("alert_group", groups)
-                        .between("create_date", start, end)
+                        .between("event_time", start, end)
                         .select("alert_name", "instance", "status")
         );
 
@@ -242,8 +245,39 @@ public class PrometheusAlertReportService {
                 .map(e -> Map.<String, Object>of("instance", e.getKey(), "total_count", e.getValue()[0], "firing_count", e.getValue()[1]))
                 .toList();
         stats.put(instanceKey, topInstances);
+        stats.putAll(buildCurrentRiskSnapshot(groups, isHttp));
 
         return stats;
+    }
+
+    private Map<String, Object> buildCurrentRiskSnapshot(List<String> groups, boolean isHttp) {
+        List<Map<String, Object>> rows = alertRecordMapper.selectMaps(
+                new QueryWrapper<AlertRecordEntity>()
+                        .in("alert_group", groups)
+                        .eq("status", "firing")
+                        .and(w -> w.isNull("closed").or().eq("closed", 0))
+                        .and(w -> w.isNull("suppressed_until").or().le("suppressed_until", new Date()))
+                        .select("instance", "alert_name", "severity", "summary", "description")
+        );
+
+        Map<String, Object> snapshot = new HashMap<>();
+        snapshot.put("currentOpenCount", rows.size());
+
+        String instanceField = isHttp ? "target" : "host";
+        List<Map<String, Object>> currentRisks = rows.stream()
+                .map(row -> {
+                    Map<String, Object> item = new HashMap<>();
+                    item.put(instanceField, strVal(row, "instance"));
+                    item.put("alertName", strVal(row, "alert_name"));
+                    item.put("severity", strVal(row, "severity"));
+                    item.put("summary", strVal(row, "summary"));
+                    item.put("description", strVal(row, "description"));
+                    return item;
+                })
+                .limit(20)
+                .toList();
+        snapshot.put("currentOpenRisks", currentRisks);
+        return snapshot;
     }
 
     private static String strVal(Map<String, Object> row, String key) {
@@ -255,8 +289,9 @@ public class PrometheusAlertReportService {
         long total    = toLong(stats.get("total"));
         long firing   = toLong(stats.get("firingCount"));
         long resolved = toLong(stats.get("resolvedCount"));
+        long currentOpen = toLong(stats.get("currentOpenCount"));
         String typeLabel = "http".equalsIgnoreCase(reportType) ? "HTTP探测" : "服务器";
-        return typeLabel + "告警总计" + total + "条，告警中" + firing + "条，已恢复" + resolved + "条";
+        return typeLabel + "告警总计" + total + "条，告警中" + firing + "条，已恢复" + resolved + "条，当前遗留风险" + currentOpen + "条";
     }
 
     private long toLong(Object value) {
