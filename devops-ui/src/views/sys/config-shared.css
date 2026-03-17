@@ -1,0 +1,148 @@
+/* devops-ui/src/views/sys/config-shared.css */
+
+/* ── 布局 ── */
+.config-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.config-grid--storage {
+  grid-template-columns: minmax(0, 1.8fr) minmax(280px, 1fr);
+}
+
+.config-grid--default {
+  grid-template-columns: minmax(0, 1.6fr) minmax(260px, 1fr);
+}
+
+.stack-panels {
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
+/* ── 卡片 ── */
+.panel-card {
+  border-radius: 8px;
+}
+
+.panel-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.panel-card--muted {
+  background: #f8fafc;
+}
+
+.panel-card--highlight {
+  border: 1px solid #dbeafe;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+}
+
+/* ── 表单 ── */
+.config-form {
+  max-width: 100%;
+}
+
+.config-form--compact :deep(.el-form-item__label) {
+  width: 84px !important;
+}
+
+.action-row {
+  margin-bottom: 0;
+}
+
+.action-row--wrap :deep(.el-form-item__content) {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.action-tip {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.action-tip--ok {
+  color: #15803d;
+}
+
+/* ── 数据展示 ── */
+.kv-list {
+  display: grid;
+  gap: 10px;
+}
+
+.kv-item {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+}
+
+.kv-item__label {
+  color: #64748b;
+}
+
+.kv-item__value {
+  color: #0f172a;
+  font-weight: 600;
+  text-align: right;
+  word-break: break-word;
+}
+
+.side-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+/* ── 文字说明 ── */
+.info-list {
+  display: grid;
+  gap: 8px;
+}
+
+.info-list__title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #334155;
+}
+
+.info-list__item {
+  color: #475569;
+  line-height: 1.55;
+  font-size: 13px;
+}
+
+.info-list--inline {
+  margin-top: 10px;
+}
+
+/* ── 保存按钮引导动画 ── */
+@keyframes config-pulse {
+  0%   { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.5); }
+  70%  { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
+.btn-save-pulse {
+  animation: config-pulse 0.7s ease-out;
+}
+
+/* ── 响应式 ── */
+@media (max-width: 960px) {
+  .config-grid--storage,
+  .config-grid--default {
+    grid-template-columns: 1fr;
+  }
+}
