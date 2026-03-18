@@ -109,7 +109,7 @@
       ></el-pagination>
     </el-dialog>
 
-    <el-dialog v-model="diffVisible" title="备份对比" width="100%" top="2vh" class="diff-dialog">
+    <el-dialog v-model="diffVisible" title="备份对比" fullscreen class="diff-dialog">
       <div class="diff-summary">
         <span class="diff-summary__mode">{{ diffModeText }}</span>
         <span class="diff-summary__total">共 {{ diffLines.length }} 行</span>
@@ -202,7 +202,7 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import {computed, nextTick, reactive, ref, toRefs, watch} from "vue";
+import {computed, nextTick, onMounted, reactive, ref, toRefs, watch} from "vue";
 import { diffLines as jsDiffLines, diffChars } from "diff";
 import baseService from "@/service/baseService";
 import app from "@/constants/app";
@@ -222,8 +222,21 @@ const view = reactive({
 });
 
 const state = reactive({ ...useView(view), ...toRefs(view) });
-const successCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.lastBackupStatus) === 1).length);
-const failCount = computed(() => (state.dataList || []).filter((item: any) => Number(item?.lastBackupStatus) === 0).length);
+const successCount = ref(0);
+const failCount = ref(0);
+
+const loadStats = () => {
+  baseService
+    .get("/ops/network-device-backup-record/stats", {
+      name: state.dataForm.name || undefined,
+      ip: state.dataForm.ip || undefined,
+      status: state.dataForm.status !== "" ? state.dataForm.status : undefined,
+    })
+    .then((res: any) => {
+      successCount.value = res.data?.success ?? 0;
+      failCount.value = res.data?.fail ?? 0;
+    });
+};
 
 const historyVisible = ref(false);
 const historyLoading = ref(false);
@@ -260,6 +273,7 @@ const previewVisible = ref(false);
 const previewContent = ref("");
 const queryList = () => {
   state.getDataList();
+  loadStats();
 };
 const handleToolbarReset = () => {
   state.dataForm.name = "";
@@ -632,10 +646,24 @@ const downloadFile = (url: string) => {
 };
 
 const onLeftScroll = (e: Event) => {
-  leftScrollTop.value = (e.target as HTMLElement).scrollTop;
+  const el = e.target as HTMLElement;
+  const scrollTop = el.scrollTop;
+  leftScrollTop.value = scrollTop;
+  const rightEl = rightPanelRef.value;
+  if (rightEl && rightEl.scrollTop !== scrollTop) {
+    rightEl.scrollTop = scrollTop;
+    rightScrollTop.value = scrollTop;
+  }
 };
 const onRightScroll = (e: Event) => {
-  rightScrollTop.value = (e.target as HTMLElement).scrollTop;
+  const el = e.target as HTMLElement;
+  const scrollTop = el.scrollTop;
+  rightScrollTop.value = scrollTop;
+  const leftEl = leftPanelRef.value;
+  if (leftEl && leftEl.scrollTop !== scrollTop) {
+    leftEl.scrollTop = scrollTop;
+    leftScrollTop.value = scrollTop;
+  }
 };
 
 let diffScrollCleanup: (() => void) | null = null;
@@ -716,7 +744,12 @@ const setupPreviewSync = () => {
   view.onscroll = syncFromView;
 };
 
+onMounted(() => {
+  loadStats();
+});
+
 watch(diffVisible, (val) => {
+  document.body.style.overflow = val ? "hidden" : "";
   if (!val && diffScrollCleanup) {
     diffScrollCleanup();
     diffScrollCleanup = null;
@@ -1055,11 +1088,25 @@ watch(diffVisible, (val) => {
 }
 
 /* 弹窗布局 */
+.diff-dialog :deep(.el-dialog) {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+}
+
+.diff-dialog :deep(.el-dialog__header) {
+  flex-shrink: 0;
+}
+
 .diff-dialog :deep(.el-dialog__body) {
   display: flex;
   flex-direction: column;
-  height: calc(100vh - 180px);
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
+  padding: 12px 16px;
 }
 
 .preview-dialog :deep(.el-dialog__body) {

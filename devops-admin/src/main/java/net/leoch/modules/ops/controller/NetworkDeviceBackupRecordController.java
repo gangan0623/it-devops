@@ -15,6 +15,7 @@ import net.leoch.common.data.page.PageData;
 import net.leoch.common.data.result.Result;
 import net.leoch.modules.ops.service.INetworkDeviceBackupRecordService;
 import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.DashboardBackupStatsRsp;
 import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupDiffContentRsp;
 import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupHistoryRsp;
 import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupRecordRsp;
@@ -44,6 +45,13 @@ public class NetworkDeviceBackupRecordController {
     @SaCheckPermission("ops:network-device-backup-record:page")
     public Result<PageData<NetworkDeviceBackupRecordRsp>> page(@Parameter(hidden = true) NetworkDeviceBackupRecordPageReq request){
         return new Result<PageData<NetworkDeviceBackupRecordRsp>>().ok(deviceBackupRecordService.page(request));
+    }
+
+    @GetMapping("stats")
+    @Operation(summary = "网络设备备份记录统计")
+    @SaCheckPermission("ops:network-device-backup-record:page")
+    public Result<DashboardBackupStatsRsp> stats(@Parameter(hidden = true) NetworkDeviceBackupRecordPageReq request) {
+        return new Result<DashboardBackupStatsRsp>().ok(deviceBackupRecordService.stats(request));
     }
 
     @GetMapping("{id}")

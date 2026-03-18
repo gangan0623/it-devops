@@ -3,11 +3,20 @@
     <el-card shadow="never" class="panel-card">
       <template #header>
         <div class="panel-card__header">
-          <span>Zabbix连接配置</span>
+          <div class="panel-card__heading">
+            <div class="panel-card__eyebrow">Monitor Bridge</div>
+            <div class="panel-card__title">Zabbix 连接配置</div>
+            <div class="panel-card__desc">维护 API 连接、连通性验证和后续映射依赖。</div>
+          </div>
           <el-tag size="small" :type="zabbixForm.status === 1 ? 'success' : 'info'">{{ zabbixForm.status === 1 ? "启用中" : "已禁用" }}</el-tag>
         </div>
       </template>
       <el-form ref="zabbixFormRef" :model="zabbixForm" :rules="zabbixRules" label-width="110px" class="config-form" :disabled="loading.save">
+        <div class="status-banner" :class="{ 'status-banner--success': tested }">
+          <div class="status-banner__label">当前步骤</div>
+          <div class="status-banner__title">{{ tested ? "连接验证已通过，可以保存配置" : "请先完成连接验证，再保存配置" }}</div>
+          <div class="status-banner__desc">推荐顺序：验证连接 -> 检查版本 -> 保存配置。</div>
+        </div>
         <el-form-item label="Zabbix URL" prop="url">
           <el-input v-model="zabbixForm.url" placeholder="http://x.x.x.x/api_jsonrpc.php"></el-input>
         </el-form-item>
@@ -27,14 +36,14 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item class="action-row action-row--wrap">
-          <el-button :loading="loading.test" @click="testZabbix">测试连接</el-button>
-          <el-button :loading="loading.version" @click="checkZabbixVersion">检测版本</el-button>
+          <el-button :loading="loading.test" @click="testZabbix">验证连接</el-button>
+          <el-button :loading="loading.version" @click="checkZabbixVersion">检查版本</el-button>
           <el-button type="primary" :disabled="!tested" :loading="loading.save" :class="{ 'btn-save-pulse': pulseSave }" @click="saveZabbix">
-            保存Zabbix配置
+            保存配置
           </el-button>
         </el-form-item>
         <div class="action-tip" :class="{ 'action-tip--ok': tested }">
-          {{ tested ? "连接测试通过，可保存" : "请先测试连接，测试成功后才能保存" }}
+          {{ tested ? "连接验证通过，可保存配置" : "请先完成连接验证，验证通过后才能保存配置" }}
         </div>
       </el-form>
     </el-card>
@@ -43,7 +52,11 @@
       <el-card shadow="never" class="panel-card panel-card--highlight">
         <template #header>
           <div class="panel-card__header">
-            <span>版本检测</span>
+            <div class="panel-card__heading">
+              <div class="panel-card__eyebrow">Version</div>
+              <div class="panel-card__title">版本状态</div>
+              <div class="panel-card__desc">用于判断当前接入环境是否存在可升级版本。</div>
+            </div>
           </div>
         </template>
         <div class="kv-list">
@@ -66,20 +79,21 @@
         </div>
         <div class="side-actions">
           <el-button v-if="zabbixVersion.updateAvailable === 1 && zabbixVersion.upgradeUrl" type="primary" @click="openZabbixUpgradeUrl">
-            前往更新
+            查看更新
           </el-button>
-          <el-button :loading="loading.version" @click="checkZabbixVersion">重新检测</el-button>
+          <el-button :loading="loading.version" @click="checkZabbixVersion">重新检查</el-button>
         </div>
         <div class="info-list info-list--inline">
-          <div class="info-list__title">建议流程</div>
-          <div class="info-list__item">先测试连接，再确认版本状态，最后保存配置。</div>
+          <div class="info-list__title">推荐流程</div>
+          <div class="info-list__item">先验证连接，再确认版本状态，最后保存配置。</div>
         </div>
       </el-card>
 
       <el-card shadow="never" class="panel-card panel-card--muted">
         <div class="info-list">
-          <div class="info-list__title">提示</div>
+          <div class="info-list__title">操作说明</div>
           <div class="info-list__item">建议先完成并保存 Zabbix 连接配置，再维护映射规则。</div>
+          <div class="info-list__item">如账号、地址或状态发生变化，已验证状态会自动失效。</div>
         </div>
       </el-card>
     </div>
@@ -87,9 +101,10 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onMounted, reactive, ref, watch } from "vue";
+import { onMounted, reactive, ref, watch } from "vue";
 import baseService from "@/service/baseService";
 import { ElMessage } from "element-plus";
+import { MESSAGE_DURATION, assignConfig, useLoadingState, useSavePulse, validateForm } from "./config-helpers";
 
 const zabbixFormRef = ref();
 
@@ -108,24 +123,33 @@ const zabbixVersion = reactive({
   upgradeUrl: "https://www.zabbix.com/download"
 });
 
-const loading = reactive({
+const zabbixDefaults = {
+  url: "",
+  name: "Zabbix",
+  username: "",
+  password: "",
+  status: 1
+};
+
+const zabbixVersionDefaults = {
+  currentVersion: "",
+  latestVersion: "",
+  updateAvailable: null as null | number,
+  upgradeUrl: "https://www.zabbix.com/download"
+};
+
+const { loading, withLoading } = useLoadingState({
   test: false,
   version: false,
   save: false
 });
 
 const tested = ref(false);
-
-const pulseSave = ref(false);
+const { pulseSave, triggerSavePulse } = useSavePulse();
 
 watch(tested, (val) => {
   if (val) {
-    nextTick(() => {
-      pulseSave.value = true;
-      setTimeout(() => {
-        pulseSave.value = false;
-      }, 700);
-    });
+    triggerSavePulse();
   }
 });
 
@@ -145,15 +169,10 @@ watch(
   }
 );
 
-const validateForm = (formRef: any) =>
-  new Promise<boolean>((resolve) => {
-    formRef.value.validate((valid: boolean) => resolve(valid));
-  });
-
 const loadZabbix = () => {
   baseService.get("/sys/config-center/zabbix").then((res) => {
     if (res.data) {
-      Object.assign(zabbixForm, { url: "", name: "Zabbix", username: "", password: "", status: 1 }, res.data);
+      assignConfig(zabbixForm, zabbixDefaults, res.data);
     }
     tested.value = false;
     loadZabbixVersion();
@@ -161,54 +180,34 @@ const loadZabbix = () => {
 };
 
 const loadZabbixVersion = () => {
-  loading.version = true;
-  baseService
-    .get("/sys/config-center/zabbix/version")
-    .then((res) => {
-      Object.assign(
-        zabbixVersion,
-        { currentVersion: "", latestVersion: "", updateAvailable: null, upgradeUrl: "https://www.zabbix.com/download" },
-        res.data || {}
-      );
+  withLoading("version", () =>
+    baseService.get("/sys/config-center/zabbix/version").then((res) => {
+      assignConfig(zabbixVersion, zabbixVersionDefaults, res.data);
     })
-    .finally(() => {
-      loading.version = false;
-    });
+  );
 };
 
 const testZabbix = async () => {
   const valid = await validateForm(zabbixFormRef);
   if (!valid) return;
-  loading.test = true;
-  baseService
-    .post("/sys/config-center/zabbix/test", { ...zabbixForm })
-    .then(() => {
+  await withLoading("test", () =>
+    baseService.post("/sys/config-center/zabbix/test", { ...zabbixForm }).then(() => {
       tested.value = true;
-      ElMessage.success({ message: "Zabbix连接测试成功", duration: 2000 });
+      ElMessage.success({ message: "连接验证成功", duration: MESSAGE_DURATION.success });
       checkZabbixVersion(false);
     })
-    .finally(() => {
-      loading.test = false;
-    });
+  );
 };
 
 const checkZabbixVersion = async (showSuccess = true) => {
   const valid = await validateForm(zabbixFormRef);
   if (!valid) return;
-  loading.version = true;
-  baseService
-    .post("/sys/config-center/zabbix/version", { ...zabbixForm })
-    .then((res) => {
-      Object.assign(
-        zabbixVersion,
-        { currentVersion: "", latestVersion: "", updateAvailable: null, upgradeUrl: "https://www.zabbix.com/download" },
-        res.data || {}
-      );
-      if (showSuccess) ElMessage.success({ message: "Zabbix版本检测完成", duration: 2000 });
+  await withLoading("version", () =>
+    baseService.post("/sys/config-center/zabbix/version", { ...zabbixForm }).then((res) => {
+      assignConfig(zabbixVersion, zabbixVersionDefaults, res.data);
+      if (showSuccess) ElMessage.success({ message: "版本检查完成", duration: MESSAGE_DURATION.success });
     })
-    .finally(() => {
-      loading.version = false;
-    });
+  );
 };
 
 const openZabbixUpgradeUrl = () => {
@@ -217,22 +216,18 @@ const openZabbixUpgradeUrl = () => {
 
 const saveZabbix = async () => {
   if (!tested.value) {
-    ElMessage.warning({ message: "请先测试连接", duration: 3000 });
+    ElMessage.warning({ message: "请先完成连接验证", duration: MESSAGE_DURATION.warning });
     return;
   }
   const valid = await validateForm(zabbixFormRef);
   if (!valid) return;
-  loading.save = true;
-  baseService
-    .put("/sys/config-center/zabbix", { ...zabbixForm })
-    .then(() => {
-      ElMessage.success({ message: "Zabbix配置已保存", duration: 2000 });
+  await withLoading("save", () =>
+    baseService.put("/sys/config-center/zabbix", { ...zabbixForm }).then(() => {
+      ElMessage.success({ message: "配置已保存", duration: MESSAGE_DURATION.success });
       tested.value = true;
       loadZabbix();
     })
-    .finally(() => {
-      loading.save = false;
-    });
+  );
 };
 
 onMounted(() => {

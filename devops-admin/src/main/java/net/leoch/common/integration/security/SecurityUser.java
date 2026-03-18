@@ -2,6 +2,7 @@
 
 package net.leoch.common.integration.security;
 
+import cn.dev33.satoken.exception.NotLoginException;
 import cn.dev33.satoken.exception.NotWebContextException;
 import cn.dev33.satoken.session.SaSession;
 import cn.dev33.satoken.stp.StpUtil;
@@ -48,8 +49,8 @@ public class SecurityUser {
             user = BeanUtil.copyProperties(userEntity, UserDetail.class);
             StpUtil.getSession().set("user", user);
             return user;
-        } catch (NotWebContextException e) {
-            // 定时任务/异步线程没有 HTTP 上下文，回退系统用户
+        } catch (NotWebContextException | NotLoginException e) {
+            // 定时任务/异步线程没有 HTTP 上下文，或 webhook/匿名请求没有登录态，回退系统用户
             return systemUser();
         } catch (Exception e) {
             log.warn("[安全] 获取用户信息失败", e);
@@ -63,8 +64,8 @@ public class SecurityUser {
     public static Long getUserId() {
         try {
             return StpUtil.getLoginIdAsLong();
-        } catch (NotWebContextException e) {
-            // 定时任务/异步线程没有 HTTP 上下文，回退系统用户
+        } catch (NotWebContextException | NotLoginException e) {
+            // 定时任务/异步线程没有 HTTP 上下文，或 webhook/匿名请求没有登录态，回退系统用户
             return SYSTEM_USER_ID;
         } catch (Exception e) {
             log.warn("[安全] 获取用户ID失败", e);

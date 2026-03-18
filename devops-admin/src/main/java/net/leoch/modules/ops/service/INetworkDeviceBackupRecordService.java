@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import net.leoch.common.data.page.PageData;
 import net.leoch.modules.ops.entity.NetworkDeviceBackupRecordEntity;
 import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.DashboardBackupStatsRsp;
 import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupDiffContentRsp;
 import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupHistoryRsp;
 import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupRecordRsp;
@@ -37,4 +38,6 @@ public interface INetworkDeviceBackupRecordService extends IService<NetworkDevic
     void upsertRecord(String name, String ip, String url, boolean success);
 
     NetworkDeviceBackupRecordRsp getByIp(String ip);
+
+    DashboardBackupStatsRsp stats(NetworkDeviceBackupRecordPageReq request);
 }

@@ -16,6 +16,7 @@ import net.leoch.modules.ops.mapper.NetworkDeviceBackupRecordMapper;
 import net.leoch.modules.ops.service.INetworkDeviceBackupHistoryService;
 import net.leoch.modules.ops.service.INetworkDeviceBackupRecordService;
 import net.leoch.modules.ops.vo.req.*;
+import net.leoch.modules.ops.vo.rsp.DashboardBackupStatsRsp;
 import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupDiffContentRsp;
 import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupHistoryRsp;
 import net.leoch.modules.ops.vo.rsp.NetworkDeviceBackupRecordRsp;
@@ -242,6 +243,28 @@ public class NetworkDeviceBackupRecordServiceImpl extends ServiceImpl<NetworkDev
         wrapper.eq(NetworkDeviceBackupRecordEntity::getIp, ip).last("limit 1");
         NetworkDeviceBackupRecordEntity existing = this.getOne(wrapper);
         return BeanUtil.copyProperties(existing, NetworkDeviceBackupRecordRsp.class);
+    }
+
+    @Override
+    public DashboardBackupStatsRsp stats(NetworkDeviceBackupRecordPageReq request) {
+        boolean nameFilter = request != null && StrUtil.isNotBlank(request.getName());
+        boolean ipFilter = request != null && StrUtil.isNotBlank(request.getIp());
+        String statusFilter = request != null ? request.getStatus() : null;
+
+        LambdaQueryWrapper<NetworkDeviceBackupRecordEntity> successWrapper = new LambdaQueryWrapper<>();
+        successWrapper.like(nameFilter, NetworkDeviceBackupRecordEntity::getName, nameFilter ? request.getName() : null);
+        successWrapper.like(ipFilter, NetworkDeviceBackupRecordEntity::getIp, ipFilter ? request.getIp() : null);
+        successWrapper.eq(NetworkDeviceBackupRecordEntity::getLastBackupStatus, 1);
+
+        LambdaQueryWrapper<NetworkDeviceBackupRecordEntity> failWrapper = new LambdaQueryWrapper<>();
+        failWrapper.like(nameFilter, NetworkDeviceBackupRecordEntity::getName, nameFilter ? request.getName() : null);
+        failWrapper.like(ipFilter, NetworkDeviceBackupRecordEntity::getIp, ipFilter ? request.getIp() : null);
+        failWrapper.eq(NetworkDeviceBackupRecordEntity::getLastBackupStatus, 0);
+
+        DashboardBackupStatsRsp rsp = new DashboardBackupStatsRsp();
+        rsp.setSuccess(StrUtil.isBlank(statusFilter) || "1".equals(statusFilter) ? this.count(successWrapper) : 0L);
+        rsp.setFail(StrUtil.isBlank(statusFilter) || "0".equals(statusFilter) ? this.count(failWrapper) : 0L);
+        return rsp;
     }
 
 }

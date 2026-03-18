@@ -4,7 +4,11 @@
       <el-card shadow="never" class="panel-card mapping-config-card">
         <template #header>
           <div class="panel-card__header">
-            <span>映射配置</span>
+            <div class="panel-card__heading">
+              <div class="panel-card__eyebrow">Workbench</div>
+              <div class="panel-card__title">映射规则配置</div>
+              <div class="panel-card__desc">先选主机群组，再维护模板、分类和区域规则，最后保存并预览结果。</div>
+            </div>
             <el-tag size="small" type="info">{{ zabbixMappingForm.zabbixName || "Zabbix" }}</el-tag>
           </div>
         </template>
@@ -46,13 +50,17 @@
           </el-select>
         </div>
         <div class="mapping-actions">
-          <el-button :loading="loading.preview" @click="previewZabbixMapping">预览映射</el-button>
-          <el-button type="success" :loading="loading.sync" @click="syncZabbixNetworkHosts">同步</el-button>
-          <el-button type="primary" :loading="loading.save" @click="saveZabbixMapping">保存</el-button>
+          <el-button :loading="loading.preview" @click="previewZabbixMapping">预览结果</el-button>
+          <el-button type="success" :loading="loading.sync" @click="syncZabbixNetworkHosts">同步数据</el-button>
+          <el-button type="primary" :loading="loading.save" @click="saveZabbixMapping">保存配置</el-button>
         </div>
       </el-card>
 
       <el-card shadow="never" class="panel-card mapping-rules-card">
+        <div class="mapping-section-head">
+          <div class="mapping-section-head__title">规则维护</div>
+          <div class="mapping-section-head__desc">按模板、分类和区域三个维度维护映射规则。</div>
+        </div>
         <el-tabs v-model="activeRuleTab" class="mapping-rule-tabs" stretch>
           <el-tab-pane label="模板型号" name="template">
             <div class="mapping-rule-list">
@@ -111,7 +119,11 @@
       <el-card shadow="never" class="panel-card panel-card--muted">
         <template #header>
           <div class="panel-card__header">
-            <span>映射预览</span>
+            <div class="panel-card__heading">
+              <div class="panel-card__eyebrow">Preview</div>
+              <div class="panel-card__title">预览结果</div>
+              <div class="panel-card__desc">用筛选和仅未映射视图快速定位需要补充的规则。</div>
+            </div>
             <div class="preview-header-tags">
               <el-tag size="small" type="info">总计 {{ zabbixMappingPreview.groupList.length }}</el-tag>
               <el-tag v-if="zabbixMappingPreview.unmatchedAreas.length" type="warning" size="small">
@@ -124,7 +136,7 @@
         <div class="preview-toolbar">
           <el-switch v-model="previewFilter.onlyUnmatched" inline-prompt active-text="仅未映射" inactive-text="全部" />
           <el-input v-model="previewFilter.keyword" placeholder="筛选：群组/分类/区域" clearable />
-          <el-button :loading="loading.preview" @click="previewZabbixMapping">刷新预览</el-button>
+          <el-button :loading="loading.preview" @click="previewZabbixMapping">刷新结果</el-button>
         </div>
         <div v-if="filteredPreviewRows.length" class="mapping-preview">
           <el-table :data="filteredPreviewRows" :row-class-name="previewRowClassName" size="small" border height="100%">
@@ -135,7 +147,7 @@
           </el-table>
         </div>
         <div v-else class="info-list">
-          <div class="info-list__item">暂无可显示数据，请调整筛选条件或点击"刷新预览"。</div>
+          <div class="info-list__item">暂无可显示数据，请调整筛选条件或点击“刷新结果”。</div>
         </div>
         <div v-if="zabbixMappingPreview.unmatchedAreas.length" class="unmatched-list">
           未映射区域：{{ zabbixMappingPreview.unmatchedAreas.join("、") }}
@@ -149,6 +161,7 @@
 import { computed, onMounted, reactive, ref } from "vue";
 import baseService from "@/service/baseService";
 import { ElMessage, ElMessageBox } from "element-plus";
+import { MESSAGE_DURATION, assignConfig, useLoadingState } from "./config-helpers";
 
 const zabbixMappingForm = reactive({
   zabbixName: "Zabbix",
@@ -187,12 +200,42 @@ const previewFilter = reactive({
   keyword: ""
 });
 
-const loading = reactive({
+const { loading, withLoading } = useLoadingState({
   options: false,
   save: false,
   preview: false,
   sync: false
 });
+
+const zabbixMappingDefaults = {
+  zabbixName: "Zabbix",
+  selectedHostGroupIds: [] as string[],
+  templateModelRules: [] as Array<{ templateName: string; deviceModel: string }>,
+  categoryGroupRules: [] as Array<{ zabbixCategory: string; deviceGroup: string }>,
+  areaKeywordRules: [] as Array<{ keyword: string; areaName: string }>
+};
+
+const zabbixMappingOptionsDefaults = {
+  zabbixName: "Zabbix",
+  templateOptions: [] as string[],
+  hostGroupOptions: [] as Array<{ groupId: string; name: string }>,
+  areaOptions: [] as Array<{ dictLabel: string; dictValue: string }>,
+  deviceGroupOptions: [] as Array<{ dictLabel: string; dictValue: string }>,
+  deviceModelOptions: [] as Array<{ dictLabel: string; dictValue: string }>
+};
+
+const zabbixMappingPreviewDefaults = {
+  groupList: [] as Array<{
+    groupId: string;
+    groupName: string;
+    zabbixCategory: string;
+    rawAreaSegment: string;
+    normalizedAreaKeyword: string;
+    matchedAreaName: string;
+    matched: number;
+  }>,
+  unmatchedAreas: [] as string[]
+};
 
 const mappingStats = computed(() => ({
   hostGroupCount: zabbixMappingForm.selectedHostGroupIds.length,
@@ -217,11 +260,7 @@ const previewRowClassName = ({ row }: { row: { matched: number } }) =>
 
 const loadZabbixMapping = () => {
   baseService.get("/sys/config-center/zabbix/network-device-mapping").then((res) => {
-    Object.assign(
-      zabbixMappingForm,
-      { zabbixName: "Zabbix", selectedHostGroupIds: [], templateModelRules: [], categoryGroupRules: [], areaKeywordRules: [] },
-      res.data || {}
-    );
+    assignConfig(zabbixMappingForm, zabbixMappingDefaults, res.data);
     if (zabbixMappingForm.selectedHostGroupIds.length) {
       previewZabbixMapping(false);
     }
@@ -229,54 +268,42 @@ const loadZabbixMapping = () => {
 };
 
 const loadZabbixMappingOptions = () => {
-  loading.options = true;
-  baseService
-    .get("/sys/config-center/zabbix/network-device-mapping/options")
-    .then((res) => {
-      Object.assign(
-        zabbixMappingOptions,
-        { zabbixName: "Zabbix", templateOptions: [], hostGroupOptions: [], areaOptions: [], deviceGroupOptions: [], deviceModelOptions: [] },
-        res.data || {}
-      );
+  withLoading("options", () =>
+    baseService.get("/sys/config-center/zabbix/network-device-mapping/options").then((res) => {
+      assignConfig(zabbixMappingOptions, zabbixMappingOptionsDefaults, res.data);
       if (!zabbixMappingForm.zabbixName) {
         zabbixMappingForm.zabbixName = zabbixMappingOptions.zabbixName || "Zabbix";
       }
     })
-    .finally(() => {
-      loading.options = false;
-    });
+  );
 };
 
 const previewZabbixMapping = (showMessage = true) => {
-  loading.preview = true;
-  baseService
-    .post("/sys/config-center/zabbix/network-device-mapping/preview", {
+  return withLoading("preview", () =>
+    baseService.post("/sys/config-center/zabbix/network-device-mapping/preview", {
       selectedHostGroupIds: [...zabbixMappingForm.selectedHostGroupIds],
       categoryGroupRules: zabbixMappingForm.categoryGroupRules.map((item) => ({ ...item })),
       areaKeywordRules: zabbixMappingForm.areaKeywordRules.map((item) => ({ ...item }))
     })
     .then((res) => {
-      Object.assign(zabbixMappingPreview, { groupList: [], unmatchedAreas: [] }, res.data || {});
+      assignConfig(zabbixMappingPreview, zabbixMappingPreviewDefaults, res.data);
       if (showMessage) {
         if (!zabbixMappingPreview.groupList.length) {
-          ElMessage.info({ message: "预览完成，未匹配到可显示的主机群组", duration: 2000 });
+          ElMessage.info({ message: "预览结果已更新，当前没有可显示的数据", duration: MESSAGE_DURATION.info });
           return;
         }
         ElMessage.success({
-          message: `预览完成，共 ${zabbixMappingPreview.groupList.length} 条，未映射 ${zabbixMappingPreview.unmatchedAreas.length} 条`,
-          duration: 2000
+          message: `预览结果已更新，共 ${zabbixMappingPreview.groupList.length} 条，未映射 ${zabbixMappingPreview.unmatchedAreas.length} 条`,
+          duration: MESSAGE_DURATION.success
         });
       }
     })
-    .finally(() => {
-      loading.preview = false;
-    });
+  );
 };
 
 const saveZabbixMapping = () => {
-  loading.save = true;
-  baseService
-    .put("/sys/config-center/zabbix/network-device-mapping", {
+  return withLoading("save", () =>
+    baseService.put("/sys/config-center/zabbix/network-device-mapping", {
       zabbixName: zabbixMappingForm.zabbixName,
       selectedHostGroupIds: [...zabbixMappingForm.selectedHostGroupIds],
       templateModelRules: zabbixMappingForm.templateModelRules.map((item) => ({ ...item })),
@@ -284,12 +311,10 @@ const saveZabbixMapping = () => {
       areaKeywordRules: zabbixMappingForm.areaKeywordRules.map((item) => ({ ...item }))
     })
     .then(() => {
-      ElMessage.success({ message: "设备映射配置已保存", duration: 2000 });
+      ElMessage.success({ message: "配置已保存", duration: MESSAGE_DURATION.success });
       previewZabbixMapping();
     })
-    .finally(() => {
-      loading.save = false;
-    });
+  );
 };
 
 const syncZabbixNetworkHosts = async () => {
@@ -302,26 +327,22 @@ const syncZabbixNetworkHosts = async () => {
   } catch {
     return;
   }
-  loading.sync = true;
-  baseService
-    .post("/sys/config-center/zabbix/network-device-mapping/sync")
-    .then((res) => {
+  return withLoading("sync", () =>
+    baseService.post("/sys/config-center/zabbix/network-device-mapping/sync").then((res) => {
       const data = res.data || {};
       if (Number(data.syncSuccess) === 0) {
-        ElMessage.warning({ message: data.message || "同步未执行", duration: 3000 });
+        ElMessage.warning({ message: data.message || "数据同步未执行", duration: MESSAGE_DURATION.warning });
         return;
       }
       ElMessage.success({
-        message: `同步完成：拉取${data.totalFetched ?? 0}，新增${data.inserted ?? 0}，更新${data.updated ?? 0}，逻辑删除(禁用)${data.logicalDeleted ?? data.disabled ?? 0}，跳过${data.skipped ?? 0}`,
-        duration: 2000
+        message: `数据同步完成：拉取${data.totalFetched ?? 0}，新增${data.inserted ?? 0}，更新${data.updated ?? 0}，逻辑删除(禁用)${data.logicalDeleted ?? data.disabled ?? 0}，跳过${data.skipped ?? 0}`,
+        duration: MESSAGE_DURATION.success
       });
       if (Array.isArray(data.unmatchedAreas) && data.unmatchedAreas.length) {
         zabbixMappingPreview.unmatchedAreas = [...data.unmatchedAreas];
       }
     })
-    .finally(() => {
-      loading.sync = false;
-    });
+  );
 };
 
 const addAreaKeywordRule = () => zabbixMappingForm.areaKeywordRules.push({ keyword: "", areaName: "" });
@@ -342,15 +363,15 @@ onMounted(() => {
 
 .mapping-workbench {
   display: grid;
-  grid-template-columns: minmax(280px, 330px) minmax(0, 1fr);
-  gap: 12px;
+  grid-template-columns: minmax(320px, 360px) minmax(0, 1fr);
+  gap: 16px;
   align-items: stretch;
 }
 
 .mapping-config-pane,
 .mapping-preview-pane {
   display: grid;
-  gap: 12px;
+  gap: 16px;
   height: 100%;
 }
 
@@ -363,6 +384,25 @@ onMounted(() => {
   padding-top: 10px;
 }
 
+.mapping-section-head {
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mapping-section-head__title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.mapping-section-head__desc {
+  margin-top: 4px;
+  font-size: 12px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
 .mapping-metrics {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -371,10 +411,10 @@ onMounted(() => {
 }
 
 .mapping-metric {
-  border: 1px solid #e2e8f0;
+  border: 1px solid #dbeafe;
   border-radius: 8px;
-  padding: 8px 10px;
-  background: #fff;
+  padding: 10px;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
 }
 
 .mapping-metric__label {
@@ -395,6 +435,12 @@ onMounted(() => {
   gap: 8px;
   flex-wrap: wrap;
   margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.mapping-actions :deep(.el-button) {
+  min-width: 96px;
 }
 
 .mapping-hostgroup {
@@ -428,13 +474,18 @@ onMounted(() => {
   display: flex;
   gap: 6px;
   font-size: 13px;
+  flex-wrap: wrap;
 }
 
 .preview-toolbar {
   display: grid;
-  grid-template-columns: auto 1fr auto;
-  gap: 8px;
-  margin-bottom: 10px;
+  grid-template-columns: 120px minmax(260px, 1fr) 112px;
+  gap: 10px;
+  margin-bottom: 12px;
+  padding: 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid #e2e8f0;
   flex-shrink: 0;
   font-size: 14px;
 }
@@ -449,7 +500,9 @@ onMounted(() => {
 }
 
 .mapping-preview :deep(.el-table th) {
-  font-size: 14px;
+  font-size: 13px;
+  color: #334155;
+  background: #f8fafc;
 }
 
 .mapping-preview :deep(.el-table td),
@@ -469,6 +522,10 @@ onMounted(() => {
 
 .unmatched-list {
   margin-top: 8px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
   color: #b45309;
   font-size: 12px;
   line-height: 1.5;
@@ -479,12 +536,12 @@ onMounted(() => {
 }
 
 .mapping-rule-tabs :deep(.el-tabs__item) {
-  font-size: 12px;
-  font-weight: 600;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .mapping-rule-tabs :deep(.el-tabs__content) {
-  height: 210px;
+  height: 240px;
 }
 
 .mapping-rule-tabs :deep(.el-tab-pane) {
@@ -500,48 +557,12 @@ onMounted(() => {
 
 .mapping-rule-scroll {
   min-height: 0;
-  max-height: calc(3 * 40px + 2 * 8px);
+  max-height: calc(3 * 44px + 2 * 8px);
   overflow: auto;
-  padding-right: 2px;
+  padding-right: 4px;
 }
 
 .mapping-preview :deep(.preview-row--unmatched > td) {
   background: #fffbeb;
-}
-
-@media (max-width: 960px) {
-  .mapping-workbench {
-    grid-template-columns: 1fr;
-  }
-
-  .mapping-config-card {
-    position: static;
-  }
-
-  .mapping-rule-row {
-    grid-template-columns: 1fr;
-  }
-
-  .preview-toolbar {
-    grid-template-columns: 1fr;
-  }
-
-  .mapping-metrics {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .mapping-config-pane,
-  .mapping-preview-pane {
-    height: auto;
-  }
-
-  .mapping-preview-pane :deep(.el-card),
-  .mapping-preview-pane :deep(.el-card__body) {
-    height: auto;
-  }
-
-  .mapping-rule-tabs :deep(.el-tabs__content) {
-    height: auto;
-  }
 }
 </style>
