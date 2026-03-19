@@ -1,10 +1,26 @@
 FROM maven:3.9.9-eclipse-temurin-17 AS build
+ARG http_proxy
+ARG https_proxy
+ARG all_proxy
+ARG no_proxy
+ENV http_proxy=${http_proxy}
+ENV https_proxy=${https_proxy}
+ENV all_proxy=${all_proxy}
+ENV no_proxy=${no_proxy}
 WORKDIR /app
 COPY pom.xml .
 COPY src ./src
 RUN mvn -DskipTests package
 
 FROM eclipse-temurin:17-jre
+ARG http_proxy
+ARG https_proxy
+ARG all_proxy
+ARG no_proxy
+ENV http_proxy=${http_proxy}
+ENV https_proxy=${https_proxy}
+ENV all_proxy=${all_proxy}
+ENV no_proxy=${no_proxy}
 WORKDIR /app
 ENV TZ=Asia/Shanghai
 RUN apt-get update \

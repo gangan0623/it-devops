@@ -178,7 +178,7 @@
       <div class="side-stack" :style="sideStackStyle">
         <el-card shadow="never" class="home-card home-card--backup">
           <div class="card-header">
-            <span class="card-header__title">备份状态</span>
+            <span class="card-header__title">网络设备备份状态</span>
             <span class="card-link" @click="goBackupRecord">查看详情</span>
           </div>
           <div class="backup-rate">
