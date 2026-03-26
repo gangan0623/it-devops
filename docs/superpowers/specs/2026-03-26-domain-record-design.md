@@ -269,6 +269,14 @@
 
 - `UPDATE` 场景必须写入字段差异明细
 - `CREATE` / `DELETE` 不写入字段差异明细，统一通过摘要和完整快照展示
+- 子表变更统一按“字段路径 + JSON 摘要”记录到差异表，不做逐列逐行拆分
+- 字段路径约定示例：
+  - `delivery.virtual_service_ip`
+  - `delivery.nodes`
+  - `dns.internal`
+  - `dns.external`
+  - `firewall.mapping`
+- 对于集合型字段（如节点池明细），`before_value` / `after_value` 直接存对应子对象数组的 JSON 字符串
 
 ## 6. 页面设计
 
@@ -399,6 +407,10 @@
 - 项目负责人必填
 - 申请时间必填
 - `ad_enabled = 1` 时必须填写应用交付信息
+- `internal_enabled` 与 `external_enabled` 至少一个为 `1`
+- 允许三种有效组合：仅内网、仅外网、内外网同时启用
+- 不允许 `internal_enabled = 0` 且 `external_enabled = 0`
+- `ad_enabled = 1` 的前提是至少存在一个启用中的解析场景
 - 存在应用交付时必须至少有一个节点池节点
 - `internal_enabled = 1` 时必须填写内网解析
 - `external_enabled = 1` 时必须填写外网解析
