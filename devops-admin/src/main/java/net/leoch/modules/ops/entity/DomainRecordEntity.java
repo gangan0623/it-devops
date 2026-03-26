@@ -38,6 +38,11 @@ public class DomainRecordEntity extends BaseEntity {
     private String externalAddress;
 
     /**
+     * 区域名称
+     */
+    private String areaName;
+
+    /**
      * 项目名称
      */
     private String projectName;

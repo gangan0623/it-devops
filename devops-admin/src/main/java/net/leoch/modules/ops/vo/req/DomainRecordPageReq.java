@@ -21,6 +21,9 @@ public class DomainRecordPageReq extends BasePage {
     @Schema(description = "域名")
     private String domainName;
 
+    @Schema(description = "区域名称")
+    private String areaName;
+
     @Schema(description = "是否走应用交付 0否 1是")
     private Integer adEnabled;
 

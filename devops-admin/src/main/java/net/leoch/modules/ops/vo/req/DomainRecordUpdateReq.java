@@ -41,6 +41,10 @@ public class DomainRecordUpdateReq implements Serializable {
     @Pattern(regexp = DOMAIN_PATTERN, message = "域名格式不合法", groups = DefaultGroup.class)
     private String domainName;
 
+    @Schema(title = "区域名称")
+    @NotBlank(message = "区域名称不能为空", groups = DefaultGroup.class)
+    private String areaName;
+
     @Schema(title = "是否走应用交付 0否 1是")
     @NotNull(message = "是否走应用交付不能为空", groups = DefaultGroup.class)
     @Min(value = 0, message = "是否走应用交付取值不合法", groups = DefaultGroup.class)

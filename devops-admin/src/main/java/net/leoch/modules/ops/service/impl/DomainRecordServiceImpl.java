@@ -87,7 +87,7 @@ public class DomainRecordServiceImpl extends ServiceImpl<DomainRecordMapper, Dom
                 request.getDomainName(), null);
 
         DomainRecordEntity entity = new DomainRecordEntity();
-        fillBaseEntity(entity, request.getProjectName(), request.getDomainName(), request.getAdEnabled(), request.getInternalEnabled(),
+        fillBaseEntity(entity, request.getProjectName(), request.getDomainName(), request.getAreaName(), request.getAdEnabled(), request.getInternalEnabled(),
                 request.getExternalEnabled(), request.getExternalAddress(), request.getDescription(), request.getProjectOwner(),
                 request.getApplyTime(), request.getRemark());
         this.save(entity);
@@ -112,7 +112,7 @@ public class DomainRecordServiceImpl extends ServiceImpl<DomainRecordMapper, Dom
 
         DomainRecordDetailRsp before = loadDetail(request.getId());
 
-        fillBaseEntity(existing, request.getProjectName(), request.getDomainName(), request.getAdEnabled(), request.getInternalEnabled(),
+        fillBaseEntity(existing, request.getProjectName(), request.getDomainName(), request.getAreaName(), request.getAdEnabled(), request.getInternalEnabled(),
                 request.getExternalEnabled(), request.getExternalAddress(), request.getDescription(), request.getProjectOwner(),
                 request.getApplyTime(), request.getRemark());
         this.updateById(existing);
@@ -185,6 +185,7 @@ public class DomainRecordServiceImpl extends ServiceImpl<DomainRecordMapper, Dom
     private void fillBaseEntity(DomainRecordEntity entity,
                                 String projectName,
                                 String domainName,
+                                String areaName,
                                 Integer adEnabled,
                                 Integer internalEnabled,
                                 Integer externalEnabled,
@@ -195,6 +196,7 @@ public class DomainRecordServiceImpl extends ServiceImpl<DomainRecordMapper, Dom
                                 String remark) {
         entity.setProjectName(projectName);
         entity.setDomainName(domainName);
+        entity.setAreaName(areaName);
         entity.setAdEnabled(adEnabled);
         entity.setInternalEnabled(internalEnabled);
         entity.setExternalEnabled(externalEnabled);

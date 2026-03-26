@@ -10,6 +10,16 @@
             <el-input v-model="state.dataForm.domainName" class="query-input" placeholder="域名" clearable></el-input>
           </el-form-item>
           <el-form-item>
+            <ren-select
+              v-model="state.dataForm.areaName"
+              dict-type="area_name_type"
+              label-field="dictValue"
+              value-field="dictLabel"
+              placeholder="区域名称"
+              style="width: 160px"
+            ></ren-select>
+          </el-form-item>
+          <el-form-item>
             <el-input v-model="state.dataForm.projectOwner" class="query-input" placeholder="项目负责人" clearable></el-input>
           </el-form-item>
           <el-form-item>
@@ -48,6 +58,11 @@
       <el-table-column type="selection" width="50" header-align="center" align="center"></el-table-column>
       <el-table-column prop="projectName" label="项目名称" min-width="140" show-overflow-tooltip></el-table-column>
       <el-table-column prop="domainName" label="域名" min-width="180" show-overflow-tooltip></el-table-column>
+      <el-table-column label="区域名称" min-width="120">
+        <template #default="{ row }">
+          {{ state.getDictValueByLabel("area_name_type", row.areaName) }}
+        </template>
+      </el-table-column>
       <el-table-column prop="virtualServiceName" label="虚拟服务名称" min-width="150" show-overflow-tooltip></el-table-column>
       <el-table-column prop="virtualServiceIp" label="虚拟服务IP" min-width="140"></el-table-column>
       <el-table-column prop="virtualServicePort" label="虚拟服务端口" width="120"></el-table-column>
@@ -142,6 +157,7 @@ const view = reactive({
   dataForm: {
     projectName: "",
     domainName: "",
+    areaName: "",
     projectOwner: "",
     adEnabled: "" as string | number,
     externalEnabled: "" as string | number
@@ -163,6 +179,7 @@ const handleReset = () => {
   state.dataForm.projectName = "";
   state.dataForm.domainName = "";
   state.dataForm.projectOwner = "";
+  state.dataForm.areaName = "";
   state.dataForm.adEnabled = "";
   state.dataForm.externalEnabled = "";
   queryList();
