@@ -1,0 +1,185 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.leoch.modules.ops.mapper.DomainRecordMapper">
+
+    <resultMap id="domainRecordSummaryMap" type="net.leoch.modules.ops.vo.rsp.DomainRecordRsp">
+        <id property="id" column="id"/>
+        <result property="projectName" column="project_name"/>
+        <result property="domainName" column="domain_name"/>
+        <result property="adEnabled" column="ad_enabled"/>
+        <result property="internalEnabled" column="internal_enabled"/>
+        <result property="externalEnabled" column="external_enabled"/>
+        <result property="externalAddress" column="external_address"/>
+        <result property="description" column="description"/>
+        <result property="projectOwner" column="project_owner"/>
+        <result property="applyTime" column="apply_time"/>
+        <result property="remark" column="remark"/>
+        <result property="virtualServiceName" column="virtual_service_name"/>
+        <result property="virtualServiceIp" column="virtual_service_ip"/>
+        <result property="virtualServicePort" column="virtual_service_port"/>
+        <result property="virtualServiceProtocol" column="virtual_service_protocol"/>
+        <result property="poolName" column="pool_name"/>
+        <result property="loadStrategy" column="load_strategy"/>
+        <result property="creator" column="creator"/>
+        <result property="createDate" column="create_date"/>
+        <result property="updater" column="updater"/>
+        <result property="updateDate" column="update_date"/>
+    </resultMap>
+
+    <resultMap id="deliveryNodeMap" type="net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp$DeliveryNodeRsp">
+        <id property="id" column="node_id"/>
+        <result property="domainDeliveryId" column="node_domain_delivery_id"/>
+        <result property="nodeIp" column="node_ip"/>
+        <result property="nodePort" column="node_port"/>
+        <result property="sort" column="node_sort"/>
+        <result property="remark" column="node_remark"/>
+    </resultMap>
+
+    <resultMap id="deliveryDetailMap" type="net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp$DeliveryRsp">
+        <id property="id" column="delivery_id"/>
+        <result property="virtualServiceName" column="delivery_virtual_service_name"/>
+        <result property="virtualServiceIp" column="delivery_virtual_service_ip"/>
+        <result property="virtualServicePort" column="delivery_virtual_service_port"/>
+        <result property="virtualServiceProtocol" column="delivery_virtual_service_protocol"/>
+        <result property="poolName" column="delivery_pool_name"/>
+        <result property="loadStrategy" column="delivery_load_strategy"/>
+        <result property="remark" column="delivery_remark"/>
+        <collection property="nodes" ofType="net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp$DeliveryNodeRsp"
+                    column="{domainDeliveryId=delivery_id}"
+                    select="net.leoch.modules.ops.mapper.DomainDeliveryNodeMapper.selectByDomainDeliveryId"/>
+    </resultMap>
+
+    <resultMap id="dnsInternalMap" type="net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp$DnsInternalRsp">
+        <id property="id" column="dns_internal_id"/>
+        <result property="resolveMode" column="dns_internal_resolve_mode"/>
+        <result property="dnsTargetIp" column="dns_internal_target_ip"/>
+        <result property="remark" column="dns_internal_remark"/>
+    </resultMap>
+
+    <resultMap id="dnsExternalMap" type="net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp$DnsExternalRsp">
+        <id property="id" column="dns_external_id"/>
+        <result property="resolveMode" column="dns_external_resolve_mode"/>
+        <result property="recordValue" column="dns_external_record_value"/>
+        <result property="remark" column="dns_external_remark"/>
+    </resultMap>
+
+    <resultMap id="firewallMappingMap" type="net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp$FirewallMappingRsp">
+        <id property="id" column="firewall_id"/>
+        <result property="publicIp" column="firewall_public_ip"/>
+        <result property="externalPort" column="firewall_external_port"/>
+        <result property="internalIp" column="firewall_internal_ip"/>
+        <result property="internalPort" column="firewall_internal_port"/>
+        <result property="mappingDesc" column="firewall_mapping_desc"/>
+    </resultMap>
+
+    <resultMap id="domainRecordDetailMap" type="net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp" extends="domainRecordSummaryMap">
+        <association property="delivery" javaType="net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp$DeliveryRsp"
+                     resultMap="deliveryDetailMap"/>
+        <association property="dnsInternal" javaType="net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp$DnsInternalRsp"
+                     resultMap="dnsInternalMap"/>
+        <association property="dnsExternal" javaType="net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp$DnsExternalRsp"
+                     resultMap="dnsExternalMap"/>
+        <association property="firewallMapping" javaType="net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp$FirewallMappingRsp"
+                     resultMap="firewallMappingMap"/>
+    </resultMap>
+
+    <select id="selectPageSummary" resultMap="domainRecordSummaryMap">
+        SELECT
+            dr.id,
+            dr.project_name,
+            dr.domain_name,
+            dr.ad_enabled,
+            dr.internal_enabled,
+            dr.external_enabled,
+            dr.external_address,
+            dr.description,
+            dr.project_owner,
+            dr.apply_time,
+            dr.remark,
+            dd.virtual_service_name,
+            dd.virtual_service_ip,
+            dd.virtual_service_port,
+            dd.virtual_service_protocol,
+            dd.pool_name,
+            dd.load_strategy,
+            dr.creator,
+            dr.create_date,
+            dr.updater,
+            dr.update_date
+        FROM tb_domain_record dr
+        LEFT JOIN tb_domain_delivery dd ON dd.domain_record_id = dr.id
+        <where>
+            <if test="request.projectName != null and request.projectName != ''">
+                AND dr.project_name LIKE CONCAT('%', #{request.projectName}, '%')
+            </if>
+            <if test="request.domainName != null and request.domainName != ''">
+                AND dr.domain_name LIKE CONCAT('%', #{request.domainName}, '%')
+            </if>
+            <if test="request.adEnabled != null">
+                AND dr.ad_enabled = #{request.adEnabled}
+            </if>
+            <if test="request.externalEnabled != null">
+                AND dr.external_enabled = #{request.externalEnabled}
+            </if>
+            <if test="request.projectOwner != null and request.projectOwner != ''">
+                AND dr.project_owner LIKE CONCAT('%', #{request.projectOwner}, '%')
+            </if>
+            <if test="request.applyTimeStart != null">
+                AND dr.apply_time &gt;= #{request.applyTimeStart}
+            </if>
+            <if test="request.applyTimeEnd != null">
+                AND dr.apply_time &lt;= #{request.applyTimeEnd}
+            </if>
+        </where>
+        ORDER BY dr.id DESC
+    </select>
+
+    <select id="selectDetailById" resultMap="domainRecordDetailMap">
+        SELECT
+            dr.id,
+            dr.project_name,
+            dr.domain_name,
+            dr.ad_enabled,
+            dr.internal_enabled,
+            dr.external_enabled,
+            dr.external_address,
+            dr.description,
+            dr.project_owner,
+            dr.apply_time,
+            dr.remark,
+            dd.id AS delivery_id,
+            dd.virtual_service_name AS delivery_virtual_service_name,
+            dd.virtual_service_ip AS delivery_virtual_service_ip,
+            dd.virtual_service_port AS delivery_virtual_service_port,
+            dd.virtual_service_protocol AS delivery_virtual_service_protocol,
+            dd.pool_name AS delivery_pool_name,
+            dd.load_strategy AS delivery_load_strategy,
+            dd.remark AS delivery_remark,
+            di.id AS dns_internal_id,
+            di.resolve_mode AS dns_internal_resolve_mode,
+            di.dns_target_ip AS dns_internal_target_ip,
+            di.remark AS dns_internal_remark,
+            de.id AS dns_external_id,
+            de.resolve_mode AS dns_external_resolve_mode,
+            de.record_value AS dns_external_record_value,
+            de.remark AS dns_external_remark,
+            df.id AS firewall_id,
+            df.public_ip AS firewall_public_ip,
+            df.external_port AS firewall_external_port,
+            df.internal_ip AS firewall_internal_ip,
+            df.internal_port AS firewall_internal_port,
+            df.mapping_desc AS firewall_mapping_desc,
+            dr.creator,
+            dr.create_date,
+            dr.updater,
+            dr.update_date
+        FROM tb_domain_record dr
+        LEFT JOIN tb_domain_delivery dd ON dd.domain_record_id = dr.id
+        LEFT JOIN tb_domain_dns_internal di ON di.domain_record_id = dr.id
+        LEFT JOIN tb_domain_dns_external de ON de.domain_record_id = dr.id
+        LEFT JOIN tb_domain_firewall_mapping df ON df.domain_record_id = dr.id
+        WHERE dr.id = #{id}
+    </select>
+
+</mapper>

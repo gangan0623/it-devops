@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.leoch.modules.ops.mapper.DomainRecordHistoryDetailMapper">
+
+    <resultMap id="domainRecordHistoryDetailItemMap"
+               type="net.leoch.modules.ops.vo.rsp.DomainRecordHistoryDetailRsp$HistoryFieldDetailRsp">
+        <id property="id" column="id"/>
+        <result property="historyId" column="history_id"/>
+        <result property="fieldCode" column="field_code"/>
+        <result property="fieldName" column="field_name"/>
+        <result property="beforeValue" column="before_value"/>
+        <result property="afterValue" column="after_value"/>
+    </resultMap>
+
+    <select id="selectByHistoryId" resultMap="domainRecordHistoryDetailItemMap">
+        SELECT
+            id,
+            history_id,
+            field_code,
+            field_name,
+            before_value,
+            after_value
+        FROM tb_domain_record_history_detail
+        WHERE history_id = #{historyId}
+        ORDER BY id ASC
+    </select>
+
+</mapper>

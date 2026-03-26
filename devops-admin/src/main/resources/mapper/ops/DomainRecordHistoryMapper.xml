@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="net.leoch.modules.ops.mapper.DomainRecordHistoryMapper">
+
+    <resultMap id="domainRecordHistorySummaryMap" type="net.leoch.modules.ops.vo.rsp.DomainRecordHistoryRsp">
+        <id property="id" column="id"/>
+        <result property="domainRecordId" column="domain_record_id"/>
+        <result property="operationType" column="operation_type"/>
+        <result property="operatorId" column="operator_id"/>
+        <result property="operatorName" column="operator_name"/>
+        <result property="operationTime" column="operation_time"/>
+        <result property="operationSummary" column="operation_summary"/>
+    </resultMap>
+
+    <resultMap id="domainRecordHistoryDetailMap" type="net.leoch.modules.ops.vo.rsp.DomainRecordHistoryDetailRsp"
+               extends="domainRecordHistorySummaryMap">
+        <result property="snapshotBefore" column="snapshot_before"/>
+        <result property="snapshotAfter" column="snapshot_after"/>
+        <collection property="details"
+                    ofType="net.leoch.modules.ops.vo.rsp.DomainRecordHistoryDetailRsp$HistoryFieldDetailRsp"
+                    column="{historyId=id}"
+                    select="net.leoch.modules.ops.mapper.DomainRecordHistoryDetailMapper.selectByHistoryId"/>
+    </resultMap>
+
+    <select id="selectPageSummary" resultMap="domainRecordHistorySummaryMap">
+        SELECT
+            id,
+            domain_record_id,
+            operation_type,
+            operator_id,
+            operator_name,
+            operation_time,
+            operation_summary
+        FROM tb_domain_record_history
+        <where>
+            <if test="request.domainRecordId != null">
+                AND domain_record_id = #{request.domainRecordId}
+            </if>
+            <if test="request.operationType != null and request.operationType != ''">
+                AND operation_type = #{request.operationType}
+            </if>
+            <if test="request.operatorName != null and request.operatorName != ''">
+                AND operator_name LIKE CONCAT('%', #{request.operatorName}, '%')
+            </if>
+            <if test="request.operationTimeStart != null">
+                AND operation_time &gt;= #{request.operationTimeStart}
+            </if>
+            <if test="request.operationTimeEnd != null">
+                AND operation_time &lt;= #{request.operationTimeEnd}
+            </if>
+        </where>
+        ORDER BY operation_time DESC, id DESC
+    </select>
+
+    <select id="selectDetailById" resultMap="domainRecordHistoryDetailMap">
+        SELECT
+            id,
+            domain_record_id,
+            operation_type,
+            operator_id,
+            operator_name,
+            operation_time,
+            operation_summary,
+            snapshot_before,
+            snapshot_after
+        FROM tb_domain_record_history
+        WHERE id = #{id}
+    </select>
+
+</mapper>
