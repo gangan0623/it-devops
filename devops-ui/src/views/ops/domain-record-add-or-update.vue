@@ -32,6 +32,17 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
+          <el-form-item label="分组名称" prop="groupName">
+            <ren-select
+              v-model="dataForm.groupName"
+              dict-type="server_host_group"
+              label-field="dictValue"
+              value-field="dictLabel"
+              placeholder="分组名称"
+            ></ren-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
           <el-form-item label="项目负责人" prop="projectOwner">
             <el-input v-model="dataForm.projectOwner" placeholder="项目负责人"></el-input>
           </el-form-item>
@@ -271,6 +282,7 @@ const createForm = () => ({
   projectName: "",
   domainName: "",
   areaName: "",
+  groupName: "",
   adEnabled: 0,
   internalEnabled: 1,
   externalEnabled: 0,
@@ -312,6 +324,7 @@ const rules = {
   projectName: [{ required: true, message: "必填项不能为空", trigger: "blur" }],
   domainName: [{ required: true, message: "必填项不能为空", trigger: "blur" }],
   areaName: [{ required: true, message: "必填项不能为空", trigger: "change" }],
+  groupName: [{ required: true, message: "必填项不能为空", trigger: "change" }],
   projectOwner: [{ required: true, message: "必填项不能为空", trigger: "blur" }],
   applyTime: [{ required: true, message: "必填项不能为空", trigger: "change" }]
 };
@@ -404,6 +417,7 @@ const normalizePayload = () => {
     projectName: dataForm.projectName,
     domainName: dataForm.domainName,
     areaName: dataForm.areaName,
+    groupName: dataForm.groupName,
     adEnabled: dataForm.adEnabled,
     internalEnabled: dataForm.internalEnabled,
     externalEnabled: dataForm.externalEnabled,

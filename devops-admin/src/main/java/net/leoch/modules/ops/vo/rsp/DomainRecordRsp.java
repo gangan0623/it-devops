@@ -29,6 +29,9 @@ public class DomainRecordRsp implements Serializable {
     @SchemaProperty(name = "区域名称")
     private String areaName;
 
+    @SchemaProperty(name = "分组名称")
+    private String groupName;
+
     @SchemaProperty(name = "是否走应用交付 0否 1是")
     private Integer adEnabled;
 

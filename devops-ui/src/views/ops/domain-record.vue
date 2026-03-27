@@ -35,6 +35,16 @@
             style="width: 100%"
           ></ren-select>
         </el-form-item>
+        <el-form-item label="分组名称">
+          <ren-select
+            v-model="state.dataForm.groupName"
+            dict-type="server_host_group"
+            label-field="dictValue"
+            value-field="dictLabel"
+            placeholder="全部"
+            style="width: 100%"
+          ></ren-select>
+        </el-form-item>
         <el-form-item label="应用交付(AD)">
           <el-select v-model="state.dataForm.adEnabled" placeholder="全部" clearable style="width: 100%">
             <el-option label="走AD" :value="1"></el-option>
@@ -67,6 +77,11 @@
       <el-table-column label="区域名称" min-width="120">
         <template #default="{ row }">
           {{ state.getDictValueByLabel("area_name_type", row.areaName) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="分组名称" min-width="120">
+        <template #default="{ row }">
+          {{ state.getDictValueByLabel("server_host_group", row.groupName) }}
         </template>
       </el-table-column>
       <el-table-column label="应用交付(AD)" width="120" align="center">
@@ -203,6 +218,9 @@
             <el-descriptions-item label="区域名称">
               {{ state.getDictValueByLabel("area_name_type", detailData.areaName) || "-" }}
             </el-descriptions-item>
+            <el-descriptions-item label="分组名称">
+              {{ state.getDictValueByLabel("server_host_group", detailData.groupName) || "-" }}
+            </el-descriptions-item>
             <el-descriptions-item label="项目负责人">{{ detailData.projectOwner || "-" }}</el-descriptions-item>
             <el-descriptions-item label="申请时间">{{ detailData.applyTime || "-" }}</el-descriptions-item>
             <el-descriptions-item label="公网解析状态">{{ detailData.externalEnabled === 1 ? "启用" : "未启用" }}</el-descriptions-item>
@@ -298,6 +316,7 @@ const view = reactive({
     projectName: "",
     domainName: "",
     areaName: "",
+    groupName: "",
     projectOwner: "",
     adEnabled: "" as string | number,
     externalEnabled: "" as string | number
@@ -321,6 +340,7 @@ const activeFilterCount = computed(() => {
   if (state.dataForm.projectName) count++;
   if (state.dataForm.projectOwner) count++;
   if (state.dataForm.areaName) count++;
+  if (state.dataForm.groupName) count++;
   if (state.dataForm.adEnabled !== "" && state.dataForm.adEnabled !== null && state.dataForm.adEnabled !== undefined) count++;
   if (state.dataForm.externalEnabled !== "" && state.dataForm.externalEnabled !== null && state.dataForm.externalEnabled !== undefined) count++;
   return count;
@@ -330,6 +350,7 @@ const resetFilters = () => {
   state.dataForm.projectName = "";
   state.dataForm.projectOwner = "";
   state.dataForm.areaName = "";
+  state.dataForm.groupName = "";
   state.dataForm.adEnabled = "";
   state.dataForm.externalEnabled = "";
 };

@@ -40,6 +40,11 @@ public class DomainRecordEntity extends BaseEntity {
     private String areaName;
 
     /**
+     * 分组名称
+     */
+    private String groupName;
+
+    /**
      * 项目名称
      */
     private String projectName;

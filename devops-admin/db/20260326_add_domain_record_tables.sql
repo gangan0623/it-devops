@@ -7,6 +7,8 @@ CREATE TABLE IF NOT EXISTS `tb_domain_record` (
   `id` bigint NOT NULL COMMENT '主键ID',
   `project_name` varchar(100) NOT NULL COMMENT '项目名称',
   `domain_name` varchar(255) NOT NULL COMMENT '域名',
+  `area_name` varchar(50) DEFAULT NULL COMMENT '区域名称',
+  `group_name` varchar(50) DEFAULT NULL COMMENT '分组名称',
   `ad_enabled` tinyint NOT NULL DEFAULT 0 COMMENT '是否走应用交付 0否 1是',
   `internal_enabled` tinyint NOT NULL DEFAULT 0 COMMENT '是否启用内网解析 0否 1是',
   `external_enabled` tinyint NOT NULL DEFAULT 0 COMMENT '是否启用外网解析 0否 1是',
@@ -20,6 +22,8 @@ CREATE TABLE IF NOT EXISTS `tb_domain_record` (
   `update_date` datetime DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `uk_domain_name` (`domain_name`),
+  KEY `idx_area_name` (`area_name`),
+  KEY `idx_group_name` (`group_name`),
   KEY `idx_project_name` (`project_name`),
   KEY `idx_project_owner` (`project_owner`),
   KEY `idx_apply_time` (`apply_time`)

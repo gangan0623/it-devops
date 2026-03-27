@@ -8,6 +8,7 @@
         <result property="projectName" column="project_name"/>
         <result property="domainName" column="domain_name"/>
         <result property="areaName" column="area_name"/>
+        <result property="groupName" column="group_name"/>
         <result property="adEnabled" column="ad_enabled"/>
         <result property="internalEnabled" column="internal_enabled"/>
         <result property="externalEnabled" column="external_enabled"/>
@@ -95,6 +96,7 @@
             dr.project_name,
             dr.domain_name,
             dr.area_name,
+            dr.group_name,
             dr.ad_enabled,
             dr.internal_enabled,
             dr.external_enabled,
@@ -137,6 +139,9 @@
             <if test="request.areaName != null and request.areaName != ''">
                 AND dr.area_name = #{request.areaName}
             </if>
+            <if test="request.groupName != null and request.groupName != ''">
+                AND dr.group_name = #{request.groupName}
+            </if>
             <if test="request.adEnabled != null">
                 AND dr.ad_enabled = #{request.adEnabled}
             </if>
@@ -162,6 +167,7 @@
             dr.project_name,
             dr.domain_name,
             dr.area_name,
+            dr.group_name,
             dr.ad_enabled,
             dr.internal_enabled,
             dr.external_enabled,

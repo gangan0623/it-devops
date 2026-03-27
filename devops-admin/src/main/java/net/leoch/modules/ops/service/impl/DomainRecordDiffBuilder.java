@@ -31,6 +31,7 @@ public class DomainRecordDiffBuilder {
         addDiff(diffs, historyId, "projectName", "项目名称", before.getProjectName(), after.getProjectName());
         addDiff(diffs, historyId, "domainName", "域名", before.getDomainName(), after.getDomainName());
         addDiff(diffs, historyId, "areaName", "区域名称", before.getAreaName(), after.getAreaName());
+        addDiff(diffs, historyId, "groupName", "分组名称", before.getGroupName(), after.getGroupName());
         addDiff(diffs, historyId, "adEnabled", "是否走应用交付", before.getAdEnabled(), after.getAdEnabled());
         addDiff(diffs, historyId, "internalEnabled", "是否启用内网解析", before.getInternalEnabled(), after.getInternalEnabled());
         addDiff(diffs, historyId, "externalEnabled", "是否启用外网解析", before.getExternalEnabled(), after.getExternalEnabled());
@@ -55,6 +56,7 @@ public class DomainRecordDiffBuilder {
         base.put("projectName", detail.getProjectName());
         base.put("domainName", detail.getDomainName());
         base.put("areaName", detail.getAreaName());
+        base.put("groupName", detail.getGroupName());
         base.put("adEnabled", detail.getAdEnabled());
         base.put("internalEnabled", detail.getInternalEnabled());
         base.put("externalEnabled", detail.getExternalEnabled());

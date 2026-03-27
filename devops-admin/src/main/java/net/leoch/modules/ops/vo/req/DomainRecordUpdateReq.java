@@ -45,6 +45,10 @@ public class DomainRecordUpdateReq implements Serializable {
     @NotBlank(message = "区域名称不能为空", groups = DefaultGroup.class)
     private String areaName;
 
+    @Schema(title = "分组名称")
+    @NotBlank(message = "分组名称不能为空", groups = DefaultGroup.class)
+    private String groupName;
+
     @Schema(title = "是否走应用交付 0否 1是")
     @NotNull(message = "是否走应用交付不能为空", groups = DefaultGroup.class)
     @Min(value = 0, message = "是否走应用交付取值不合法", groups = DefaultGroup.class)
