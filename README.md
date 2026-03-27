@@ -1,132 +1,275 @@
-﻿# IT-devops
+# IT-devops
 
-本仓库包含 DevOps 相关的三部分：后端服务、备份代理以及前端界面。
+[中文文档](./README_ZH.md) | English
 
-## 项目介绍
+An integrated IT DevOps management platform for managing IT assets, network device backups, and alerting.
 
-### devops-admin — 后端管理服务
-
-> 详见 [devops-admin/README.md](devops-admin/README.md)
-
-基于 Spring Boot 3（Java 17）的后端服务。
-
-- **接口层**：REST API（统一入口 `/api`），Controller -> Service -> DAO（MyBatis-Plus + XML Mapper）
-- **数据层**：MySQL（业务数据）、Redis（参数缓存/可选）
-- **安全层**：Shiro + Token（OAuth2 风格），支持验证码登录与权限控制
-- **可观测**：操作/登录/异常日志，仪表盘汇总
-- **生态集成**：备份代理回调、对象存储（MinIO / 阿里云 OSS / 腾讯云 COS / 七牛）、Zabbix 监控接入、Prometheus 服务发现
-
-核心模块：`sys`（系统基础）、`security`（认证授权）、`log`（审计日志）、`oss`（对象存储）、`ops`（运维资产与备份）、`alert`（告警）、`job`（定时任务）
+## Architecture Overview
 
 ```
-devops-ui -> devops-admin(/api) -> MySQL/Redis
-                     |-> OSS(对象存储)
-                     |-> Zabbix/Prometheus
-devops-backup-agent --(callback)--> devops-admin
+┌─────────────────────────────────────────────────────────┐
+│                    Browser                               │
+└─────────────────────┬───────────────────────────────────┘
+                      │ http://localhost:10000 (dev)
+                      │ or http://localhost (prod)
+                      ▼
+┌─────────────────────────────────────────────────────────┐
+│                  devops-ui (Vue 3 SPA)                  │
+│                   Port: 10000 (dev) / 80 (prod)         │
+│                     nginx reverse proxy                  │
+└─────────────────────┬───────────────────────────────────┘
+                      │ /api/*
+                      ▼
+┌─────────────────────────────────────────────────────────┐
+│              devops-admin (Spring Boot 3)               │
+│                   Port: 10001, Context: /api             │
+│                                                         │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐ ┌─────────┐      │
+│  │   sys   │ │security │ │   log   │ │   ops   │      │
+│  │  users, │ │  login, │ │  login  │ │  hosts, │      │
+│  │  roles, │ │  token  │ │  audit  │ │ backups │      │
+│  │  menus  │ │         │ │         │ │         │      │
+│  └─────────┘ └─────────┘ └─────────┘ └─────────┘      │
+│  ┌─────────┐ ┌─────────┐ ┌─────────┐                   │
+│  │  alert  │ │   job   │ │   oss   │                   │
+│  │ triggers│ │ quartz  │ │ storage │                   │
+│  │   SSE   │ │         │ │         │                   │
+│  └─────────┘ └─────────┘ └─────────┘                   │
+└────────┬────────────────────────────────────────────────┘
+         │
+    ┌────┴────┬─────────────┬──────────────┐
+    ▼         ▼             ▼              ▼
+┌───────┐ ┌───────┐ ┌─────────────┐ ┌─────────────┐
+│ MySQL │ │ Redis │ │ Zabbix /    │ │   Object    │
+│  8.0  │ │ 7.4.7 │ │ Prometheus  │ │   Storage   │
+└───────┘ └───────┘ └─────────────┘ │ MinIO / OSS │
+                                    └─────────────┘
+
+         ┌─────────────────────────────────────────┐
+         │        devops-backup-agent               │
+         │         (Python FastAPI)                 │
+         │          Port: 8120                      │
+         │                                          │
+         │  ┌─────────────────────────────────────┐ │
+         │  │ SSH → Network Devices              │ │
+         │  │ Huawei VRP / H3C / FortiOS / Ruijie │ │
+         │  └─────────────────────────────────────┘ │
+         │  ┌─────────────────────────────────────┐ │
+         │  │ Upload configs to Object Storage    │ │
+         │  └─────────────────────────────────────┘ │
+         │  ┌─────────────────────────────────────┐ │
+         │  │ Callback → devops-admin            │ │
+         │  └─────────────────────────────────────┘ │
+         └─────────────────────────────────────────┘
 ```
 
-### devops-backup-agent — 网络设备备份代理
+## Sub-projects
 
-> 详见 [devops-backup-agent/README.md](devops-backup-agent/README.md)
+| Sub-project | Technology | Port | Description |
+|-------------|------------|------|-------------|
+| [devops-admin](./devops-admin/) | Spring Boot 3 (Java 17) | 10001 | REST API backend |
+| [devops-ui](./devops-ui/) | Vue 3 + TypeScript | 10000 (dev) | Web management interface |
+| [devops-backup-agent](./devops-backup-agent/) | Python 3.12 (FastAPI) | 8120 | Network device backup agent |
 
-基于 Python 3.12（FastAPI + SSH + MinIO）的备份代理。
+## Features
 
-- **入口**：HTTP API（`/backup`）接收后端下发的设备清单
-- **执行**：按设备型号选择适配器，通过 SSH 拉取配置
-- **存储**：上传到对象存储（默认 MinIO，S3 协议）
-- **回调**：将结果回调到 `devops-admin` 的备份回调接口
-- **支持设备**：华为 VRP、H3C ComWare、飞塔 FortiOS、锐捷 RGOS
+### IT Asset Management (`ops` module)
+- **Linux hosts** — SSH-based host management with online status detection
+- **Windows hosts** — RDP-based host management
+- **Network devices** — Switches and routers from Huawei, H3C, Fortinet, Ruijie
+- **Business systems** — Grouping and association of hosts
+- **Dashboard** — Overview of asset statistics
 
-```
-devops-admin -> /backup -> devops-backup-agent -> MinIO
-devops-backup-agent --(callback)--> devops-admin
-```
+### Network Device Backup (`ops` module)
+- Automatic scheduled backup of network device configs
+- Support for Huawei VRP, H3C ComWare, FortiOS, Ruijie RGOS
+- Version history and diff comparison
+- Backup verification and change detection
 
-### devops-ui — 前端界面
+### Alerting System (`alert` module)
+- **Alert media** — Notification channels (email, webhook, etc.)
+- **Alert templates** — Reusable alert message templates
+- **Alert triggers** — Threshold-based alert rules
+- **Alert records** — Alert history with SSE real-time push to browser
+- **Prometheus integration** — Webhook endpoint for Prometheus Alertmanager
+- **Zabbix integration** — Alert forwarding from Zabbix
 
-> 详见 [devops-ui/README.md](devops-ui/README.md)
+### Scheduled Jobs (`job` module)
+- Quartz-based scheduled task management
+- Task execution logging and history
+- Configurable cron expressions
 
-基于 Vue 3 + Vite + TypeScript 的管理前端。
+### System Management (`sys` module)
+- User, role, and permission management (SA-Token auth)
+- Menu management (dynamic routing from database)
+- Department organization
+- Dictionary data
+- System parameters
 
-- **交互**：通过 `src/service` 调用 `devops-admin` REST API（`/api` 前缀）
-- **权限**：登录获取 Token，按菜单/角色渲染路由与按钮权限
-- **页面模块**：系统管理（sys）、运维资产与备份（ops）、告警管理（alert）、定时任务（job）、日志查询（log）、对象存储（oss）、监控看板（monitor）
+### Audit Logging (`log` module)
+- Login audit (success/failure tracking)
+- Operation audit (via `@LogOperation` AOP)
+- Exception error logs
 
-## 目录结构
-- `devops-admin/`：后台服务（Spring Boot 3）
-- `devops-backup-agent/`：网络设备备份代理（FastAPI + SSH + MinIO）
-- `devops-ui/`：前端界面（Vue 3 + Vite）
+### Object Storage (`oss` module)
+- Multi-provider support: MinIO, Aliyun OSS, Tencent COS, Qiniu
+- Unified API via `OSSFactory`
+- Used for network device config backup files
 
-## 快速开始
-### devops-admin
-- 需要：JDK 17、Maven
-- 运行（开发）：`mvn spring-boot:run`
-- 打包：`mvn -DskipTests package`
-- 产物：`devops-admin/target/devops-admin.jar`
+## Tech Stack
 
-### devops-ui
-- 需要：Node.js 18+、npm
-- 安装依赖：`npm install`
-- 本地开发：`npm run dev`
-- 构建：`npm run build`
-- 产物：`devops-ui/dist/`
+| Layer | Component | Technology |
+|-------|-----------|------------|
+| Backend | Framework | Spring Boot 3.5.4 (Java 17) |
+| Backend | ORM | MyBatis-Plus 3.5.8 |
+| Backend | Auth | SA-Token 1.37.0 (Redis sessions) |
+| Backend | API Docs | Springdoc OpenAPI 2.8.4 |
+| Frontend | Framework | Vue 3.5.18 + Vite 5.4.19 |
+| Frontend | UI | Element Plus 2.10.5 |
+| Frontend | State | Pinia 2.3.1 |
+| Database | — | MySQL 8.0 |
+| Cache | — | Redis 7.4.7 |
+| Backup Agent | Framework | FastAPI 0.115.6 |
+| Backup Agent | SSH | Paramiko 3.5.0 |
 
-### devops-backup-agent
-- 需要：Python 3.12、pip
-- 安装依赖：`pip install -r requirements.txt`
-- 运行：
-  `python -m backup_agent.main --config-file config.yaml --token <AGENT_TOKEN> --callback-url <CALLBACK_URL> --log-file agent.log --host 0.0.0.0 --port 8120`
-- 二进制构建：`./build.sh`
-- 产物：`devops-backup-agent/dist/backup-agent`
+## Quick Start
 
-## Docker Compose 一键部署
+### Prerequisites
 
-### 前置条件
-- 安装 Docker 和 Docker Compose
+- JDK 17+
+- Maven 3.8+
+- Node.js 18+
+- Docker & Docker Compose (for full stack)
 
-### 服务组成
-| 服务 | 说明 | 端口 |
-|------|------|------|
-| mysql | MySQL 8.0 数据库 | 3306 |
-| redis | Redis 7.4.7 缓存 | 6379 |
-| devops-admin | 后端 Spring Boot 服务 | 8080 |
-| nginx | 前端 + 反向代理 | 80 |
-
-### 启动
+### Backend (devops-admin)
 
 ```bash
-# 构建并启动所有服务（后台运行）
-docker-compose up -d --build
+cd devops-admin
 
-# 查看服务状态
-docker-compose ps
+# Install dependencies and build
+mvn -DskipTests package
 
-# 查看日志
-docker-compose logs -f
+# Run locally (uses application-dev.yml)
+mvn spring-boot:run
 ```
 
-### 停止与清理
+API docs available at: http://localhost:10001/swagger-ui.html
+
+### Frontend (devops-ui)
 
 ```bash
-# 停止所有服务
-docker-compose down
+cd devops-ui
 
-# 停止并删除数据卷（会清除数据库数据）
-docker-compose down -v
+# Install dependencies
+npm install
+
+# Start dev server (proxies /api to localhost:10001)
+npm run dev
 ```
 
-### 数据持久化
-- MySQL 数据：`./docker/mysql/`
-- Redis 数据：`./docker/redis/`
-- 后端日志：`./docker/admin/logs/`
-- Nginx 日志：`./docker/nginx/logs/`
+Open: http://localhost:10000
 
-### 注意事项
-- MySQL 会在首次启动时自动执行 `devops-admin/db/devops_dev.sql` 进行数据库初始化
-- 服务启动有依赖顺序：MySQL/Redis 健康检查通过后才会启动 devops-admin，devops-admin 启动后才会启动 nginx
-- 如需修改数据库或 Redis 密码，请同步修改 `docker-compose.yaml` 中对应服务的环境变量
+### Backup Agent (devops-backup-agent)
 
-## 配置入口
-- `devops-admin/src/main/resources/application*.yml`
-- `devops-ui/.env.development`、`devops-ui/.env.production`
-- `devops-backup-agent/config.yaml`
+```bash
+cd devops-backup-agent
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Start agent
+python -m backup_agent.main --config-file config.yaml \
+    --token <AGENT_TOKEN> \
+    --callback-url http://localhost:10001/api/ops/backup/callback \
+    --log-file agent.log --host 0.0.0.0 --port 8120
+
+# Or build binary and run
+./build.sh
+./dist/backup-agent --config-file config.yaml ...
+```
+
+### Docker Compose (Full Stack)
+
+```bash
+# Start all services (dev)
+docker compose up -d --build
+
+# Services: mysql (3306), redis (6379), devops-admin (10001), nginx (80)
+```
+
+For production:
+```bash
+docker compose -f docker-compose.prod.yaml up -d
+```
+
+## Project Structure
+
+```
+it-devops/
+├── devops-admin/                    # Spring Boot REST API
+│   ├── src/main/java/net/leoch/
+│   │   ├── modules/                 # Business modules
+│   │   │   ├── sys/                # Users, roles, menus, depts, dicts
+│   │   │   ├── security/           # Login, authentication
+│   │   │   ├── log/                 # Audit logs
+│   │   │   ├── ops/                 # Hosts, backups, Zabbix, Prometheus
+│   │   │   ├── alert/               # Alert media, templates, triggers, records
+│   │   │   ├── job/                 # Scheduled jobs
+│   │   │   └── oss/                 # Object storage
+│   │   ├── common/                  # Shared: integration, utils, exceptions
+│   │   └── framework/              # Config, aspects, handlers
+│   └── src/main/resources/
+│       ├── application.yml          # Base config
+│       ├── application-dev.yml      # Dev overrides
+│       └── mapper/**/*.xml           # MyBatis XML mappers
+├── devops-ui/                       # Vue 3 SPA
+│   ├── src/
+│   │   ├── views/                   # Page components (auto-routed)
+│   │   ├── hooks/useView.ts        # CRUD composable
+│   │   ├── service/                 # API service layer
+│   │   ├── store/                   # Pinia store
+│   │   └── components/             # Custom components (ren-* prefix)
+│   └── CLAUDE.md                    # Frontend-specific guidance
+├── devops-backup-agent/             # Python FastAPI backup agent
+│   ├── backup_agent/
+│   │   ├── main.py                 # FastAPI app
+│   │   ├── ssh_client.py           # SSH to network devices
+│   │   ├── minio_client.py         # Object storage upload
+│   │   └── cleaner.py              # Output cleaning
+│   └── README.md                    # Agent-specific documentation
+├── docker-compose.yaml              # Dev Docker Compose
+├── docker-compose.prod.yaml         # Prod Docker Compose
+├── CLAUDE.md                        # AI agent guidance (this project)
+├── AGENTS.md                        # Multi-agent collaboration guidance
+└── scripts/build_push.sh            # Release build script
+```
+
+## Configuration
+
+| File | Purpose |
+|------|---------|
+| `devops-admin/src/main/resources/application-dev.yml` | Local dev: MySQL, Redis, Zabbix, OSS |
+| `devops-admin/src/main/resources/application-prod.yml` | Production overrides |
+| `devops-ui/.env.development` | Dev: `VITE_APP_API=http://localhost:10001/api` |
+| `devops-ui/.env.production` | Prod: `VITE_APP_API=/api` |
+| `devops-backup-agent/config.yaml` | MinIO credentials, callback URL, agent token |
+
+## Key Conventions
+
+- **Auth**: SA-Token with `token` header; 12h timeout; max 5 concurrent logins
+- **Response**: All APIs return `{ code: 0, msg: "success", data: T }`
+- **Routing**: Frontend routes come from backend menu API (server-driven)
+- **DB**: MySQL with `ASSIGN_ID` primary keys; manual SQL migrations in `devops-admin/db/`
+- **Online status**: Stored in MySQL (not Redis); refreshed by scheduled task
+- **SSE**: Alert records push via Server-Sent Events with unlimited timeout
+
+## Release
+
+```bash
+./scripts/build_push.sh <version>
+# Builds Docker images, tags with <version> + latest, pushes to taohongqiang/*
+```
+
+## License
+
+Proprietary — Internal use only.

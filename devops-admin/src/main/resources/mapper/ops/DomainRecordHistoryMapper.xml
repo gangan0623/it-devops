@@ -19,7 +19,7 @@
         <result property="snapshotAfter" column="snapshot_after"/>
         <collection property="details"
                     ofType="net.leoch.modules.ops.vo.rsp.DomainRecordHistoryDetailRsp$HistoryFieldDetailRsp"
-                    column="{historyId=id}"
+                    column="id"
                     select="net.leoch.modules.ops.mapper.DomainRecordHistoryDetailMapper.selectByHistoryId"/>
     </resultMap>
 

@@ -32,10 +32,7 @@ public class DomainRecordEntity extends BaseEntity {
      */
     private Integer externalEnabled;
 
-    /**
-     * 外网访问地址
-     */
-    private String externalAddress;
+
 
     /**
      * 区域名称

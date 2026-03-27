@@ -88,7 +88,7 @@ public class DomainRecordServiceImpl extends ServiceImpl<DomainRecordMapper, Dom
 
         DomainRecordEntity entity = new DomainRecordEntity();
         fillBaseEntity(entity, request.getProjectName(), request.getDomainName(), request.getAreaName(), request.getAdEnabled(), request.getInternalEnabled(),
-                request.getExternalEnabled(), request.getExternalAddress(), request.getDescription(), request.getProjectOwner(),
+                request.getExternalEnabled(), request.getDescription(), request.getProjectOwner(),
                 request.getApplyTime(), request.getRemark());
         this.save(entity);
         saveOrUpdateChildren(entity.getId(), request.getAdEnabled(), request.getInternalEnabled(), request.getExternalEnabled(),
@@ -113,7 +113,7 @@ public class DomainRecordServiceImpl extends ServiceImpl<DomainRecordMapper, Dom
         DomainRecordDetailRsp before = loadDetail(request.getId());
 
         fillBaseEntity(existing, request.getProjectName(), request.getDomainName(), request.getAreaName(), request.getAdEnabled(), request.getInternalEnabled(),
-                request.getExternalEnabled(), request.getExternalAddress(), request.getDescription(), request.getProjectOwner(),
+                request.getExternalEnabled(), request.getDescription(), request.getProjectOwner(),
                 request.getApplyTime(), request.getRemark());
         this.updateById(existing);
         saveOrUpdateChildren(existing.getId(), request.getAdEnabled(), request.getInternalEnabled(), request.getExternalEnabled(),
@@ -189,7 +189,6 @@ public class DomainRecordServiceImpl extends ServiceImpl<DomainRecordMapper, Dom
                                 Integer adEnabled,
                                 Integer internalEnabled,
                                 Integer externalEnabled,
-                                String externalAddress,
                                 String description,
                                 String projectOwner,
                                 Date applyTime,
@@ -200,7 +199,6 @@ public class DomainRecordServiceImpl extends ServiceImpl<DomainRecordMapper, Dom
         entity.setAdEnabled(adEnabled);
         entity.setInternalEnabled(internalEnabled);
         entity.setExternalEnabled(externalEnabled);
-        entity.setExternalAddress(externalAddress);
         entity.setDescription(description);
         entity.setProjectOwner(projectOwner);
         entity.setApplyTime(applyTime);
@@ -253,7 +251,6 @@ public class DomainRecordServiceImpl extends ServiceImpl<DomainRecordMapper, Dom
         entity.setVirtualServicePort(delivery.getVirtualServicePort());
         entity.setVirtualServiceProtocol(delivery.getVirtualServiceProtocol());
         entity.setPoolName(delivery.getPoolName());
-        entity.setLoadStrategy(delivery.getLoadStrategy());
         entity.setRemark(delivery.getRemark());
         if (entity.getId() == null) {
             domainDeliveryMapper.insert(entity);

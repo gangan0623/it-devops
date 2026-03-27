@@ -38,8 +38,11 @@ public class DomainRecordRsp implements Serializable {
     @SchemaProperty(name = "是否启用外网解析 0否 1是")
     private Integer externalEnabled;
 
-    @SchemaProperty(name = "外网访问地址")
-    private String externalAddress;
+    @SchemaProperty(name = "内网解析目标IP")
+    private String internalTargetIp;
+
+    @SchemaProperty(name = "公网解析记录值(公网IP)")
+    private String externalRecordValue;
 
     @SchemaProperty(name = "描述")
     private String description;
@@ -68,8 +71,8 @@ public class DomainRecordRsp implements Serializable {
     @SchemaProperty(name = "节点池名称")
     private String poolName;
 
-    @SchemaProperty(name = "负载策略")
-    private String loadStrategy;
+    @SchemaProperty(name = "节点池节点明细")
+    private String poolNodes;
 
     @SchemaProperty(name = "创建者")
     private Long creator;
@@ -82,4 +85,16 @@ public class DomainRecordRsp implements Serializable {
 
     @SchemaProperty(name = "更新时间")
     private Date updateDate;
+
+    @SchemaProperty(name = "防火墙映射-公网IP")
+    private String fmPublicIp;
+
+    @SchemaProperty(name = "防火墙映射-外部端口")
+    private Integer fmExternalPort;
+
+    @SchemaProperty(name = "防火墙映射-内部IP")
+    private String fmInternalIp;
+
+    @SchemaProperty(name = "防火墙映射-内部端口")
+    private Integer fmInternalPort;
 }

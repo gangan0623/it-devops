@@ -53,9 +53,6 @@ public class DomainRecordDetailRsp extends DomainRecordRsp {
         @SchemaProperty(name = "节点池名称")
         private String poolName;
 
-        @SchemaProperty(name = "负载策略")
-        private String loadStrategy;
-
         @SchemaProperty(name = "备注")
         private String remark;
 

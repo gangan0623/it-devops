@@ -64,8 +64,7 @@ public class DomainRecordSaveReq implements Serializable {
     @Max(value = 1, message = "是否启用外网解析取值不合法", groups = DefaultGroup.class)
     private Integer externalEnabled;
 
-    @Schema(title = "外网访问地址")
-    private String externalAddress;
+
 
     @Schema(title = "描述")
     private String description;
@@ -150,10 +149,6 @@ public class DomainRecordSaveReq implements Serializable {
         @Schema(title = "节点池名称")
         @NotBlank(message = "节点池名称不能为空", groups = DefaultGroup.class)
         private String poolName;
-
-        @Schema(title = "负载策略")
-        @NotBlank(message = "负载策略不能为空", groups = DefaultGroup.class)
-        private String loadStrategy;
 
         @Schema(title = "备注")
         private String remark;

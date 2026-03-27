@@ -7,8 +7,9 @@
     :close-on-press-escape="false"
   >
     <el-form ref="dataFormRef" :model="dataForm" :rules="rules" label-width="120px" class="domain-form">
-      <div class="form-section-title">基础信息</div>
-      <el-row :gutter="16">
+      <el-tabs v-model="activeTab" class="domain-tabs" type="border-card">
+        <el-tab-pane label="基础设置" name="base">
+          <el-row :gutter="16" class="tab-pane-content">
         <el-col :span="12">
           <el-form-item label="项目名称" prop="projectName">
             <el-input v-model="dataForm.projectName" placeholder="项目名称"></el-input>
@@ -28,26 +29,6 @@
               value-field="dictLabel"
               placeholder="区域名称"
             ></ren-select>
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="走应用交付" prop="adEnabled">
-            <el-switch v-model="dataForm.adEnabled" :active-value="1" :inactive-value="0"></el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="启用内网解析" prop="internalEnabled">
-            <el-switch v-model="dataForm.internalEnabled" :active-value="1" :inactive-value="0"></el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="启用外网解析" prop="externalEnabled">
-            <el-switch v-model="dataForm.externalEnabled" :active-value="1" :inactive-value="0"></el-switch>
-          </el-form-item>
-        </el-col>
-        <el-col :span="12">
-          <el-form-item label="外网地址">
-            <el-input v-model="dataForm.externalAddress" placeholder="外网访问地址 / URL"></el-input>
           </el-form-item>
         </el-col>
         <el-col :span="12">
@@ -76,11 +57,19 @@
             <el-input v-model="dataForm.remark" type="textarea" :rows="2" placeholder="备注"></el-input>
           </el-form-item>
         </el-col>
-      </el-row>
+          </el-row>
+        </el-tab-pane>
 
-      <div class="form-section-title">应用交付</div>
-      <div v-if="dataForm.adEnabled === 1">
-        <el-row :gutter="16">
+        <el-tab-pane label="深信服(AD)配置" name="delivery">
+          <el-row class="tab-pane-content">
+            <el-col :span="24" style="margin-bottom: 24px;">
+              <el-form-item label="开启深信服(AD)" prop="adEnabled">
+                <el-switch v-model="dataForm.adEnabled" :active-value="1" :inactive-value="0"></el-switch>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <template v-if="dataForm.adEnabled === 1">
+          <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item label="虚拟服务名称" prop="delivery.virtualServiceName">
               <el-input v-model="dataForm.delivery.virtualServiceName" placeholder="虚拟服务名称"></el-input>
@@ -91,23 +80,18 @@
               <el-input v-model="dataForm.delivery.virtualServiceIp" placeholder="虚拟服务IP"></el-input>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="12">
             <el-form-item label="虚拟服务端口" prop="delivery.virtualServicePort">
               <el-input-number v-model="dataForm.delivery.virtualServicePort" :min="1" :max="65535" style="width: 100%"></el-input-number>
             </el-form-item>
           </el-col>
-          <el-col :span="8">
+          <el-col :span="12">
             <el-form-item label="虚拟服务协议" prop="delivery.virtualServiceProtocol">
               <el-select v-model="dataForm.delivery.virtualServiceProtocol" placeholder="协议" style="width: 100%">
                 <el-option label="HTTP" value="HTTP"></el-option>
                 <el-option label="HTTPS" value="HTTPS"></el-option>
                 <el-option label="TCP" value="TCP"></el-option>
               </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="负载策略" prop="delivery.loadStrategy">
-              <el-input v-model="dataForm.delivery.loadStrategy" placeholder="负载策略"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="12">
@@ -128,13 +112,17 @@
         </div>
         <el-table :data="dataForm.delivery.nodes" border>
           <el-table-column label="节点IP" min-width="180">
-            <template #default="{ row }">
-              <el-input v-model="row.nodeIp" placeholder="节点IP"></el-input>
+            <template #default="{ row, $index }">
+              <el-form-item label-width="0" :prop="`delivery.nodes.${$index}.nodeIp`" :rules="[{ required: true, message: '必填且需为合法IP', pattern: /^((25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(25[0-5]|2[0-4]\d|[01]?\d\d?)$/, trigger: 'blur' }]" class="table-form-item" style="margin-bottom: 0;">
+                <el-input v-model="row.nodeIp" placeholder="节点IP"></el-input>
+              </el-form-item>
             </template>
           </el-table-column>
           <el-table-column label="节点端口" width="140">
-            <template #default="{ row }">
-              <el-input-number v-model="row.nodePort" :min="1" :max="65535" style="width: 100%"></el-input-number>
+            <template #default="{ row, $index }">
+              <el-form-item label-width="0" :prop="`delivery.nodes.${$index}.nodePort`" :rules="[{ required: true, message: '必填', trigger: 'blur' }]" class="table-form-item" style="margin-bottom: 0;">
+                <el-input-number v-model="row.nodePort" :min="1" :max="65535" style="width: 100%"></el-input-number>
+              </el-form-item>
             </template>
           </el-table-column>
           <el-table-column label="排序" width="120">
@@ -153,46 +141,71 @@
             </template>
           </el-table-column>
         </el-table>
-      </div>
-      <el-empty v-else description="未启用应用交付"></el-empty>
+        </template>
+        </el-tab-pane>
 
-      <div class="form-section-title">解析配置</div>
-      <el-row :gutter="16">
+        <el-tab-pane label="解析配置" name="dns">
+          <el-row class="tab-pane-content" :gutter="16">
+            <el-col :span="12" style="margin-bottom: 24px;">
+              <el-form-item label="开启内网解析" prop="internalEnabled">
+                <el-switch v-model="dataForm.internalEnabled" :active-value="1" :inactive-value="0"></el-switch>
+              </el-form-item>
+            </el-col>
+            <el-col :span="12" style="margin-bottom: 24px;">
+              <el-form-item label="开启公网解析" prop="externalEnabled">
+                <el-switch v-model="dataForm.externalEnabled" :active-value="1" :inactive-value="0"></el-switch>
+              </el-form-item>
+            </el-col>
+          </el-row>
+
+          <el-row :gutter="16">
         <el-col :span="12" v-if="dataForm.internalEnabled === 1">
           <div class="sub-section-title">内网解析</div>
-          <el-form-item label="解析方式" prop="dnsInternal.resolveMode">
-            <el-select v-model="dataForm.dnsInternal.resolveMode" placeholder="解析方式" style="width: 100%">
-              <el-option label="AD" value="AD"></el-option>
-              <el-option label="DIRECT" value="DIRECT"></el-option>
-            </el-select>
+          <el-form-item label="解析链路">
+            <el-alert
+              :title="internalResolveHint"
+              type="info"
+              :closable="false"
+              show-icon
+            ></el-alert>
           </el-form-item>
-          <el-form-item label="目标IP" prop="dnsInternal.dnsTargetIp">
-            <el-input v-model="dataForm.dnsInternal.dnsTargetIp" placeholder="目标IP"></el-input>
+          <el-form-item :label="dataForm.adEnabled === 1 ? '虚拟服务IP' : '目标IP'" prop="dnsInternal.dnsTargetIp">
+            <el-input
+              v-model="dataForm.dnsInternal.dnsTargetIp"
+              :placeholder="dataForm.adEnabled === 1 ? '深信服应用交付虚拟IP' : '目标IP'"
+            ></el-input>
           </el-form-item>
           <el-form-item label="备注">
             <el-input v-model="dataForm.dnsInternal.remark" placeholder="备注"></el-input>
           </el-form-item>
         </el-col>
         <el-col :span="12" v-if="dataForm.externalEnabled === 1">
-          <div class="sub-section-title">外网解析</div>
-          <el-form-item label="解析方式" prop="dnsExternal.resolveMode">
-            <el-select v-model="dataForm.dnsExternal.resolveMode" placeholder="解析方式" style="width: 100%">
-              <el-option label="AD" value="AD"></el-option>
-              <el-option label="DIRECT" value="DIRECT"></el-option>
-            </el-select>
+          <div class="sub-section-title">公网解析</div>
+          <el-form-item label="解析链路">
+            <el-alert
+              :title="externalResolveHint"
+              type="info"
+              :closable="false"
+              show-icon
+            ></el-alert>
           </el-form-item>
-          <el-form-item label="DNS记录值" prop="dnsExternal.recordValue">
-            <el-input v-model="dataForm.dnsExternal.recordValue" placeholder="公网IP / 记录值"></el-input>
+          <el-form-item :label="dataForm.adEnabled === 1 ? '公网IP' : '目标公网IP'" prop="dnsExternal.recordValue">
+            <el-input
+              v-model="dataForm.dnsExternal.recordValue"
+              :placeholder="dataForm.adEnabled === 1 ? '阿里云DNS解析公网IP' : '目标公网IP'"
+            ></el-input>
           </el-form-item>
+
           <el-form-item label="备注">
             <el-input v-model="dataForm.dnsExternal.remark" placeholder="备注"></el-input>
           </el-form-item>
-        </el-col>
-      </el-row>
+          </el-col>
+          </el-row>
+        </el-tab-pane>
 
-      <template v-if="dataForm.adEnabled === 1 && dataForm.externalEnabled === 1">
-        <div class="sub-section-title">防火墙映射</div>
-        <el-row :gutter="16">
+        <el-tab-pane label="防火墙 NAT 映射" name="firewall">
+          <template v-if="dataForm.adEnabled === 1 && dataForm.externalEnabled === 1">
+          <el-row :gutter="16" class="tab-pane-content">
           <el-col :span="12">
             <el-form-item label="公网IP" prop="firewallMapping.publicIp">
               <el-input v-model="dataForm.firewallMapping.publicIp" placeholder="公网IP"></el-input>
@@ -218,8 +231,11 @@
               <el-input v-model="dataForm.firewallMapping.mappingDesc" placeholder="映射描述"></el-input>
             </el-form-item>
           </el-col>
-        </el-row>
-      </template>
+          </el-row>
+          </template>
+          <el-empty v-else description="需同时开启 深信服(AD) 与 公网解析"></el-empty>
+        </el-tab-pane>
+      </el-tabs>
     </el-form>
 
     <template #footer>
@@ -232,13 +248,14 @@
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref, watch } from "vue";
+import { computed, reactive, ref, watch } from "vue";
 import baseService from "@/service/baseService";
 import { ElMessage } from "element-plus";
 
 const emit = defineEmits(["refreshDataList"]);
 
 const visible = ref(false);
+const activeTab = ref("base");
 const dataFormRef = ref();
 const submitLoading = ref(false);
 
@@ -257,7 +274,6 @@ const createForm = () => ({
   adEnabled: 0,
   internalEnabled: 1,
   externalEnabled: 0,
-  externalAddress: "",
   description: "",
   projectOwner: "",
   applyTime: "",
@@ -268,7 +284,6 @@ const createForm = () => ({
     virtualServicePort: 80,
     virtualServiceProtocol: "HTTP",
     poolName: "",
-    loadStrategy: "",
     remark: "",
     nodes: [createNode()]
   },
@@ -301,6 +316,20 @@ const rules = {
   applyTime: [{ required: true, message: "必填项不能为空", trigger: "change" }]
 };
 
+const internalResolveHint = computed(() => {
+  if (dataForm.adEnabled === 1) {
+    return "走AD时，内网DNS解析到深信服应用交付虚拟IP，再转发到节点池IP和端口。";
+  }
+  return "不走AD时，内网DNS直接解析到目标IP。";
+});
+
+const externalResolveHint = computed(() => {
+  if (dataForm.adEnabled === 1) {
+    return "走AD时，公网DNS解析到公网IP，经防火墙映射到虚拟IP和内部端口，再转发到节点池IP和端口。";
+  }
+  return "不走AD时，公网DNS直接解析到目标公网IP。";
+});
+
 watch(
   () => dataForm.adEnabled,
   (value) => {
@@ -313,11 +342,43 @@ watch(
 );
 
 watch(
+  () => dataForm.internalEnabled,
+  (value) => {
+    if (value !== 1) {
+      dataForm.dnsInternal = {
+        ...createForm().dnsInternal,
+        resolveMode: dataForm.adEnabled === 1 ? "AD" : "DIRECT"
+      };
+    }
+  }
+);
+
+watch(
   () => dataForm.externalEnabled,
   (value) => {
     if (value !== 1) {
       dataForm.firewallMapping = createForm().firewallMapping;
-      dataForm.dnsExternal = createForm().dnsExternal;
+      dataForm.dnsExternal = {
+        ...createForm().dnsExternal,
+        resolveMode: dataForm.adEnabled === 1 ? "AD" : "DIRECT"
+      };
+    }
+  }
+);
+
+watch(
+  () => [
+    dataForm.dnsExternal.recordValue,
+    dataForm.delivery.virtualServiceIp,
+    dataForm.delivery.virtualServicePort,
+    dataForm.adEnabled,
+    dataForm.externalEnabled
+  ],
+  ([recordValue, vip, vport, ad, ext]) => {
+    if (ad === 1 && ext === 1) {
+      dataForm.firewallMapping.publicIp = recordValue as string;
+      dataForm.firewallMapping.internalIp = vip as string;
+      dataForm.firewallMapping.internalPort = vport as number;
     }
   }
 );
@@ -346,7 +407,6 @@ const normalizePayload = () => {
     adEnabled: dataForm.adEnabled,
     internalEnabled: dataForm.internalEnabled,
     externalEnabled: dataForm.externalEnabled,
-    externalAddress: dataForm.externalAddress,
     description: dataForm.description,
     projectOwner: dataForm.projectOwner,
     applyTime: dataForm.applyTime,
@@ -359,10 +419,16 @@ const normalizePayload = () => {
     };
   }
   if (dataForm.internalEnabled === 1) {
-    payload.dnsInternal = { ...dataForm.dnsInternal };
+    payload.dnsInternal = {
+      ...dataForm.dnsInternal,
+      resolveMode: dataForm.adEnabled === 1 ? "AD" : "DIRECT"
+    };
   }
   if (dataForm.externalEnabled === 1) {
-    payload.dnsExternal = { ...dataForm.dnsExternal };
+    payload.dnsExternal = {
+      ...dataForm.dnsExternal,
+      resolveMode: dataForm.adEnabled === 1 ? "AD" : "DIRECT"
+    };
   }
   if (dataForm.adEnabled === 1 && dataForm.externalEnabled === 1) {
     payload.firewallMapping = { ...dataForm.firewallMapping };
@@ -372,6 +438,7 @@ const normalizePayload = () => {
 
 const init = (id?: number) => {
   visible.value = true;
+  activeTab.value = "base";
   resetForm();
   if (id) {
     baseService.get(`/ops/domain-record/${id}`).then((res) => {
@@ -386,8 +453,15 @@ const init = (id?: number) => {
 };
 
 const submitHandle = () => {
-  dataFormRef.value.validate((valid: boolean) => {
+  dataFormRef.value.validate((valid: boolean, fields: any) => {
     if (!valid) {
+      if (fields) {
+        const firstErrorField = Object.keys(fields)[0];
+        if (firstErrorField.startsWith('delivery.')) activeTab.value = 'delivery';
+        else if (firstErrorField.startsWith('dnsInternal.') || firstErrorField.startsWith('dnsExternal.')) activeTab.value = 'dns';
+        else if (firstErrorField.startsWith('firewallMapping.')) activeTab.value = 'firewall';
+        else activeTab.value = 'base';
+      }
       return;
     }
     submitLoading.value = true;
@@ -414,16 +488,30 @@ defineExpose({ init });
 
 <style scoped>
 .domain-form {
-  max-height: 70vh;
-  overflow-y: auto;
-  padding-right: 8px;
+  padding: 4px;
 }
 
-.form-section-title {
-  margin: 8px 0 16px;
-  font-size: 15px;
-  font-weight: 600;
-  color: #1f2937;
+.domain-tabs {
+  min-height: 480px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  border: 1px solid #e4e7ed;
+  border-radius: 6px;
+}
+.domain-tabs :deep(.el-tabs__content) {
+  padding: 24px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+.tab-pane-content {
+  margin-top: 8px;
+}
+
+:deep(.table-form-item .el-form-item__error) {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  padding-top: 2px;
+  z-index: 10;
 }
 
 .sub-section-title {

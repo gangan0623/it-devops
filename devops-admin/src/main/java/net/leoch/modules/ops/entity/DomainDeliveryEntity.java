@@ -48,11 +48,6 @@ public class DomainDeliveryEntity extends BaseEntity {
     private String poolName;
 
     /**
-     * 负载策略
-     */
-    private String loadStrategy;
-
-    /**
      * 备注
      */
     private String remark;

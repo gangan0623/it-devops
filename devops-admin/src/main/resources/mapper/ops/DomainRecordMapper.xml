@@ -11,7 +11,6 @@
         <result property="adEnabled" column="ad_enabled"/>
         <result property="internalEnabled" column="internal_enabled"/>
         <result property="externalEnabled" column="external_enabled"/>
-        <result property="externalAddress" column="external_address"/>
         <result property="description" column="description"/>
         <result property="projectOwner" column="project_owner"/>
         <result property="applyTime" column="apply_time"/>
@@ -21,11 +20,17 @@
         <result property="virtualServicePort" column="virtual_service_port"/>
         <result property="virtualServiceProtocol" column="virtual_service_protocol"/>
         <result property="poolName" column="pool_name"/>
-        <result property="loadStrategy" column="load_strategy"/>
         <result property="creator" column="creator"/>
         <result property="createDate" column="create_date"/>
         <result property="updater" column="updater"/>
         <result property="updateDate" column="update_date"/>
+        <result property="internalTargetIp" column="internal_target_ip"/>
+        <result property="externalRecordValue" column="external_record_value"/>
+        <result property="poolNodes" column="pool_nodes"/>
+        <result property="fmPublicIp" column="fm_public_ip"/>
+        <result property="fmExternalPort" column="fm_external_port"/>
+        <result property="fmInternalIp" column="fm_internal_ip"/>
+        <result property="fmInternalPort" column="fm_internal_port"/>
     </resultMap>
 
     <resultMap id="deliveryNodeMap" type="net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp$DeliveryNodeRsp">
@@ -44,10 +49,9 @@
         <result property="virtualServicePort" column="delivery_virtual_service_port"/>
         <result property="virtualServiceProtocol" column="delivery_virtual_service_protocol"/>
         <result property="poolName" column="delivery_pool_name"/>
-        <result property="loadStrategy" column="delivery_load_strategy"/>
         <result property="remark" column="delivery_remark"/>
         <collection property="nodes" ofType="net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp$DeliveryNodeRsp"
-                    column="{domainDeliveryId=delivery_id}"
+                    column="delivery_id"
                     select="net.leoch.modules.ops.mapper.DomainDeliveryNodeMapper.selectByDomainDeliveryId"/>
     </resultMap>
 
@@ -94,7 +98,6 @@
             dr.ad_enabled,
             dr.internal_enabled,
             dr.external_enabled,
-            dr.external_address,
             dr.description,
             dr.project_owner,
             dr.apply_time,
@@ -104,13 +107,26 @@
             dd.virtual_service_port,
             dd.virtual_service_protocol,
             dd.pool_name,
-            dd.load_strategy,
             dr.creator,
             dr.create_date,
             dr.updater,
-            dr.update_date
+            dr.update_date,
+            di.dns_target_ip AS internal_target_ip,
+            de.record_value AS external_record_value,
+            (
+                SELECT GROUP_CONCAT(CONCAT(dn.node_ip, ':', dn.node_port) SEPARATOR '\n')
+                FROM tb_domain_delivery_node dn
+                WHERE dn.domain_delivery_id = dd.id
+            ) AS pool_nodes,
+            fm.public_ip AS fm_public_ip,
+            fm.external_port AS fm_external_port,
+            fm.internal_ip AS fm_internal_ip,
+            fm.internal_port AS fm_internal_port
         FROM tb_domain_record dr
         LEFT JOIN tb_domain_delivery dd ON dd.domain_record_id = dr.id
+        LEFT JOIN tb_domain_dns_internal di ON di.domain_record_id = dr.id
+        LEFT JOIN tb_domain_dns_external de ON de.domain_record_id = dr.id
+        LEFT JOIN tb_domain_firewall_mapping fm ON fm.domain_record_id = dr.id
         <where>
             <if test="request.projectName != null and request.projectName != ''">
                 AND dr.project_name LIKE CONCAT('%', #{request.projectName}, '%')
@@ -149,7 +165,6 @@
             dr.ad_enabled,
             dr.internal_enabled,
             dr.external_enabled,
-            dr.external_address,
             dr.description,
             dr.project_owner,
             dr.apply_time,
@@ -160,7 +175,6 @@
             dd.virtual_service_port AS delivery_virtual_service_port,
             dd.virtual_service_protocol AS delivery_virtual_service_protocol,
             dd.pool_name AS delivery_pool_name,
-            dd.load_strategy AS delivery_load_strategy,
             dd.remark AS delivery_remark,
             di.id AS dns_internal_id,
             di.resolve_mode AS dns_internal_resolve_mode,
