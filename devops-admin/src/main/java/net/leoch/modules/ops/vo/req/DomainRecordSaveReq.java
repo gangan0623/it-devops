@@ -15,6 +15,7 @@ import net.leoch.common.data.validator.group.DefaultGroup;
 
 import java.io.Serial;
 import java.io.Serializable;
+import java.net.URI;
 import java.util.Date;
 import java.util.List;
 
@@ -50,6 +51,16 @@ public class DomainRecordSaveReq implements Serializable {
     @NotBlank(message = "分组名称不能为空", groups = DefaultGroup.class)
     private String groupName;
 
+    @Schema(title = "站点位置")
+    @NotBlank(message = "站点位置不能为空", groups = DefaultGroup.class)
+    private String siteLocation;
+
+    @Schema(title = "状态 0禁用 1启用")
+    @NotNull(message = "状态不能为空", groups = DefaultGroup.class)
+    @Min(value = 0, message = "状态取值不合法", groups = DefaultGroup.class)
+    @Max(value = 1, message = "状态取值不合法", groups = DefaultGroup.class)
+    private Integer status;
+
     @Schema(title = "是否走应用交付 0否 1是")
     @NotNull(message = "是否走应用交付不能为空", groups = DefaultGroup.class)
     @Min(value = 0, message = "是否走应用交付取值不合法", groups = DefaultGroup.class)
@@ -83,6 +94,9 @@ public class DomainRecordSaveReq implements Serializable {
 
     @Schema(title = "备注")
     private String remark;
+
+    @Schema(title = "访问地址")
+    private String apiUrl;
 
     @Schema(title = "应用交付")
     @Valid
@@ -123,6 +137,32 @@ public class DomainRecordSaveReq implements Serializable {
     public boolean isFirewallMappingValid() {
         return !(Integer.valueOf(1).equals(adEnabled) && Integer.valueOf(1).equals(externalEnabled))
             || firewallMapping != null;
+    }
+
+    @AssertTrue(message = "访问地址格式不合法", groups = DefaultGroup.class)
+    @Schema(hidden = true)
+    public boolean isApiUrlValid() {
+        return isValidHttpUrl(apiUrl);
+    }
+
+    private boolean isValidHttpUrl(String url) {
+        if (url == null || url.isBlank()) {
+            return true;
+        }
+        try {
+            URI uri = URI.create(url.trim());
+            String scheme = uri.getScheme();
+            if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
+                return false;
+            }
+            if (uri.getHost() == null || uri.getHost().isBlank()) {
+                return false;
+            }
+            int port = uri.getPort();
+            return port == -1 || (port >= 1 && port <= 65535);
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Data

@@ -42,6 +42,7 @@ import net.leoch.modules.ops.vo.req.DomainRecordPageReq;
 import net.leoch.modules.ops.vo.req.DomainRecordSaveReq;
 import net.leoch.modules.ops.vo.req.DomainRecordUpdateReq;
 import net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp;
+import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import net.leoch.modules.ops.vo.rsp.DomainRecordRsp;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -71,6 +72,35 @@ public class DomainRecordServiceImpl extends ServiceImpl<DomainRecordMapper, Dom
     }
 
     @Override
+    public OpsHostStatusSummaryRsp summary(DomainRecordPageReq request) {
+        LambdaQueryWrapper<DomainRecordEntity> wrapper = new LambdaQueryWrapper<>();
+        wrapper.select(DomainRecordEntity::getStatus, DomainRecordEntity::getOnlineStatus);
+        List<DomainRecordEntity> list = this.list(wrapper);
+        OpsHostStatusSummaryRsp summary = new OpsHostStatusSummaryRsp();
+        summary.setTotalCount((long) list.size());
+        for (DomainRecordEntity item : list) {
+            if (item == null) {
+                continue;
+            }
+            Integer status = item.getStatus();
+            if (Integer.valueOf(1).equals(status)) {
+                summary.setEnabledCount(summary.getEnabledCount() + 1);
+            } else if (Integer.valueOf(0).equals(status)) {
+                summary.setDisabledCount(summary.getDisabledCount() + 1);
+            }
+            Boolean onlineStatus = item.getOnlineStatus();
+            if (Boolean.TRUE.equals(onlineStatus)) {
+                summary.setOnlineCount(summary.getOnlineCount() + 1);
+            } else if (Boolean.FALSE.equals(onlineStatus)) {
+                summary.setOfflineCount(summary.getOfflineCount() + 1);
+            } else {
+                summary.setUnknownCount(summary.getUnknownCount() + 1);
+            }
+        }
+        return summary;
+    }
+
+    @Override
     public DomainRecordDetailRsp get(DomainRecordIdReq request) {
         if (request == null || request.getId() == null) {
             return null;
@@ -87,9 +117,10 @@ public class DomainRecordServiceImpl extends ServiceImpl<DomainRecordMapper, Dom
                 request.getDomainName(), null);
 
         DomainRecordEntity entity = new DomainRecordEntity();
-        fillBaseEntity(entity, request.getProjectName(), request.getDomainName(), request.getAreaName(), request.getGroupName(), request.getAdEnabled(), request.getInternalEnabled(),
+        fillBaseEntity(entity, request.getProjectName(), request.getDomainName(), request.getAreaName(), request.getGroupName(),
+                request.getSiteLocation(), request.getStatus(), request.getAdEnabled(), request.getInternalEnabled(),
                 request.getExternalEnabled(), request.getDescription(), request.getProjectOwner(),
-                request.getApplyTime(), request.getRemark());
+                request.getApplyTime(), request.getRemark(), request.getApiUrl());
         this.save(entity);
         saveOrUpdateChildren(entity.getId(), request.getAdEnabled(), request.getInternalEnabled(), request.getExternalEnabled(),
                 request.getDelivery(), request.getDnsInternal(), request.getDnsExternal(), request.getFirewallMapping());
@@ -112,9 +143,10 @@ public class DomainRecordServiceImpl extends ServiceImpl<DomainRecordMapper, Dom
 
         DomainRecordDetailRsp before = loadDetail(request.getId());
 
-        fillBaseEntity(existing, request.getProjectName(), request.getDomainName(), request.getAreaName(), request.getGroupName(), request.getAdEnabled(), request.getInternalEnabled(),
+        fillBaseEntity(existing, request.getProjectName(), request.getDomainName(), request.getAreaName(), request.getGroupName(),
+                request.getSiteLocation(), request.getStatus(), request.getAdEnabled(), request.getInternalEnabled(),
                 request.getExternalEnabled(), request.getDescription(), request.getProjectOwner(),
-                request.getApplyTime(), request.getRemark());
+                request.getApplyTime(), request.getRemark(), request.getApiUrl());
         this.updateById(existing);
         saveOrUpdateChildren(existing.getId(), request.getAdEnabled(), request.getInternalEnabled(), request.getExternalEnabled(),
                 request.getDelivery(), request.getDnsInternal(), request.getDnsExternal(), request.getFirewallMapping());
@@ -187,17 +219,22 @@ public class DomainRecordServiceImpl extends ServiceImpl<DomainRecordMapper, Dom
                                 String domainName,
                                 String areaName,
                                 String groupName,
+                                String siteLocation,
+                                Integer status,
                                 Integer adEnabled,
                                 Integer internalEnabled,
                                 Integer externalEnabled,
                                 String description,
                                 String projectOwner,
                                 Date applyTime,
-                                String remark) {
+                                String remark,
+                                String apiUrl) {
         entity.setProjectName(projectName);
         entity.setDomainName(domainName);
         entity.setAreaName(areaName);
         entity.setGroupName(groupName);
+        entity.setSiteLocation(siteLocation);
+        entity.setStatus(status);
         entity.setAdEnabled(adEnabled);
         entity.setInternalEnabled(internalEnabled);
         entity.setExternalEnabled(externalEnabled);
@@ -205,6 +242,8 @@ public class DomainRecordServiceImpl extends ServiceImpl<DomainRecordMapper, Dom
         entity.setProjectOwner(projectOwner);
         entity.setApplyTime(applyTime);
         entity.setRemark(remark);
+        String normalizedApiUrl = StrUtil.trim(apiUrl);
+        entity.setApiUrl(StrUtil.isBlank(normalizedApiUrl) ? null : normalizedApiUrl);
     }
 
     private void saveOrUpdateChildren(Long domainRecordId,

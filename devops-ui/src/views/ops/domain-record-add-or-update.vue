@@ -43,6 +43,25 @@
           </el-form-item>
         </el-col>
         <el-col :span="12">
+          <el-form-item label="站点位置" prop="siteLocation">
+            <ren-select
+              v-model="dataForm.siteLocation"
+              dict-type="base_site_location"
+              label-field="dictValue"
+              value-field="dictLabel"
+              placeholder="站点位置"
+            ></ren-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="状态" prop="status">
+            <el-select v-model="dataForm.status" placeholder="状态" style="width: 100%">
+              <el-option label="启用" :value="1"></el-option>
+              <el-option label="禁用" :value="0"></el-option>
+            </el-select>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
           <el-form-item label="项目负责人" prop="projectOwner">
             <el-input v-model="dataForm.projectOwner" placeholder="项目负责人"></el-input>
           </el-form-item>
@@ -61,6 +80,11 @@
         <el-col :span="12">
           <el-form-item label="描述">
             <el-input v-model="dataForm.description" placeholder="描述"></el-input>
+          </el-form-item>
+        </el-col>
+        <el-col :span="12">
+          <el-form-item label="访问地址" prop="apiUrl">
+            <el-input v-model="dataForm.apiUrl" placeholder="https://grafana.leoch.net:8001/api"></el-input>
           </el-form-item>
         </el-col>
         <el-col :span="24">
@@ -283,6 +307,8 @@ const createForm = () => ({
   domainName: "",
   areaName: "",
   groupName: "",
+  siteLocation: "",
+  status: 1,
   adEnabled: 0,
   internalEnabled: 1,
   externalEnabled: 0,
@@ -290,6 +316,7 @@ const createForm = () => ({
   projectOwner: "",
   applyTime: "",
   remark: "",
+  apiUrl: "",
   delivery: {
     virtualServiceName: "",
     virtualServiceIp: "",
@@ -325,8 +352,34 @@ const rules = {
   domainName: [{ required: true, message: "必填项不能为空", trigger: "blur" }],
   areaName: [{ required: true, message: "必填项不能为空", trigger: "change" }],
   groupName: [{ required: true, message: "必填项不能为空", trigger: "change" }],
+  siteLocation: [{ required: true, message: "必填项不能为空", trigger: "change" }],
+  status: [{ required: true, message: "必填项不能为空", trigger: "change" }],
   projectOwner: [{ required: true, message: "必填项不能为空", trigger: "blur" }],
-  applyTime: [{ required: true, message: "必填项不能为空", trigger: "change" }]
+  applyTime: [{ required: true, message: "必填项不能为空", trigger: "change" }],
+  apiUrl: [{
+    validator: (_rule: any, value: string, callback: (error?: Error) => void) => {
+      if (!value) {
+        callback();
+        return;
+      }
+      try {
+        const url = new URL(value);
+        const port = url.port ? Number(url.port) : undefined;
+        if (!["http:", "https:"].includes(url.protocol)) {
+          callback(new Error("仅支持http/https地址"));
+          return;
+        }
+        if (port !== undefined && (!Number.isInteger(port) || port < 1 || port > 65535)) {
+          callback(new Error("端口范围需在1-65535"));
+          return;
+        }
+        callback();
+      } catch (_error) {
+        callback(new Error("请输入合法的完整URL"));
+      }
+    },
+    trigger: "blur"
+  }]
 };
 
 const internalResolveHint = computed(() => {
@@ -418,13 +471,16 @@ const normalizePayload = () => {
     domainName: dataForm.domainName,
     areaName: dataForm.areaName,
     groupName: dataForm.groupName,
+    siteLocation: dataForm.siteLocation,
+    status: dataForm.status,
     adEnabled: dataForm.adEnabled,
     internalEnabled: dataForm.internalEnabled,
     externalEnabled: dataForm.externalEnabled,
     description: dataForm.description,
     projectOwner: dataForm.projectOwner,
     applyTime: dataForm.applyTime,
-    remark: dataForm.remark
+    remark: dataForm.remark,
+    apiUrl: dataForm.apiUrl
   };
   if (dataForm.adEnabled === 1) {
     payload.delivery = {

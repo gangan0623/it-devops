@@ -51,7 +51,7 @@
           <el-select v-model="filters.deviceType" clearable>
             <el-option label="Linux设备" value="linux" />
             <el-option label="Windows设备" value="windows" />
-            <el-option label="业务系统" value="business" />
+            <el-option label="域名站点" value="business" />
           </el-select>
         </el-form-item>
         <el-form-item label="实例(模糊)">

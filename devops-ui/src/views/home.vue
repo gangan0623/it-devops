@@ -34,10 +34,10 @@
           </div>
         </div>
 
-        <div :class="['stat-card', 'stat-card--link', { 'stat-card--zero': !totalBusiness }]" @click="goAsset('/ops/businesssystem')">
+        <div :class="['stat-card', 'stat-card--link', { 'stat-card--zero': !totalBusiness }]" @click="goAsset('/ops/domain-record')">
           <div class="stat-card__head">
             <span class="stat-card__icon"><svg viewBox="0 0 14 14" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="1" y="2" width="12" height="10" rx="1.5"/><line x1="1" y1="5.5" x2="13" y2="5.5"/><circle cx="3.5" cy="3.8" r="0.8" fill="currentColor" stroke="none"/><circle cx="6" cy="3.8" r="0.8" fill="currentColor" stroke="none"/></svg></span>
-            <span class="stat-card__name">业务系统</span>
+            <span class="stat-card__name">域名站点</span>
           </div>
           <div class="stat-card__hero">{{ totalBusiness }}</div>
           <div class="stat-card__sep"></div>

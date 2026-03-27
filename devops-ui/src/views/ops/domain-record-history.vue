@@ -62,31 +62,21 @@
     ></el-pagination>
 
     <el-drawer v-model="detailVisible" title="域名操作记录详情" size="980px" :append-to-body="true">
-      <div v-loading="detailLoading" v-if="detailData" class="history-detail">
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="操作类型">{{ operationTypeText(detailData.operationType) }}</el-descriptions-item>
-          <el-descriptions-item label="操作人">{{ detailData.operatorName || "-" }}</el-descriptions-item>
-          <el-descriptions-item label="操作时间">{{ detailData.operationTime || "-" }}</el-descriptions-item>
-          <el-descriptions-item label="主记录ID">{{ detailData.domainRecordId || "-" }}</el-descriptions-item>
-          <el-descriptions-item label="操作摘要" :span="2">{{ detailData.operationSummary || "-" }}</el-descriptions-item>
-        </el-descriptions>
-
-        <el-table v-if="detailData.details?.length" :data="detailData.details" border style="margin-top: 16px">
-          <el-table-column prop="fieldName" label="字段" min-width="160"></el-table-column>
-          <el-table-column prop="beforeValue" label="变更前" min-width="260" show-overflow-tooltip></el-table-column>
-          <el-table-column prop="afterValue" label="变更后" min-width="260" show-overflow-tooltip></el-table-column>
-        </el-table>
-
-        <el-row :gutter="16" style="margin-top: 16px">
-          <el-col :span="12">
-            <div class="history-detail__subtitle">修改前快照</div>
-            <el-input v-model="detailData.snapshotBefore" type="textarea" :rows="14" readonly></el-input>
-          </el-col>
-          <el-col :span="12">
-            <div class="history-detail__subtitle">修改后快照</div>
-            <el-input v-model="detailData.snapshotAfter" type="textarea" :rows="14" readonly></el-input>
-          </el-col>
-        </el-row>
+      <div v-loading="detailLoading" class="history-detail">
+        <div v-if="detailData" style="margin-bottom: 20px;">
+          <el-descriptions :column="3" border size="small">
+            <el-descriptions-item label="操作类型">
+              <el-tag :type="tagTypeMap[detailData.operationType] || 'info'" size="small">
+                {{ operationTypeText(detailData.operationType) }}
+              </el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="操作人">{{ detailData.operatorName || "-" }}</el-descriptions-item>
+            <el-descriptions-item label="操作时间">{{ detailData.operationTime || "-" }}</el-descriptions-item>
+            <el-descriptions-item label="操作摘要" :span="3">{{ detailData.operationSummary || "-" }}</el-descriptions-item>
+          </el-descriptions>
+        </div>
+        
+        <domain-record-history-diff v-if="detailData" ref="diffRef" />
       </div>
     </el-drawer>
   </div>
@@ -94,8 +84,9 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import { reactive, ref, toRefs } from "vue";
+import { nextTick, reactive, ref, toRefs } from "vue";
 import baseService from "@/service/baseService";
+import DomainRecordHistoryDiff from "./domain-record-history-diff.vue";
 
 const view = reactive({
   getDataListURL: "/ops/domain-record/history/page",
@@ -113,6 +104,7 @@ const timeRange = ref<string[]>([]);
 const detailVisible = ref(false);
 const detailLoading = ref(false);
 const detailData = ref<any>(null);
+const diffRef = ref();
 
 const tagTypeMap: Record<string, string> = {
   CREATE: "success",
@@ -126,6 +118,8 @@ const operationTypeText = (value: string) => {
   if (value === "DELETE") return "删除";
   return value || "-";
 };
+
+
 
 const queryList = () => {
   state.dataForm.operationTimeStart = timeRange.value?.[0] || "";
@@ -150,6 +144,11 @@ const loadDetail = (id: number) => {
     .get(`/ops/domain-record/history/${id}`)
     .then((res) => {
       detailData.value = res.data;
+      nextTick(() => {
+        if (diffRef.value) {
+          diffRef.value.init(res.data);
+        }
+      });
     })
     .finally(() => {
       detailLoading.value = false;
@@ -162,11 +161,5 @@ queryList();
 <style scoped>
 .history-detail {
   margin-top: 4px;
-}
-
-.history-detail__subtitle {
-  margin-bottom: 8px;
-  font-size: 14px;
-  font-weight: 600;
 }
 </style>

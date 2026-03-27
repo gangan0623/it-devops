@@ -31,20 +31,20 @@ public class OnlineStatusRefreshTask implements ITask {
 
     private final LinuxHostMapper linuxHostMapper;
     private final WindowHostMapper windowHostMapper;
-    private final BusinessSystemMapper businessSystemMapper;
+    private final DomainRecordMapper domainRecordMapper;
     private final NetworkBackupAgentMapper backupAgentMapper;
     private final OnlineStatusConfig properties;
     private final PrometheusOnlineStatusService prometheusOnlineStatusService;
 
     public OnlineStatusRefreshTask(LinuxHostMapper linuxHostMapper,
                                    WindowHostMapper windowHostMapper,
-                                   BusinessSystemMapper businessSystemMapper,
+                                   DomainRecordMapper domainRecordMapper,
                                    NetworkBackupAgentMapper backupAgentMapper,
                                    OnlineStatusConfig properties,
                                    PrometheusOnlineStatusService prometheusOnlineStatusService) {
         this.linuxHostMapper = linuxHostMapper;
         this.windowHostMapper = windowHostMapper;
-        this.businessSystemMapper = businessSystemMapper;
+        this.domainRecordMapper = domainRecordMapper;
         this.backupAgentMapper = backupAgentMapper;
         this.properties = properties;
         this.prometheusOnlineStatusService = prometheusOnlineStatusService;
@@ -55,7 +55,7 @@ public class OnlineStatusRefreshTask implements ITask {
         long start = System.currentTimeMillis();
         refreshLinux();
         refreshWindows();
-        refreshBusinessSystems();
+        refreshDomainRecords();
         refreshBackupAgents();
         logger.info("[在线状态刷新] 完成, 耗时={}ms", System.currentTimeMillis() - start);
     }
@@ -82,15 +82,15 @@ public class OnlineStatusRefreshTask implements ITask {
                 WindowHostEntity::getInstance, result.statusMap(), PrometheusOnlineStatusService.JOB_WINDOWS);
     }
 
-    private void refreshBusinessSystems() {
+    private void refreshDomainRecords() {
         PrometheusOnlineStatusService.BatchStatusResult result =
                 prometheusOnlineStatusService.queryJobStatus(PrometheusOnlineStatusService.JOB_HTTP_PROBE);
         if (!result.success()) {
-            logger.warn("[在线状态刷新] BusinessSystem Prometheus 查询失败，跳过本轮状态覆盖");
+            logger.warn("[在线状态刷新] DomainRecord Prometheus 查询失败，跳过本轮状态覆盖");
             return;
         }
-        refreshTableStatus(businessSystemMapper, BusinessSystemEntity::getOnlineStatus, BusinessSystemEntity::getInstance,
-                BusinessSystemEntity::getInstance, result.statusMap(), PrometheusOnlineStatusService.JOB_HTTP_PROBE);
+        refreshTableStatus(domainRecordMapper, DomainRecordEntity::getOnlineStatus, DomainRecordEntity::getApiUrl,
+                DomainRecordEntity::getApiUrl, result.statusMap(), PrometheusOnlineStatusService.JOB_HTTP_PROBE);
     }
 
     private void refreshBackupAgents() {

@@ -19,6 +19,7 @@ import net.leoch.modules.ops.vo.req.DomainRecordPageReq;
 import net.leoch.modules.ops.vo.req.DomainRecordSaveReq;
 import net.leoch.modules.ops.vo.req.DomainRecordUpdateReq;
 import net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp;
+import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import net.leoch.modules.ops.vo.rsp.DomainRecordRsp;
 import org.springframework.web.bind.annotation.*;
 
@@ -41,6 +42,13 @@ public class DomainRecordController {
     @SaCheckPermission("ops:domain-record:page")
     public Result<PageData<DomainRecordRsp>> page(@Parameter(hidden = true) DomainRecordPageReq request) {
         return new Result<PageData<DomainRecordRsp>>().ok(domainRecordService.page(request));
+    }
+
+    @GetMapping("summary")
+    @Operation(summary = "状态汇总")
+    @SaCheckPermission("ops:domain-record:page")
+    public Result<OpsHostStatusSummaryRsp> summary(@Parameter(hidden = true) DomainRecordPageReq request) {
+        return new Result<OpsHostStatusSummaryRsp>().ok(domainRecordService.summary(request));
     }
 
     @GetMapping("{id}")

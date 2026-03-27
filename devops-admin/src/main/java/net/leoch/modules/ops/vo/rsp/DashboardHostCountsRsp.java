@@ -15,7 +15,7 @@ public class DashboardHostCountsRsp implements Serializable  {
     @Serial
     private static final long serialVersionUID = 1L;
 
-    @Schema(description = "资产总数(Windows+Linux+业务系统+网络设备)")
+    @Schema(description = "资产总数(Windows+Linux+域名站点+网络设备)")
     private Long assetTotal;
 
     @Schema(description = "Windows主机数量")
@@ -32,11 +32,11 @@ public class DashboardHostCountsRsp implements Serializable  {
     @Schema(description = "Linux离线数量")
     private Long linuxOffline;
 
-    @Schema(description = "业务系统数量")
+    @Schema(description = "域名站点数量")
     private Long business;
-    @Schema(description = "业务系统在线数量")
+    @Schema(description = "域名站点在线数量")
     private Long businessOnline;
-    @Schema(description = "业务系统离线数量")
+    @Schema(description = "域名站点离线数量")
     private Long businessOffline;
 
     @Schema(description = "网络设备数量")

@@ -9,10 +9,13 @@ import net.leoch.modules.ops.vo.req.DomainRecordPageReq;
 import net.leoch.modules.ops.vo.req.DomainRecordSaveReq;
 import net.leoch.modules.ops.vo.req.DomainRecordUpdateReq;
 import net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp;
+import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import net.leoch.modules.ops.vo.rsp.DomainRecordRsp;
 
 public interface IDomainRecordService extends IService<DomainRecordEntity> {
     PageData<DomainRecordRsp> page(DomainRecordPageReq request);
+
+    OpsHostStatusSummaryRsp summary(DomainRecordPageReq request);
 
     DomainRecordDetailRsp get(DomainRecordIdReq request);
 

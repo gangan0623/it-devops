@@ -3,10 +3,10 @@ package net.leoch.modules.ops.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import net.leoch.modules.ops.entity.BusinessSystemEntity;
+import net.leoch.modules.ops.entity.DomainRecordEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
-import net.leoch.modules.ops.mapper.BusinessSystemMapper;
+import net.leoch.modules.ops.mapper.DomainRecordMapper;
 import net.leoch.modules.ops.mapper.LinuxHostMapper;
 import net.leoch.modules.ops.mapper.WindowHostMapper;
 import net.leoch.modules.ops.service.IPrometheusSdService;
@@ -30,7 +30,7 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
 
     private final LinuxHostMapper linuxHostMapper;
     private final WindowHostMapper windowHostMapper;
-    private final BusinessSystemMapper businessSystemMapper;
+    private final DomainRecordMapper domainRecordMapper;
     private final SysDictDataMapper sysDictDataMapper;
 
     @Override
@@ -90,20 +90,22 @@ public class PrometheusSdServiceImpl implements IPrometheusSdService {
             return new ArrayList<>();
         }
         DictMaps dictMaps = loadDictMaps();
-        List<BusinessSystemEntity> list = businessSystemMapper.selectList(new LambdaQueryWrapper<BusinessSystemEntity>()
-                .select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName, BusinessSystemEntity::getSiteLocation, BusinessSystemEntity::getAreaName, BusinessSystemEntity::getMenuName)
-                .eq(BusinessSystemEntity::getStatus, 1)
-                .eq(BusinessSystemEntity::getAreaName, areaName)
+        List<DomainRecordEntity> list = domainRecordMapper.selectList(new LambdaQueryWrapper<DomainRecordEntity>()
+                .select(DomainRecordEntity::getProjectName, DomainRecordEntity::getDomainName, DomainRecordEntity::getSiteLocation,
+                        DomainRecordEntity::getAreaName, DomainRecordEntity::getGroupName, DomainRecordEntity::getApiUrl)
+                .eq(DomainRecordEntity::getStatus, 1)
+                .eq(DomainRecordEntity::getAreaName, areaName)
+                .isNotNull(DomainRecordEntity::getApiUrl)
         );
         return buildTargets(
                 list,
                 "http_probe",
                 dictMaps,
-                BusinessSystemEntity::getInstance,
-                BusinessSystemEntity::getName,
-                BusinessSystemEntity::getSiteLocation,
-                BusinessSystemEntity::getAreaName,
-                BusinessSystemEntity::getMenuName,
+                DomainRecordEntity::getApiUrl,
+                item -> Optional.ofNullable(item.getProjectName()).orElse(item.getDomainName()),
+                DomainRecordEntity::getSiteLocation,
+                DomainRecordEntity::getAreaName,
+                DomainRecordEntity::getGroupName,
                 item -> null
         );
     }

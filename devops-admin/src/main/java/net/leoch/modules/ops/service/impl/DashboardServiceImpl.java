@@ -6,12 +6,12 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.service.AlertRealtimeViewService;
 import net.leoch.modules.alert.vo.rsp.AlertRealtimeRsp;
-import net.leoch.modules.ops.entity.BusinessSystemEntity;
+import net.leoch.modules.ops.entity.DomainRecordEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.MonitorComponentEntity;
 import net.leoch.modules.ops.entity.NetworkHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
-import net.leoch.modules.ops.mapper.BusinessSystemMapper;
+import net.leoch.modules.ops.mapper.DomainRecordMapper;
 import net.leoch.modules.ops.mapper.NetworkDeviceBackupRecordMapper;
 import net.leoch.modules.ops.mapper.LinuxHostMapper;
 import net.leoch.modules.ops.mapper.MonitorComponentMapper;
@@ -33,7 +33,7 @@ public class DashboardServiceImpl implements IDashboardService {
 
     private final WindowHostMapper windowHostMapper;
     private final LinuxHostMapper linuxHostMapper;
-    private final BusinessSystemMapper businessSystemMapper;
+    private final DomainRecordMapper domainRecordMapper;
     private final NetworkHostMapper networkHostMapper;
     private final NetworkDeviceBackupRecordMapper deviceBackupRecordMapper;
     private final MonitorComponentMapper monitorComponentMapper;
@@ -60,9 +60,9 @@ public class DashboardServiceImpl implements IDashboardService {
                 new LambdaQueryWrapper<LinuxHostEntity>()
                         .select(LinuxHostEntity::getType, LinuxHostEntity::getOnlineStatus)
         );
-        List<BusinessSystemEntity> businesses = businessSystemMapper.selectList(
-                new LambdaQueryWrapper<BusinessSystemEntity>()
-                        .select(BusinessSystemEntity::getOnlineStatus)
+        List<DomainRecordEntity> businesses = domainRecordMapper.selectList(
+                new LambdaQueryWrapper<DomainRecordEntity>()
+                        .select(DomainRecordEntity::getOnlineStatus)
         );
         List<NetworkHostEntity> networks = networkHostMapper.selectList(
                 new LambdaQueryWrapper<NetworkHostEntity>()
@@ -124,7 +124,7 @@ public class DashboardServiceImpl implements IDashboardService {
             }
         }
 
-        for (BusinessSystemEntity item : businesses) {
+        for (DomainRecordEntity item : businesses) {
             if (Boolean.TRUE.equals(item.getOnlineStatus())) {
                 businessOnline++;
             } else {

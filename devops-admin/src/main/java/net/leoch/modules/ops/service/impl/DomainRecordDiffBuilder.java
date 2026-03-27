@@ -32,6 +32,8 @@ public class DomainRecordDiffBuilder {
         addDiff(diffs, historyId, "domainName", "域名", before.getDomainName(), after.getDomainName());
         addDiff(diffs, historyId, "areaName", "区域名称", before.getAreaName(), after.getAreaName());
         addDiff(diffs, historyId, "groupName", "分组名称", before.getGroupName(), after.getGroupName());
+        addDiff(diffs, historyId, "siteLocation", "站点位置", before.getSiteLocation(), after.getSiteLocation());
+        addDiff(diffs, historyId, "status", "状态", before.getStatus(), after.getStatus());
         addDiff(diffs, historyId, "adEnabled", "是否走应用交付", before.getAdEnabled(), after.getAdEnabled());
         addDiff(diffs, historyId, "internalEnabled", "是否启用内网解析", before.getInternalEnabled(), after.getInternalEnabled());
         addDiff(diffs, historyId, "externalEnabled", "是否启用外网解析", before.getExternalEnabled(), after.getExternalEnabled());
@@ -40,6 +42,7 @@ public class DomainRecordDiffBuilder {
         addDiff(diffs, historyId, "projectOwner", "项目负责人", before.getProjectOwner(), after.getProjectOwner());
         addDiff(diffs, historyId, "applyTime", "申请时间", before.getApplyTime(), after.getApplyTime());
         addDiff(diffs, historyId, "remark", "备注", before.getRemark(), after.getRemark());
+        addDiff(diffs, historyId, "apiUrl", "访问地址", before.getApiUrl(), after.getApiUrl());
         addDiff(diffs, historyId, "delivery", "应用交付", before.getDelivery(), after.getDelivery());
         addDiff(diffs, historyId, "delivery.nodes", "节点池明细", before.getDelivery() == null ? null : before.getDelivery().getNodes(),
                 after.getDelivery() == null ? null : after.getDelivery().getNodes());
@@ -57,6 +60,8 @@ public class DomainRecordDiffBuilder {
         base.put("domainName", detail.getDomainName());
         base.put("areaName", detail.getAreaName());
         base.put("groupName", detail.getGroupName());
+        base.put("siteLocation", detail.getSiteLocation());
+        base.put("status", detail.getStatus());
         base.put("adEnabled", detail.getAdEnabled());
         base.put("internalEnabled", detail.getInternalEnabled());
         base.put("externalEnabled", detail.getExternalEnabled());
@@ -65,6 +70,7 @@ public class DomainRecordDiffBuilder {
         base.put("projectOwner", detail.getProjectOwner());
         base.put("applyTime", detail.getApplyTime());
         base.put("remark", detail.getRemark());
+        base.put("apiUrl", detail.getApiUrl());
         snapshot.put("base", base);
         snapshot.put("delivery", detail.getDelivery());
         snapshot.put("dnsInternal", detail.getDnsInternal());

@@ -28,10 +28,10 @@ import net.leoch.modules.alert.vo.req.AlertRecordPageReq;
 import net.leoch.modules.alert.vo.rsp.AlertProblemRsp;
 import net.leoch.modules.alert.vo.rsp.AlertRecordActionRsp;
 import net.leoch.modules.alert.vo.rsp.AlertRecordRsp;
-import net.leoch.modules.ops.entity.BusinessSystemEntity;
+import net.leoch.modules.ops.entity.DomainRecordEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
-import net.leoch.modules.ops.mapper.BusinessSystemMapper;
+import net.leoch.modules.ops.mapper.DomainRecordMapper;
 import net.leoch.modules.ops.mapper.LinuxHostMapper;
 import net.leoch.modules.ops.mapper.WindowHostMapper;
 import net.leoch.modules.sys.entity.SysUserEntity;
@@ -63,7 +63,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
     private final SysUserMapper sysUserMapper;
     private final LinuxHostMapper linuxHostMapper;
     private final WindowHostMapper windowHostMapper;
-    private final BusinessSystemMapper businessSystemMapper;
+    private final DomainRecordMapper domainRecordMapper;
 
     public AlertRecordServiceImpl(IAlertSseService alertSseService,
                                   IAlertRecordActionService alertRecordActionService,
@@ -75,7 +75,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
                                   SysUserMapper sysUserMapper,
                                   LinuxHostMapper linuxHostMapper,
                                   WindowHostMapper windowHostMapper,
-                                  BusinessSystemMapper businessSystemMapper) {
+                                  DomainRecordMapper domainRecordMapper) {
         this.alertSseService = alertSseService;
         this.alertRecordActionService = alertRecordActionService;
         this.alertManagerService = alertManagerService;
@@ -86,7 +86,7 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         this.sysUserMapper = sysUserMapper;
         this.linuxHostMapper = linuxHostMapper;
         this.windowHostMapper = windowHostMapper;
-        this.businessSystemMapper = businessSystemMapper;
+        this.domainRecordMapper = domainRecordMapper;
     }
 
     @Override
@@ -655,13 +655,13 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             putHost(map, item.getInstance(), item.getName(), "windows");
         }
 
-        List<BusinessSystemEntity> businessList = businessSystemMapper.selectList(
-            new LambdaQueryWrapper<BusinessSystemEntity>()
-                .select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName)
+        List<DomainRecordEntity> businessList = domainRecordMapper.selectList(
+            new LambdaQueryWrapper<DomainRecordEntity>()
+                .select(DomainRecordEntity::getApiUrl, DomainRecordEntity::getProjectName)
                 .last("LIMIT 10000")
         );
-        for (BusinessSystemEntity item : businessList) {
-            putHost(map, item.getInstance(), item.getName(), "business");
+        for (DomainRecordEntity item : businessList) {
+            putHost(map, item.getApiUrl(), item.getProjectName(), "business");
         }
 
         log.debug("[告警记录] 加载主机映射, linux={}, windows={}, business={}",
@@ -1005,8 +1005,8 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
             return list.stream().map(WindowHostEntity::getInstance).filter(StrUtil::isNotBlank).distinct().collect(Collectors.toList());
         }
         if ("business".equals(type)) {
-            List<BusinessSystemEntity> list = businessSystemMapper.selectList(new LambdaQueryWrapper<BusinessSystemEntity>().select(BusinessSystemEntity::getInstance));
-            return list.stream().map(BusinessSystemEntity::getInstance).filter(StrUtil::isNotBlank).distinct().collect(Collectors.toList());
+            List<DomainRecordEntity> list = domainRecordMapper.selectList(new LambdaQueryWrapper<DomainRecordEntity>().select(DomainRecordEntity::getApiUrl));
+            return list.stream().map(DomainRecordEntity::getApiUrl).filter(StrUtil::isNotBlank).distinct().collect(Collectors.toList());
         }
         return new ArrayList<>();
     }
@@ -1045,12 +1045,12 @@ public class AlertRecordServiceImpl extends ServiceImpl<AlertRecordMapper, Alert
         }
         if (StrUtil.isBlank(deviceType) || "business".equalsIgnoreCase(deviceType)) {
             instances.addAll(queryHostInstances(
-                () -> businessSystemMapper.selectList(
-                    new LambdaQueryWrapper<BusinessSystemEntity>()
-                        .select(BusinessSystemEntity::getInstance)
-                        .like(BusinessSystemEntity::getName, value)
+                () -> domainRecordMapper.selectList(
+                    new LambdaQueryWrapper<DomainRecordEntity>()
+                        .select(DomainRecordEntity::getApiUrl)
+                        .like(DomainRecordEntity::getProjectName, value)
                 ),
-                BusinessSystemEntity::getInstance
+                DomainRecordEntity::getApiUrl
             ));
         }
 

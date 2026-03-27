@@ -32,6 +32,15 @@ public class DomainRecordRsp implements Serializable {
     @SchemaProperty(name = "分组名称")
     private String groupName;
 
+    @SchemaProperty(name = "站点位置")
+    private String siteLocation;
+
+    @SchemaProperty(name = "状态 0禁用 1启用")
+    private Integer status;
+
+    @SchemaProperty(name = "在线状态")
+    private Boolean onlineStatus;
+
     @SchemaProperty(name = "是否走应用交付 0否 1是")
     private Integer adEnabled;
 
@@ -58,6 +67,9 @@ public class DomainRecordRsp implements Serializable {
 
     @SchemaProperty(name = "备注")
     private String remark;
+
+    @SchemaProperty(name = "访问地址")
+    private String apiUrl;
 
     @SchemaProperty(name = "虚拟服务名称")
     private String virtualServiceName;

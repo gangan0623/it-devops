@@ -27,11 +27,20 @@ public class DomainRecordPageReq extends BasePage {
     @Schema(description = "分组名称")
     private String groupName;
 
+    @Schema(description = "站点位置")
+    private String siteLocation;
+
     @Schema(description = "是否走应用交付 0否 1是")
     private Integer adEnabled;
 
     @Schema(description = "是否启用外网解析 0否 1是")
     private Integer externalEnabled;
+
+    @Schema(description = "状态 0禁用 1启用")
+    private Integer status;
+
+    @Schema(description = "在线状态 0不在线 1在线")
+    private Integer onlineStatus;
 
     @Schema(description = "项目负责人")
     private String projectOwner;

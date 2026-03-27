@@ -4,7 +4,7 @@
       <div class="toolbar-card__head">
         <div class="toolbar-card__title-wrap">
           <div class="toolbar-card__title">报告</div>
-          <div class="toolbar-card__subtitle">统一查看和生成网络设备、服务主机、网络站点智能分析报告</div>
+          <div class="toolbar-card__subtitle">统一查看和生成网络设备、服务主机、域名站点智能分析报告</div>
         </div>
         <div class="toolbar-card__summary">
           <span class="toolbar-summary-pill">当前类型 {{ typeLabel(activeType) }}</span>
@@ -21,7 +21,7 @@
           <el-radio-group v-model="activeType" @change="handleTypeChange">
             <el-radio-button value="zabbix">网络设备</el-radio-button>
             <el-radio-button value="server">服务主机</el-radio-button>
-            <el-radio-button value="http">网络站点</el-radio-button>
+            <el-radio-button value="http">域名站点</el-radio-button>
           </el-radio-group>
         </div>
 
@@ -359,7 +359,7 @@ watch(
 const typeLabel = (type: ReportKind | string) => {
   if (type === "zabbix") return "网络设备";
   if (type === "server") return "服务主机";
-  if (type === "http") return "网络站点";
+  if (type === "http") return "域名站点";
   return "服务主机";
 };
 

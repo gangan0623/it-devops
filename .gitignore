@@ -98,3 +98,9 @@ devops-ui/.vite/
 
 /.skillkit/**
 /skillkit.yaml
+/devops-admin/.skillkit/
+/.skillkit/
+/.superpowers/
+/docs/
+/docs/
+/docs/superpowers/

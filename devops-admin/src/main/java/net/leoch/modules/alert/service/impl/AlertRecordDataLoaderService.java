@@ -5,10 +5,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.leoch.modules.alert.entity.AlertRecordEntity;
-import net.leoch.modules.ops.entity.BusinessSystemEntity;
+import net.leoch.modules.ops.entity.DomainRecordEntity;
 import net.leoch.modules.ops.entity.LinuxHostEntity;
 import net.leoch.modules.ops.entity.WindowHostEntity;
-import net.leoch.modules.ops.mapper.BusinessSystemMapper;
+import net.leoch.modules.ops.mapper.DomainRecordMapper;
 import net.leoch.modules.ops.mapper.LinuxHostMapper;
 import net.leoch.modules.ops.mapper.WindowHostMapper;
 import net.leoch.modules.sys.entity.SysUserEntity;
@@ -32,7 +32,7 @@ public class AlertRecordDataLoaderService {
 
     private final LinuxHostMapper linuxHostMapper;
     private final WindowHostMapper windowHostMapper;
-    private final BusinessSystemMapper businessSystemMapper;
+    private final DomainRecordMapper domainRecordMapper;
     private final SysUserMapper sysUserMapper;
 
     /**
@@ -61,13 +61,13 @@ public class AlertRecordDataLoaderService {
             putHost(map, item.getInstance(), item.getName(), "windows");
         }
 
-        List<BusinessSystemEntity> businessList = businessSystemMapper.selectList(
-            new LambdaQueryWrapper<BusinessSystemEntity>()
-                .select(BusinessSystemEntity::getInstance, BusinessSystemEntity::getName)
+        List<DomainRecordEntity> businessList = domainRecordMapper.selectList(
+            new LambdaQueryWrapper<DomainRecordEntity>()
+                .select(DomainRecordEntity::getApiUrl, DomainRecordEntity::getProjectName)
                 .last("LIMIT 10000")
         );
-        for (BusinessSystemEntity item : businessList) {
-            putHost(map, item.getInstance(), item.getName(), "business");
+        for (DomainRecordEntity item : businessList) {
+            putHost(map, item.getApiUrl(), item.getProjectName(), "business");
         }
 
         log.debug("[告警记录数据加载] 加载主机映射, linux={}, windows={}, business={}",
@@ -129,12 +129,12 @@ public class AlertRecordDataLoaderService {
         }
         if (StrUtil.isBlank(deviceType) || "business".equalsIgnoreCase(deviceType)) {
             instances.addAll(queryHostInstances(
-                () -> businessSystemMapper.selectList(
-                    new LambdaQueryWrapper<BusinessSystemEntity>()
-                        .select(BusinessSystemEntity::getInstance)
-                        .like(BusinessSystemEntity::getName, value)
+                () -> domainRecordMapper.selectList(
+                    new LambdaQueryWrapper<DomainRecordEntity>()
+                        .select(DomainRecordEntity::getApiUrl)
+                        .like(DomainRecordEntity::getProjectName, value)
                 ),
-                BusinessSystemEntity::getInstance
+                DomainRecordEntity::getApiUrl
             ));
         }
 
@@ -168,11 +168,11 @@ public class AlertRecordDataLoaderService {
         }
         if (StrUtil.isBlank(deviceType) || "business".equalsIgnoreCase(deviceType)) {
             instances.addAll(queryHostInstances(
-                () -> businessSystemMapper.selectList(
-                    new LambdaQueryWrapper<BusinessSystemEntity>()
-                        .select(BusinessSystemEntity::getInstance)
+                () -> domainRecordMapper.selectList(
+                    new LambdaQueryWrapper<DomainRecordEntity>()
+                        .select(DomainRecordEntity::getApiUrl)
                 ),
-                BusinessSystemEntity::getInstance
+                DomainRecordEntity::getApiUrl
             ));
         }
         return instances.stream().filter(StrUtil::isNotBlank).distinct().collect(Collectors.toList());

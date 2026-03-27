@@ -45,6 +45,21 @@ public class DomainRecordEntity extends BaseEntity {
     private String groupName;
 
     /**
+     * 站点位置
+     */
+    private String siteLocation;
+
+    /**
+     * 状态 0禁用 1启用
+     */
+    private Integer status;
+
+    /**
+     * 在线状态
+     */
+    private Boolean onlineStatus;
+
+    /**
      * 项目名称
      */
     private String projectName;
@@ -73,6 +88,11 @@ public class DomainRecordEntity extends BaseEntity {
      * 备注
      */
     private String remark;
+
+    /**
+     * 访问地址
+     */
+    private String apiUrl;
 
     /**
      * 更新者

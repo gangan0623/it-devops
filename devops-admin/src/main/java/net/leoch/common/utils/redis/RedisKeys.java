@@ -67,10 +67,6 @@ public class RedisKeys {
         return "ops:online:windowhost";
     }
 
-    public static String getBusinessSystemOnlineKey() {
-        return "ops:online:businesssystem";
-    }
-
     public static String getNetworkBackupAgentOnlineKey() {
         return "ops:online:network-backup-agent";
     }

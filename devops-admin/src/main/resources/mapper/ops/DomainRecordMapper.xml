@@ -9,6 +9,9 @@
         <result property="domainName" column="domain_name"/>
         <result property="areaName" column="area_name"/>
         <result property="groupName" column="group_name"/>
+        <result property="siteLocation" column="site_location"/>
+        <result property="status" column="status"/>
+        <result property="onlineStatus" column="online_status"/>
         <result property="adEnabled" column="ad_enabled"/>
         <result property="internalEnabled" column="internal_enabled"/>
         <result property="externalEnabled" column="external_enabled"/>
@@ -16,6 +19,7 @@
         <result property="projectOwner" column="project_owner"/>
         <result property="applyTime" column="apply_time"/>
         <result property="remark" column="remark"/>
+        <result property="apiUrl" column="api_url"/>
         <result property="virtualServiceName" column="virtual_service_name"/>
         <result property="virtualServiceIp" column="virtual_service_ip"/>
         <result property="virtualServicePort" column="virtual_service_port"/>
@@ -91,12 +95,20 @@
     </resultMap>
 
     <select id="selectPageSummary" resultMap="domainRecordSummaryMap">
+        <include refid="domainRecordSummaryQuery"/>
+        ORDER BY dr.id DESC
+    </select>
+
+    <sql id="domainRecordSummaryQuery">
         SELECT
             dr.id,
             dr.project_name,
             dr.domain_name,
             dr.area_name,
             dr.group_name,
+            dr.site_location,
+            dr.status,
+            dr.online_status,
             dr.ad_enabled,
             dr.internal_enabled,
             dr.external_enabled,
@@ -104,6 +116,7 @@
             dr.project_owner,
             dr.apply_time,
             dr.remark,
+            dr.api_url,
             dd.virtual_service_name,
             dd.virtual_service_ip,
             dd.virtual_service_port,
@@ -142,11 +155,20 @@
             <if test="request.groupName != null and request.groupName != ''">
                 AND dr.group_name = #{request.groupName}
             </if>
+            <if test="request.siteLocation != null and request.siteLocation != ''">
+                AND dr.site_location = #{request.siteLocation}
+            </if>
             <if test="request.adEnabled != null">
                 AND dr.ad_enabled = #{request.adEnabled}
             </if>
             <if test="request.externalEnabled != null">
                 AND dr.external_enabled = #{request.externalEnabled}
+            </if>
+            <if test="request.status != null">
+                AND dr.status = #{request.status}
+            </if>
+            <if test="request.onlineStatus != null">
+                AND dr.online_status = #{request.onlineStatus}
             </if>
             <if test="request.projectOwner != null and request.projectOwner != ''">
                 AND dr.project_owner LIKE CONCAT('%', #{request.projectOwner}, '%')
@@ -158,8 +180,7 @@
                 AND dr.apply_time &lt;= #{request.applyTimeEnd}
             </if>
         </where>
-        ORDER BY dr.id DESC
-    </select>
+    </sql>
 
     <select id="selectDetailById" resultMap="domainRecordDetailMap">
         SELECT
@@ -168,6 +189,9 @@
             dr.domain_name,
             dr.area_name,
             dr.group_name,
+            dr.site_location,
+            dr.status,
+            dr.online_status,
             dr.ad_enabled,
             dr.internal_enabled,
             dr.external_enabled,
@@ -175,6 +199,7 @@
             dr.project_owner,
             dr.apply_time,
             dr.remark,
+            dr.api_url,
             dd.id AS delivery_id,
             dd.virtual_service_name AS delivery_virtual_service_name,
             dd.virtual_service_ip AS delivery_virtual_service_ip,

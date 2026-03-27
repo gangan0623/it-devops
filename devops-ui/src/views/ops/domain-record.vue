@@ -3,14 +3,20 @@
     <div class="ops-toolbar">
       <div class="ops-toolbar__row">
         <div class="ops-toolbar__group ops-filters">
-          <el-input v-model="state.dataForm.domainName" class="query-input" placeholder="域名(模糊)" clearable @keyup.enter="queryList()" style="width: 240px; margin-right: 12px;"/>
+          <el-input v-model="state.dataForm.domainName" class="query-input" placeholder="域名(模糊)" clearable @keyup.enter="queryList()" />
           <el-button class="query-btn" :loading="state.dataListLoading" @click="queryList()">查询</el-button>
           <el-button class="query-btn" @click="handleReset">重置</el-button>
           <el-button :icon="Filter" @click="filterDrawer = true">
-            高级筛选<span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span>
+            筛选<span v-if="activeFilterCount > 0" class="filter-badge">{{ activeFilterCount }}</span>
           </el-button>
         </div>
         <div class="ops-toolbar__group ops-actions">
+          <div class="host-stats">
+            <span class="host-stats__item host-stats__item--on">启用 {{ enabledCount }}</span>
+            <span class="host-stats__item host-stats__item--off">禁用 {{ disabledCount }}</span>
+            <span class="host-stats__item host-stats__item--online">在线 {{ onlineCount }}</span>
+            <span class="host-stats__item host-stats__item--filter">离线 {{ offlineCount }}</span>
+          </div>
           <el-button v-if="state.hasPermission('ops:domain-record:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
           <el-button v-if="state.hasPermission('ops:domain-record:delete')" type="danger" @click="deleteBatchHandle">删除</el-button>
         </div>
@@ -45,10 +51,32 @@
             style="width: 100%"
           ></ren-select>
         </el-form-item>
+        <el-form-item label="站点位置">
+          <ren-select
+            v-model="state.dataForm.siteLocation"
+            dict-type="base_site_location"
+            label-field="dictValue"
+            value-field="dictLabel"
+            placeholder="全部"
+            style="width: 100%"
+          ></ren-select>
+        </el-form-item>
         <el-form-item label="应用交付(AD)">
           <el-select v-model="state.dataForm.adEnabled" placeholder="全部" clearable style="width: 100%">
             <el-option label="走AD" :value="1"></el-option>
             <el-option label="不走AD" :value="0"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="状态">
+          <el-select v-model="state.dataForm.status" placeholder="全部" clearable style="width: 100%">
+            <el-option label="启用" :value="1"></el-option>
+            <el-option label="禁用" :value="0"></el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="在线状态">
+          <el-select v-model="state.dataForm.onlineStatus" placeholder="全部" clearable style="width: 100%">
+            <el-option label="在线" :value="1"></el-option>
+            <el-option label="不在线" :value="0"></el-option>
           </el-select>
         </el-form-item>
         <el-form-item label="公网解析状态">
@@ -68,23 +96,42 @@
       v-loading="state.dataListLoading"
       :data="state.dataList"
       border
+      class="ops-table-nowrap"
       style="width: 100%"
       @selection-change="state.dataListSelectionChangeHandle"
     >
       <el-table-column type="selection" width="50" header-align="center" align="center"></el-table-column>
-      <el-table-column prop="projectName" label="项目名称" min-width="140" show-overflow-tooltip></el-table-column>
-      <el-table-column prop="domainName" label="域名" min-width="180" show-overflow-tooltip></el-table-column>
-      <el-table-column label="区域名称" min-width="120">
+      <el-table-column prop="projectName" label="项目名称" min-width="140" header-align="center" align="center" show-overflow-tooltip></el-table-column>
+      <el-table-column prop="domainName" label="域名" min-width="180" header-align="center" align="center" show-overflow-tooltip></el-table-column>
+      <el-table-column label="区域名称" min-width="120" header-align="center" align="center">
         <template #default="{ row }">
           {{ state.getDictValueByLabel("area_name_type", row.areaName) }}
         </template>
       </el-table-column>
-      <el-table-column label="分组名称" min-width="120">
+      <el-table-column label="分组名称" min-width="120" header-align="center" align="center">
         <template #default="{ row }">
           {{ state.getDictValueByLabel("server_host_group", row.groupName) }}
         </template>
       </el-table-column>
-      <el-table-column label="应用交付(AD)" width="120" align="center">
+      <el-table-column label="站点位置" min-width="120" header-align="center" align="center">
+        <template #default="{ row }">
+          {{ state.getDictValueByLabel("base_site_location", row.siteLocation) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" width="90" header-align="center" align="center">
+        <template #default="{ row }">
+          <el-tag v-if="row.status === 0" size="small" type="danger">禁用</el-tag>
+          <el-tag v-else size="small" type="success">启用</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="在线状态" width="90" header-align="center" align="center">
+        <template #default="{ row }">
+          <el-tag v-if="row.onlineStatus === true" size="small" type="success">在线</el-tag>
+          <el-tag v-else-if="row.onlineStatus === false" size="small" type="danger">离线</el-tag>
+          <el-tag v-else size="small" type="info">检测中</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="应用交付(AD)" width="120" header-align="center" align="center">
         <template #default="{ row }">
           <el-popover v-if="row.adEnabled === 1" placement="right" :width="280" trigger="hover">
             <template #reference>
@@ -104,7 +151,7 @@
           <el-tag v-else type="info" size="small">不走AD</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="内网解析" width="110" align="center">
+      <el-table-column label="内网解析" width="110" header-align="center" align="center">
         <template #default="{ row }">
           <el-popover v-if="row.internalEnabled === 1" placement="right" :width="240" trigger="hover">
             <template #reference>
@@ -117,7 +164,7 @@
           <el-tag v-else type="info" size="small">未启用</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="公网解析" width="110" align="center">
+      <el-table-column label="公网解析" width="110" header-align="center" align="center">
         <template #default="{ row }">
           <el-popover v-if="row.externalEnabled === 1" placement="right" :width="row.fmPublicIp ? 300 : 240" trigger="hover">
             <template #reference>
@@ -144,8 +191,9 @@
           <el-tag v-else type="info" size="small">未启用</el-tag>
         </template>
       </el-table-column>
-      <el-table-column prop="projectOwner" label="项目负责人" width="120"></el-table-column>
-      <el-table-column prop="applyTime" label="申请时间" min-width="170"></el-table-column>
+      <el-table-column prop="apiUrl" label="访问地址" min-width="220" header-align="center" align="center" show-overflow-tooltip></el-table-column>
+      <el-table-column prop="projectOwner" label="项目负责人" width="120" header-align="center" align="center"></el-table-column>
+      <el-table-column prop="applyTime" label="申请时间" min-width="170" header-align="center" align="center"></el-table-column>
       <el-table-column label="操作" fixed="right" width="280" header-align="center" align="center">
         <template #default="{ row }">
           <el-button type="primary" link @click="openDetail(row.id)">详情</el-button>
@@ -181,29 +229,16 @@
 
       <div v-if="historyDetail" class="history-detail">
         <div class="history-detail__title">详情</div>
-        <el-descriptions :column="2" border>
-          <el-descriptions-item label="操作类型">{{ historyDetail.operationType }}</el-descriptions-item>
+        <el-descriptions :column="3" border size="small" style="margin-bottom: 20px;">
+          <el-descriptions-item label="操作类型">
+            <el-tag size="small">{{ historyDetail.operationType }}</el-tag>
+          </el-descriptions-item>
           <el-descriptions-item label="操作人">{{ historyDetail.operatorName }}</el-descriptions-item>
           <el-descriptions-item label="操作时间">{{ historyDetail.operationTime }}</el-descriptions-item>
-          <el-descriptions-item label="操作摘要">{{ historyDetail.operationSummary }}</el-descriptions-item>
+          <el-descriptions-item label="操作摘要" :span="3">{{ historyDetail.operationSummary }}</el-descriptions-item>
         </el-descriptions>
 
-        <el-table v-if="historyDetail.details?.length" :data="historyDetail.details" border style="margin-top: 16px">
-          <el-table-column prop="fieldName" label="字段" min-width="160"></el-table-column>
-          <el-table-column prop="beforeValue" label="变更前" min-width="260" show-overflow-tooltip></el-table-column>
-          <el-table-column prop="afterValue" label="变更后" min-width="260" show-overflow-tooltip></el-table-column>
-        </el-table>
-
-        <el-row :gutter="16" style="margin-top: 16px">
-          <el-col :span="12">
-            <div class="history-detail__subtitle">修改前快照</div>
-            <el-input v-model="historyDetail.snapshotBefore" type="textarea" :rows="12" readonly></el-input>
-          </el-col>
-          <el-col :span="12">
-            <div class="history-detail__subtitle">修改后快照</div>
-            <el-input v-model="historyDetail.snapshotAfter" type="textarea" :rows="12" readonly></el-input>
-          </el-col>
-        </el-row>
+        <domain-record-history-diff ref="diffRef" />
       </div>
     </el-drawer>
 
@@ -221,10 +256,23 @@
             <el-descriptions-item label="分组名称">
               {{ state.getDictValueByLabel("server_host_group", detailData.groupName) || "-" }}
             </el-descriptions-item>
+            <el-descriptions-item label="站点位置">
+              {{ state.getDictValueByLabel("base_site_location", detailData.siteLocation) || "-" }}
+            </el-descriptions-item>
+            <el-descriptions-item label="状态">
+              <el-tag v-if="detailData.status === 0" size="small" type="danger">禁用</el-tag>
+              <el-tag v-else size="small" type="success">启用</el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item label="在线状态">
+              <el-tag v-if="detailData.onlineStatus === true" size="small" type="success">在线</el-tag>
+              <el-tag v-else-if="detailData.onlineStatus === false" size="small" type="danger">不在线</el-tag>
+              <el-tag v-else size="small" type="info">检测中</el-tag>
+            </el-descriptions-item>
             <el-descriptions-item label="项目负责人">{{ detailData.projectOwner || "-" }}</el-descriptions-item>
             <el-descriptions-item label="申请时间">{{ detailData.applyTime || "-" }}</el-descriptions-item>
             <el-descriptions-item label="公网解析状态">{{ detailData.externalEnabled === 1 ? "启用" : "未启用" }}</el-descriptions-item>
             <el-descriptions-item label="是否走AD">{{ detailData.adEnabled === 1 ? "走AD" : "不走AD" }}</el-descriptions-item>
+            <el-descriptions-item label="访问地址" :span="2">{{ detailData.apiUrl || "-" }}</el-descriptions-item>
             <el-descriptions-item label="描述" :span="2">{{ detailData.description || "-" }}</el-descriptions-item>
             <el-descriptions-item label="备注" :span="2">{{ detailData.remark || "-" }}</el-descriptions-item>
           </el-descriptions>
@@ -302,11 +350,12 @@
 
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
-import { reactive, ref, toRefs, computed } from "vue";
+import { reactive, ref, toRefs, computed, nextTick, onMounted } from "vue";
 import { Filter } from "@element-plus/icons-vue";
 import baseService from "@/service/baseService";
 import { ElMessage, ElMessageBox } from "element-plus";
 import AddOrUpdate from "./domain-record-add-or-update.vue";
+import DomainRecordHistoryDiff from "./domain-record-history-diff.vue";
 
 const view = reactive({
   deleteIsBatch: true,
@@ -317,14 +366,27 @@ const view = reactive({
     domainName: "",
     areaName: "",
     groupName: "",
+    siteLocation: "",
     projectOwner: "",
     adEnabled: "" as string | number,
-    externalEnabled: "" as string | number
+    externalEnabled: "" as string | number,
+    status: "" as string | number,
+    onlineStatus: "" as string | number
   }
 });
 
 const state = reactive({ ...useView(view), ...toRefs(view) });
 const addOrUpdateRef = ref();
+const statusSummary = ref({
+  enabledCount: 0,
+  disabledCount: 0,
+  onlineCount: 0,
+  offlineCount: 0
+});
+const enabledCount = computed(() => statusSummary.value.enabledCount);
+const disabledCount = computed(() => statusSummary.value.disabledCount);
+const onlineCount = computed(() => statusSummary.value.onlineCount);
+const offlineCount = computed(() => statusSummary.value.offlineCount);
 const detailVisible = ref(false);
 const detailLoading = ref(false);
 const detailData = ref<any>(null);
@@ -332,6 +394,7 @@ const historyVisible = ref(false);
 const historyLoading = ref(false);
 const historyList = ref<any[]>([]);
 const historyDetail = ref<any>(null);
+const diffRef = ref();
 
 const filterDrawer = ref(false);
 
@@ -341,7 +404,10 @@ const activeFilterCount = computed(() => {
   if (state.dataForm.projectOwner) count++;
   if (state.dataForm.areaName) count++;
   if (state.dataForm.groupName) count++;
+  if (state.dataForm.siteLocation) count++;
   if (state.dataForm.adEnabled !== "" && state.dataForm.adEnabled !== null && state.dataForm.adEnabled !== undefined) count++;
+  if (state.dataForm.status !== "" && state.dataForm.status !== null && state.dataForm.status !== undefined) count++;
+  if (state.dataForm.onlineStatus !== "" && state.dataForm.onlineStatus !== null && state.dataForm.onlineStatus !== undefined) count++;
   if (state.dataForm.externalEnabled !== "" && state.dataForm.externalEnabled !== null && state.dataForm.externalEnabled !== undefined) count++;
   return count;
 });
@@ -351,7 +417,10 @@ const resetFilters = () => {
   state.dataForm.projectOwner = "";
   state.dataForm.areaName = "";
   state.dataForm.groupName = "";
+  state.dataForm.siteLocation = "";
   state.dataForm.adEnabled = "";
+  state.dataForm.status = "";
+  state.dataForm.onlineStatus = "";
   state.dataForm.externalEnabled = "";
 };
 
@@ -362,6 +431,28 @@ const confirmFilters = () => {
 
 const queryList = () => {
   state.getDataList();
+  loadStatusSummary();
+};
+
+const loadStatusSummary = () => {
+  baseService
+    .get("/ops/domain-record/summary")
+    .then((res) => {
+      statusSummary.value = {
+        enabledCount: Number(res.data?.enabledCount || 0),
+        disabledCount: Number(res.data?.disabledCount || 0),
+        onlineCount: Number(res.data?.onlineCount || 0),
+        offlineCount: Number(res.data?.offlineCount || 0)
+      };
+    })
+    .catch(() => {
+      statusSummary.value = {
+        enabledCount: 0,
+        disabledCount: 0,
+        onlineCount: 0,
+        offlineCount: 0
+      };
+    });
 };
 
 const handleReset = () => {
@@ -454,13 +545,23 @@ const openHistory = (row: any) => {
 const loadHistoryDetail = (id: number) => {
   baseService.get(`/ops/domain-record/history/${id}`).then((res) => {
     historyDetail.value = res.data;
+    nextTick(() => {
+      if (diffRef.value) {
+        diffRef.value.init(res.data);
+      }
+    });
   });
 };
+
+onMounted(() => {
+  loadStatusSummary();
+});
 
 queryList();
 </script>
 
 <style scoped>
+
 .history-detail {
   margin-top: 20px;
 }
