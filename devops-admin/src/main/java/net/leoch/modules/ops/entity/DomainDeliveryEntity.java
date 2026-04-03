@@ -48,6 +48,26 @@ public class DomainDeliveryEntity extends BaseEntity {
     private String poolName;
 
     /**
+     * 外网虚拟服务名称
+     */
+    private String externalVirtualServiceName;
+
+    /**
+     * 外网虚拟服务IP
+     */
+    private String externalVirtualServiceIp;
+
+    /**
+     * 外网虚拟服务端口
+     */
+    private Integer externalVirtualServicePort;
+
+    /**
+     * 外网虚拟服务协议
+     */
+    private String externalVirtualServiceProtocol;
+
+    /**
      * 备注
      */
     private String remark;

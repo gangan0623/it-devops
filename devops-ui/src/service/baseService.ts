@@ -54,11 +54,18 @@ export default {
    * @returns
    */
   post(path: string, body?: IObject, headers?: IObject, config?: IObject): Promise<IHttpResponse> {
+    const defaultHeaders: IObject = {
+      "Content-Type": "application/json;charset=UTF-8"
+    };
+    // FormData 时让浏览器自动设置 Content-Type（含 boundary），否则 multipart 上传会失败
+    if (body instanceof FormData) {
+      delete defaultHeaders["Content-Type"];
+    }
     return http({
       url: path,
       method: "post",
       headers: {
-        "Content-Type": "application/json;charset=UTF-8",
+        ...defaultHeaders,
         ...headers
       },
       data: body,

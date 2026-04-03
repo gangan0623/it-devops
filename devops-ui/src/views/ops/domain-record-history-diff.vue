@@ -9,58 +9,92 @@
           <el-col :span="12"><diff-item label="分组名称" field="groupName" :b="b" :a="a" /></el-col>
           <el-col :span="12"><diff-item label="项目负责人" field="projectOwner" :b="b" :a="a" /></el-col>
           <el-col :span="12"><diff-item label="申请时间" field="applyTime" :b="b" :a="a" /></el-col>
-          <el-col :span="12"><diff-item label="描述" field="description" :b="b" :a="a" /></el-col>
+          <el-col :span="12"><diff-item label="修改描述" field="description" :b="b" :a="a" /></el-col>
           <el-col :span="24"><diff-item label="备注" field="remark" :b="b" :a="a" /></el-col>
         </el-row>
       </el-tab-pane>
 
       <el-tab-pane label="深信服(AD)配置" name="delivery">
-        <el-row class="tab-pane-content">
-          <el-col :span="24" style="margin-bottom: 24px;">
-            <diff-item label="开启深信服(AD)" field="adEnabled" :b="b" :a="a" type="bool" />
-          </el-col>
-        </el-row>
-        <template v-if="(b.adEnabled === 1) || (a.adEnabled === 1)">
-          <el-row :gutter="16">
-            <el-col :span="12"><diff-item label="虚拟服务名称" field="delivery.virtualServiceName" :b="b" :a="a" /></el-col>
-            <el-col :span="12"><diff-item label="虚拟服务IP" field="delivery.virtualServiceIp" :b="b" :a="a" /></el-col>
-            <el-col :span="12"><diff-item label="虚拟服务端口" field="delivery.virtualServicePort" :b="b" :a="a" /></el-col>
-            <el-col :span="12"><diff-item label="虚拟服务协议" field="delivery.virtualServiceProtocol" :b="b" :a="a" /></el-col>
-            <el-col :span="12"><diff-item label="节点池名称" field="delivery.poolName" :b="b" :a="a" /></el-col>
-            <el-col :span="12"><diff-item label="应用交付备注" field="delivery.remark" :b="b" :a="a" /></el-col>
+        <div class="delivery-section" style="margin-top: 16px;">
+          <div class="delivery-section__header">
+            <span>基础配置</span>
+          </div>
+          <el-row class="tab-pane-content">
+            <el-col :span="24">
+              <diff-item label="开启深信服(AD)" field="adEnabled" :b="b" :a="a" type="bool" />
+            </el-col>
           </el-row>
+        </div>
 
-          <div class="node-toolbar">
-            <span class="node-toolbar__title">节点池明细对比</span>
+        <template v-if="(b.adEnabled === 1) || (a.adEnabled === 1)">
+          <div class="delivery-section">
+            <div class="delivery-section__header">
+              <span>{{ isDualAdAfter ? '内网虚拟服务' : '虚拟服务' }}</span>
+            </div>
+            <el-row :gutter="16">
+              <el-col :span="12"><diff-item label="名称" field="delivery.virtualServiceName" :b="b" :a="a" /></el-col>
+              <el-col :span="12"><diff-item label="虚拟IP" field="delivery.virtualServiceIp" :b="b" :a="a" /></el-col>
+              <el-col :span="12"><diff-item label="端口" field="delivery.virtualServicePort" :b="b" :a="a" /></el-col>
+              <el-col :span="12"><diff-item label="协议" field="delivery.virtualServiceProtocol" :b="b" :a="a" /></el-col>
+            </el-row>
           </div>
 
-          <div v-if="nodesChanged" class="diff-nodes-container">
-            <div v-if="b.delivery?.nodes?.length" class="diff-nodes-old">
-              <div class="nodes-badge nodes-badge--danger">变更前</div>
-              <el-table :data="b.delivery.nodes" border class="table-danger">
+          <!-- 外网虚拟服务（双向AD时显示） -->
+          <template v-if="isDualAdBefore || isDualAdAfter">
+            <div class="delivery-section">
+              <div class="delivery-section__header">
+                <span>外网虚拟服务</span>
+              </div>
+              <el-row :gutter="16">
+                <el-col :span="12"><diff-item label="名称" field="delivery.externalVirtualServiceName" :b="b" :a="a" /></el-col>
+                <el-col :span="12"><diff-item label="虚拟IP" field="delivery.externalVirtualServiceIp" :b="b" :a="a" /></el-col>
+                <el-col :span="12"><diff-item label="端口" field="delivery.externalVirtualServicePort" :b="b" :a="a" /></el-col>
+                <el-col :span="12"><diff-item label="协议" field="delivery.externalVirtualServiceProtocol" :b="b" :a="a" /></el-col>
+              </el-row>
+            </div>
+          </template>
+
+          <div class="delivery-section">
+            <div class="delivery-section__header">
+              <span>节点池{{ isDualAdAfter ? '（共享）' : '' }}</span>
+            </div>
+            <el-row :gutter="16" style="margin-bottom: 16px;">
+              <el-col :span="12"><diff-item label="节点池名称" field="delivery.poolName" :b="b" :a="a" /></el-col>
+              <el-col :span="12"><diff-item label="备注" field="delivery.remark" :b="b" :a="a" /></el-col>
+            </el-row>
+            
+            <div class="node-toolbar" style="margin-top: 0; margin-bottom: 8px;">
+              <span class="node-toolbar__title" style="font-size: 13px; color: #64748b;">节点池明细对比</span>
+            </div>
+
+            <div v-if="nodesChanged" class="diff-nodes-container">
+              <div v-if="b.delivery?.nodes?.length" class="diff-nodes-old">
+                <div class="nodes-badge nodes-badge--danger">变更前</div>
+                <el-table :data="b.delivery.nodes" border class="table-danger" size="small">
+                  <el-table-column prop="nodeIp" label="节点IP" min-width="180"></el-table-column>
+                  <el-table-column prop="nodePort" label="节点端口" width="140"></el-table-column>
+                  <el-table-column prop="sort" label="排序" width="100"></el-table-column>
+                  <el-table-column prop="remark" label="备注" min-width="180"></el-table-column>
+                </el-table>
+              </div>
+              <div v-if="a.delivery?.nodes?.length" class="diff-nodes-new">
+                <div class="nodes-badge nodes-badge--success">变更后</div>
+                <el-table :data="a.delivery.nodes" border class="table-success" size="small">
+                  <el-table-column prop="nodeIp" label="节点IP" min-width="180"></el-table-column>
+                  <el-table-column prop="nodePort" label="节点端口" width="140"></el-table-column>
+                  <el-table-column prop="sort" label="排序" width="100"></el-table-column>
+                  <el-table-column prop="remark" label="备注" min-width="180"></el-table-column>
+                </el-table>
+              </div>
+            </div>
+            <div v-else>
+              <el-table :data="a.delivery?.nodes || []" border size="small">
                 <el-table-column prop="nodeIp" label="节点IP" min-width="180"></el-table-column>
                 <el-table-column prop="nodePort" label="节点端口" width="140"></el-table-column>
-                <el-table-column prop="sort" label="排序" width="120"></el-table-column>
+                <el-table-column prop="sort" label="排序" width="100"></el-table-column>
                 <el-table-column prop="remark" label="备注" min-width="180"></el-table-column>
               </el-table>
             </div>
-            <div v-if="a.delivery?.nodes?.length" class="diff-nodes-new">
-              <div class="nodes-badge nodes-badge--success">变更后</div>
-              <el-table :data="a.delivery.nodes" border class="table-success">
-                <el-table-column prop="nodeIp" label="节点IP" min-width="180"></el-table-column>
-                <el-table-column prop="nodePort" label="节点端口" width="140"></el-table-column>
-                <el-table-column prop="sort" label="排序" width="120"></el-table-column>
-                <el-table-column prop="remark" label="备注" min-width="180"></el-table-column>
-              </el-table>
-            </div>
-          </div>
-          <div v-else>
-            <el-table :data="a.delivery?.nodes || []" border>
-              <el-table-column prop="nodeIp" label="节点IP" min-width="180"></el-table-column>
-              <el-table-column prop="nodePort" label="节点端口" width="140"></el-table-column>
-              <el-table-column prop="sort" label="排序" width="120"></el-table-column>
-              <el-table-column prop="remark" label="备注" min-width="180"></el-table-column>
-            </el-table>
           </div>
         </template>
       </el-tab-pane>
@@ -148,6 +182,14 @@ const getAdLabel = (before: any, after: any) => {
   return (before.adEnabled === 1 || after.adEnabled === 1);
 };
 
+const isDualAdBefore = computed(() => {
+  return b.value.adEnabled === 1 && b.value.internalEnabled === 1 && b.value.externalEnabled === 1;
+});
+
+const isDualAdAfter = computed(() => {
+  return a.value.adEnabled === 1 && a.value.internalEnabled === 1 && a.value.externalEnabled === 1;
+});
+
 const init = (data: any) => {
   detailData.value = data;
   activeTab.value = "base";
@@ -192,6 +234,44 @@ defineExpose({ init });
   font-size: 14px;
   font-weight: 600;
   color: #475569;
+}
+
+.delivery-section {
+  padding: 16px;
+  margin-bottom: 16px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.delivery-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.delivery-section__header > span {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  position: relative;
+  padding-left: 10px;
+}
+
+.delivery-section__header > span::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 12px;
+  background: linear-gradient(to bottom, #3b82f6, #2563eb);
+  border-radius: 2px;
 }
 
 .node-toolbar {

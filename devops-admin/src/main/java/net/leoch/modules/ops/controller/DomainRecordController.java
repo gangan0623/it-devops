@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.Parameters;
 import io.swagger.v3.oas.annotations.enums.ParameterIn;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.leoch.common.annotation.LogOperation;
@@ -15,6 +16,7 @@ import net.leoch.common.data.result.Result;
 import net.leoch.modules.ops.service.IDomainRecordService;
 import net.leoch.modules.ops.vo.req.DomainRecordDeleteReq;
 import net.leoch.modules.ops.vo.req.DomainRecordIdReq;
+import net.leoch.modules.ops.vo.req.DomainRecordImportReq;
 import net.leoch.modules.ops.vo.req.DomainRecordPageReq;
 import net.leoch.modules.ops.vo.req.DomainRecordSaveReq;
 import net.leoch.modules.ops.vo.req.DomainRecordUpdateReq;
@@ -22,6 +24,7 @@ import net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp;
 import net.leoch.modules.ops.vo.rsp.OpsHostStatusSummaryRsp;
 import net.leoch.modules.ops.vo.rsp.DomainRecordRsp;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("ops/domain-record")
@@ -83,5 +86,30 @@ public class DomainRecordController {
     public Result<Object> delete(@Valid @RequestBody DomainRecordDeleteReq request) {
         domainRecordService.delete(request);
         return new Result<>();
+    }
+
+    @PostMapping("import")
+    @Operation(summary = "导入")
+    @LogOperation("导入域名记录")
+    @SaCheckPermission("ops:domain-record:save")
+    public Result<Object> importExcel(@RequestParam("file") MultipartFile file) throws Exception {
+        DomainRecordImportReq request = new DomainRecordImportReq();
+        request.setFile(file);
+        domainRecordService.importExcel(request);
+        return new Result<>();
+    }
+
+    @GetMapping("template")
+    @Operation(summary = "模板下载")
+    @SaCheckPermission("ops:domain-record:page")
+    public void template(HttpServletResponse response) throws Exception {
+        domainRecordService.template(response);
+    }
+
+    @GetMapping("export")
+    @Operation(summary = "导出")
+    @SaCheckPermission("ops:domain-record:page")
+    public void export(DomainRecordPageReq request, HttpServletResponse response) throws Exception {
+        domainRecordService.export(request, response);
     }
 }

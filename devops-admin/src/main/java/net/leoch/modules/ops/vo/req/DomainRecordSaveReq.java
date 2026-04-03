@@ -197,6 +197,18 @@ public class DomainRecordSaveReq implements Serializable {
         @Schema(title = "备注")
         private String remark;
 
+        @Schema(title = "外网虚拟服务名称")
+        private String externalVirtualServiceName;
+
+        @Schema(title = "外网虚拟服务IP")
+        private String externalVirtualServiceIp;
+
+        @Schema(title = "外网虚拟服务端口")
+        private Integer externalVirtualServicePort;
+
+        @Schema(title = "外网虚拟服务协议")
+        private String externalVirtualServiceProtocol;
+
         @Schema(title = "节点明细")
         @Valid
         private List<DomainDeliveryNodeReq> nodes;

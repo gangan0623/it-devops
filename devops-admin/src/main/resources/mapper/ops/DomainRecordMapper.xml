@@ -25,6 +25,10 @@
         <result property="virtualServicePort" column="virtual_service_port"/>
         <result property="virtualServiceProtocol" column="virtual_service_protocol"/>
         <result property="poolName" column="pool_name"/>
+        <result property="externalVirtualServiceName" column="external_virtual_service_name"/>
+        <result property="externalVirtualServiceIp" column="external_virtual_service_ip"/>
+        <result property="externalVirtualServicePort" column="external_virtual_service_port"/>
+        <result property="externalVirtualServiceProtocol" column="external_virtual_service_protocol"/>
         <result property="creator" column="creator"/>
         <result property="createDate" column="create_date"/>
         <result property="updater" column="updater"/>
@@ -55,6 +59,10 @@
         <result property="virtualServiceProtocol" column="delivery_virtual_service_protocol"/>
         <result property="poolName" column="delivery_pool_name"/>
         <result property="remark" column="delivery_remark"/>
+        <result property="externalVirtualServiceName" column="delivery_external_virtual_service_name"/>
+        <result property="externalVirtualServiceIp" column="delivery_external_virtual_service_ip"/>
+        <result property="externalVirtualServicePort" column="delivery_external_virtual_service_port"/>
+        <result property="externalVirtualServiceProtocol" column="delivery_external_virtual_service_protocol"/>
         <collection property="nodes" ofType="net.leoch.modules.ops.vo.rsp.DomainRecordDetailRsp$DeliveryNodeRsp"
                     column="delivery_id"
                     select="net.leoch.modules.ops.mapper.DomainDeliveryNodeMapper.selectByDomainDeliveryId"/>
@@ -122,6 +130,10 @@
             dd.virtual_service_port,
             dd.virtual_service_protocol,
             dd.pool_name,
+            dd.external_virtual_service_name,
+            dd.external_virtual_service_ip,
+            dd.external_virtual_service_port,
+            dd.external_virtual_service_protocol,
             dr.creator,
             dr.create_date,
             dr.updater,
@@ -207,6 +219,10 @@
             dd.virtual_service_protocol AS delivery_virtual_service_protocol,
             dd.pool_name AS delivery_pool_name,
             dd.remark AS delivery_remark,
+            dd.external_virtual_service_name AS delivery_external_virtual_service_name,
+            dd.external_virtual_service_ip AS delivery_external_virtual_service_ip,
+            dd.external_virtual_service_port AS delivery_external_virtual_service_port,
+            dd.external_virtual_service_protocol AS delivery_external_virtual_service_protocol,
             di.id AS dns_internal_id,
             di.resolve_mode AS dns_internal_resolve_mode,
             di.dns_target_ip AS dns_internal_target_ip,

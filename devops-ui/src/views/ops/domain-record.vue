@@ -18,6 +18,8 @@
             <span class="host-stats__item host-stats__item--filter">离线 {{ offlineCount }}</span>
           </div>
           <el-button v-if="state.hasPermission('ops:domain-record:save')" type="primary" @click="addOrUpdateHandle()">新增</el-button>
+          <el-button v-if="state.hasPermission('ops:domain-record:save')" @click="importDialogVisible = true">导入</el-button>
+          <el-button v-if="state.hasPermission('ops:domain-record:page')" @click="exportHandle">导出</el-button>
           <el-button v-if="state.hasPermission('ops:domain-record:delete')" type="danger" @click="deleteBatchHandle">删除</el-button>
         </div>
       </div>
@@ -103,37 +105,9 @@
       <el-table-column type="selection" width="50" header-align="center" align="center"></el-table-column>
       <el-table-column prop="projectName" label="项目名称" min-width="140" header-align="center" align="center" show-overflow-tooltip></el-table-column>
       <el-table-column prop="domainName" label="域名" min-width="180" header-align="center" align="center" show-overflow-tooltip></el-table-column>
-      <el-table-column label="区域名称" min-width="120" header-align="center" align="center">
-        <template #default="{ row }">
-          {{ state.getDictValueByLabel("area_name_type", row.areaName) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="分组名称" min-width="120" header-align="center" align="center">
-        <template #default="{ row }">
-          {{ state.getDictValueByLabel("server_host_group", row.groupName) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="站点位置" min-width="120" header-align="center" align="center">
-        <template #default="{ row }">
-          {{ state.getDictValueByLabel("base_site_location", row.siteLocation) }}
-        </template>
-      </el-table-column>
-      <el-table-column label="状态" width="90" header-align="center" align="center">
-        <template #default="{ row }">
-          <el-tag v-if="row.status === 0" size="small" type="danger">禁用</el-tag>
-          <el-tag v-else size="small" type="success">启用</el-tag>
-        </template>
-      </el-table-column>
-      <el-table-column label="在线状态" width="90" header-align="center" align="center">
-        <template #default="{ row }">
-          <el-tag v-if="row.onlineStatus === true" size="small" type="success">在线</el-tag>
-          <el-tag v-else-if="row.onlineStatus === false" size="small" type="danger">离线</el-tag>
-          <el-tag v-else size="small" type="info">检测中</el-tag>
-        </template>
-      </el-table-column>
       <el-table-column label="应用交付(AD)" width="120" header-align="center" align="center">
         <template #default="{ row }">
-          <el-popover v-if="row.adEnabled === 1" placement="right" :width="280" trigger="hover">
+          <el-popover v-if="row.adEnabled === 1" placement="right" :width="row.externalVirtualServiceIp ? 360 : 280" trigger="hover">
             <template #reference>
               <el-tag type="success" size="small" style="cursor: pointer">走AD</el-tag>
             </template>
@@ -146,6 +120,14 @@
               <el-descriptions-item label="包含节点">
                 <div style="max-height: 80px; overflow-y: auto; white-space: pre-wrap; line-height: 1.4; color: #409eff;">{{ row.poolNodes || '-' }}</div>
               </el-descriptions-item>
+              <template v-if="row.externalVirtualServiceIp">
+                <el-descriptions-item label="外网虚拟IP">
+                  <span style="color: #67c23a; font-weight: bold">{{ row.externalVirtualServiceIp || '-' }}</span>
+                </el-descriptions-item>
+                <el-descriptions-item label="外网虚拟端口">
+                  <span style="color: #67c23a; font-weight: bold">{{ row.externalVirtualServicePort || '-' }}</span>
+                </el-descriptions-item>
+              </template>
             </el-descriptions>
           </el-popover>
           <el-tag v-else type="info" size="small">不走AD</el-tag>
@@ -189,6 +171,34 @@
             </el-descriptions>
           </el-popover>
           <el-tag v-else type="info" size="small">未启用</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="区域名称" min-width="120" header-align="center" align="center">
+        <template #default="{ row }">
+          {{ state.getDictValueByLabel("area_name_type", row.areaName) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="分组名称" min-width="120" header-align="center" align="center">
+        <template #default="{ row }">
+          {{ state.getDictValueByLabel("server_host_group", row.groupName) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="站点位置" min-width="120" header-align="center" align="center">
+        <template #default="{ row }">
+          {{ state.getDictValueByLabel("base_site_location", row.siteLocation) }}
+        </template>
+      </el-table-column>
+      <el-table-column label="状态" width="90" header-align="center" align="center">
+        <template #default="{ row }">
+          <el-tag v-if="row.status === 0" size="small" type="danger">禁用</el-tag>
+          <el-tag v-else size="small" type="success">启用</el-tag>
+        </template>
+      </el-table-column>
+      <el-table-column label="在线状态" width="90" header-align="center" align="center">
+        <template #default="{ row }">
+          <el-tag v-if="row.onlineStatus === true" size="small" type="success">在线</el-tag>
+          <el-tag v-else-if="row.onlineStatus === false" size="small" type="danger">离线</el-tag>
+          <el-tag v-else size="small" type="info">检测中</el-tag>
         </template>
       </el-table-column>
       <el-table-column prop="apiUrl" label="访问地址" min-width="220" header-align="center" align="center" show-overflow-tooltip></el-table-column>
@@ -273,7 +283,7 @@
             <el-descriptions-item label="公网解析状态">{{ detailData.externalEnabled === 1 ? "启用" : "未启用" }}</el-descriptions-item>
             <el-descriptions-item label="是否走AD">{{ detailData.adEnabled === 1 ? "走AD" : "不走AD" }}</el-descriptions-item>
             <el-descriptions-item label="访问地址" :span="2">{{ detailData.apiUrl || "-" }}</el-descriptions-item>
-            <el-descriptions-item label="描述" :span="2">{{ detailData.description || "-" }}</el-descriptions-item>
+            <el-descriptions-item label="修改描述" :span="2">{{ detailData.description || "-" }}</el-descriptions-item>
             <el-descriptions-item label="备注" :span="2">{{ detailData.remark || "-" }}</el-descriptions-item>
           </el-descriptions>
           </div>
@@ -281,22 +291,49 @@
           <div class="group-panel">
             <div class="group-panel__header">应用交付</div>
             <template v-if="detailData.adEnabled === 1 && detailData.delivery">
-              <el-descriptions :column="2" border>
-                <el-descriptions-item label="虚拟服务名称">{{ detailData.delivery.virtualServiceName || "-" }}</el-descriptions-item>
-                <el-descriptions-item label="虚拟服务IP">{{ detailData.delivery.virtualServiceIp || "-" }}</el-descriptions-item>
-                <el-descriptions-item label="虚拟服务端口">{{ detailData.delivery.virtualServicePort || "-" }}</el-descriptions-item>
-                <el-descriptions-item label="虚拟服务协议">{{ detailData.delivery.virtualServiceProtocol || "-" }}</el-descriptions-item>
-                <el-descriptions-item label="节点池名称">{{ detailData.delivery.poolName || "-" }}</el-descriptions-item>
-                <el-descriptions-item label="备注" :span="2">{{ detailData.delivery.remark || "-" }}</el-descriptions-item>
-              </el-descriptions>
+              <div class="delivery-section">
+                <div class="delivery-section__header">
+                  <span>{{ isDualAdDetail ? '内网虚拟服务' : '虚拟服务' }}</span>
+                </div>
+                <el-descriptions :column="2" border>
+                  <el-descriptions-item label="虚拟服务名称">{{ detailData.delivery.virtualServiceName || "-" }}</el-descriptions-item>
+                  <el-descriptions-item label="虚拟服务IP">{{ detailData.delivery.virtualServiceIp || "-" }}</el-descriptions-item>
+                  <el-descriptions-item label="虚拟服务端口">{{ detailData.delivery.virtualServicePort || "-" }}</el-descriptions-item>
+                  <el-descriptions-item label="虚拟服务协议">{{ detailData.delivery.virtualServiceProtocol || "-" }}</el-descriptions-item>
+                </el-descriptions>
+              </div>
 
-              <div class="detail-subtitle">节点池明细</div>
-              <el-table :data="detailData.delivery.nodes || []" border style="width: 100%">
-                <el-table-column prop="nodeIp" label="节点IP" min-width="180"></el-table-column>
-                <el-table-column prop="nodePort" label="节点端口" width="140"></el-table-column>
-                <el-table-column prop="sort" label="排序" width="100"></el-table-column>
-                <el-table-column prop="remark" label="备注" min-width="180" show-overflow-tooltip></el-table-column>
-              </el-table>
+              <!-- 双向AD时：显示外网虚拟服务 -->
+              <template v-if="detailData.delivery.externalVirtualServiceIp">
+                <div class="delivery-section">
+                  <div class="delivery-section__header">
+                    <span>外网虚拟服务</span>
+                  </div>
+                  <el-descriptions :column="2" border>
+                    <el-descriptions-item label="外网虚拟服务名称">{{ detailData.delivery.externalVirtualServiceName || "-" }}</el-descriptions-item>
+                    <el-descriptions-item label="外网虚拟服务IP">{{ detailData.delivery.externalVirtualServiceIp || "-" }}</el-descriptions-item>
+                    <el-descriptions-item label="外网虚拟服务端口">{{ detailData.delivery.externalVirtualServicePort || "-" }}</el-descriptions-item>
+                    <el-descriptions-item label="外网虚拟服务协议">{{ detailData.delivery.externalVirtualServiceProtocol || "-" }}</el-descriptions-item>
+                  </el-descriptions>
+                </div>
+              </template>
+
+              <div class="delivery-section">
+                <div class="delivery-section__header">
+                  <span>节点池{{ isDualAdDetail ? '（共享）' : '' }}</span>
+                </div>
+                <el-descriptions :column="2" border style="margin-bottom: 20px;">
+                  <el-descriptions-item label="节点池名称">{{ detailData.delivery.poolName || "-" }}</el-descriptions-item>
+                  <el-descriptions-item label="备注">{{ detailData.delivery.remark || "-" }}</el-descriptions-item>
+                </el-descriptions>
+                <div class="detail-subtitle" style="margin-bottom: 12px; font-size: 13px; color: #64748b;">节点池明细</div>
+                <el-table :data="detailData.delivery.nodes || []" border style="width: 100%" size="small">
+                  <el-table-column prop="nodeIp" label="节点IP" min-width="180"></el-table-column>
+                  <el-table-column prop="nodePort" label="节点端口" width="140"></el-table-column>
+                  <el-table-column prop="sort" label="排序" width="100"></el-table-column>
+                  <el-table-column prop="remark" label="备注" min-width="180" show-overflow-tooltip></el-table-column>
+                </el-table>
+              </div>
             </template>
             <el-empty v-else description="不走AD，无应用交付链路"></el-empty>
           </div>
@@ -344,6 +381,38 @@
       </div>
     </el-drawer>
 
+    <el-dialog v-model="importDialogVisible" title="导入域名记录" width="550px" :append-to-body="true">
+      <el-upload
+        ref="uploadRef"
+        :auto-upload="false"
+        v-model:file-list="fileList"
+        :on-change="handleFileChange"
+        :on-exceed="handleExceed"
+        accept=".xlsx,.xls"
+        :limit="1"
+        drag
+        class="import-upload"
+      >
+        <div class="upload-area">
+          <el-icon class="upload-icon"><upload-filled /></el-icon>
+          <div class="upload-text">
+            <div>拖拽文件到此处或点击上传</div>
+            <div class="upload-tip">仅支持 .xlsx, .xls 文件</div>
+          </div>
+        </div>
+      </el-upload>
+      <div class="import-tips">
+        <el-button type="primary" link @click="downloadTemplate">下载导入模板</el-button>
+        <span class="tip-divider">|</span>
+        <el-icon><info-filled /></el-icon>
+        <span>导入后将创建完整记录（包含应用交付、DNS、防火墙配置）</span>
+      </div>
+      <template #footer>
+        <el-button @click="importDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="importLoading" @click="confirmImport">确定导入</el-button>
+      </template>
+    </el-dialog>
+
     <add-or-update ref="addOrUpdateRef" @refreshDataList="queryList"></add-or-update>
   </div>
 </template>
@@ -351,7 +420,10 @@
 <script lang="ts" setup>
 import useView from "@/hooks/useView";
 import { reactive, ref, toRefs, computed, nextTick, onMounted } from "vue";
-import { Filter } from "@element-plus/icons-vue";
+import { Filter, UploadFilled, InfoFilled } from "@element-plus/icons-vue";
+import app from "@/constants/app";
+import { getToken } from "@/utils/cache";
+import qs from "qs";
 import baseService from "@/service/baseService";
 import { ElMessage, ElMessageBox } from "element-plus";
 import AddOrUpdate from "./domain-record-add-or-update.vue";
@@ -390,6 +462,10 @@ const offlineCount = computed(() => statusSummary.value.offlineCount);
 const detailVisible = ref(false);
 const detailLoading = ref(false);
 const detailData = ref<any>(null);
+const isDualAdDetail = computed(() => {
+  if (!detailData.value) return false;
+  return detailData.value.internalEnabled === 1 && detailData.value.externalEnabled === 1;
+});
 const historyVisible = ref(false);
 const historyLoading = ref(false);
 const historyList = ref<any[]>([]);
@@ -397,6 +473,10 @@ const historyDetail = ref<any>(null);
 const diffRef = ref();
 
 const filterDrawer = ref(false);
+const importDialogVisible = ref(false);
+const importLoading = ref(false);
+const uploadRef = ref();
+const fileList = ref<any[]>([]);
 
 const activeFilterCount = computed(() => {
   let count = 0;
@@ -467,13 +547,16 @@ const addOrUpdateHandle = (id?: number) => {
 
 const formatInternalChain = (row: any) => {
   if (row.adEnabled === 1) {
-    return "DNS -> 深信服应用交付虚拟IP -> 节点池IP+端口";
+    return "DNS -> 深信服AD内网虚拟IP -> 节点池IP+端口";
   }
   return "DNS -> 目标IP";
 };
 
 const formatExternalChain = (row: any) => {
   if (row.adEnabled === 1) {
+    if (row.delivery?.externalVirtualServiceIp) {
+      return "阿里云DNS -> 公网IP -> 防火墙映射 -> 深信服AD外网虚拟IP -> 节点池IP+端口";
+    }
     return "阿里云DNS -> 公网IP -> 防火墙映射 -> 虚拟IP+内部端口 -> 节点池IP+端口";
   }
   return "DNS -> 目标公网IP";
@@ -553,6 +636,60 @@ const loadHistoryDetail = (id: number) => {
   });
 };
 
+const handleFileChange = (file: any) => {
+  const isExcel = file.name.endsWith(".xlsx") || file.name.endsWith(".xls");
+  if (!isExcel) {
+    ElMessage.error("仅支持 .xlsx, .xls 文件");
+    return false;
+  }
+  fileList.value = [file];
+  return false;
+};
+
+const handleExceed = (files: any) => {
+  uploadRef.value!.clearFiles();
+  const file = files[0];
+  file.uid = Date.now();
+  uploadRef.value!.handleStart(file);
+};
+
+const confirmImport = () => {
+  if (fileList.value.length === 0) {
+    ElMessage.warning("请选择要导入的文件");
+    return;
+  }
+  importLoading.value = true;
+  const formData = new FormData();
+  formData.append("file", fileList.value[0].raw);
+  baseService.post("/ops/domain-record/import", formData).then(() => {
+    ElMessage.success({
+      message: "导入成功",
+      duration: 1500,
+      onClose: () => {
+        importDialogVisible.value = false;
+        fileList.value = [];
+        queryList();
+      }
+    });
+  }).catch((err: any) => {
+    ElMessage.error(err.msg || "导入失败");
+  }).finally(() => {
+    importLoading.value = false;
+  });
+};
+
+const downloadTemplate = () => {
+  window.location.href = `${app.api}/ops/domain-record/template?${qs.stringify({ token: getToken() })}`;
+};
+
+const exportHandle = () => {
+  const params: any = { ...state.dataForm };
+  params.page = 1;
+  params.limit = 99999;
+  params.token = getToken();
+  window.location.href = `${app.api}/ops/domain-record/export?${qs.stringify(params)}`;
+};
+
 onMounted(() => {
   loadStatusSummary();
 });
@@ -561,6 +698,52 @@ queryList();
 </script>
 
 <style scoped>
+
+.import-upload {
+  margin: 20px 0;
+}
+
+.upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 0;
+}
+
+.upload-icon {
+  font-size: 48px;
+  color: #409eff;
+  margin-bottom: 16px;
+}
+
+.upload-text {
+  text-align: center;
+  color: #606266;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.upload-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+.import-tips {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #ebeef5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #606266;
+}
+
+.tip-divider {
+  color: #dcdfe6;
+  margin: 0 4px;
+}
 
 .history-detail {
   margin-top: 20px;
@@ -605,6 +788,44 @@ queryList();
 .group-panel :deep(.el-descriptions__body) {
   border-radius: 4px;
   overflow: hidden;
+}
+
+.delivery-section {
+  padding: 20px;
+  margin-bottom: 20px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+.delivery-section__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.delivery-section__header > span {
+  font-size: 14px;
+  font-weight: 700;
+  color: #0f172a;
+  position: relative;
+  padding-left: 12px;
+}
+
+.delivery-section__header > span::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 14px;
+  background: linear-gradient(to bottom, #3b82f6, #2563eb);
+  border-radius: 2px;
 }
 
 .detail-subtitle {

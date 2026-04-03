@@ -112,4 +112,16 @@ public class DomainRecordRsp implements Serializable {
 
     @SchemaProperty(name = "防火墙映射-内部端口")
     private Integer fmInternalPort;
+
+    @SchemaProperty(name = "外网虚拟服务名称")
+    private String externalVirtualServiceName;
+
+    @SchemaProperty(name = "外网虚拟服务IP")
+    private String externalVirtualServiceIp;
+
+    @SchemaProperty(name = "外网虚拟服务端口")
+    private Integer externalVirtualServicePort;
+
+    @SchemaProperty(name = "外网虚拟服务协议")
+    private String externalVirtualServiceProtocol;
 }

@@ -56,6 +56,18 @@ public class DomainRecordDetailRsp extends DomainRecordRsp {
         @SchemaProperty(name = "备注")
         private String remark;
 
+        @SchemaProperty(name = "外网虚拟服务名称")
+        private String externalVirtualServiceName;
+
+        @SchemaProperty(name = "外网虚拟服务IP")
+        private String externalVirtualServiceIp;
+
+        @SchemaProperty(name = "外网虚拟服务端口")
+        private Integer externalVirtualServicePort;
+
+        @SchemaProperty(name = "外网虚拟服务协议")
+        private String externalVirtualServiceProtocol;
+
         @SchemaProperty(name = "节点明细")
         private List<DeliveryNodeRsp> nodes = new ArrayList<>();
     }

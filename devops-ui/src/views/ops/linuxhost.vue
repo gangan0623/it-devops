@@ -94,14 +94,36 @@
       </el-table-column>
     </el-table>
     <el-pagination :current-page="state.page" :page-sizes="[10, 20, 50, 100]" :page-size="state.limit" :total="state.total" layout="total, sizes, prev, pager, next, jumper" @size-change="state.pageSizeChangeHandle" @current-change="state.pageCurrentChangeHandle"> </el-pagination>
-    <el-dialog v-model="importDialogVisible" title="导入" width="420px">
-      <div class="import-actions">
-        <el-button v-if="state.hasPermission('ops:linuxhost:template')" type="info" @click="handleTemplateDownload">下载示例表格</el-button>
-        <el-upload v-if="state.hasPermission('ops:linuxhost:import')" :action="importUrl" :headers="uploadHeaders" :show-file-list="false" :before-upload="beforeImportUpload" :on-success="handleImportSuccess" accept=".xls,.xlsx">
-          <el-button type="primary">选择文件</el-button>
-        </el-upload>
+    <el-dialog v-model="importDialogVisible" title="导入主机数据" width="550px" :append-to-body="true">
+      <el-upload
+        ref="uploadRef"
+        :auto-upload="false"
+        v-model:file-list="fileList"
+        :on-change="handleFileChange"
+        :on-exceed="handleExceed"
+        accept=".xlsx,.xls"
+        :limit="1"
+        drag
+        class="import-upload"
+      >
+        <div class="upload-area">
+          <el-icon class="upload-icon"><upload-filled /></el-icon>
+          <div class="upload-text">
+            <div>拖拽文件到此处或点击上传</div>
+            <div class="upload-tip">仅支持 .xlsx, .xls 文件</div>
+          </div>
+        </div>
+      </el-upload>
+      <div class="import-tips">
+        <el-button type="primary" link @click="handleTemplateDownload">下载导入模板</el-button>
+        <span class="tip-divider">|</span>
+        <el-icon><info-filled /></el-icon>
+        <span>模板字段：地址、名称、区域名称、站点位置、分组名称、主机类型、状态</span>
       </div>
-      <div class="import-tip">模板字段：地址、名称、区域名称、站点位置、分组名称、主机类型、状态</div>
+      <template #footer>
+        <el-button @click="importDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="importLoading" @click="confirmImport">确定导入</el-button>
+      </template>
     </el-dialog>
     <!-- 弹窗, 新增 / 修改 -->
     <add-or-update ref="addOrUpdateRef" @refreshDataList="queryList">确定</add-or-update>
@@ -126,6 +148,52 @@
   font-size: 13px;
   line-height: 1.6;
 }
+
+.import-upload {
+  margin: 20px 0;
+}
+
+.upload-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 0;
+}
+
+.upload-icon {
+  font-size: 48px;
+  color: #409eff;
+  margin-bottom: 16px;
+}
+
+.upload-text {
+  text-align: center;
+  color: #606266;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.upload-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 4px;
+}
+
+.import-tips {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid #ebeef5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #606266;
+}
+
+.tip-divider {
+  color: #dcdfe6;
+  margin: 0 4px;
+}
 </style>
 
 <script lang="ts" setup>
@@ -134,7 +202,7 @@ import {computed, onMounted, reactive, ref, toRefs} from "vue";
 import AddOrUpdate from "./linuxhost-add-or-update.vue";
 import baseService from "@/service/baseService";
 import {ElMessage, ElMessageBox} from "element-plus";
-import {Filter} from "@element-plus/icons-vue";
+import {Filter, UploadFilled, InfoFilled} from "@element-plus/icons-vue";
 import app from "@/constants/app";
 import {getToken} from "@/utils/cache";
 import {IObject} from "@/types/interface";

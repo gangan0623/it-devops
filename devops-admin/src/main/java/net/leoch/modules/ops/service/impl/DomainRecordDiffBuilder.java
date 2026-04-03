@@ -46,6 +46,18 @@ public class DomainRecordDiffBuilder {
         addDiff(diffs, historyId, "delivery", "应用交付", before.getDelivery(), after.getDelivery());
         addDiff(diffs, historyId, "delivery.nodes", "节点池明细", before.getDelivery() == null ? null : before.getDelivery().getNodes(),
                 after.getDelivery() == null ? null : after.getDelivery().getNodes());
+        addDiff(diffs, historyId, "delivery.externalVirtualServiceName", "外网虚拟服务名称",
+                before.getDelivery() == null ? null : before.getDelivery().getExternalVirtualServiceName(),
+                after.getDelivery() == null ? null : after.getDelivery().getExternalVirtualServiceName());
+        addDiff(diffs, historyId, "delivery.externalVirtualServiceIp", "外网虚拟服务IP",
+                before.getDelivery() == null ? null : before.getDelivery().getExternalVirtualServiceIp(),
+                after.getDelivery() == null ? null : after.getDelivery().getExternalVirtualServiceIp());
+        addDiff(diffs, historyId, "delivery.externalVirtualServicePort", "外网虚拟服务端口",
+                before.getDelivery() == null ? null : before.getDelivery().getExternalVirtualServicePort(),
+                after.getDelivery() == null ? null : after.getDelivery().getExternalVirtualServicePort());
+        addDiff(diffs, historyId, "delivery.externalVirtualServiceProtocol", "外网虚拟服务协议",
+                before.getDelivery() == null ? null : before.getDelivery().getExternalVirtualServiceProtocol(),
+                after.getDelivery() == null ? null : after.getDelivery().getExternalVirtualServiceProtocol());
         addDiff(diffs, historyId, "dns.internal", "内网解析", before.getDnsInternal(), after.getDnsInternal());
         addDiff(diffs, historyId, "dns.external", "外网解析", before.getDnsExternal(), after.getDnsExternal());
         addDiff(diffs, historyId, "firewall.mapping", "防火墙映射", before.getFirewallMapping(), after.getFirewallMapping());
